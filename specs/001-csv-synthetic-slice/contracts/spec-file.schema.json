@@ -19,7 +19,7 @@
         "bom": { "type": "boolean", "default": false },
         "delimiter": { "type": "string", "minLength": 1, "maxLength": 1 },
         "quote": { "type": ["string", "null"], "maxLength": 1, "default": "\"" },
-        "quote_style": { "enum": ["minimal", "all", "nonnumeric"], "default": "minimal" },
+        "quote_style": { "enum": ["minimal", "all", "per_column"], "default": "minimal" },
         "line_ending": { "enum": ["lf", "crlf", "cr"], "default": "lf" },
         "trailing_newline": { "type": "boolean", "default": true },
         "header": { "type": "boolean" }
@@ -89,6 +89,7 @@
           ]
         },
         "exclude": { "enum": ["drop", "keep_as_na", "include"], "default": "include" },
+        "quoted": { "type": "boolean", "description": "Source wrote this column's non-empty fields in quotes; used when source.quote_style is per_column." },
         "na": { "$ref": "#/$defs/na" },
         "sentinels": { "$ref": "#/$defs/sentinels" }
       },

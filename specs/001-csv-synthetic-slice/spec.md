@@ -308,7 +308,8 @@ generation and export without a frozen tab.
 
 - **FR-028**: The system MUST export a CSV that keeps the input's delimiter, quote style,
   encoding, line endings, header, byte-order mark, NA token, decimal places, leading zeros and
-  date and time string formats.
+  date and time string formats. When the source quotes fields per column (for example text
+  quoted and numbers not), the export MUST quote exactly the same columns.
 - **FR-029**: The export file name MUST default to the original name with a "_fake" suffix,
   and the user MUST be able to keep the original name instead.
 - **FR-030**: Users MUST be able to export the spec file separately.

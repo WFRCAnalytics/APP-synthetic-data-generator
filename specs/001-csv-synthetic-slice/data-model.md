@@ -24,7 +24,7 @@ only inside the in-memory database and are never copied into these objects.
 | bom | boolean |
 | delimiter | single character |
 | quote | single character, or none |
-| quoteStyle | `minimal`, `all`, `nonnumeric` |
+| quoteStyle | `minimal` (quote only when needed), `all` (quote every field), `per_column` (quote exactly the columns whose `quoted` flag is true, as in files where text is quoted and numbers are not) |
 | lineEnding | `lf`, `crlf`, `cr` |
 | header | boolean |
 | trailingNewline | boolean |
@@ -35,6 +35,7 @@ only inside the in-memory database and are never copied into these objects.
 |---|---|
 | name | Column name from the file |
 | outputName | Name written to the export (differs only if renamed) |
+| quoted | Whether the source wrote this column's non-empty fields in quotes, inferred by sampling the raw bytes of the first 10,000 rows (the all-text read loses this). Used when `quoteStyle` is `per_column` |
 | detectedType | Type chosen by the profiler |
 | type | Type in effect (user override or detected) |
 | status | `ok`, `needs_attention`, `unsupported` |
