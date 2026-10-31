@@ -33,7 +33,7 @@ Expected: all pass.
 
 ## Scenario A: the whole flow (User Story 1)
 
-1. Open the app, choose `tests/fixtures/trips_small.csv`.
+1. Open the app, choose `tests/fixtures/zoo/zoo_small.csv`.
 2. Confirm the detected delimiter, encoding, quote, header.
 3. On Review, accept defaults, then continue to Generate.
 4. Seed 42, Generate, then export the CSV.
@@ -43,7 +43,7 @@ rows; the check table shows every exact metric as a pass; no real row appears be
 
 ## Scenario B: review and override (User Story 2)
 
-1. Load `tests/fixtures/coded.csv` (coded integers, sentinels, a few unsupported columns).
+1. Load `tests/fixtures/zoo/zoo_small.csv` (coded integers, sentinels, a few unsupported columns).
 2. Confirm the coded column is categorical, and edit the sentinels on the numeric column.
 3. Search, use the "needs attention" filter, and check the banner.
 
@@ -52,7 +52,7 @@ min, max, mean and standard deviation; all optional protections are off.
 
 ## Scenario C: IDs (User Story 3)
 
-1. Load `tests/fixtures/ids_50k.csv` (50,000 household IDs).
+1. Load `tests/fixtures/zoo/ids_50k.csv` (50,000 household IDs).
 2. Edit the mask in the editor; try a mask that is too narrow.
 3. Save the spec and open it in a text editor.
 
@@ -77,7 +77,7 @@ Network tab; after reload, no data remains and the app is back at the start.
 
 ## Scenario F: scale (User Story 6)
 
-1. Load `.fixtures/trips_500mb.csv` (about 120 columns).
+1. Load `.fixtures/zoo_500mb.csv` (about 120 columns).
 2. Profile, generate and export.
 
 **Expect**: progress shown and the page responsive; profiling under 5 minutes and

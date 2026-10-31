@@ -16,7 +16,7 @@ core, and the success criteria (exact summaries, determinism, zero cross-origin 
 verified on its own. The "Deferred Backlog" at the end is the single record of everything the spec
 puts out of scope; those tasks stay unchecked until their own feature starts (Principle X).
 
-> **Numbering note**: T119 and T120 were added after `/speckit-analyze`. They keep their IDs so existing
+> **Numbering note**: T119 to T122 were added after `/speckit-analyze` and the fixture review. They keep their IDs so existing
 > references stay valid, and sit in the phase where they are executed.
 
 ## Format: `[ID] [P?] [Story] Description`
@@ -42,7 +42,7 @@ real data.
 - [ ] T003 [P] Copy and adapt `.eslintrc.cjs`, `.eslintignore`, `.prettierrc.json`, `.prettierignore` from `WFRCAnalytics/APP-Project-Scoresheet`
 - [ ] T004 [P] Create `scripts/copy-duckdb.mjs` that copies the DuckDB-WASM binaries and workers from `node_modules` into `public/duckdb/` with no network access, and wire it into `predev` and `prebuild` in `package.json`
 - [ ] T005 [P] Create `tests/setup.ts` and add `.fixtures/` to `.gitignore`
-- [ ] T006 [P] Create `scripts/make-fixtures.mjs` that writes the small fixtures `tests/fixtures/trips_small.csv`, `tests/fixtures/coded.csv` (coded integers, sentinels, unsupported columns), `tests/fixtures/ids_50k.csv`, plus UTF-16, Windows-1252, BOM, semicolon and no-header variants
+- [ ] T006 [P] Create `scripts/make-fixtures.mjs` (fixed seed, `@faker-js/faker` as a dev dependency for personal-data columns) that writes the "type zoo" per `contracts/fixture-matrix.md`: `tests/fixtures/zoo/zoo_small.csv` (2,000 rows, committed), `tests/fixtures/zoo/expected.json` (expected type, status and reason codes per column), `tests/fixtures/zoo/ids_50k.csv`, and the file-level variants (UTF-8 BOM, UTF-16 LE and BE, Windows-1252, delimiters, no header, line endings, quote styles including per-column quoting, ragged, empty and header-only files)
 - [ ] T007 Create `index.html` with the Content-Security-Policy meta tag from `contracts/worker-protocol.md` section 4 and the app mount point. Apply the strict policy in build and preview only and use a dev-safe variant through `transformIndexHtml` (Vite's React plugin injects an inline script in dev; see research.md R9). Browser tests run against `vite preview`
 - [ ] T008 [P] Create `README.md` with the privacy statement, dev commands, and a link to `specs/001-csv-synthetic-slice/quickstart.md`
 
@@ -64,7 +64,8 @@ real data.
 
 ### Prototypes (VERIFY items from research.md; each ends by recording the result in research.md)
 
-- [ ] T014 Create `scripts/make-fixtures.mjs --large` that writes the ~500 MB, ~120-column `.fixtures/trips_500mb.csv` (deterministic, never committed)
+- [ ] T014 Extend `scripts/make-fixtures.mjs` with `--100k` and `--large` that write `.fixtures/zoo_100k.csv` and the ~500 MB, ~120-column `.fixtures/zoo_500mb.csv` (zoo columns repeated with suffixes; deterministic, never committed)
+- [ ] T121 [P] Create `scripts/fetch-corpus.mjs` that downloads, at a pinned tag, the selected CSV edge-case files from `duckdb/duckdb` `data/csv` (encodings, dates, decimal separators, leading zeros, quoted newlines, null padding, bad dates) and `csv-spectrum`, plus the smoke datasets (NHTS 2017 `trippub.csv`, a 1M-row Chicago Crimes slice), into `.fixtures/corpus/` (gitignored, never committed); tests that need them skip with a clear message when the folder is absent
 - [ ] T015 Spike R9: instantiate DuckDB-WASM under the page CSP from T007 in `tests/e2e/spikes/csp.spec.ts`; record the outcome and any narrowest-needed CSP change in `research.md`
 - [ ] T016 Spike R1: in `tests/e2e/spikes/memory.spec.ts`, register the 500 MB fixture with `registerFileHandle`, load it as an all-text table, and record memory and time in `research.md`; if it does not fit, T091 (profile in column batches from the file handle) becomes required
 - [ ] T017 [P] Spike R2: in `tests/e2e/spikes/encoding.spec.ts`, check `read_csv` with `utf-16` and `latin-1` on the encoding fixtures; record the result and, if it fails, T120 (the `TextDecoderStream` fallback) becomes required
@@ -91,15 +92,16 @@ real data.
 **Goal**: CSV in, defaults accepted, fake CSV out for categorical, numeric, date and boolean columns,
 with unsupported columns safely excluded.
 
-**Independent Test**: Quickstart scenarios A and G on `tests/fixtures/trips_small.csv`.
+**Independent Test**: Quickstart scenarios A and G on `tests/fixtures/zoo/zoo_small.csv`.
 
 ### Tests for User Story 1
 
 - [ ] T028 [P] [US1] Integration test for profiling SQL on small fixtures (counts, NA, min, max, mean, sd, quantiles) using DuckDB's Node bindings in `tests/integration/profile.test.ts`
-- [ ] T029 [P] [US1] Unit tests for type detection rules in SPEC.md order, coded integers defaulting to categorical, the "unsupported" rule (emails, free text, many-valued short codes, latitude and longitude), and survey ID detection taking precedence over categorical (an ID column with 50 or fewer distinct values is never typed categorical) in `tests/unit/classify.test.ts`
+- [ ] T029 [P] [US1] Unit tests for type detection rules in SPEC.md order, coded integers defaulting to categorical, the "unsupported" rule (emails, free text, many-valued short codes, latitude and longitude), and survey ID detection taking precedence over categorical (an ID column with 50 or fewer distinct values is never typed categorical), asserted column by column against `tests/fixtures/zoo/expected.json` so a failure names the column and rule, in `tests/unit/classify.test.ts`
 - [ ] T030 [P] [US1] Unit tests that generated columns hit exact label counts, NA counts, sentinel counts, min and max in `tests/unit/generate-columns.test.ts`
 - [ ] T031 [P] [US1] Integration test for the CSV round trip (fake file parses with the same code as the real one, SC-004) in `tests/integration/roundtrip.test.ts`
 - [ ] T032 [P] [US1] Component test for the ingest, review and generate flow with mocked workers in `tests/component/flow.test.tsx`
+- [ ] T122 [P] [US1] Corpus robustness test: every file in `.fixtures/corpus/` either profiles without a crash or fails with a clear message that holds no cell value, and files that parse round-trip through generate and export, in `tests/integration/corpus.test.ts`
 
 ### Implementation for User Story 1
 
@@ -127,7 +129,7 @@ with unsupported columns safely excluded.
 
 **Goal**: The analyst can correct every detection before generating.
 
-**Independent Test**: Quickstart scenario B on `tests/fixtures/coded.csv`.
+**Independent Test**: Quickstart scenario B on `tests/fixtures/zoo/zoo_small.csv`.
 
 ### Tests for User Story 2
 
@@ -162,7 +164,7 @@ with unsupported columns safely excluded.
 
 - [ ] T059 [P] [US3] Unit tests for mask inference results, capacity (including numeric `[min, max]` and zero padding) and generation that fits the mask and repeat structure in `tests/unit/mask.test.ts`
 - [ ] T060 [P] [US3] Integration test that ID inference SQL returns only patterns and aggregates (no ID value) in `tests/integration/id-inference.test.ts`
-- [ ] T061 [P] [US3] Privacy test that a saved spec for `ids_50k.csv` contains none of the fixture IDs and stays under 1 MB in `tests/integration/spec-privacy.test.ts`
+- [ ] T061 [P] [US3] Privacy test that a saved spec for `tests/fixtures/zoo/ids_50k.csv` contains none of the fixture IDs and stays under 1 MB in `tests/integration/spec-privacy.test.ts`
 - [ ] T062 [P] [US3] Component tests for the mask editor, live sample and the "allows X, needs Y" block in `tests/component/id-mask-editor.test.tsx`
 
 ### Implementation for User Story 3
