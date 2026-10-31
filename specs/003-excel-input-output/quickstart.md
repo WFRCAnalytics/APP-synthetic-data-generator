@@ -54,3 +54,18 @@ npm run test:e2e:browsers        # plus Firefox and WebKit
 
 All scenarios pass in Chrome and Edge, A and D also in Firefox and WebKit, and `tasks.md` has no
 unchecked task for this feature.
+
+## Results (recorded 2026-10-31)
+
+| Scenario | Chromium | Edge | Firefox | WebKit | Evidence |
+|----------|----------|------|---------|--------|----------|
+| A: workbook in, fake workbook out, read back | pass | pass | pass | pass | `excel-flow.spec` (openpyxl cross-check) |
+| B: quirks | pass | pass | pass | pass | `excel-quirks.spec`, `xlsx-writer`, `xlsx-metadata` unit tests |
+| C: size and spec | pass | pass | pass | pass | `excel-flow.spec`, `workbook-dialog`, `spec-load`, `size-warning` tests |
+| D: nothing real is kept | pass | pass | pass | pass | `excel-flow.spec` leak test, `xlsx-privacy` test |
+| E: scale (73 MB, 600,000 rows by 20) | profile 27 s, export 25 s | not run | not run | not run | `excel-scale.spec`, research R14 |
+
+Accessibility: `a11y.spec` passes for the workbook dialog and the cell format editor in light and dark themes (Chromium).
+
+**Person-timing sign-offs still to be done by a maintainer** (an automated run cannot stand in for them): slice 3 SC-008 (an analyst loads a typical workbook and gets a fake workbook that reads back in their own R or pandas code), and slice 1 SC-007 and SC-008.
+

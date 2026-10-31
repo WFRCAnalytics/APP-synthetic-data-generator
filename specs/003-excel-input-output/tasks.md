@@ -143,10 +143,10 @@
 - [x] T047 [P] Extend `tests/e2e/a11y.spec.ts` to the workbook dialog and the cell format editor in light and dark themes, and fix any violation
 - [x] T048 [P] Browser tests of the whole flow in `tests/e2e/excel-flow.spec.ts` (workbook in, fake workbook out, read back with the extension; spec save, reload, load) in Chromium, then `npm run test:e2e:browsers` and Edge
 - [x] T049 [P] Update `src/app/HelpGuideModal.tsx`, `SpecContentsNotice.tsx` and `README.md` (Excel is supported; what is kept and what is not; the one-sheet output; .xls refused)
-- [ ] T050 Measure the large workbook: `python scripts/make-xlsx-fixtures.py --large`, `SCALE_XLSX=1 npx playwright test excel-scale.spec` (new, gated like `scale.spec`), record profile time, export time, peak memory and the stop limit in `research.md` (R8)
-- [ ] T051 Dependency and bundle audit: the extension is a file, not a package; record the sizes of `public/duckdb-ext/` and the main and worker bundles in `research.md`, and the deploy workflow run that fetches the extension
-- [ ] T052 Record the SheetJS decision (not needed, with the spike evidence) in `research.md` and update slice 1's research audit
-- [ ] T053 Run quickstart scenarios A to E in Chrome, Edge, Firefox and WebKit, and record the results and the person-timing sign-off lines (SC-008 here, slice 1 SC-007 and SC-008) in this feature's `quickstart.md`
+- [x] T050 Measure the large workbook: `python scripts/make-xlsx-fixtures.py --large`, `SCALE_XLSX=1 npx playwright test excel-scale.spec` (new, gated like `scale.spec`), record profile time, export time, peak memory and the stop limit in `research.md` (R8)
+- [x] T051 Dependency and bundle audit: the extension is a file, not a package; record the sizes of `public/duckdb-ext/` and the main and worker bundles in `research.md`, and the deploy workflow run that fetches the extension
+- [x] T052 Record the SheetJS decision (not needed, with the spike evidence) in `research.md` and update slice 1's research audit
+- [x] T053 Run quickstart scenarios A to E in Chrome, Edge, Firefox and WebKit, and record the results and the person-timing sign-off lines (SC-008 here, slice 1 SC-007 and SC-008) in this feature's `quickstart.md`
 - [ ] T054 Run `/speckit-converge` and mark the slice complete
 
 ---

@@ -157,6 +157,30 @@ cached values, and merged cells.
   proves no request leaves the site while the extension loads.
 - **Rationale**: FR-016, FR-019, SC-003, SC-004.
 
+## R14: Measured on the reference laptop (T050)
+
+- **Workbook**: `.fixtures/big.xlsx`, 600,000 rows by 20 columns, 72.9 MB (made by `scripts/make-xlsx-fixtures.py --large`).
+- **Result** (Chromium, `SCALE_XLSX=1 npx playwright test excel-scale.spec`, 2026-10-31): profile 27 s, generate and check 25 s, worst main-thread frame delay 4 ms while profiling. Both are far under the 10 minute limit the test enforces.
+- **Stop limit**: a sheet that expands past 1 GB (`WORKBOOK_STOP_BYTES`) is refused in the dialog and in the worker with `xlsx_too_large`; the warning starts at 100 MB. The estimate of memory is 2.5 times the expanded size.
+- **Decimals**: a decimal column's decimals come from the digits of the values, the format code only decides the cell style (this replaced the first plan, which read decimals from the code, because a General-format column can hold decimals).
+
+## R15: Bundle and dependency audit (T051)
+
+- The Excel extension is a file, not a package: `public/duckdb-ext/` is 1.2 MB (two builds, `wasm_eh` and `wasm_mvp`, fetched at build time and checked against the pinned engine version; gitignored).
+- Bundles after this slice: main 300 kB (94 kB gzip), profile worker 250 kB, generate worker 480 kB. No new runtime npm dependency was added (the zip reader and writer, and the xlsx writer, are our own code using the browser's `CompressionStream`).
+- `npm audit --omit=dev`: 0 vulnerabilities.
+- The deploy workflow fetches the extension and runs the extension smoke test before it publishes.
+
+## R16: SheetJS decision (T052)
+
+- **Decision**: not needed, and not added. DuckDB's Excel reader read every fixture (quirks, formats, 1904 dates, wide, titles, mixed) under the strict content policy with no request outside the site; the quirks it cannot express (number formats, blank versus empty text, merged cells, hidden sheets) come from our own reading of the package metadata, which touches only names, flags and format codes. A column that mixes kinds is read again as text (R17).
+- Slice 1's research audit is unchanged: no spreadsheet library is in the dependency list.
+
+## R17: Columns that mix kinds
+
+- **Decision**: the reader decides each column's type from its first rows. If a later cell does not fit (a totals row of text under numbers), the sheet is read again with every cell as text, date serial numbers are converted using the column's format code, and the columns that held something other than their type are flagged `mixed_cells`. The engine's own message quotes the cell, so it is never shown or logged (the engine's logger is silent).
+- **Rationale**: FR-005, FR-016, FR-019.
+
 ## Open items
 
 None.
