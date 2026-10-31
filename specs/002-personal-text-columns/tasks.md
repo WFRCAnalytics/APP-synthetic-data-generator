@@ -148,14 +148,14 @@
 ## Phase 7: Polish & Cross-Cutting
 
 - [x] T061 [P] Extend `tests/unit/determinism.test.ts` with personal, free text and short string columns: byte-identical output across chunk sizes and seeds, and changing one of them changes no other column (SC-003)
-- [ ] T062 Record the person-timing sign-off lines for SC-008 (and the slice 1 SC-007 and SC-008) in this feature's `quickstart.md`
-- [ ] T048 [P] Extend `tests/e2e/a11y.spec.ts` to open the new editors in light and dark themes and fix any violation
-- [ ] T049 [P] Browser tests for the whole slice 2 flow and spec save, reload, load in `tests/e2e/quickstart.spec.ts` (scenarios A, D, E, F) in Chromium, then run `npm run test:e2e:browsers`
-- [ ] T050 [P] Update `src/app/HelpGuideModal.tsx`, `src/features/review/SpecContentsNotice.tsx` and `README.md` for the new column kinds and the "not in this version" list
+- [x] T062 Record the person-timing sign-off lines for SC-008 (and the slice 1 SC-007 and SC-008) in this feature's `quickstart.md`
+- [x] T048 [P] Extend `tests/e2e/a11y.spec.ts` to open the new editors in light and dark themes and fix any violation
+- [x] T049 [P] Browser tests for the whole slice 2 flow and spec save, reload, load in `tests/e2e/quickstart.spec.ts` (scenarios A, D, E, F) in Chromium, then run `npm run test:e2e:browsers`
+- [x] T050 [P] Update `src/app/HelpGuideModal.tsx`, `src/features/review/SpecContentsNotice.tsx` and `README.md` for the new column kinds and the "not in this version" list
 - [x] T051 Measure the generate worker bundle growth against the 1.5 MB budget and record it in `research.md` (R11); lazy-load by kind if exceeded
-- [ ] T052 Run the 500 MB fixture with text columns (`SCALE_500MB=1 npx playwright test scale.spec`), extend `scripts/make-fixtures.mjs --large` with text columns if absent, and record the timings in `quickstart.md`
-- [ ] T053 Dependency audit update in slice 1 `research.md` (faker is now a runtime dependency; confirm it makes no requests) and deploy to Pages by pushing to main
-- [ ] T054 Run quickstart scenarios A to F in Chrome, Edge, Firefox and WebKit and record results in this feature's `quickstart.md`
+- [x] T052 Run the 500 MB fixture with text columns (`SCALE_500MB=1 npx playwright test scale.spec`), extend `scripts/make-fixtures.mjs --large` with text columns if absent, and record the timings in `quickstart.md`
+- [x] T053 Dependency audit update in slice 1 `research.md` (faker is now a runtime dependency; confirm it makes no requests) and deploy to Pages by pushing to main
+- [x] T054 Run quickstart scenarios A to F in Chrome, Edge, Firefox and WebKit and record results in this feature's `quickstart.md`
 - [ ] T055 Run `/speckit-converge` and mark the slice complete
 
 ---

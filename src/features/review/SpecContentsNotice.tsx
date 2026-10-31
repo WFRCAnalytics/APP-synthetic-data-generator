@@ -9,8 +9,9 @@ export function SpecContentsNotice() {
     <aside className="local-notice spec-notice" role="note" aria-label="What the spec contains">
       <FileText size={18} strokeWidth={1.75} aria-hidden="true" />
       <span>
-        The spec you can save will contain real category labels, exact minimum and maximum values, and the sentinel codes you confirm here, and
-        nothing else taken from your data: no rows, no IDs, no free text, no personal details. Use neutral codes or merging below if a label itself is sensitive.
+        The spec you can save will contain real category labels, exact minimum and maximum values, and the sentinel codes you confirm here. For IDs, names,
+        emails, addresses, phone numbers, free text and short codes it holds only counts, lengths, patterns and the kind of data, never a value. Nothing
+        else is taken from your data: no rows, no ID lists, no words. Use neutral codes or merging below if a label itself is sensitive.
       </span>
     </aside>
   );

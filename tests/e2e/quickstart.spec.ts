@@ -114,3 +114,84 @@ test("scenario D: reproducibility - same seed, byte-identical; one change affect
   expect(differing).toEqual(["float_2dp"]);
   expect(statSync(specPath).size).toBeLessThan(1_000_000);
 });
+
+// ---- Slice 2 (specs/002-personal-text-columns/quickstart.md) ----------------------------------
+
+test("slice 2 scenario A: names, emails, phones and addresses keep their counts and none is real", async ({ page }) => {
+  await profile(page, "text_50k.csv");
+  const real = parseCsv(readFileSync(join(ZOO, "text_50k.csv"), "utf8")).rows;
+  const realHeader = real[0];
+  const col = (rows: string[][], header: string[], name: string) => rows.slice(1).map((r) => r[header.indexOf(name)]);
+
+  await expect(page.locator('[data-column="respondent_name"]')).toContainText("Personal identifier");
+  await expect(page.locator('[data-column="email"]')).toContainText("Invented email addresses");
+  await expect(page.locator('[data-column="plate"]')).toContainText("Short string");
+
+  // A live sample of invented values, and a change of kind updates it.
+  const card = page.locator('[data-column="respondent_name"]');
+  await card.getByText("Settings", { exact: true }).click();
+  await expect(card.getByTestId("sample-respondent_name")).toContainText("Examples (invented)", { timeout: 30_000 });
+  const before = await card.getByTestId("sample-respondent_name").innerText();
+  await card.getByLabel("Kind").selectOption("last_name");
+  await expect(card.getByTestId("sample-respondent_name")).not.toHaveText(before, { timeout: 30_000 });
+  await card.getByLabel("Kind").selectOption("full_name");
+
+  await page.getByRole("button", { name: "Continue to Generate" }).click();
+  await generate(page);
+  const fake = parseCsv(await downloadText(page, /Download .*_fake\.csv/)).rows;
+  const fakeHeader = fake[0];
+  expect(fakeHeader).toEqual(realHeader);
+  expect(fake.length).toBe(real.length);
+
+  for (const name of ["respondent_name", "email", "phone", "address"]) {
+    const a = col(real, realHeader, name);
+    const b = col(fake, fakeHeader, name);
+    const distinct = (v: string[]) => new Set(v.filter((x) => x !== "" && x !== "NA")).size;
+    expect(distinct(b), `${name} distinct`).toBe(distinct(a));
+    expect(b.filter((x) => x === "" || x === "NA").length, `${name} missing`).toBe(a.filter((x) => x === "" || x === "NA").length);
+    const realSet = new Set(a);
+    expect(b.filter((x) => x !== "" && x !== "NA" && realSet.has(x)), `${name} real values written`).toEqual([]);
+  }
+});
+
+test("slice 2 scenario E: an SSN-style column is left out until it is acknowledged, then generated in the 900 range", async ({ page }) => {
+  await profile(page, "zoo_small.csv");
+  const ssn = page.locator('[data-column="ssn_like"]');
+  await expect(ssn).toContainText("Left out");
+  await ssn.getByText("Settings", { exact: true }).click();
+  await ssn.getByLabel(/I understand that invented social-security-style numbers/).check();
+  await expect(ssn).not.toContainText("Left out");
+
+  await page.getByRole("button", { name: "Continue to Generate" }).click();
+  await generate(page);
+  const rows = parseCsv(await downloadText(page, /Download .*_fake\.csv/)).rows;
+  const idx = rows[0].indexOf("ssn_like");
+  expect(idx).toBeGreaterThan(-1);
+  const values = rows.slice(1).map((r) => r[idx]).filter((v) => v !== "");
+  expect(values.length).toBeGreaterThan(1000);
+  for (const v of values) expect(v).toMatch(/^9\d\d-\d\d-\d{4}$/);
+
+  // Cleared again, the column goes back to being left out.
+  await page.getByRole("button", { name: /Review/ }).first().click();
+  await ssn.getByText("Settings", { exact: true }).click();
+  await ssn.getByLabel(/I understand that invented social-security-style numbers/).uncheck();
+  await expect(ssn).toContainText("Left out");
+});
+
+test("slice 2 scenario F: a slice 1 spec loads, and its unsupported column needs the file to change", async ({ page }) => {
+  await page.goto(APP);
+  await page.getByLabel("Load existing spec").setInputFiles(join(HERE, "../fixtures/spec-v1.json"));
+  await expect(page.getByRole("heading", { name: "Review columns" })).toBeVisible();
+  const email = page.locator('[data-column="respondent_email"]');
+  await expect(email).toContainText("Left out");
+  await email.getByText("Settings", { exact: true }).click();
+  await expect(email.getByLabel("Type")).toBeDisabled();
+  await expect(email.getByTestId("needs-source-file")).toContainText("Open the original file");
+
+  // The columns it can generate still do.
+  await page.getByRole("button", { name: "Continue to Generate" }).click();
+  await generate(page);
+  const rows = parseCsv(await downloadText(page, /Download .*_fake\.csv/)).rows;
+  expect(rows[0]).toEqual(["mode", "hh_id"]);
+  expect(rows.length - 1).toBe(200);
+});

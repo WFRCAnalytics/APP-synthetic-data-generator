@@ -353,6 +353,10 @@ Checked on 2026-10-31 against `package.json`, the production build in `dist/`, a
 - Production dependencies: 0 vulnerabilities.
 - Development tooling: 22 reported (19 moderate, 1 high, 2 critical), all in `vite`, `vitest`, `esbuild`, `minimatch` and `tinypool` at the versions this slice pins. They run only on a developer machine or in CI and are never shipped. They are resolved by moving the toolchain to current majors, which is T103 in the deferred backlog.
 
+### Added by slice 2 (2026-10-31)
+
+`@faker-js/faker` moved from development to runtime. It is a data package: it makes no request and holds no telemetry. Only its en and en_US word lists are bundled, and only into the generate worker (`bundle-wordlists.test.ts` fails the build otherwise); the generate worker grew by 0.43 MB. `npm audit --omit=dev` still reports 0 vulnerabilities, and the generate worker contains one network-related reference, the network counter patch.
+
 ### Added during the slice
 
 `@axe-core/playwright` (development only) runs automatic accessibility checks in the browser tests. It runs in the test browser and is not part of the build.

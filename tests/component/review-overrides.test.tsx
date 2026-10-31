@@ -573,7 +573,8 @@ describe("the spec notice (FR-038)", () => {
     expect(notice).toHaveTextContent(/real category labels/);
     expect(notice).toHaveTextContent(/exact minimum and maximum/);
     expect(notice).toHaveTextContent(/sentinel codes/);
-    expect(notice).toHaveTextContent(/no rows, no IDs, no free text/);
+    expect(notice).toHaveTextContent(/only counts, lengths, patterns and the kind of data, never a value/);
+    expect(notice).toHaveTextContent(/no rows, no ID lists, no words/);
   });
 
   it("stays visible while the user edits and filters", async () => {

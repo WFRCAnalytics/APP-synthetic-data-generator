@@ -11,7 +11,8 @@ Closing or reloading the page clears all real data from memory.
 
 The only artifact derived from your data is the **spec file** you choose to download. It holds
 summaries and settings only (category labels, exact min and max, sentinel codes, quantiles, ID
-patterns), never rows, ID lists, free text, personal identifiers or coordinates.
+patterns, and for names, emails, phone numbers, addresses, free text and short codes only counts,
+lengths and patterns), never rows, ID lists, free text, personal identifiers or coordinates.
 
 ## How it works
 
@@ -27,19 +28,28 @@ name and format) and run the code locally.
 
 ## Status
 
-The core flow works end to end for CSV files: choose a file, confirm the detected settings, review
-and change how each column is understood, generate, check the summaries, and download the fake file.
-On Review you can search and filter the columns, change a column's type, confirm sentinel codes and
-missing-value markers, type a date pattern, choose how numbers are generated, leave columns out, and
-turn on the optional protections (merge rare categories, neutral labels, rename). A counter in the
-header shows every network request since the page loaded, split into local and outside (always 0),
-and the page's security policy makes the browser refuse any request to another site.
+The first two slices work end to end for CSV files: choose a file, confirm the detected settings,
+review and change how each column is understood, generate, check that every summary was met, and
+download the fake file and the spec.
 
-Next: survey ID patterns, saving and loading a spec, and a virtualized column list for very wide
-tables. Everything still to do is tracked in
-[`specs/001-csv-synthetic-slice/tasks.md`](specs/001-csv-synthetic-slice/tasks.md).
+- **Column types**: categorical (including coded integers and Yes/No), integers and decimals, dates
+  and times, survey IDs (a pattern with an editor and a live sample), **personal identifiers**
+  (names, emails, US phone numbers, street addresses, URLs, IP addresses, and social-security-style
+  numbers after an explicit acknowledgement), **free text** (lengths only) and **short strings**
+  (a character pattern). Personal values are always invented from word lists; none is copied.
+- **Review**: search, filters, per-column overrides, optional protections, and a virtualized list for
+  very wide tables.
+- **Spec files**: save, load (version 1 and 2), and generate from a spec alone.
+- **Privacy**: a live request counter and a strict Content-Security-Policy. Tests prove that no
+  real value of any column reaches the page, the spec, the preview, the file or an error message.
+- **Browsers**: tested in Chrome, Edge, Firefox and WebKit.
 
-On a 525 MB, 117-column file it profiles in about 80 seconds and generates in about 50.
+Not yet: Excel and Parquet files, coordinates, other languages for invented values, several tables,
+the offline zip release. The backlog is in
+[`specs/001-csv-synthetic-slice/tasks.md`](specs/001-csv-synthetic-slice/tasks.md) and the slice 2
+list in [`specs/002-personal-text-columns/tasks.md`](specs/002-personal-text-columns/tasks.md).
+
+On a 525 MB, 117-column file it profiles in about 80 seconds and generates in about 60.
 
 ## Documents
 
@@ -47,6 +57,8 @@ On a 525 MB, 117-column file it profiles in about 80 seconds and generates in ab
 - [`.specify/memory/constitution.md`](.specify/memory/constitution.md): project principles
 - [`specs/001-csv-synthetic-slice/`](specs/001-csv-synthetic-slice/): spec, plan, research, data
   model, contracts, quickstart and tasks for the first slice
+- [`specs/002-personal-text-columns/`](specs/002-personal-text-columns/): the same for personal
+  identifier, free text and short string columns
 
 ## Development
 

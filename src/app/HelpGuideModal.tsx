@@ -38,9 +38,14 @@ export function HelpGuideModal({ open, onClose }: HelpGuideModalProps) {
         <ul>
           <li>category labels with how many rows have each, sentinel codes and missing-value counts;</li>
           <li>the minimum and maximum of numeric, date and time columns, with percentiles;</li>
-          <li>for survey IDs, a pattern such as UT-999-999, optional minimum and maximum, and how often IDs repeat.</li>
+          <li>for survey IDs, a pattern such as UT-999-999, optional minimum and maximum, and how often IDs repeat;</li>
+          <li>for names, emails, phone numbers and addresses, only the kind of data, how many distinct values there are and how often they repeat;</li>
+          <li>for free text and short codes, only the lengths and the pattern of characters.</li>
         </ul>
-        <p>It never holds lists of IDs, free text, names, emails, phone numbers, addresses or coordinates. Those columns are left out of the fake file.</p>
+        <p>
+          It never holds lists of IDs, a name, an email, a phone number, an address, a word of free text or a coordinate. The fake file holds invented values of the same kind. Coordinate
+          columns are left out.
+        </p>
 
         <h3>Optional protections</h3>
         <p>All off by default, because analysis code filters on exact labels and column names:</p>
@@ -62,13 +67,16 @@ export function HelpGuideModal({ open, onClose }: HelpGuideModalProps) {
             <strong>Mean and spread can shift slightly after rounding.</strong> The optional &ldquo;restore the exact mean and spread&rdquo; setting fixes this, at the cost of a few values moving.
           </li>
           <li>
+            <strong>Invented values can coincide.</strong> Invented names and addresses come from word lists, never from your data, but a common name may match a real one by chance. A name column does not match the email in the same row.
+          </li>
+          <li>
             <strong>Labels are real.</strong> Category labels, sentinel codes and min and max values come from your data. Rare categories stay visible unless you merge them.
           </li>
           <li>
             <strong>Memory limits table size.</strong> Tables up to about 500 MB are supported. Files in some encodings need twice their size in memory.
           </li>
           <li>
-            <strong>Not in this version.</strong> Excel and Parquet files, personal identifier columns, free text, coordinates, and several tables at once.
+            <strong>Not in this version.</strong> Excel and Parquet files, coordinates, languages other than US English for invented names and addresses, and several tables at once.
           </li>
           <li>
             <strong>Browsers.</strong> Chrome and Edge are fully supported; Firefox and Safari work and download one file at a time.

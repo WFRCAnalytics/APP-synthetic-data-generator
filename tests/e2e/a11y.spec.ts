@@ -35,6 +35,11 @@ for (const scheme of ["light", "dark"] as const) {
       await expect(page.getByRole("heading", { name: "Review columns" })).toBeVisible({ timeout: 180_000 });
       await page.locator('[data-column="hh_id"]').getByText("Settings", { exact: true }).click();
       await page.locator('[data-column="cat_str_5"]').getByText("Settings", { exact: true }).click();
+      // The editors added with personal, free text and short string columns (specs/002)
+      for (const column of ["person_name", "phone_us", "ssn_like", "comments", "plate"]) {
+        await page.locator(`[data-column="${column}"]`).getByText("Settings", { exact: true }).click();
+      }
+      await expect(page.locator('[data-column="person_name"]').getByTestId("sample-person_name")).toContainText("Examples (invented)", { timeout: 30_000 });
       expect(await violations(page), "Review").toEqual([]);
 
       await page.getByRole("button", { name: "Continue to Generate" }).click();
