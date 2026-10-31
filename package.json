@@ -9,9 +9,9 @@
     "node": ">=20"
   },
   "scripts": {
-    "predev": "node scripts/copy-duckdb.mjs",
+    "predev": "node scripts/copy-duckdb.mjs && node scripts/fetch-extensions.mjs",
     "dev": "vite",
-    "prebuild": "node scripts/copy-duckdb.mjs",
+    "prebuild": "node scripts/copy-duckdb.mjs && node scripts/fetch-extensions.mjs",
     "build": "npm run typecheck && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
@@ -23,7 +23,7 @@
     "test:e2e:browsers": "node scripts/e2e-browsers.mjs",
     "fixtures": "node scripts/make-fixtures.mjs",
     "verify:roundtrip": "node scripts/verify-roundtrip.mjs",
-    "build:spike": "node scripts/copy-duckdb.mjs && vite build --mode spike"
+    "build:spike": "node scripts/copy-duckdb.mjs && node scripts/fetch-extensions.mjs && vite build --mode spike"
   },
   "dependencies": {
     "@duckdb/duckdb-wasm": "1.33.1-dev57.0",

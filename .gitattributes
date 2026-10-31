@@ -9,3 +9,6 @@ tests/fixtures/** -text
 # Binary assets
 *.png binary
 *.wasm binary
+
+*.xlsx binary
+*.xls binary
