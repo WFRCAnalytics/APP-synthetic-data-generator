@@ -76,6 +76,7 @@ describe("a workbook spec", () => {
     expect(await within(card("fee")).findByLabelText("Format in the Excel file")).toHaveValue("#,##0.00");
     await user.click(screen.getByRole("button", { name: "Continue to Generate" }));
     expect(await screen.findByText(/survey_fake\.xlsx/)).toBeInTheDocument();
+    expect(screen.getByTestId("one-sheet-note")).toHaveTextContent("holds one sheet, “Survey Data”");
   });
 
   it("leaves a CSV spec producing a CSV", async () => {
@@ -85,6 +86,7 @@ describe("a workbook spec", () => {
     await screen.findByRole("heading", { name: "Review columns" });
     await user.click(screen.getByRole("button", { name: "Continue to Generate" }));
     expect(await screen.findByText(/trips_fake\.csv/)).toBeInTheDocument();
+    expect(screen.queryByTestId("one-sheet-note")).not.toBeInTheDocument();
   });
 });
 

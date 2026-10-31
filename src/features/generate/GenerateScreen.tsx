@@ -6,6 +6,7 @@ import { CircleCheck, CircleX, Download } from "lucide-react";
 import { parseSeed, type SessionState } from "../../app/session";
 import type { CheckRow } from "../../lib/generate/checks";
 import { GenerateProgress } from "./GenerateProgress";
+import { isExcelSettings } from "../../lib/profile/types";
 import { narrowIdColumns, patternFit, shortfallText } from "../../lib/profile/idCapacity";
 
 export interface GenerateScreenProps {
@@ -97,6 +98,12 @@ export function GenerateScreen(props: GenerateScreenProps) {
           </label>
           <span className="field-hint">Off by default so a fake file is never mistaken for the real one: {fakeFileName}</span>
         </div>
+
+        {session.settings && isExcelSettings(session.settings) && (
+          <p className="field-hint" data-testid="one-sheet-note">
+            The fake workbook holds one sheet, &ldquo;{session.settings.sheet}&rdquo;. Other sheets of the original workbook are not included.
+          </p>
+        )}
       </div>
 
       <div className="actions-row">

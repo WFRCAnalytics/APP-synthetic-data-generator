@@ -147,7 +147,7 @@
 - [x] T051 Dependency and bundle audit: the extension is a file, not a package; record the sizes of `public/duckdb-ext/` and the main and worker bundles in `research.md`, and the deploy workflow run that fetches the extension
 - [x] T052 Record the SheetJS decision (not needed, with the spike evidence) in `research.md` and update slice 1's research audit
 - [x] T053 Run quickstart scenarios A to E in Chrome, Edge, Firefox and WebKit, and record the results and the person-timing sign-off lines (SC-008 here, slice 1 SC-007 and SC-008) in this feature's `quickstart.md`
-- [ ] T054 Run `/speckit-converge` and mark the slice complete
+- [x] T054 Run `/speckit-converge` and mark the slice complete
 
 ---
 
@@ -183,3 +183,8 @@
 | US3 | 5 |
 | Polish | 8 |
 | Total | 54 |
+
+## Phase 8: Convergence
+
+- [x] T055 [P] Tell the user on the Generate screen that the fake workbook holds only the chosen sheet, naming the sheet (never other sheets' names or content), with a component test in `tests/component/flow.test.tsx` or `tests/component/spec-load.test.tsx`, per FR-012 (missing)
+- [x] T056 [P] Make the Help guide text match the decision in research R11 (a macro workbook is read safely, macros are never run or kept; only .xls is refused) in `src/app/HelpGuideModal.tsx`, per FR-018 (contradicts)
