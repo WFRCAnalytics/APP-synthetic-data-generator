@@ -75,11 +75,11 @@
 
 **Independent Test**: build twice and compare; run the workflow on a test tag or with `workflow_dispatch` in dry-run mode.
 
-- [ ] T019 [P] [US3] Unit test `tests/unit/release-tag.test.ts` for `scripts/check-tag.mjs`: `v0.2.0` passes against version `0.2.0`; `v0.2.1`, `0.2.0` and `v0.2.0-rc1` fail with the reason (the last allowed only in dry-run mode)
-- [ ] T020 [US3] Write `scripts/check-tag.mjs` to pass T019
-- [ ] T021 [P] [US3] Reproducibility test `tests/e2e/release-reproducible.spec.ts` (or a script check in the workflow): run `build-release` twice on one `dist/` and expect equal checksum lists and equal zip bytes (FR-012, SC-004)
-- [ ] T022 [US3] Write `.github/workflows/release.yml`: on `v*` tags and `workflow_dispatch` (dry run: build, verify and test but do not publish): checkout, Node 24, `npm ci`, lint, typecheck, unit tests, `npm run build`, bundle and extension checks as in `deploy.yml`, `check-tag`, `build-release`, `verify-release`, then the offline test on `ubuntu-latest` and `macos-latest` (`start.sh`) and `windows-latest` (`start.ps1`) using the built zip as an artifact, then `gh release create` with the zip and `CHECKSUMS.sha256`, named `v<app> (writes spec v<N>)`
-- [ ] T023 [P] [US3] Document the release steps in `README.md` (bump version, tag, what the workflow does, how to build locally and compare)
+- [x] T019 [P] [US3] Unit test `tests/unit/release-tag.test.ts` for `scripts/check-tag.mjs`: `v0.2.0` passes against version `0.2.0`; `v0.2.1`, `0.2.0` and `v0.2.0-rc1` fail with the reason (the last allowed only in dry-run mode)
+- [x] T020 [US3] Write `scripts/check-tag.mjs` to pass T019
+- [x] T021 [P] [US3] Reproducibility test `tests/e2e/release-reproducible.spec.ts` (or a script check in the workflow): run `build-release` twice on one `dist/` and expect equal checksum lists and equal zip bytes (FR-012, SC-004)
+- [x] T022 [US3] Write `.github/workflows/release.yml`: on `v*` tags and `workflow_dispatch` (dry run: build, verify and test but do not publish): checkout, Node 24, `npm ci`, lint, typecheck, unit tests, `npm run build`, bundle and extension checks as in `deploy.yml`, `check-tag`, `build-release`, `verify-release`, then the offline test on `ubuntu-latest` and `macos-latest` (`start.sh`) and `windows-latest` (`start.ps1`) using the built zip as an artifact, then `gh release create` with the zip and `CHECKSUMS.sha256`, named `v<app> (writes spec v<N>)`
+- [x] T023 [P] [US3] Document the release steps in `README.md` (bump version, tag, what the workflow does, how to build locally and compare)
 
 **Checkpoint**: a tag produces a verified release.
 
@@ -102,7 +102,7 @@
 
 ## Phase 7: Polish and Cross-Cutting
 
-- [ ] T028 [P] Add an "Offline copy" section to `README.md` (what it is, how to get it, that a launcher is needed and why, the version pairing) and a short entry in the Help guide
+- [x] T028 [P] Add an "Offline copy" section to `README.md` (what it is, how to get it, that a launcher is needed and why, the version pairing) and a short entry in the Help guide
 - [ ] T029 [P] Measure and record in `research.md`: zip size against `dist/`, unzip and open time on the reference laptop (SC-007), and the launcher's start time
 - [ ] T030 Run a dry-run of `release.yml` with `workflow_dispatch` on `main`, fix what it finds, record the run in `research.md`; the first real release is the maintainer's tag
 - [ ] T031 Run quickstart scenarios A to D locally, and record the results and the person sign-off line (SC-008: someone other than the author follows `README.txt` alone on a clean Windows machine) in `quickstart.md`

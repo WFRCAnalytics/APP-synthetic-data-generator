@@ -61,6 +61,32 @@ list in [`specs/002-personal-text-columns/tasks.md`](specs/002-personal-text-col
 
 On a 525 MB, 117-column file it profiles in about 80 seconds and generates in about 60.
 
+## Offline copy
+
+Every release has a zip that runs from a folder with no internet and no install, for machines that
+cannot reach the web page. Unzip it, then double-click `start.cmd` (Windows) or run `./start.sh`
+(macOS, Linux, needs `python3`). Browsers will not run an app straight from a file, so the zip holds a
+small launcher that shows the same site to your browser from that folder, on your computer only; it makes
+no outside connection. The zip also holds a one-page `README.txt`, `CHECKSUMS.sha256` (a SHA-256 for every
+file) and `LICENSES.md`. The release name and the page header show the app version and the spec file
+version it writes (for example `v0.2.0 · writes spec v3`), so a saved spec can be matched to a release.
+There is no auto-update: download a newer zip for a newer version.
+
+## Releasing
+
+1. Set the new `version` in `package.json` and commit it to `main`.
+2. Tag it `v<version>` (for example `v0.2.0`) and push the tag.
+3. The `Release (offline zip)` workflow runs lint, types, tests and the build, builds and verifies the
+   zip, runs the real launcher on Linux, macOS and Windows with every request that is not to the launcher
+   refused, and only then attaches the zip and `CHECKSUMS.sha256` to a release named
+   `v<version> (writes spec v<N>)`. A tag that is not `v<package version>` fails the first check.
+4. To try it without publishing, use Actions, Release (offline zip), Run workflow, with a tag name such as
+   `v0.2.0-rc1`.
+
+To build the same zip yourself: `npm run release` writes `release-out/`, `npm run verify:release` checks it,
+and `npx playwright test offline-zip offline-guard` runs it. The build is reproducible: the same commit
+gives the same file checksums (file times come from the commit date, or `SOURCE_DATE_EPOCH`).
+
 ## Documents
 
 - [`SPEC.md`](SPEC.md): the design document
@@ -69,6 +95,8 @@ On a 525 MB, 117-column file it profiles in about 80 seconds and generates in ab
   model, contracts, quickstart and tasks for the first slice
 - [`specs/002-personal-text-columns/`](specs/002-personal-text-columns/): the same for personal
   identifier, free text and short string columns
+- [`specs/003-excel-input-output/`](specs/003-excel-input-output/): Excel workbooks in and out
+- [`specs/004-offline-zip-release/`](specs/004-offline-zip-release/): the offline zip release
 
 ## Development
 

@@ -1,0 +1,99 @@
+name: Release (offline zip)
+
+# A version tag (v0.2.0, the version in package.json) builds the offline zip, checks it, runs the real
+# launcher against it on Linux, macOS and Windows with every non-local request refused, and then attaches
+# the zip and its checksum list to a GitHub Release named with the app and spec versions.
+# "Run workflow" is a dry run: everything except publishing, for a tag name you give.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag name to check in this dry run (nothing is published)"
+        default: "v0.2.0-rc1"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      # prebuild copies the pinned DuckDB-WASM binaries and fetches the matching Excel extension
+      - run: npm run build
+      - run: npx vitest run tests/unit/bundle-wordlists.test.ts
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test --project=chromium excel-extension
+      # The tag must be the release of package.json's version (a dry run also accepts v<version>-<pre-release>)
+      - run: node scripts/check-tag.mjs "$TAG" ${{ github.event_name == 'workflow_dispatch' && '--dry-run' || '' }}
+      - run: node scripts/build-release.mjs
+      - run: node scripts/verify-release.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-out
+          path: release-out
+          retention-days: 14
+
+  offline:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-out
+          path: release-out
+      - run: npx playwright install --with-deps chromium
+      # Unpacks the built zip, starts its own launcher (start.ps1 on Windows, start.sh elsewhere) and runs a
+      # full CSV and Excel session with every request that is not to the launcher refused.
+      - run: npx playwright test --project=chromium offline-zip offline-guard
+
+  publish:
+    # Only a real tag publishes; a manual dry run stops after the checks above.
+    if: github.event_name == 'push'
+    needs: [build, offline]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-out
+          path: release-out
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          name=$(node -p "require('./release-out/release.json').name")
+          zip=$(node -p "require('./release-out/release.json').zip")
+          cat > notes.md <<EOF
+          Offline copy of the Synthetic Data Generator. Unzip it, then run \`start.cmd\` (Windows) or \`./start.sh\` (macOS, Linux); \`README.txt\` inside explains it in one page.
+
+          - App version and the spec file version it writes are in the release name.
+          - \`CHECKSUMS.sha256\` lists a SHA-256 for every file in the zip; the zip also holds its own copy.
+          - Nothing in it sends data anywhere; the page header shows a counter of network requests.
+          EOF
+          gh release create "$TAG" "release-out/$zip" "release-out/CHECKSUMS.sha256" --repo "${{ github.repository }}" --title "$name" --notes-file notes.md
