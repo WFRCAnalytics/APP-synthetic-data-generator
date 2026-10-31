@@ -56,11 +56,11 @@ real data.
 
 ### Brand shell
 
-- [ ] T009 [P] Copy `src/theme/tokens.css`, `fonts.ts` and `useTheme.ts` from the Scoresheet reference app into `src/theme/`
-- [ ] T010 [P] Copy and adapt `app.css` into `src/styles/app.css`, and the `Modal`, `Badge`, `EmptyState`, `SelectField` and `ConfirmDialog` components into `src/components/`
-- [ ] T011 [P] Copy the WFRC logo into `src/assets/logo/` and adapt `AppHeader.tsx` into `src/app/AppHeader.tsx` (logo and header match the reference)
-- [ ] T012 Create `src/main.tsx`, `src/App.tsx`, the app state reducer in `src/app/state.ts` (steps `ingest`, `review`, `generate`; transitions from data-model.md; going back keeps overrides for columns whose name and type are unchanged) with a reducer test in `tests/unit/state.test.ts`, and `src/app/Stepper.tsx` that allows going back
-- [ ] T013 [P] Create `src/app/LocalNotice.tsx` (persistent "processed locally; reload clears data" notice) and mount it in `src/App.tsx`
+- [X] T009 [P] Copy `src/theme/tokens.css`, `fonts.ts` and `useTheme.ts` from the Scoresheet reference app into `src/theme/`
+- [X] T010 [P] Copy and adapt `app.css` into `src/styles/app.css`, and the `Modal`, `Badge`, `EmptyState`, `SelectField` and `ConfirmDialog` components into `src/components/`
+- [X] T011 [P] Copy the WFRC logo into `src/assets/logo/` and adapt `AppHeader.tsx` into `src/app/AppHeader.tsx` (logo and header match the reference)
+- [X] T012 Create `src/main.tsx`, `src/App.tsx`, the app state reducer in `src/app/state.ts` (steps `ingest`, `review`, `generate`; transitions from data-model.md; going back keeps overrides for columns whose name and type are unchanged) with a reducer test in `tests/unit/state.test.ts`, and `src/app/Stepper.tsx` that allows going back
+- [X] T013 [P] Create `src/app/LocalNotice.tsx` (persistent "processed locally; reload clears data" notice) and mount it in `src/App.tsx`
 
 ### Prototypes (VERIFY items from research.md; each ends by recording the result in research.md)
 

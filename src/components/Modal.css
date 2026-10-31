@@ -1,0 +1,50 @@
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  /* --overlay-backdrop (tokens.css) is derived from --shadow-color, which gets its own
+     dark-mode override there — fixes the same bug this hardcoded rgba(8, 27, 38, 0.5) had
+     in dark mode (that literal navy is bit-identical to dark mode's own page background,
+     so the "dimmed" backdrop was indistinguishable from an undimmed one). */
+  background: var(--overlay-backdrop);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  z-index: 100;
+}
+
+.modal {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  padding: var(--space-5);
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+  max-height: calc(100vh - var(--space-8));
+  overflow-y: auto;
+}
+
+.modal--sm {
+  max-width: 28rem;
+}
+
+.modal--md {
+  max-width: 36rem;
+}
+
+.modal--lg {
+  max-width: 48rem;
+}
+
+.modal--xl {
+  max-width: 72rem;
+}
+
+.modal h2 {
+  margin: 0 0 var(--space-2);
+}
+
+.modal > p:last-of-type {
+  margin-bottom: var(--space-4);
+}

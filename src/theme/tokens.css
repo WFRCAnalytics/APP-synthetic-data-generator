@@ -1,0 +1,552 @@
+/*
+ * T016/T017: WFRC brand values as CSS custom properties, light + dark mode.
+ *
+ * Source of truth for the raw brand values: research.md §10, itself fetched directly
+ * from https://github.com/WFRCAnalytics/wfrc-brand on 2026-08-20 (constitution
+ * Principle VII — sourced, not invented). Every hex value below traces back to that
+ * file's brand.yml / _wfrc-colors.scss / _wfrc-fonts.scss.
+ *
+ * Several values here are NOT the raw brand hex — they are accessibility-adjusted
+ * variants, each with a comment naming the raw brand token it derives from and the real
+ * WCAG contrast ratio that justified the adjustment (computed with the exact formula in
+ * src/lib/contrast.ts and mechanically re-verified by tests/unit/contrast.test.ts,
+ * T020). This is the constitution's own instruction in practice: "WCAG-reasonable
+ * contrast ... MUST be layered on top of these brand colors" (Principle VII) — raw brand
+ * hex values are used everywhere they already pass; adjusted variants are used only
+ * where the raw value measurably fails and only enough to clear the threshold.
+ *
+ * Text/UI tokens target WCAG 2.1 AA for normal text (4.5:1, spec SC-010). The chart
+ * categorical palette targets 3:1 (WCAG 1.4.11 non-text/graphical-object contrast,
+ * appropriate for chart fills rather than text) in both modes.
+ */
+
+:root {
+  /* Tells the browser which palette this page actually uses, so it renders NATIVE form
+   * chrome (the <input type="date"> calendar-picker icon, scrollbars in supporting
+   * browsers, etc.) to match instead of always assuming light — those aren't drawn from
+   * any token above, the browser paints them itself, and without this it keeps drawing
+   * them in light-mode style even against this app's dark background (found: the
+   * Selection Committee Meeting Date field's calendar icon stayed black in dark mode).
+   * A real CSS property, not a custom property, so unlike every value below it takes
+   * effect directly here rather than being consumed via var(). Same duplication pattern as
+   * every other theme-dependent value in this file: light here, dark override in both the
+   * @media block and the explicit data-theme="dark" block further down. */
+  color-scheme: light;
+
+  /* ---- Primary WFRC brand tokens (raw, unmodified) ---- */
+  --color-wfrc-blue: #023c5b;
+  --color-wfrc-secondary-blue: #52b6d5;
+  --color-wfrc-yellow: #f8b93e; /* fails AA as small text-on-white (research.md §10) —
+    used only as a background/border/accent with a dark foreground on top, never as
+    text color itself. */
+
+  /* ---- Semantic tokens: light mode ---- */
+  --color-foreground: #151515; /* brand.yml "black" */
+  --color-background: #ffffff; /* brand.yml "white" */
+  --color-heading: var(--color-wfrc-blue); /* brand.yml's own light-mode heading color */
+  /* Raw wfrc-secondary-blue as link text on white is 2.33:1 (fails AA badly) — this is
+     an accessibility-adjusted darken of the same hue, 4.52:1 against white. Dark mode
+     uses the raw brand value unmodified (see below — it already passes there). */
+  --color-link: #397f95;
+  /* Raw brand gray (#7f7a76) as text on white is 4.24:1 — fails AA normal text (4.5:1)
+     by a hair. Moved out of the "raw, unmodified" brand-token block above for that
+     reason (it's no longer literally that) and darkened just enough to clear the
+     threshold, 4.82:1 against white — same treatment as --color-link just above.
+     Found in a manual sweep after the dark-mode elevation fixes: unlike --color-link,
+     this pairing had never been added to contrast.test.ts's textPairs, despite being
+     used as text everywhere (field hints, stat labels, table header labels, page
+     subtitles) — see that test for the pairing added alongside this fix. Dark mode's
+     own --color-wfrc-gray override (below) already passes and is unaffected by this. */
+  --color-wfrc-gray: #76716e;
+  --color-primary: var(--color-wfrc-blue);
+  --color-primary-foreground: #ffffff; /* 11.67:1 on wfrc-blue */
+  --color-accent-background: var(--color-wfrc-yellow);
+  --color-accent-foreground: #151515; /* 10.44:1 on wfrc-yellow */
+  --color-border: #d8d5d2;
+  --color-code-background: #e6ebf1; /* matches $code-bg in wfrc-light.scss, per brand.yml */
+  --color-code-text: var(--color-wfrc-blue);
+
+  /* ---- Chart categorical palette: RTP set (primary, fixed order) ----
+     Constitution Principle VII: per-firm chart colors MUST come from this palette, never
+     invented. Where a raw RTP hex falls below 3:1 against the light background, it is
+     darkened just enough to clear that threshold (comment notes the raw value). */
+  --chart-1: #3f748e; /* rtp-blue — 5.12:1, unmodified */
+  --chart-2: #789d4b; /* rtp-green — 3.12:1, unmodified */
+  --chart-3: #c48839; /* rtp-mustard, darkened from #c98b3a (2.90:1 -> 3.03:1) */
+  --chart-4: #9d4879; /* rtp-fuschia — 5.77:1, unmodified */
+  --chart-5: #608a8f; /* rtp-turquoise — 3.80:1, unmodified */
+  --chart-6: #c23c33; /* rtp-red — 5.27:1, unmodified */
+  --chart-7: #585377; /* rtp-purple — 7.20:1, unmodified */
+  --chart-8: #597f72; /* rtp-seafoam — 4.46:1, unmodified */
+  --chart-9: #6f2d3d; /* rtp-maroon — 9.91:1, unmodified */
+  --chart-10: #cb7e72; /* rtp-pink, darkened from #e28c7f (2.53:1 -> 3.10:1) */
+
+  /* ---- Chart categorical palette: Wasatch Choice set (overflow, past 10 firms) ----
+     Several WC colors are pastel map-fill tones and fail even the 3:1 graphical
+     threshold against white outright — darkened here for the same reason as above. */
+  --chart-11: #a62966; /* wc-metro — 6.71:1, unmodified */
+  --chart-12: #e65937; /* wc-urban — 3.59:1, unmodified */
+  --chart-13: #c88433; /* wc-city, darkened from #f2a03e (2.13:1 -> 3.09:1) */
+  --chart-14: #a7951a; /* wc-neighborhood, darkened from #f8dc26 (1.38:1 -> 3.02:1) */
+  --chart-15: #989479; /* wc-residential, darkened from #fdf7ca (1.09:1 -> 3.07:1) */
+  --chart-16: #869a79; /* wc-open-space, darkened from #a3bb93 (2.08:1 -> 3.04:1) */
+  --chart-17: #ab8d90; /* wc-employment, darkened from #f4c9cd (1.49:1 -> 3.02:1) */
+  --chart-18: #968e9d; /* wc-industrial, darkened from #ded2e8 (1.45:1 -> 3.16:1) */
+
+  /* ---- Typography (research.md §10 / brand.yml) ---- */
+  --font-body:
+    "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial,
+    sans-serif;
+  --font-heading: "Inter", var(--font-body);
+  --font-mono:
+    "Fira Code", SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
+
+  /* ---- Design system layer (added in the SaaS-polish pass, on top of the brand tokens
+   * above — constitution Principle VII: layout/spacing/hierarchy polish, not a rebrand).
+   * Every color below either names an existing brand-derived value or is composed from one
+   * via color-mix()/rgb(); no new hex values are introduced here. ---- */
+
+  /* Spacing — 4px base grid */
+  --space-1: 0.25rem; /* 4px */
+  --space-2: 0.5rem; /* 8px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem; /* 16px */
+  --space-5: 1.5rem; /* 24px */
+  --space-6: 2rem; /* 32px */
+  --space-7: 3rem; /* 48px */
+  --space-8: 4rem; /* 64px */
+
+  /* Type scale */
+  --text-xs: 0.75rem; /* 12px */
+  --text-sm: 0.875rem; /* 14px */
+  --text-base: 1rem; /* 16px */
+  --text-lg: 1.125rem; /* 18px */
+  --text-xl: 1.375rem; /* 22px */
+  --text-2xl: 1.75rem; /* 28px */
+  --text-3xl: 2.25rem; /* 36px — page h1 only */
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+
+  /* Radius */
+  --radius-sm: 4px; /* inputs, badges */
+  --radius-md: 8px; /* cards, buttons */
+  --radius-lg: 12px; /* modals, hero panels */
+  --radius-full: 999px; /* pills */
+
+  /* Elevation — restrained on purpose (civic/procurement tone, not a glossy dashboard).
+   * --shadow-color is an RGB triplet reused as a consistent shadow tint via rgb(... /
+   * alpha) instead of a flat rgba(0,0,0,x). In light mode it's the dark brand
+   * background's own value (8 27 38) — a dark navy shadow reads clearly against a white
+   * surface. That same value is WRONG in dark mode, though: it's bit-identical to dark
+   * mode's own --color-background, so a shadow "tinted" with it is mathematically the
+   * same color as the surface it's supposed to darken — zero contrast, not just subtle,
+   * fully invisible (found in manual testing: hover elevation on Load's entry cards and
+   * modal box-shadow-lg were both silently no-ops in dark mode). Dark mode gets its own
+   * override below (pure black — genuinely darker than the dark surface, unlike the navy
+   * it replaces) plus --shadow-ring, a light-mode no-op that becomes a visible highlight
+   * rim in dark mode: a drop shadow alone still reads weakly against a near-black page
+   * even once it's black instead of navy, so dark-mode "elevation" leans on the more
+   * conventional dark-UI technique of a light edge highlight, not shadow alone. */
+  --shadow-color: 8 27 38;
+  --shadow-ring: 0 0 0 0 transparent; /* no-op layer in light mode — shadows alone
+    already read clearly against a light background */
+  --shadow-sm: var(--shadow-ring), 0 1px 3px rgb(var(--shadow-color) / 0.12);
+  --shadow-md: var(--shadow-ring), 0 4px 12px rgb(var(--shadow-color) / 0.14);
+  --shadow-lg: var(--shadow-ring), 0 12px 32px rgb(var(--shadow-color) / 0.22); /* replaces
+    ConfirmDialog's previously hardcoded box-shadow */
+
+  /* Hover-only ring, stronger than the resting --shadow-ring (double the opacity, double
+   * the thickness in dark mode) — manual testing found the resting ring alone plus the
+   * lift/shadow-deepening on the interactive card's hover state still read as too subtle a
+   * "this is now the active one" signal in dark mode. A no-op in light mode, same as the
+   * resting ring, for the same reason: light mode's shadow deepening alone already reads
+   * clearly. Used ONLY by app.css's hover rule for interactive cards — the resting-state
+   * ring/shadow-md is untouched by this token. */
+  --shadow-ring-hover: 0 0 0 0 transparent;
+
+  /* Modal backdrop dim — reuses --shadow-color rather than its own hex, so fixing that one
+   * token's dark-mode invisibility (above) fixes this too, no separate override needed.
+   * Previously a hardcoded `rgba(8, 27, 38, 0.5)` in Modal.css: identical bug to the
+   * shadow's, for the identical reason (that literal navy = dark mode's own background). */
+  --overlay-backdrop: rgb(var(--shadow-color) / 0.5);
+
+  /* Motion */
+  --transition-fast: 120ms ease;
+  --transition-base: 180ms ease;
+
+  /* Focus ring — one definition, applied to every focusable element */
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--color-primary) 35%, transparent);
+
+  /* Semantic status colors — reuse existing brand-derived hexes, don't invent new ones.
+   * --color-danger names the value already used 3x ad hoc in app.css (= --chart-6). */
+  --color-success: var(--chart-2); /* rtp-green, already brand/contrast-verified */
+  /* White-on-green is only 3.12:1 (fails AA normal text) — #789d4b is identical in both
+     light and dark mode (tokens.css above), so one dark foreground covers both; no
+     per-mode override needed (verified: 5.63:1 against this exact green). */
+  --color-success-foreground: #081b26;
+  --color-danger: #c23c33;
+  --color-danger-foreground: #ffffff; /* 5.27:1, verified */
+  --color-warning-foreground: var(--color-accent-foreground); /* reuse existing pairing */
+
+  /* .banner-error's own token (not inlined in app.css) — dark mode needs a different MIX
+   * PERCENTAGE than light, not a different --color-danger (danger is deliberately identical
+   * in both modes, already a vivid, unmodified-enough red). Manual sweep found this fill
+   * reads weak as a distinct "highlighted region" in EITHER mode on its own — the border
+   * (--color-danger at full strength) is what actually signals "error" — but dark mode was
+   * measurably weaker still: mixing a mid-dark red into an already near-black background
+   * barely differentiates the fill from the page (1.15:1 vs light's 1.35:1), the same
+   * "numerically different, visually collapses" family as the chart/modal/shadow fixes.
+   * Dark mode's own override (below) uses a stronger mix so it reads at least as distinctly
+   * as light's, mirroring how .banner-warning's dark mode already ends up stronger than its
+   * light mode (not a coincidence there either — a bright accent mixed into a dark surface
+   * naturally separates more than the same mix into a light one; danger's mid-dark red does
+   * the opposite, so it needs an explicit per-mode percentage rather than relying on that
+   * same effect). Text stays enormously safe either way (12.37:1 dark), so there's no
+   * legibility trade-off in going stronger. */
+  --banner-error-background: color-mix(in srgb, var(--color-danger) 20%, var(--color-background));
+}
+
+/*
+ * Dark-mode block, guarded by :not([data-theme="light"]) rather than bare :root: this is
+ * the SYSTEM-preference-driven default, and an explicit "light" override (set by
+ * useTheme.ts via data-theme="light" on <html>) must be able to suppress it even when the
+ * OS itself prefers dark. The mirror case — an explicit "dark" override winning even when
+ * the OS prefers light — can't be expressed inside this media query at all (the media
+ * query itself never matches when the OS is light), so it's a separate bare-selector block
+ * below, duplicating these same values on purpose. Both blocks MUST be kept in sync; the
+ * `@media print` block further down is explicitly written to out-specificity BOTH of them
+ * so printing stays forced-light regardless of which one would otherwise apply.
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    /* ---- Semantic tokens: dark mode ---- */
+    --color-foreground: #ffffff; /* brand.yml "white" */
+    --color-background: #081b26; /* brand.yml's dedicated dark bg — deliberately richer
+      than a plain darkened wfrc-blue */
+    --color-heading: #8fcfe3; /* brand.yml's own explicit dark-mode heading override
+      (lightened wfrc-secondary-blue) — 10.21:1 against the dark background */
+    --color-link: var(--color-wfrc-secondary-blue); /* raw brand value: 7.54:1 here, no
+      adjustment needed in this mode */
+    /* wfrc-blue itself is only 1.51:1 against the dark background — too low-contrast to
+       read as an accent here, so dark mode's primary accent uses the (already dark-mode-
+       safe) secondary-blue instead. Still an unmodified WFRC brand color, just the other
+       primary one. */
+    --color-primary: var(--color-wfrc-secondary-blue);
+    --color-primary-foreground: #081b26; /* 7.54:1 on the secondary-blue background —
+      white text there would only be 2.33:1 and fail outright */
+    /* Lightened from the raw WFRC brand gray (#7f7a76, 4.14:1 against this dark
+       background — fails AA) to #85817d, 4.55:1. Independent fix from light mode's own
+       darken of the same raw value above (#7f7a76 -> #76716e, for the opposite reason:
+       4.24:1 against WHITE failed AA too) — both modes needed their own adjustment off
+       the same raw brand hex, in opposite directions, for the same reason (AA text
+       contrast against that mode's own background). */
+    --color-wfrc-gray: #85817d;
+    --color-accent-background: var(--color-wfrc-yellow); /* 10.04:1 vs dark bg — safe
+      even unmodified */
+    --color-accent-foreground: #151515;
+    --color-border: #23394a;
+    --color-code-background: #10293a;
+    --color-code-text: #8fcfe3;
+
+    /* ---- Elevation: dark mode ---- */
+    /* Pure black, not the light-mode navy — genuinely darker than this mode's own
+       --color-background (#081b26), unlike the navy it replaces which WAS that exact
+       background color (see the light-mode definition's comment for the bug this fixes).
+       Also drives --overlay-backdrop (defined once, above, in terms of this token). */
+    --shadow-color: 0 0 0;
+    /* A crisp light rim around the raised element — the conventional dark-UI elevation
+       cue (surfaces read as "raised" via a light edge/tonal highlight, since a shadow
+       alone has very little contrast to work with against an already-dark page). Derived
+       from --color-foreground (white in dark mode) via color-mix rather than a bare
+       rgba(255,255,255,x) literal, consistent with how every other translucent overlay in
+       this file (--focus-ring, table-row hover, etc.) is composed from a named token. */
+    --shadow-ring: 0 0 0 1px color-mix(in srgb, var(--color-foreground) 12%, transparent);
+    /* Double the resting ring's opacity and thickness (12% -> 24%, 1px -> 2px) — a clearly
+       stronger, unmistakably distinct rim specifically for the interactive card's hover
+       state, so hovering reads as a real "this is now the active one" signal on top of the
+       lift and shadow deepening, not just the same constant edge every card has at rest. */
+    --shadow-ring-hover: 0 0 0 2px color-mix(in srgb, var(--color-foreground) 24%, transparent);
+
+    /* ---- Chart categorical palette: dark-mode-safe variants ---- */
+    --chart-1: #5c899f; /* rtp-blue, lightened from #3f748e (3.43:1 -> 4.63:1) */
+    --chart-2: #789d4b; /* rtp-green — 5.63:1, unmodified */
+    --chart-3: #c98b3a; /* rtp-mustard — 6.06:1, unmodified */
+    --chart-4: #9d4879; /* rtp-fuschia — 3.04:1, unmodified (already clears 3:1) */
+    --chart-5: #608a8f; /* rtp-turquoise — 4.63:1, unmodified */
+    --chart-6: #c23c33; /* rtp-red — 3.34:1, unmodified (already clears 3:1) */
+    --chart-7: #696485; /* rtp-purple, lightened from #585377 (2.44:1 -> 3.15:1) */
+    --chart-8: #597f72; /* rtp-seafoam — 3.94:1, unmodified */
+    --chart-9: #8c5764; /* rtp-maroon, lightened from #6f2d3d (1.77:1 -> 3.06:1) */
+    --chart-10: #e28c7f; /* rtp-pink — 6.94:1, unmodified */
+
+    --chart-11: #ad3971; /* wc-metro, lightened from #a62966 (2.62:1 -> 3.01:1) */
+    --chart-12: #e65937; /* wc-urban — 4.89:1, unmodified */
+    --chart-13: #f2a03e; /* wc-city — 8.26:1, unmodified */
+    --chart-14: #f8dc26; /* wc-neighborhood — 12.77:1, unmodified */
+    --chart-15: #fdf7ca; /* wc-residential — 16.18:1, unmodified */
+    --chart-16: #a3bb93; /* wc-open-space — 8.44:1, unmodified */
+    --chart-17: #f4c9cd; /* wc-employment — 11.78:1, unmodified */
+    --chart-18: #ded2e8; /* wc-industrial — 12.12:1, unmodified */
+
+    /* No dark-mode overrides needed here: --color-success-foreground and
+       --color-danger-foreground above already work in both modes (see their comments in
+       the :root block). */
+
+    /* 45% instead of light mode's 20% — see the :root definition's comment for why dark
+       mode needs a stronger mix than light rather than inheriting the same percentage. */
+    --banner-error-background: color-mix(in srgb, var(--color-danger) 45%, var(--color-background));
+  }
+}
+
+/* Explicit dark-theme override (useTheme.ts sets data-theme="dark" on <html> when the user
+ * has manually toggled to dark, regardless of OS preference) — same values as the
+ * @media (prefers-color-scheme: dark) block above, duplicated per the comment there. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-foreground: #ffffff;
+  --color-background: #081b26;
+  --color-heading: #8fcfe3;
+  --color-link: var(--color-wfrc-secondary-blue);
+  --color-primary: var(--color-wfrc-secondary-blue);
+  --color-primary-foreground: #081b26;
+  --color-wfrc-gray: #85817d;
+  --color-accent-background: var(--color-wfrc-yellow);
+  --color-accent-foreground: #151515;
+  --color-border: #23394a;
+  --color-code-background: #10293a;
+  --color-code-text: #8fcfe3;
+
+  /* Elevation: dark mode — see the @media (prefers-color-scheme: dark) block above for
+     the full explanation; duplicated per this file's own "both blocks must stay in sync"
+     rule. */
+  --shadow-color: 0 0 0;
+  --shadow-ring: 0 0 0 1px color-mix(in srgb, var(--color-foreground) 12%, transparent);
+  --shadow-ring-hover: 0 0 0 2px color-mix(in srgb, var(--color-foreground) 24%, transparent);
+
+  --chart-1: #5c899f;
+  --chart-2: #789d4b;
+  --chart-3: #c98b3a;
+  --chart-4: #9d4879;
+  --chart-5: #608a8f;
+  --chart-6: #c23c33;
+  --chart-7: #696485;
+  --chart-8: #597f72;
+  --chart-9: #8c5764;
+  --chart-10: #e28c7f;
+  --chart-11: #ad3971;
+  --chart-12: #e65937;
+  --chart-13: #f2a03e;
+  --chart-14: #f8dc26;
+  --chart-15: #fdf7ca;
+  --chart-16: #a3bb93;
+  --chart-17: #f4c9cd;
+  --chart-18: #ded2e8;
+
+  --banner-error-background: color-mix(in srgb, var(--color-danger) 45%, var(--color-background));
+}
+
+/*
+ * T043 / constitution Principle VII's explicit PDF carve-out: "legibility takes priority
+ * over strict brand-color literalism ... specifically" in print. This block forces every
+ * token back to its LIGHT-mode value for print, regardless of whether the screen is
+ * currently in dark mode — printing a page with dark-mode-tuned colors (chosen for
+ * contrast against a near-black background) onto white paper would defeat the exact
+ * contrast guarantees T020's test enforces for the two on-screen modes. Placed after the
+ * `prefers-color-scheme: dark` block on purpose: same specificity (`:root` inside a media
+ * query), so when both conditions are true at once (printing while the OS is in dark
+ * mode), this later block wins the cascade.
+ *
+ * CSS custom properties alone can't fix chart colors, though — theme/chartColors.ts reads
+ * these values via getComputedStyle and bakes them into SVG `fill` attributes at render
+ * time, which this stylesheet change can't retroactively rewrite. chartColors.ts listens
+ * for the `beforeprint` event and re-reads (now print-forced) values so charts re-render
+ * with print-safe colors just before the print dialog captures the page.
+ *
+ * Selector list below deliberately includes both data-theme variants, not just bare :root:
+ * `:root[data-theme="dark"]` (the explicit-override block above) has HIGHER specificity
+ * than a plain `:root` selector, so a plain `:root` print rule would lose to it — printing
+ * while explicitly toggled to dark would silently print in dark colors, defeating this
+ * entire carve-out. Listing `:root[data-theme="dark"]` here too matches its specificity
+ * exactly, so source order (this block is last) decides it correctly instead.
+ */
+@media print {
+  :root,
+  :root[data-theme="light"],
+  :root[data-theme="dark"] {
+    color-scheme: light;
+
+    --color-foreground: #151515;
+    --color-background: #ffffff;
+    --color-heading: #023c5b;
+    --color-link: #397f95;
+    --color-primary: #023c5b;
+    --color-primary-foreground: #ffffff;
+    --color-wfrc-gray: #76716e;
+    --color-accent-background: #f8b93e;
+    --color-accent-foreground: #151515;
+    --color-border: #d8d5d2;
+    --color-code-background: #e6ebf1;
+    --color-code-text: #023c5b;
+
+    --chart-1: #3f748e;
+    --chart-2: #789d4b;
+    --chart-3: #c48839;
+    --chart-4: #9d4879;
+    --chart-5: #608a8f;
+    --chart-6: #c23c33;
+    --chart-7: #585377;
+    --chart-8: #597f72;
+    --chart-9: #6f2d3d;
+    --chart-10: #cb7e72;
+    --chart-11: #a62966;
+    --chart-12: #e65937;
+    --chart-13: #c88433;
+    --chart-14: #a7951a;
+    --chart-15: #989479;
+    --chart-16: #869a79;
+    --chart-17: #ab8d90;
+    --chart-18: #968e9d;
+
+    --banner-error-background: color-mix(in srgb, var(--color-danger) 20%, var(--color-background));
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .card {
+    break-inside: avoid;
+    border-color: var(--color-border);
+  }
+
+  /* PRINT_PAGE_STYLE's usable content width (lib/pdf/printLayout.ts: 8.5in letter - 2 *
+   * 0.75in margin = 7in ≈ 672px at 96dpi) is much narrower than this table's on-screen
+   * container. table-layout:auto (app.css's default for every .data-table, including this
+   * one) lets a table grow WIDER than its declared 100% width whenever its columns' content
+   * can't otherwise fit on one line — with 6 columns including headers like "TLC Applicant
+   * Weighted Total", it reliably did, pushing the rightmost (Completion) column past the
+   * page's right edge, where the print engine simply clips it (no horizontal scroll exists
+   * on paper, unlike on screen). table-layout:fixed makes the table honor its declared width
+   * unconditionally instead, wrapping cell content within its column rather than growing the
+   * table. Paired with tighter cell padding and a relaxed .completion-bar min-width (each
+   * normally sized for a roomy on-screen card) so neither forces its own cell to overflow
+   * its now much narrower fixed-layout column. All three loaded from tokens.css BEFORE
+   * app.css (main.tsx's own import order) — `!important` here isn't optional specificity
+   * paranoia, it's the only way a rule from the earlier stylesheet can still beat app.css's
+   * base .data-table/.completion-bar rules, the same reason .no-print above already needs
+   * it. */
+  .ranked-firms-table {
+    table-layout: fixed !important;
+  }
+
+  .ranked-firms-table th,
+  .ranked-firms-table td {
+    padding: 4px 6px !important;
+  }
+
+  .ranked-firms-table .completion-bar {
+    min-width: 0 !important;
+  }
+}
+
+/*
+ * Always-light scope for the PDF export's dedicated print-only chart copy (see
+ * usePrintSafeChartColors.ts and OverallApplicantBarChartPrintCopy in
+ * OverallApplicantBarChart.tsx) — deliberately NOT gated by `@media print` or `data-theme`,
+ * unlike every other block on this page. Recharts bakes these custom properties into
+ * literal SVG `fill`/`stroke` attributes at React-render time, so a single chart instance
+ * can't show dark-mode colors on screen while ALSO being captured in light-mode colors for
+ * print — there's no CSS override that reaches back and rewrites an attribute React already
+ * wrote. The earlier approach (briefly forcing the whole app's `data-theme` to "light"
+ * right before react-to-print grabs the DOM) worked but visibly flashed the entire visible
+ * dashboard to light mode for an instant, which is a real photosensitivity concern, not
+ * just a cosmetic one. This scope lets a SEPARATE chart instance stay permanently in light
+ * colors, permanently off-screen (.print-chart-copy below) — nothing ever toggles, so
+ * nothing ever flashes.
+ *
+ * Values are identical to the base `:root` (light mode) declarations at the top of this
+ * file and to the `@media print` block just above — all three MUST be kept in sync (same
+ * requirement this file's dark-mode blocks already document for themselves).
+ */
+.chart-print-safe-scope {
+  --color-foreground: #151515;
+  --color-background: #ffffff;
+  --color-border: #d8d5d2;
+
+  --chart-1: #3f748e;
+  --chart-2: #789d4b;
+  --chart-3: #c48839;
+  --chart-4: #9d4879;
+  --chart-5: #608a8f;
+  --chart-6: #c23c33;
+  --chart-7: #585377;
+  --chart-8: #597f72;
+  --chart-9: #6f2d3d;
+  --chart-10: #cb7e72;
+  --chart-11: #a62966;
+  --chart-12: #e65937;
+  --chart-13: #c88433;
+  --chart-14: #a7951a;
+  --chart-15: #989479;
+  --chart-16: #869a79;
+  --chart-17: #ab8d90;
+  --chart-18: #968e9d;
+}
+
+/* Off-screen at all times on a live screen — real, nonzero layout WIDTH (NOT display:none,
+ * which would zero its box and leave Recharts nothing to measure/render into) positioned
+ * out of the viewport instead. Swaps into normal, visible, in-flow layout only inside the
+ * print rendering context — at that point its sibling .no-print chart (the theme-following,
+ * on-screen one) is hidden instead, so exactly one of the two ever appears in a given
+ * context. Width matches PRINT_PAGE_STYLE's usable content area (lib/pdf/printLayout.ts:
+ * 8.5in letter - 2 * 0.75in margin = 7in ≈ 672px at 96dpi).
+ *
+ * Deliberately no fixed height (content sizes it instead): the ONE-time version of this rule
+ * hardcoded height:320px to match OverallApplicantBarChart's own chart height, which happened
+ * to fit — but CriterionBreakdownChart/ReviewerScoreSpreadChart's print copies each also
+ * render their own title row ABOVE their chart (280px/320px), so their real content is taller
+ * than 320px. A fixed height clipped that off-screen (invisible, harmless) but, once printed
+ * (`overflow: visible` below), left the box's own layout height still locked at 320px while
+ * its content visually spilled out past it — overlapping whatever printed content came next.
+ * Letting height stay auto (both off-screen and in print) means the box's layout height
+ * always matches what's actually inside it, in both places. */
+.print-chart-copy {
+  position: absolute;
+  left: -99999px;
+  top: 0;
+  width: 672px;
+}
+@media print {
+  .print-chart-copy {
+    position: static;
+    width: 100%;
+  }
+}
+
+/* Generic version of the same off-screen/print-swap mechanic above, for arbitrary block
+ * content instead of one fixed-size chart — currently RankedFirmsTable.tsx's
+ * RankedFirmsTablePrintCopy (the always-every-firm, always-canonical-order, always-
+ * "expanded" twin of the interactive ranked-firms table; see that file's header comment).
+ * No fixed width/height: unlike a lone chart, this wraps plain HTML plus nested
+ * .print-chart-copy elements that already size themselves explicitly regardless of this
+ * wrapper's own dimensions, so there's nothing here that needs a specific width to render
+ * correctly while off-screen. */
+.print-only-block {
+  position: absolute;
+  left: -99999px;
+  top: 0;
+}
+@media print {
+  .print-only-block {
+    position: static;
+  }
+}

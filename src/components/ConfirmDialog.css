@@ -1,0 +1,7 @@
+/* Backdrop/panel styling now lives in Modal.css (shared primitive) — this file only keeps
+   the one rule specific to ConfirmDialog's own content layout. */
+.confirm-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
