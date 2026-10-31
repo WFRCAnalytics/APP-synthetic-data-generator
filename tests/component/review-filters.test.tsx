@@ -46,6 +46,12 @@ async function toReview(user: User) {
 }
 
 const shownNames = () => Array.from(document.querySelectorAll(".column-card")).map((c) => c.getAttribute("data-column"));
+/** 119 columns are listed through a window, so only the cards near the screen are in the page (FR-032). */
+const expectWindowed = () => {
+  const n = shownNames().length;
+  expect(n).toBeGreaterThan(0);
+  expect(n).toBeLessThan(119);
+};
 const count = () => screen.getByTestId("filter-count").textContent;
 
 describe("a table with more than a hundred columns", () => {
@@ -53,7 +59,7 @@ describe("a table with more than a hundred columns", () => {
     const user = userEvent.setup();
     render(<App />);
     await toReview(user);
-    expect(shownNames()).toHaveLength(119);
+    expectWindowed();
     expect(count()).toBe("Showing 119 of 119 columns");
   });
 });
@@ -84,7 +90,7 @@ describe("search", () => {
     expect(shownNames()).toEqual([]);
     expect(screen.getByText("No columns match these filters.")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Clear filters" }));
-    expect(shownNames()).toHaveLength(119);
+    expectWindowed();
   });
 
   it("ignores leading and trailing spaces", async () => {
@@ -159,7 +165,7 @@ describe("the type filter", () => {
     await user.type(screen.getByLabelText("Search columns"), "in");
     await user.click(screen.getByLabelText("Needs attention only"));
     await user.click(screen.getByRole("button", { name: "Clear filters" }));
-    expect(shownNames()).toHaveLength(119);
+    expectWindowed();
     expect(screen.queryByRole("button", { name: "Clear filters" })).not.toBeInTheDocument();
   });
 });
@@ -191,7 +197,7 @@ describe("the banner of columns that need a look", () => {
     expect(shownNames()).toEqual(["mode", "income", "email", "home_address"]);
     expect(screen.getByLabelText("Needs attention only")).toBeChecked();
     await user.click(screen.getByRole("button", { name: "Show all columns" }));
-    expect(shownNames()).toHaveLength(119);
+    expectWindowed();
   });
 
   it("names only the first few when many columns need a look", async () => {

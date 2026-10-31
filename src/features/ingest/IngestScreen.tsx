@@ -5,7 +5,9 @@ import { FileUp } from "lucide-react";
 import { useRef } from "react";
 import { EmptyState } from "../../components/EmptyState";
 import type { FileSettings } from "../../lib/profile/types";
-import type { Progress, SessionState } from "../../app/session";
+import type { SessionState } from "../../app/session";
+import { ProfileProgress } from "./ProfileProgress";
+import { SizeWarning } from "./SizeWarning";
 import { SpecErrors } from "../spec/SpecErrors";
 
 export interface IngestScreenProps {
@@ -32,19 +34,6 @@ const ENCODINGS: [FileSettings["encoding"], string][] = [
 ];
 
 const MAX_NAMES_SHOWN = 40;
-
-function ProgressBar({ progress, label }: { progress: Progress | null; label: string }) {
-  const known = progress && progress.total > 0;
-  return (
-    <div className="progress-block" role="status" aria-live="polite">
-      <label>
-        {label}
-        {known ? ` (${Math.round((progress.done / progress.total) * 100)}%)` : ""}
-        <progress max={known ? progress.total : undefined} value={known ? progress.done : undefined} />
-      </label>
-    </div>
-  );
-}
 
 export function IngestScreen({ session, onChooseFile, onChooseSpec, onEditSettings, onConfirm, onCancel }: IngestScreenProps) {
   const input = useRef<HTMLInputElement>(null);
@@ -104,7 +93,7 @@ export function IngestScreen({ session, onChooseFile, onChooseSpec, onEditSettin
 
       {phase === "idle" && !session.specProblems && <EmptyState icon={FileUp} message="Choose a CSV file to begin." hint="Nothing is uploaded; everything happens in this tab." />}
 
-      {phase === "opening" && <ProgressBar progress={null} label="Reading the start of the file" />}
+      {phase === "opening" && <ProfileProgress progress={null} label="Reading the start of the file" />}
 
       {settings && !session.specOnly && phase !== "idle" && phase !== "opening" && (
         <div className="card">
@@ -156,6 +145,8 @@ export function IngestScreen({ session, onChooseFile, onChooseSpec, onEditSettin
             Line endings: {settings.lineEnding.toUpperCase()} &middot; quoting: {settings.quoteStyle.replace("_", " ")} &middot; ends with a newline: {settings.trailingNewline ? "yes" : "no"}
           </p>
 
+          <SizeWarning fileSize={session.fileSize} encoding={settings.encoding} />
+
           {session.rowCount > 0 && (
             <p>
               <strong>{session.rowCount.toLocaleString("en-US")}</strong> rows and <strong>{names.length}</strong> columns.
@@ -184,15 +175,8 @@ export function IngestScreen({ session, onChooseFile, onChooseSpec, onEditSettin
         </div>
       )}
 
-      {phase === "loading" && <ProgressBar progress={session.progress} label="Reading the file" />}
-      {phase === "profiling" && (
-        <>
-          <ProgressBar progress={session.progress} label="Profiling columns" />
-          <button type="button" className="button button-secondary" onClick={onCancel}>
-            Cancel
-          </button>
-        </>
-      )}
+      {phase === "loading" && <ProfileProgress progress={session.progress} label="Reading the file" onCancel={onCancel} />}
+      {phase === "profiling" && <ProfileProgress progress={session.progress} label="Profiling columns" onCancel={onCancel} />}
     </section>
   );
 }

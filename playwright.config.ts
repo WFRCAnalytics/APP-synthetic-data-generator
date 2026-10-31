@@ -15,5 +15,14 @@ export default defineConfig({
     reuseExistingServer: true,
     timeout: 5 * 60 * 1000,
   },
-  projects: [{ name: "chromium", use: { browserName: "chromium" } }],
+  projects: [
+    { name: "chromium", use: { browserName: "chromium" } },
+    // Firefox and WebKit only run the single-file download test (`npm run test:e2e:browsers`).
+    ...(process.env.PW_ALL_BROWSERS === "1"
+      ? [
+          { name: "firefox", testMatch: /download-fallback\.spec\.ts/, use: { browserName: "firefox" as const } },
+          { name: "webkit", testMatch: /download-fallback\.spec\.ts/, use: { browserName: "webkit" as const } },
+        ]
+      : []),
+  ],
 });

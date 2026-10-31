@@ -5,6 +5,7 @@
 import { CircleCheck, CircleX, Download } from "lucide-react";
 import { parseSeed, type SessionState } from "../../app/session";
 import type { CheckRow } from "../../lib/generate/checks";
+import { GenerateProgress } from "./GenerateProgress";
 import { idFit, narrowIdColumns, shortfallText } from "../../lib/profile/idCapacity";
 
 export interface GenerateScreenProps {
@@ -70,7 +71,6 @@ export function GenerateScreen(props: GenerateScreenProps) {
   const seedOk = parseSeed(session.seedText) !== null;
   const running = gen.status === "running";
   const narrow = narrowIdColumns(session.profiles);
-  const percent = gen.progress && gen.progress.total > 0 ? Math.round((gen.progress.done / gen.progress.total) * 100) : 0;
 
   return (
     <section aria-labelledby="generate-heading">
@@ -103,11 +103,6 @@ export function GenerateScreen(props: GenerateScreenProps) {
         <button type="button" className="button button-primary" onClick={props.onGenerate} disabled={running || !seedOk || narrow.length > 0} aria-describedby={narrow.length > 0 ? "narrow-ids" : undefined}>
           {gen.status === "done" ? "Generate again" : "Generate"}
         </button>
-        {running && (
-          <button type="button" className="button button-secondary" onClick={props.onCancel}>
-            Cancel
-          </button>
-        )}
       </div>
       {narrow.length > 0 && (
         <div id="narrow-ids" className="banner banner-error" role="alert">
@@ -127,14 +122,7 @@ export function GenerateScreen(props: GenerateScreenProps) {
         </div>
       )}
 
-      {running && (
-        <div className="progress-block" role="status" aria-live="polite">
-          <label>
-            Generating ({percent}%)
-            <progress max={100} value={percent} />
-          </label>
-        </div>
-      )}
+      {running && <GenerateProgress progress={gen.progress} onCancel={props.onCancel} />}
 
       {gen.error && (
         <div className="banner banner-error" role="alert">

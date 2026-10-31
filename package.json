@@ -20,6 +20,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:e2e:browsers": "node scripts/e2e-browsers.mjs",
     "fixtures": "node scripts/make-fixtures.mjs",
     "verify:roundtrip": "node scripts/verify-roundtrip.mjs",
     "build:spike": "node scripts/copy-duckdb.mjs && vite build --mode spike"

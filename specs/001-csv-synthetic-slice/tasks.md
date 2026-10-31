@@ -235,16 +235,18 @@ with unsupported columns safely excluded.
 
 ### Tests for User Story 6
 
-- [ ] T084 [P] [US6] Component test that the column list virtualizes 120+ cards and search returns matching columns within a few hundred milliseconds in `tests/component/virtual-list.test.tsx` (the 15-second human timing in SC-008 is a manual check in T096)
-- [ ] T085 [P] [US6] Playwright test on the 500 MB fixture: profile under 5 minutes and generate plus export under 5 minutes with progress and a responsive page, in `tests/e2e/scale.spec.ts`. Run manually on the reference laptop (4 or more cores, 16 GB, current Chrome or Edge); CI runs only the small-fixture variant
-- [ ] T086 [P] [US6] Playwright test that Firefox and WebKit download a single file, in `tests/e2e/download-fallback.spec.ts`
+- [x] T084 [P] [US6] Component test that the column list virtualizes 120+ cards and search returns matching columns within a few hundred milliseconds in `tests/component/virtual-list.test.tsx` (the 15-second human timing in SC-008 is a manual check in T096)
+- [x] T085 [P] [US6] Playwright test on the 500 MB fixture: profile under 5 minutes and generate plus export under 5 minutes with progress and a responsive page, in `tests/e2e/scale.spec.ts`. Run manually on the reference laptop (4 or more cores, 16 GB, current Chrome or Edge); CI runs only the small-fixture variant
+  - T085 result (525 MB, 117 columns, Chromium): profile 83 s, generate and check 60 s, search 14 ms, worst frame 10 ms. Run with `SCALE_500MB=1 npx playwright test scale.spec`.
+- [x] T086 [P] [US6] Playwright test that Firefox and WebKit download a single file, in `tests/e2e/download-fallback.spec.ts`
 
 ### Implementation for User Story 6
 
-- [ ] T087 [US6] Virtualize the column list with `@tanstack/react-virtual` in `src/features/review/ColumnList.tsx` (keeps filters and search working)
-- [ ] T088 [US6] Add profiling progress and cancel (batch progress, `cancel` message) in `src/features/ingest/ProfileProgress.tsx` and the worker
-- [ ] T089 [US6] Add generation and export progress with cancel in `src/features/generate/GenerateProgress.tsx` and the generate worker
-- [ ] T090 [US6] Add the size warning (large files, and xlsx later) in `src/features/ingest/SizeWarning.tsx`
+  - T086 result: Chromium, Firefox and WebKit each download the fake CSV and the spec as single files (`npm run test:e2e:browsers`).
+- [x] T087 [US6] Virtualize the column list with `@tanstack/react-virtual` in `src/features/review/ColumnList.tsx` (keeps filters and search working)
+- [x] T088 [US6] Add profiling progress and cancel (batch progress, `cancel` message) in `src/features/ingest/ProfileProgress.tsx` and the worker
+- [x] T089 [US6] Add generation and export progress with cancel in `src/features/generate/GenerateProgress.tsx` and the generate worker
+- [x] T090 [US6] Add the size warning (large files, and xlsx later) in `src/features/ingest/SizeWarning.tsx`
 - [X] T091 [US6] If the T016 spike failed, implement profiling in column batches straight from the file handle in `src/workers/profile/batchFromHandle.ts`; otherwise mark this task done with "not needed" and the spike result
   - Not needed: the T016 spike passed (500 MB loads in 4.1 s; see research.md, Spike results).
 - [X] T092 [US6] If the T018 spike failed, implement streamed save via `showSaveFilePicker` where available in `src/features/generate/streamSave.ts`; otherwise mark done with "not needed"

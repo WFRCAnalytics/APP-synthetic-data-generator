@@ -8,7 +8,9 @@ import type { SessionState } from "../../app/session";
 import type { LocalEdits } from "../../lib/profile/edits";
 import type { ColumnOverrides } from "../../lib/profile/types";
 import { AttentionBanner } from "./AttentionBanner";
+import { ProfileProgress } from "../ingest/ProfileProgress";
 import { ColumnCard } from "./ColumnCard";
+import { ColumnList } from "./ColumnList";
 import { ColumnFilters } from "./ColumnFilters";
 import { countByType, filterProfiles, NO_FILTERS, type Filters } from "./filter";
 import { SpecContentsNotice } from "./SpecContentsNotice";
@@ -76,15 +78,7 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
         />
       </div>
 
-      {reprofiling && (
-        <div className="progress-block" role="status" aria-live="polite">
-          <label>
-            Profiling the columns again
-            {progress && progress.total > 0 ? ` (${Math.round((progress.done / progress.total) * 100)}%)` : ""}
-            <progress max={progress && progress.total > 0 ? progress.total : undefined} value={progress && progress.total > 0 ? progress.done : undefined} />
-          </label>
-        </div>
-      )}
+      {reprofiling && <ProfileProgress progress={progress} label="Profiling the columns again" />}
 
       {reviewError && (
         <div className="banner banner-error" role="alert">
@@ -97,8 +91,9 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
       {shown.length === 0 ? (
         <EmptyState icon={FileUp} message="No columns match these filters." hint="Clear the filters to see every column." />
       ) : (
-        <div className="column-grid">
-          {shown.map((p) => (
+        <ColumnList
+          profiles={shown}
+          renderCard={(p) => (
             <ColumnCard
               key={p.name}
               profile={p}
@@ -109,8 +104,8 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
               onOverride={(patch) => actions.overrideColumn(p.name, patch)}
               onCheckDate={(pattern) => actions.checkDatePattern(p.name, pattern)}
             />
-          ))}
-        </div>
+          )}
+        />
       )}
 
       <div className="actions-row">
