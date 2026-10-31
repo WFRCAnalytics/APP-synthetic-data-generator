@@ -128,6 +128,16 @@
   keep two versions from mixing; `index.html` shows the version so a stale tab is visible.
 - **Rationale**: FR-015.
 
+## R13: Measured (T029)
+
+Reference laptop (Windows 11, 2026-10-31), release 0.2.0:
+
+- **Size**: the zip is 18.2 MB for 78.0 MB of site files (48 files). SC-007 asks for no more than the site's total, which it meets by a wide margin because the engine and extension binaries compress well.
+- **Unzip**: 0.25 s (our own reader; Explorer's Extract All takes a few seconds more).
+- **Launcher**: 0.32 s from start to the `URL:` line; the first page answers in 59 ms.
+- **Offline test**: the full CSV and Excel sessions and the launcher cases pass in Chromium, Edge, Firefox and WebKit through `start.ps1` on Windows; `start.sh`'s server code was probed directly (types, `no-store`, traversal, methods, ports) and runs in CI on Linux and macOS.
+- **Findings from the work**: Windows' HTTP service registers a prefix by host name and may accept connections on other addresses, so `start.ps1` also refuses any request whose remote address is not loopback (contract updated). A client that stops reading a response blocks the single-threaded launcher until it disconnects; browsers always read, so this only matters to a hand-made client.
+
 ## Open items
 
 None.

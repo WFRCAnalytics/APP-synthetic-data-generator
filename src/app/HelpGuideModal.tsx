@@ -17,6 +17,11 @@ export function HelpGuideModal({ open, onClose }: HelpGuideModalProps) {
         <h2 id="help-title">Help &amp; guide</h2>
         <p className="field-hint">{versionLabel()}</p>
 
+        <h3>Offline copy</h3>
+        <p>
+          Every release has a zip that runs from a folder with no internet: unzip it and run <code>start.cmd</code> (Windows) or <code>./start.sh</code>. A small launcher shows the app to your browser from that folder, on this computer only. Its <code>README.txt</code> explains it on one page.
+        </p>
+
         <h3>How it works</h3>
         <ol>
           <li>

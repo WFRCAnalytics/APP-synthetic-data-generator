@@ -103,7 +103,7 @@
 ## Phase 7: Polish and Cross-Cutting
 
 - [x] T028 [P] Add an "Offline copy" section to `README.md` (what it is, how to get it, that a launcher is needed and why, the version pairing) and a short entry in the Help guide
-- [ ] T029 [P] Measure and record in `research.md`: zip size against `dist/`, unzip and open time on the reference laptop (SC-007), and the launcher's start time
+- [x] T029 [P] Measure and record in `research.md`: zip size against `dist/`, unzip and open time on the reference laptop (SC-007), and the launcher's start time
 - [ ] T030 Run a dry-run of `release.yml` with `workflow_dispatch` on `main`, fix what it finds, record the run in `research.md`; the first real release is the maintainer's tag
 - [ ] T031 Run quickstart scenarios A to D locally, and record the results and the person sign-off line (SC-008: someone other than the author follows `README.txt` alone on a clean Windows machine) in `quickstart.md`
 - [ ] T032 Run `/speckit-converge` and mark the slice complete
