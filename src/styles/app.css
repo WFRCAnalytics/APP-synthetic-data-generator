@@ -47,6 +47,7 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
+summary:focus-visible,
 [tabindex]:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
@@ -264,7 +265,7 @@ input[type="radio"]:disabled {
 
 .button-danger {
   background: transparent;
-  color: var(--color-danger);
+  color: var(--color-danger-text);
   border-color: var(--color-danger);
 }
 
@@ -345,6 +346,13 @@ input[type="radio"]:disabled {
   color: var(--color-primary);
 }
 
+/* The link colour does not reach 4.5:1 on a tinted banner, so links inside one read in the text
+   colour (still underlined and bold, so they stay recognisable as links). */
+.banner .button-link,
+.banner .button-link:hover {
+  color: var(--color-foreground);
+}
+
 .button-link:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
@@ -381,7 +389,8 @@ table.data-table thead th {
   font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--color-wfrc-gray);
+  /* The grey of hints falls just under 4.5:1 on this tinted row, so headers use the text colour. */
+  color: var(--color-foreground);
   background: color-mix(in srgb, var(--color-foreground) 4%, transparent);
 }
 

@@ -2,7 +2,7 @@
 // (the same pattern ConfirmDialog originated), now shared by ConfirmDialog, GetStartedModal,
 // and HelpGuideModal instead of three independent copies of the same plumbing.
 
-import { type ReactNode, useEffect } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 import "./Modal.css";
 
 export interface ModalProps {
@@ -30,13 +30,41 @@ export function Modal({
   size = "md",
   children,
 }: ModalProps) {
+  const panel = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (!open) return;
+    // Keyboard users: focus moves into the dialog, Tab stays inside it, and focus returns to
+    // whatever opened it when it closes.
+    const opener = document.activeElement as HTMLElement | null;
+    const focusables = () =>
+      Array.from(panel.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])') ?? []);
+    (focusables()[0] ?? panel.current)?.focus();
+
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
+      if (e.key === "Tab") {
+        const items = focusables();
+        if (items.length === 0) {
+          e.preventDefault();
+          return;
+        }
+        const first = items[0];
+        const last = items[items.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     }
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      opener?.focus?.();
+    };
   }, [open, onClose]);
 
   if (!open) return null;
@@ -44,6 +72,8 @@ export function Modal({
   return (
     <div className="modal-backdrop" role="presentation" onClick={onClose}>
       <div
+        ref={panel}
+        tabIndex={-1}
         className={`modal modal--${size}`}
         role={role}
         aria-modal="true"

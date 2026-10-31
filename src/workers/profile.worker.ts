@@ -50,7 +50,12 @@ let overridesInUse: Record<string, ColumnOverrides> = {};
 async function ensureEngine(): Promise<SqlRunner> {
   if (!engine) {
     engine = await createEngine(BASE);
-    sql = runnerFor(await engine.db.connect());
+    const runner = runnerFor(await engine.db.connect());
+    // Never fetch an extension from the internet (constitution Principle I); the CSV reader and
+    // everything else this app uses are built in.
+    await runner.run("SET autoinstall_known_extensions = false");
+    await runner.run("SET autoload_known_extensions = false");
+    sql = runner;
   }
   return sql as SqlRunner;
 }

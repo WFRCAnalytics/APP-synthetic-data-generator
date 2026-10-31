@@ -322,5 +322,37 @@ of the target, against several percent without it.
 
 - Changing the categorical limit profiles every column again (84 s on the 525 MB file), with a
   progress bar; one column's own changes re-profile only that column.
-- The settings of a card are built only when it is opened, so a hundred cards stay light, but the
-  list itself is not yet virtualized (User Story 6).
+- The settings of a card are built only when it is opened, so a hundred cards stay light. Lists
+  longer than 100 columns are drawn through a window (`ColumnList.tsx`), so a 117-column table keeps
+  only the cards near the screen in the page.
+
+## Dependency audit (T095)
+
+Checked on 2026-10-31 against `package.json`, the production build in `dist/`, and `npm audit`.
+
+### Runtime dependencies (shipped to users)
+
+| Package | Can it make a network request or send telemetry? | Verdict |
+|---|---|---|
+| `@duckdb/duckdb-wasm` | Loads its own worker and WASM from URLs the app gives it (same origin, `public/duckdb/`). DuckDB can fetch an extension from the internet when a query needs one. | Kept. The profile worker now sets `autoinstall_known_extensions` and `autoload_known_extensions` to false at start, and the CSP `connect-src 'self'` would block and count an attempt anyway. |
+| `react`, `react-dom` | No. The production build holds the string `reactjs.org/docs/error-decoder.html` in an error message, never fetched. | Kept. |
+| `valibot` | No. Pure validation. | Kept. |
+| `lucide-react` | No. Inline SVG components; no icon font or CDN. | Kept. |
+| `@tanstack/react-virtual` | No. Measures the DOM only. | Kept. |
+| `@fontsource/inter`, `poppins`, `fira-code` | No. Font files are bundled and served from the site; there is no Google Fonts request (an earlier version had one; it was removed). | Kept. |
+
+### Built bundle
+
+- Every `http(s)://` string in `dist/` is an XML namespace (w3.org), a code comment (`js-sha256`), or the React error-decoder text above. None is requested.
+- `XMLHttpRequest` appears in the two worker bundles only because the network counter wraps it (`src/workers/netpatch.ts`), and in DuckDB's own workers for same-origin loading.
+- No `sendBeacon`, `WebSocket` or `EventSource`, and no analytics, tracking or cookie code.
+- Browser tests (`tests/e2e/privacy.spec.ts`) record every request in a full session and find none outside the page's own origin.
+
+### `npm audit`
+
+- Production dependencies: 0 vulnerabilities.
+- Development tooling: 22 reported (19 moderate, 1 high, 2 critical), all in `vite`, `vitest`, `esbuild`, `minimatch` and `tinypool` at the versions this slice pins. They run only on a developer machine or in CI and are never shipped. They are resolved by moving the toolchain to current majors, which is T103 in the deferred backlog.
+
+### Added during the slice
+
+`@axe-core/playwright` (development only) runs automatic accessibility checks in the browser tests. It runs in the test browser and is not part of the build.

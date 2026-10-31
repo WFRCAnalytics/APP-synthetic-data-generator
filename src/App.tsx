@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useReducer, useState } from "react";
 import { AppHeader } from "./app/AppHeader";
+import { HelpGuideModal } from "./app/HelpGuideModal";
 import { NetworkCounter } from "./app/NetworkCounter";
 import { netCounter } from "./app/netMonitor";
 import { downloadBlob } from "./app/download";
@@ -15,6 +16,7 @@ export function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const session = useMemo(() => new Session(), []);
   const [data, setData] = useState(session.state);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => {
     const unsubscribe = session.subscribe(setData);
@@ -34,7 +36,7 @@ export function App() {
 
   return (
     <>
-      <AppHeader>
+      <AppHeader onOpenHelp={() => setHelpOpen(true)}>
         <NetworkCounter counter={netCounter} />
       </AppHeader>
       <main className="app-shell">
@@ -98,6 +100,7 @@ export function App() {
           </div>
         )}
       </main>
+      <HelpGuideModal open={helpOpen} onClose={() => setHelpOpen(false)} />
     </>
   );
 }

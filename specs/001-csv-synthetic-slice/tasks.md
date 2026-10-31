@@ -239,10 +239,10 @@ with unsupported columns safely excluded.
 - [x] T085 [P] [US6] Playwright test on the 500 MB fixture: profile under 5 minutes and generate plus export under 5 minutes with progress and a responsive page, in `tests/e2e/scale.spec.ts`. Run manually on the reference laptop (4 or more cores, 16 GB, current Chrome or Edge); CI runs only the small-fixture variant
   - T085 result (525 MB, 117 columns, Chromium): profile 83 s, generate and check 60 s, search 14 ms, worst frame 10 ms. Run with `SCALE_500MB=1 npx playwright test scale.spec`.
 - [x] T086 [P] [US6] Playwright test that Firefox and WebKit download a single file, in `tests/e2e/download-fallback.spec.ts`
+  - T086 result: Chromium, Firefox and WebKit each download the fake CSV and the spec as single files (`npm run test:e2e:browsers`).
 
 ### Implementation for User Story 6
 
-  - T086 result: Chromium, Firefox and WebKit each download the fake CSV and the spec as single files (`npm run test:e2e:browsers`).
 - [x] T087 [US6] Virtualize the column list with `@tanstack/react-virtual` in `src/features/review/ColumnList.tsx` (keeps filters and search working)
 - [x] T088 [US6] Add profiling progress and cancel (batch progress, `cancel` message) in `src/features/ingest/ProfileProgress.tsx` and the worker
 - [x] T089 [US6] Add generation and export progress with cancel in `src/features/generate/GenerateProgress.tsx` and the generate worker
@@ -258,9 +258,9 @@ with unsupported columns safely excluded.
 
 ## Phase 9: Polish & Cross-Cutting Concerns
 
-- [ ] T093 [P] Accessibility pass: keyboard operation of every control, visible focus ring, contrast check with a unit test in `tests/unit/contrast.test.ts` (Principle VII, FR-037)
-- [ ] T094 [P] Add a help guide modal (what is stored, what is not, known limits from SPEC.md) in `src/app/HelpGuideModal.tsx`
-- [ ] T095 [P] Review `package.json` for any dependency that can make network requests or send telemetry and record the audit in `research.md`
+- [x] T093 [P] Accessibility pass: keyboard operation of every control, visible focus ring, contrast check with a unit test in `tests/unit/contrast.test.ts` (Principle VII, FR-037)
+- [x] T094 [P] Add a help guide modal (what is stored, what is not, known limits from SPEC.md) in `src/app/HelpGuideModal.tsx`
+- [x] T095 [P] Review `package.json` for any dependency that can make network requests or send telemetry and record the audit in `research.md`
 - [ ] T096 Run all quickstart scenarios A to G in Chrome and Edge, and A and G in Firefox and Safari, plus the manual checks for SC-007 (typical table to fake CSV in under 10 minutes) and SC-008 (find any column in a 120-column table in under 15 seconds), and record the results in `specs/001-csv-synthetic-slice/quickstart.md`
 - [ ] T097 Run `/speckit-converge` to re-sync this file with the code, then mark the slice complete
 

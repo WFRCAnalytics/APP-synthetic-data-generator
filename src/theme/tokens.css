@@ -192,6 +192,7 @@
   --color-success-foreground: #081b26;
   --color-danger: #c23c33;
   --color-danger-foreground: #ffffff; /* 5.27:1, verified */
+  --color-danger-text: var(--color-danger); /* danger as text on the page; lightened in dark mode */
   --color-warning-foreground: var(--color-accent-foreground); /* reuse existing pairing */
 
   /* .banner-error's own token (not inlined in app.css) — dark mode needs a different MIX
@@ -255,6 +256,7 @@
     --color-border: #23394a;
     --color-code-background: #10293a;
     --color-code-text: #8fcfe3;
+    --color-danger-text: #d9726b; /* danger red lightened for text on the dark background: 5.50:1 (danger itself is 3.34:1 there) */
 
     /* ---- Elevation: dark mode ---- */
     /* Pure black, not the light-mode navy — genuinely darker than this mode's own
@@ -324,6 +326,7 @@
   --color-border: #23394a;
   --color-code-background: #10293a;
   --color-code-text: #8fcfe3;
+    --color-danger-text: #d9726b; /* danger red lightened for text on the dark background: 5.50:1 (danger itself is 3.34:1 there) */
 
   /* Elevation: dark mode — see the @media (prefers-color-scheme: dark) block above for
      the full explanation; duplicated per this file's own "both blocks must stay in sync"
@@ -388,6 +391,7 @@
     --color-background: #ffffff;
     --color-heading: #023c5b;
     --color-link: #397f95;
+    --color-danger-text: #c23c33;
     --color-primary: #023c5b;
     --color-primary-foreground: #ffffff;
     --color-wfrc-gray: #76716e;

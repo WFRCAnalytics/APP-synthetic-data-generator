@@ -37,7 +37,7 @@ function CheckTable({ checks }: { checks: CheckRow[] }) {
           </>
         )}
       </p>
-      <div className="table-wrap table-wrap--scroll">
+      <div className="table-wrap table-wrap--scroll" tabIndex={0} role="region" aria-label="Check table rows">
         <table className="data-table check-table">
           <thead>
             <tr>
@@ -152,7 +152,7 @@ export function GenerateScreen(props: GenerateScreenProps) {
 
           <div className="card">
             <h3>Preview of the first {gen.preview.length} fake rows</h3>
-            <div className="table-wrap table-wrap--scroll">
+            <div className="table-wrap table-wrap--scroll" tabIndex={0} role="region" aria-label="Preview rows">
               <table className="data-table preview-table">
                 <thead>
                   <tr>
