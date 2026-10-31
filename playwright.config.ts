@@ -22,8 +22,8 @@ export default defineConfig({
     // Firefox and WebKit run the whole-flow and single-file download tests (`npm run test:e2e:browsers`).
     ...(process.env.PW_ALL_BROWSERS === "1"
       ? [
-          { name: "firefox", testMatch: /(flow|excel-flow|excel-quirks|download-fallback|quickstart)\.spec\.ts/, use: { browserName: "firefox" as const } },
-          { name: "webkit", testMatch: /(flow|excel-flow|excel-quirks|download-fallback|quickstart)\.spec\.ts/, use: { browserName: "webkit" as const } },
+          { name: "firefox", testMatch: /(flow|excel-flow|excel-quirks|offline-zip|offline-guard|download-fallback|quickstart)\.spec\.ts/, use: { browserName: "firefox" as const } },
+          { name: "webkit", testMatch: /(flow|excel-flow|excel-quirks|offline-zip|offline-guard|download-fallback|quickstart)\.spec\.ts/, use: { browserName: "webkit" as const } },
         ]
       : []),
   ],

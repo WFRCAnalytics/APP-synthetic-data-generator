@@ -5,8 +5,8 @@
 //
 // Needs the zip: `npm run release` first. Without it the tests skip with that message.
 import { spawn, type ChildProcess } from "node:child_process";
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
-import { get as httpGet } from "node:http";
+import { copyFileSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { get as httpGet, request as httpRequest } from "node:http";
 import { networkInterfaces, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -217,5 +217,106 @@ test.describe("the launcher", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("no-store");
     expect(await response.text()).toContain('id="root"');
+  });
+});
+
+/** The launcher's own file for this platform. */
+const launcherFile = isWindows ? "start.ps1" : "start.sh";
+
+/** Runs the launcher from a folder until it exits, for the cases where it should refuse to start. */
+function runToExit(folder: string, extra: string[]): Promise<{ code: number | null; output: string }> {
+  const [command, args] = isWindows
+    ? ["powershell", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", join(folder, launcherFile), "--no-open", ...extra]]
+    : ["sh", [join(folder, launcherFile), "--no-open", ...extra]];
+  return new Promise((resolve) => {
+    const child = spawn(command, args, { cwd: folder, stdio: ["ignore", "pipe", "pipe"] });
+    let output = "";
+    child.stdout?.on("data", (d) => (output += String(d)));
+    child.stderr?.on("data", (d) => (output += String(d)));
+    const timer = setTimeout(() => child.kill(), 30_000);
+    child.on("exit", (code) => {
+      clearTimeout(timer);
+      resolve({ code, output });
+    });
+  });
+}
+
+/** A request with the path exactly as given (fetch would tidy `..` away). */
+function rawRequest(origin: string, path: string, method = "GET"): Promise<{ status: number; body: string }> {
+  const url = new URL(origin);
+  return new Promise((resolve, reject) => {
+    const req = httpRequest({ host: url.hostname, port: Number(url.port), path, method }, (res) => {
+      let body = "";
+      res.on("data", (d) => (body += String(d)));
+      res.on("end", () => resolve({ status: res.statusCode ?? 0, body }));
+    });
+    req.on("error", reject);
+    req.end();
+  });
+}
+
+test.describe("the launcher in unusual situations", () => {
+  test("a second launcher takes the next port and the first keeps serving", async () => {
+    const second = await startLauncher(launcher.folder);
+    try {
+      expect(second.origin).not.toBe(launcher.origin);
+      expect(Number(new URL(second.origin).port)).toBeGreaterThan(Number(new URL(launcher.origin).port));
+      for (const origin of [launcher.origin, second.origin]) expect((await fetch(origin + APP_PATH)).status).toBe(200);
+    } finally {
+      await second.stop();
+    }
+  });
+
+  test("asking for a port that is taken stops with exit code 2 and says what to do", async () => {
+    const { code, output } = await runToExit(launcher.folder, ["--port", new URL(launcher.origin).port]);
+    expect(code).toBe(2);
+    expect(output).toMatch(/No free port|in use/);
+  });
+
+  test("a folder without site/ stops with exit code 3", async () => {
+    const empty = mkdtempSync(join(tmpdir(), "launcher no site "));
+    try {
+      copyFileSync(join(launcher.folder, launcherFile), join(empty, launcherFile));
+      const { code, output } = await runToExit(empty, []);
+      expect(code).toBe(3);
+      expect(output).toMatch(/site/);
+    } finally {
+      rmSync(empty, { recursive: true, force: true });
+    }
+  });
+
+  test("serves nothing outside site/: traversal, a missing file and other methods are refused", async () => {
+    const secret = readFileSync(join(launcher.folder, "README.txt"), "utf8").slice(0, 30);
+    for (const path of [
+      `${APP_PATH}../README.txt`,
+      "/../README.txt",
+      "/%2e%2e/README.txt",
+      `${APP_PATH}%2e%2e/%2e%2e/README.txt`,
+      "/..%5cREADME.txt",
+      "/README.txt",
+      `${APP_PATH}missing.js`,
+    ]) {
+      const { status, body } = await rawRequest(launcher.origin, path);
+      // Refused one way or another (the Windows HTTP service may answer 400 or 403 before the launcher sees
+      // an odd path); what matters is that no file outside site/ comes back.
+      expect([400, 403, 404], path).toContain(status);
+      expect(body, path).not.toContain(secret);
+    }
+    expect((await rawRequest(launcher.origin, APP_PATH, "POST")).status).toBe(405);
+    expect((await rawRequest(launcher.origin, APP_PATH, "HEAD")).status).toBe(200);
+  });
+
+  test("sends the right type for the files the app needs, and never lets them be cached", async () => {
+    const wasm = await fetch(`${launcher.origin}${APP_PATH}duckdb/duckdb-eh.wasm`, { method: "HEAD" }); // headers only: the file is large
+    expect(wasm.headers.get("content-type")).toBe("application/wasm");
+    expect(wasm.headers.get("cache-control")).toBe("no-store");
+    const index = await fetch(launcher.origin + APP_PATH);
+    await index.arrayBuffer();
+    expect(index.headers.get("content-type")).toMatch(/^text\/html/);
+    expect(index.headers.get("cache-control")).toBe("no-store");
+    const asset = readdirSync(join(launcher.folder, "site", "APP-synthetic-data-generator", "assets")).find((f) => f.endsWith(".js"))!;
+    const js = await fetch(`${launcher.origin}${APP_PATH}assets/${asset}`);
+    await js.arrayBuffer();
+    expect(js.headers.get("content-type")).toMatch(/^text\/javascript/);
   });
 });

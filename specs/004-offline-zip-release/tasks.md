@@ -91,10 +91,10 @@
 
 **Independent Test**: open `index.html` from disk in Chromium, Firefox and WebKit and see the message; run the launcher edge tests; run the offline test in the other browsers.
 
-- [ ] T024 [P] [US4] Write `public/guard.js` (classic script, no module, no inline code): when `location.protocol` is `file:`, write a short message into `#root` (what happened, use `start.cmd` or `start.sh`, see `README.txt`); do nothing when served; add `<script src="./guard.js"></script>` to `index.html` and confirm the build keeps it and the hosted site is unchanged (R5)
-- [ ] T025 [P] [US4] Test `tests/e2e/offline-guard.spec.ts`: open the built `index.html` with `file://` in Chromium, Firefox and WebKit and expect the message and no blank page; open it served and expect no message; the message has no accessibility violation (axe)
-- [ ] T026 [P] [US4] Launcher edge tests in `tests/e2e/offline-zip.spec.ts`: a folder path with spaces; a second launcher while the first runs takes the next port and the first keeps serving; `--port` on a taken port exits 2; a path with `..` and a missing file give 404; POST gives 405; `site/` missing gives exit 3; the launcher leaves no file behind; every response carries `Cache-Control: no-store` (FR-015)
-- [ ] T027 [US4] Add `offline-zip` and `offline-guard` to the Firefox and WebKit `testMatch` in `playwright.config.ts` and to `scripts/e2e-browsers.mjs`; run in Chromium, Edge (`PW_EDGE=1`), Firefox and WebKit and fix what differs
+- [x] T024 [P] [US4] Write `public/guard.js` (classic script, no module, no inline code): when `location.protocol` is `file:`, write a short message into `#root` (what happened, use `start.cmd` or `start.sh`, see `README.txt`); do nothing when served; add `<script src="./guard.js"></script>` to `index.html` and confirm the build keeps it and the hosted site is unchanged (R5)
+- [x] T025 [P] [US4] Test `tests/e2e/offline-guard.spec.ts`: open the built `index.html` with `file://` in Chromium, Firefox and WebKit and expect the message and no blank page; open it served and expect no message; the message has no accessibility violation (axe)
+- [x] T026 [P] [US4] Launcher edge tests in `tests/e2e/offline-zip.spec.ts`: a folder path with spaces; a second launcher while the first runs takes the next port and the first keeps serving; `--port` on a taken port exits 2; a path with `..` and a missing file give 404; POST gives 405; `site/` missing gives exit 3; the launcher leaves no file behind; every response carries `Cache-Control: no-store` (FR-015)
+- [x] T027 [US4] Add `offline-zip` and `offline-guard` to the Firefox and WebKit `testMatch` in `playwright.config.ts` and to `scripts/e2e-browsers.mjs`; run in Chromium, Edge (`PW_EDGE=1`), Firefox and WebKit and fix what differs
 
 **Checkpoint**: every way of opening ends in a working app or a message that says what to do.
 

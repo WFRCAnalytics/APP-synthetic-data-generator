@@ -22,6 +22,8 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- A plain script, so a page opened from disk can say why it cannot run (specs/004). Relative on purpose. -->
+    <script src="./guard.js"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

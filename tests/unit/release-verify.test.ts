@@ -24,6 +24,7 @@ function goodFiles(): Files {
     "start.ps1": "# launcher\n",
     "start.sh": "#!/bin/sh\n",
     [`${SITE}/index.html`]: `<!doctype html><html><head>${CSP}</head><body><div id="root"></div></body></html>`,
+    [`${SITE}/guard.js`]: "// guard",
     [`${SITE}/assets/index-abc.js`]: 'const a="0.2.0";',
     [`${SITE}/duckdb/duckdb-eh.wasm`]: new Uint8Array([0, 97, 115, 109]),
     [`${SITE}/duckdb/duckdb-mvp.wasm`]: new Uint8Array([0, 97, 115, 109]),

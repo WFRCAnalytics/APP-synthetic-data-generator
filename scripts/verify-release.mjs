@@ -20,6 +20,7 @@ const TOP_FILES = ["README.txt", "CHECKSUMS.sha256", "LICENSES.md", "start.cmd",
 export const REQUIRED_FILES = [
   ...TOP_FILES,
   `${SITE}/index.html`,
+  `${SITE}/guard.js`,
   `${SITE}/duckdb/duckdb-eh.wasm`,
   `${SITE}/duckdb/duckdb-mvp.wasm`,
   `${SITE}/duckdb/duckdb-browser-eh.worker.js`,
