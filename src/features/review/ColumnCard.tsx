@@ -23,11 +23,12 @@ export interface ColumnCardProps {
   samples?: string[];
   onRequestSamples?: (description: SampleDescription) => void;
   specOnly?: boolean;
+  workbook?: boolean;
 }
 
 const noop = () => {};
 
-export function ColumnCard({ profile, otherNames, busy = false, dateCheck, onEdit = noop, onOverride = noop, onCheckDate = noop, samples, onRequestSamples, specOnly }: ColumnCardProps) {
+export function ColumnCard({ profile, otherNames, busy = false, dateCheck, onEdit = noop, onOverride = noop, onCheckDate = noop, samples, onRequestSamples, specOnly, workbook }: ColumnCardProps) {
   // The settings are only built while open, so a hundred cards stay light.
   const [open, setOpen] = useState(false);
   const dropped = profile.exclude === "drop";
@@ -77,7 +78,7 @@ export function ColumnCard({ profile, otherNames, busy = false, dateCheck, onEdi
           Settings
         </summary>
         {open && (
-          <ColumnEditors profile={profile} otherNames={otherNames} busy={busy} dateCheck={dateCheck} onEdit={onEdit} onOverride={onOverride} onCheckDate={onCheckDate} samples={samples} onRequestSamples={onRequestSamples} specOnly={specOnly} />
+          <ColumnEditors profile={profile} otherNames={otherNames} busy={busy} dateCheck={dateCheck} onEdit={onEdit} onOverride={onOverride} onCheckDate={onCheckDate} samples={samples} onRequestSamples={onRequestSamples} specOnly={specOnly} workbook={workbook} />
         )}
       </details>
     </article>

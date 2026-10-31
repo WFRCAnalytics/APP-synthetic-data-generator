@@ -104,14 +104,14 @@
 
 - [x] T035 [P] [US2] Browser tests per quirk through the app against `quirks.xlsx`, `formats.xlsx` and `dates1904.xlsx`: zip text keeps zeros, amounts keep `#,##0.00` and 2 decimals, percent and currency formats, dates round trip in both date systems, blank and empty-text counts equal, formulas read as values with no formula text in the spec or file, in `tests/e2e/excel-quirks.spec.ts`; the writer's cell types for each quirk are unit tested in `tests/unit/xlsx-writer.test.ts`
 - [ ] T036 [P] [US2] Unit tests for format detection from a column: the first cells' style decides, mixed formats raise `format_mismatch`, a number column displayed as text stays text, in `tests/unit/xlsx-metadata.test.ts`
-- [ ] T037 [P] [US2] Component tests for the quirk notes (merged cells found, mixed formats, hidden sheet chosen) in `tests/component/workbook-dialog.test.tsx` and `tests/component/review-xlsx.test.tsx`
+- [x] T037 [P] [US2] Component tests for the quirk notes (merged cells found, mixed formats, hidden sheet chosen) in `tests/component/workbook-dialog.test.tsx` and `tests/component/review-xlsx.test.tsx`
 
 ### Implementation for User Story 2
 
 - [ ] T038 [US2] Carry formats through profiling: `cellFormat` per column from `SheetHints.formats`; `decimals` and `thousands` come from the format code, not the value digits; a date column's pattern is the ISO pattern with `cellFormat` as the display code; text-kind formats mark columns written as text cells (`src/workers/profile/xlsx.ts`, `profiler.ts`)
-- [ ] T039 [US2] Keep blanks and empty text apart: spec `na` tokens with `EMPTY_TEXT_TOKEN`, the placer and check table count them separately (`src/lib/generate/column.ts`, `checks.ts`), and the writer writes the two differently
+- [x] T039 [US2] Keep blanks and empty text apart: spec `na` tokens with `EMPTY_TEXT_TOKEN`, the placer and check table count them separately (`src/lib/generate/column.ts`, `checks.ts`), and the writer writes the two differently
 - [ ] T040 [US2] Merged cells and hidden sheets: hint, reason codes and notes on the dialog and the cards; a column whose cells carry different formats gets `format_mismatch` and the first format is used
-- [ ] T041 [US2] Review editor for the cell format of a column (select from the formats of its kind, plus a custom code with validation) in `src/features/review/CellFormatEditor.tsx`, wired into `ColumnEditors.tsx`
+- [x] T041 [US2] Review editor for the cell format of a column (select from the formats of its kind, plus a custom code with validation) in `src/features/review/CellFormatEditor.tsx`, wired into `ColumnEditors.tsx`
 
 **Checkpoint**: the test workbook's columns all read back with the same type and format.
 

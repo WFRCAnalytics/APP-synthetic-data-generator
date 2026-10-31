@@ -32,6 +32,8 @@ export interface LocalEdits {
   mergeUnderK?: number | null;
   labelCodes?: boolean;
   outputName?: string;
+  /** The number format code of the column in an Excel output; "General" means none. */
+  cellFormat?: string;
 }
 
 export const MAX_DECIMALS = 15;
@@ -54,6 +56,11 @@ export function applyEdits(p: ColumnProfile, e: LocalEdits | undefined): ColumnP
   }
 
   if (e.outputName !== undefined && e.outputName.trim() !== "") out.outputName = e.outputName;
+
+  if (e.cellFormat !== undefined) {
+    if (/^general$/i.test(e.cellFormat.trim())) delete out.cellFormat;
+    else out.cellFormat = e.cellFormat.trim();
+  }
 
   if (isNumericKind(p)) {
     if (e.mode !== undefined) out.mode = e.mode;

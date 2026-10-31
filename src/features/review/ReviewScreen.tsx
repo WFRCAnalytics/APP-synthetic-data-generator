@@ -6,7 +6,7 @@ import { FileUp } from "lucide-react";
 import { EmptyState } from "../../components/EmptyState";
 import type { SessionState } from "../../app/session";
 import type { LocalEdits } from "../../lib/profile/edits";
-import type { ColumnOverrides } from "../../lib/profile/types";
+import { isExcelSettings, type ColumnOverrides } from "../../lib/profile/types";
 import type { SampleDescription } from "../../lib/textgen/sample";
 import { AttentionBanner } from "./AttentionBanner";
 import { ProfileProgress } from "../ingest/ProfileProgress";
@@ -44,6 +44,7 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
   const typeCounts = useMemo(() => countByType(profiles), [profiles]);
   const reprofiling = phase === "profiling";
   const specOnly = session.specOnly;
+  const workbook = session.settings !== null && isExcelSettings(session.settings);
 
   const typedThreshold = Number(thresholdText);
   const thresholdError =
@@ -108,6 +109,7 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
               samples={session.samples[p.name]}
               onRequestSamples={(description) => actions.requestSamples(p.name, description)}
               specOnly={specOnly}
+              workbook={workbook}
             />
           )}
         />

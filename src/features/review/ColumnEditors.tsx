@@ -6,6 +6,7 @@ import { useId, useState } from "react";
 import type { DatePatternCheck } from "../../app/session";
 import type { LocalEdits } from "../../lib/profile/edits";
 import type { ColumnOverrides, ColumnProfile, ColumnType } from "../../lib/profile/types";
+import { CellFormatEditor } from "./CellFormatEditor";
 import { DatePatternBox } from "./DatePatternBox";
 import { ExcludeControl } from "./ExcludeControl";
 import type { SampleDescription } from "../../lib/textgen/sample";
@@ -33,6 +34,8 @@ export interface ColumnEditorsProps {
   onRequestSamples?: (description: SampleDescription) => void;
   /** The columns came from a saved spec, so there is no file to read again. */
   specOnly?: boolean;
+  /** The output is an Excel workbook, so the format of the cells can be chosen. */
+  workbook?: boolean;
 }
 
 /** The types a user can choose. Dates are chosen by typing their pattern; IDs arrive with ID patterns. */
@@ -50,7 +53,7 @@ const CHOICES: [string, string][] = [
 
 const isDateLike = (t: ColumnType) => t === "date" || t === "datetime" || t === "time";
 
-export function ColumnEditors({ profile, otherNames, busy, dateCheck, onEdit, onOverride, onCheckDate, samples, onRequestSamples, specOnly = false }: ColumnEditorsProps) {
+export function ColumnEditors({ profile, otherNames, busy, dateCheck, onEdit, onOverride, onCheckDate, samples, onRequestSamples, specOnly = false, workbook = false }: ColumnEditorsProps) {
   const typeId = useId();
   const [chooseDate, setChooseDate] = useState(false);
   const kind = profile.summary.kind;
@@ -134,6 +137,8 @@ export function ColumnEditors({ profile, otherNames, busy, dateCheck, onEdit, on
 
       {supportsSentinels && <SentinelEditor profile={profile} busy={busy} onApply={(sentinels) => onOverride({ sentinels })} />}
       {hasValues && <NaTokenEditor profile={profile} busy={busy} onApply={(naTokens) => onOverride({ naTokens })} />}
+
+      {workbook && hasValues && <CellFormatEditor profile={profile} onChange={(cellFormat) => onEdit({ cellFormat })} />}
 
       <NumericControls
         profile={profile}
