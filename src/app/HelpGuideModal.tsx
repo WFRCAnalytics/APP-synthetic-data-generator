@@ -3,6 +3,7 @@
 // what the fake table can and cannot be trusted for. Plain text only; no links leave the site.
 
 import { Modal } from "../components/Modal";
+import { versionLabel } from "./version";
 
 export interface HelpGuideModalProps {
   open: boolean;
@@ -14,6 +15,7 @@ export function HelpGuideModal({ open, onClose }: HelpGuideModalProps) {
     <Modal open={open} onClose={onClose} ariaLabelledBy="help-title" size="lg">
       <div className="help-guide">
         <h2 id="help-title">Help &amp; guide</h2>
+        <p className="field-hint">{versionLabel()}</p>
 
         <h3>How it works</h3>
         <ol>

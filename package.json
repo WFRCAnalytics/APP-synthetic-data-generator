@@ -1,7 +1,7 @@
 {
   "name": "synthetic-data-generator",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Client-side synthetic data generator for AI coding agents (WFRC)",
   "license": "MIT",
   "type": "module",
@@ -21,6 +21,9 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:browsers": "node scripts/e2e-browsers.mjs",
+    "release": "npm run build && node scripts/build-release.mjs",
+    "verify:release": "node scripts/verify-release.mjs",
+    "test:e2e:offline": "playwright test offline-zip offline-guard",
     "fixtures": "node scripts/make-fixtures.mjs",
     "verify:roundtrip": "node scripts/verify-roundtrip.mjs",
     "build:spike": "node scripts/copy-duckdb.mjs && node scripts/fetch-extensions.mjs && vite build --mode spike"

@@ -524,6 +524,18 @@ table.data-table tbody tr:last-child td {
   text-overflow: ellipsis;
 }
 
+.app-header-version {
+  font-size: var(--text-sm);
+  color: var(--color-wfrc-gray);
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .app-header-version {
+    display: none;
+  }
+}
+
 .app-header-actions {
   display: flex;
   align-items: center;

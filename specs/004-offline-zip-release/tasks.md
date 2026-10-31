@@ -18,8 +18,8 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Set `package.json` version to `0.2.0`; add scripts `release` (`npm run build && node scripts/build-release.mjs`), `verify:release` and `test:e2e:offline`; add `release-out/` to `.gitignore`
-- [ ] T002 [P] Version constants: `define` `__APP_VERSION__` (from `package.json`) and `__SPEC_VERSION__` (from `SPEC_VERSION`) in `vite.config.ts` for the build and for Vitest, with their types in `src/vite-env.d.ts`, and `src/app/version.ts` exporting `APP_VERSION`, `SPEC_VERSION` and `versionLabel()` (`v0.2.0 · writes spec v3`) (R6)
+- [x] T001 Set `package.json` version to `0.2.0`; add scripts `release` (`npm run build && node scripts/build-release.mjs`), `verify:release` and `test:e2e:offline`; add `release-out/` to `.gitignore`
+- [x] T002 [P] Version constants: `define` `__APP_VERSION__` (from `package.json`) and `__SPEC_VERSION__` (from `SPEC_VERSION`) in `vite.config.ts` for the build and for Vitest, with their types in `src/vite-env.d.ts`, and `src/app/version.ts` exporting `APP_VERSION`, `SPEC_VERSION` and `versionLabel()` (`v0.2.0 · writes spec v3`) (R6)
 
 ---
 
@@ -61,8 +61,8 @@
 - [ ] T013a [US2] Record the scan of the real `dist/` (hosts found and where each comes from) in `research.md` R8 and as the verifier's allowlist data in `scripts/release-allowlist.json`, so T014 and T015 test against facts
 - [ ] T014 [P] [US2] Unit tests for the verifier in `tests/unit/release-verify.test.ts` using small zips built in the test: passes a good zip; fails on an extra file (a source map, `.env`, a fixture), a missing file, a changed file, a file missing from the checksum list, a new outside `http(s)` host in a text file (every host on the allowlist accepted, any other rejected), a version mismatch between zip name, README and `site/` build, and a missing content policy tag in `index.html`
 - [ ] T015 [US2] Write `scripts/verify-release.mjs` per R8 and `contracts/zip-layout.md` to pass T014; print each failure with the file and the reason, exit 1; run from `npm run verify:release`
-- [ ] T016 [P] [US2] Component test `tests/component/version-display.test.tsx`: the header shows `v0.2.0 · writes spec v3` (from the constants), the help guide repeats it, nothing else changes
-- [ ] T017 [US2] Show the version label in `src/app/AppHeader.tsx` and in `src/app/HelpGuideModal.tsx`, styled with existing classes
+- [x] T016 [P] [US2] Component test `tests/component/version-display.test.tsx`: the header shows `v0.2.0 · writes spec v3` (from the constants), the help guide repeats it, nothing else changes
+- [x] T017 [US2] Show the version label in `src/app/AppHeader.tsx` and in `src/app/HelpGuideModal.tsx`, styled with existing classes
 - [ ] T018 [US2] Extend `tests/e2e/offline-zip.spec.ts`: after a full session the in-app counter shows zero cross-origin requests; every file in the unzipped folder matches `CHECKSUMS.sha256`; trying the machine's non-loopback address on the launcher's port is refused; no cookie is set and local, session and IndexedDB storage hold nothing after a session (FR-007, FR-016, SC-002, SC-004)
 
 **Checkpoint**: the claim "nothing leaves the machine" is checkable by a tester and by CI.
