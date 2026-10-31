@@ -72,7 +72,8 @@
           "items": { "type": "number" }
         },
         "rescale": { "type": "boolean", "default": false },
-        "thousands": { "type": "boolean", "default": false }
+        "thousands": { "type": "boolean", "default": false },
+        "scientific": { "type": "boolean", "default": false }
       }
     },
     "column": {

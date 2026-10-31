@@ -70,6 +70,8 @@ export interface NumericFields {
   rescale?: boolean;
   /** The source wrote integers with thousands separators (1,234); the export does too. */
   thousands?: boolean;
+  /** The source wrote numbers in scientific notation (1.2e-5); the export does too. */
+  scientific?: boolean;
 }
 
 export interface CategoricalColumn extends ColumnBase {

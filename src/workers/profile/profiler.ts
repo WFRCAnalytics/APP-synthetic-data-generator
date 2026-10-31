@@ -24,6 +24,8 @@ const SURVEY_ID_GENERATION_READY = false;
 export interface ProfileOptions {
   /** Distinct-value limit for categorical. */
   threshold: number;
+  /** Per column: did the source quote its non-empty fields (from the dialect sniffer). */
+  quoted?: readonly boolean[];
 }
 
 /** Settings the user can change on the Review screen; each triggers a re-profile of one column. */
@@ -78,7 +80,13 @@ function dateNumberExpr(col: string, pattern: string): string {
   }
 }
 
-async function numericSummary(sql: SqlRunner, valueExpr: string, where: string, decimalsFrom?: string): Promise<NumericSummary> {
+async function numericSummary(
+  sql: SqlRunner,
+  valueExpr: string,
+  where: string,
+  decimalsFrom?: string,
+  scientific = false,
+): Promise<NumericSummary> {
   const base = `WITH v AS (SELECT ${valueExpr} AS x FROM ${SRC} WHERE ${where}) `;
   const [r] = await sql.all(
     `${base}SELECT count(x) AS n, min(x) AS mn, max(x) AS mx, avg(x) AS mean, stddev_pop(x) AS sd, quantile_cont(x, ${QUANTILE_LIST}) AS q FROM v WHERE x IS NOT NULL`,
@@ -100,20 +108,29 @@ async function numericSummary(sql: SqlRunner, valueExpr: string, where: string, 
 
   let decimals = 0;
   if (decimalsFrom) {
+    // For scientific notation the decimals that matter are the mantissa's (1.25e-5 has two).
+    const pattern = scientific ? String.raw`'^[+-]?\d+\.(\d+)[eE]'` : String.raw`'\.(\d+)'`;
     const [d] = await sql.all(
-      String.raw`SELECT coalesce(max(length(regexp_extract(${decimalsFrom}, '\.(\d+)', 1))), 0) AS d FROM ${SRC} WHERE ${where}`,
+      `SELECT coalesce(max(length(regexp_extract(${decimalsFrom}, ${pattern}, 1))), 0) AS d FROM ${SRC} WHERE ${where}`,
     );
     decimals = toNumber(d.d);
   }
 
+  // Floating-point error can put the mean or a percentile a hair outside [min, max], or make the
+  // percentiles dip; the spec requires them ordered and inside the range.
+  const clamp = (x: number) => Math.min(max, Math.max(min, x));
+  let floor = min;
+  const quantiles = toNumberArray(r.q).map((q) => (floor = Math.max(floor, clamp(q))));
+
   return {
     min,
     max,
-    mean: toNumber(r.mean),
+    mean: clamp(toNumber(r.mean)),
     sd: toNumber(r.sd),
     decimals,
-    quantiles: toNumberArray(r.q),
+    quantiles,
     histogram,
+    ...(scientific ? { scientific: true } : {}),
   };
 }
 
@@ -183,7 +200,8 @@ export async function profileColumn(
     case "integer":
     case "float": {
       const expr = cls.thousands ? `try_cast(replace(${c}, ',', '') AS DOUBLE)` : `try_cast(${c} AS DOUBLE)`;
-      const num = await numericSummary(sql, expr, where, type === "float" ? c : undefined);
+      const scientific = type === "float" && basic.sciCount > 0 && basic.sciCount >= basic.valueCount * 0.5;
+      const num = await numericSummary(sql, expr, where, type === "float" ? c : undefined, scientific);
       summary = { kind: "numeric", ...num, ...(cls.thousands ? { thousands: true } : {}) };
       break;
     }
@@ -267,7 +285,9 @@ export async function profileAll(
   const profiles: ColumnProfile[] = [];
   for (let i = 0; i < columnNames.length; i++) {
     if (isCancelled()) break;
-    profiles.push(await profileColumn(sql, columnNames[i], rowCount, options));
+    const profile = await profileColumn(sql, columnNames[i], rowCount, options);
+    profile.quoted = options.quoted?.[i] ?? false;
+    profiles.push(profile);
     onProgress?.({ done: i + 1, total: columnNames.length });
   }
   return profiles;

@@ -1,0 +1,117 @@
+// Builds the spec file from the reviewed column profiles (FR-017). The spec holds only what the
+// privacy model allows: category labels and counts, exact min and max, sentinel codes, quantiles,
+// masks and repeat structures, and format settings. An unsupported column keeps only its name and
+// the user's choice, so none of its values can leak (constitution Principle II).
+
+import type { ColumnProfile, FileSettings } from "../profile/types";
+import { SPEC_VERSION, type ColumnSpec, type NumericFields, type SourceSpec, type SpecFile } from "./types";
+
+export interface BuildInput {
+  fileName: string;
+  settings: FileSettings;
+  rowCount: number;
+  seed: number;
+  keepOriginalName: boolean;
+  threshold: number;
+  profiles: readonly ColumnProfile[];
+}
+
+export function buildSource(fileName: string, s: FileSettings): SourceSpec {
+  return {
+    format: "csv",
+    file_name: fileName,
+    encoding: s.encoding,
+    bom: s.bom,
+    delimiter: s.delimiter,
+    quote: s.quote,
+    quote_style: s.quoteStyle,
+    line_ending: s.lineEnding,
+    trailing_newline: s.trailingNewline,
+    header: s.header,
+    header_quoted: s.headerQuoted,
+  };
+}
+
+function numericFields(p: ColumnProfile): NumericFields | null {
+  const s = p.summary;
+  if (s.kind !== "numeric" && s.kind !== "datetime") return null;
+  return {
+    mode: p.mode ?? "match_mean_sd",
+    min: s.min,
+    max: s.max,
+    mean: s.mean,
+    sd: s.sd,
+    decimals: s.decimals,
+    quantiles: s.quantiles,
+  };
+}
+
+/** One profile as a spec column. */
+export function columnSpecOf(p: ColumnProfile): ColumnSpec {
+  const common = {
+    name: p.name,
+    ...(p.outputName !== p.name ? { output_name: p.outputName } : {}),
+    ...(p.exclude !== "include" ? { exclude: p.exclude } : {}),
+  };
+
+  const s = p.summary;
+
+  // Unsupported columns: a name and a choice, nothing else.
+  if (p.type === "unsupported" || s.kind === "unsupported") return { ...common, type: "unsupported" };
+  // Survey IDs without a mask yet (until ID patterns land) are held back the same way.
+  if (p.type === "survey_id" && s.kind === "survey_id" && s.mask.length === 0) return { ...common, type: "unsupported" };
+
+  const detail = {
+    ...common,
+    quoted: p.quoted,
+    ...(p.naTokens.length > 0
+      ? {
+          na: {
+            tokens: p.naTokens,
+            count: p.naCount,
+            ...(p.naTokens.length > 1 ? { by_token: p.naByToken } : {}),
+          },
+        }
+      : {}),
+    ...(Object.keys(p.sentinels).length > 0 ? { sentinels: p.sentinels } : {}),
+  };
+
+  switch (s.kind) {
+    case "empty":
+      return { ...detail, type: "empty" };
+    case "categorical":
+      return { ...detail, type: p.type === "boolean" ? "boolean" : "categorical", storage: s.storage, counts: s.counts };
+    case "numeric":
+      return { ...detail, type: p.type as "integer" | "float", ...(numericFields(p) as NumericFields), ...(s.thousands ? { thousands: true } : {}), ...(s.scientific ? { scientific: true } : {}) };
+    case "datetime":
+      return {
+        ...detail,
+        type: p.type as "date" | "datetime" | "time",
+        ...(numericFields(p) as NumericFields),
+        format: s.format ?? "",
+        granularity: s.granularity,
+      };
+    case "survey_id":
+      return {
+        ...detail,
+        type: "survey_id",
+        mask: s.mask,
+        ...(s.min !== undefined ? { min: s.min } : {}),
+        ...(s.max !== undefined ? { max: s.max } : {}),
+        ...(s.padWidth !== undefined ? { pad_width: s.padWidth } : {}),
+        repeat_structure: s.repeatStructure,
+      };
+  }
+}
+
+export function buildSpec(input: BuildInput): SpecFile {
+  return {
+    spec_version: SPEC_VERSION,
+    source: buildSource(input.fileName, input.settings),
+    n_rows: input.rowCount,
+    seed: input.seed,
+    keep_original_name: input.keepOriginalName,
+    categorical_threshold: input.threshold,
+    columns: input.profiles.map(columnSpecOf),
+  };
+}

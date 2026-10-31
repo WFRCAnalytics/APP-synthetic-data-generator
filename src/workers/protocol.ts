@@ -4,6 +4,7 @@
 
 import type { WireError } from "../lib/errors";
 import type { ColumnProfile, FileSettings } from "../lib/profile/types";
+import type { CheckRow } from "../lib/generate/checks";
 import type { SpecFile } from "../lib/spec/types";
 
 // ---- Profile worker (owns DuckDB and the real data) -----------------------------------------
@@ -29,14 +30,7 @@ export type ProfileResponse =
 
 // ---- Generate worker (spec only, no DuckDB) -------------------------------------------------
 
-export interface CheckRow {
-  column: string;
-  metric: "label_counts" | "na_count" | "sentinel_counts" | "min" | "max" | "mean" | "sd" | "repeat_structure";
-  target: string;
-  achieved: string;
-  /** Exact metrics must be equal; mean and sd report a difference instead of failing. */
-  pass: boolean;
-}
+export type { CheckRow };
 
 export type GenerateRequest =
   | { type: "generate"; spec: SpecFile; seed: number; chunkRows: number }

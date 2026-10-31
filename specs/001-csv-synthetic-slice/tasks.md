@@ -98,8 +98,8 @@ with unsupported columns safely excluded.
 
 - [X] T028 [P] [US1] Integration test for profiling SQL on small fixtures (counts, NA, min, max, mean, sd, quantiles) using DuckDB's Node bindings in `tests/integration/profile.test.ts`
 - [X] T029 [P] [US1] Unit tests for type detection rules in SPEC.md order, coded integers defaulting to categorical, the "unsupported" rule (emails, free text, many-valued short codes, latitude and longitude), and survey ID detection taking precedence over categorical (an ID column with 50 or fewer distinct values is never typed categorical), asserted column by column against `tests/fixtures/zoo/expected.json` so a failure names the column and rule, in `tests/unit/classify.test.ts`
-- [ ] T030 [P] [US1] Unit tests that generated columns hit exact label counts, NA counts, sentinel counts, min and max in `tests/unit/generate-columns.test.ts`
-- [ ] T031 [P] [US1] Integration test for the CSV round trip (fake file parses with the same code as the real one, SC-004) in `tests/integration/roundtrip.test.ts`
+- [X] T030 [P] [US1] Unit tests that generated columns hit exact label counts, NA counts, sentinel counts, min and max in `tests/unit/generate-columns.test.ts`
+- [X] T031 [P] [US1] Integration test for the CSV round trip (fake file parses with the same code as the real one, SC-004) in `tests/integration/roundtrip.test.ts`
 - [ ] T032 [P] [US1] Component test for the ingest, review and generate flow with mocked workers in `tests/component/flow.test.tsx`
 - [ ] T122 [P] [US1] Corpus robustness test: every file in `.fixtures/corpus/` either profiles without a crash or fails with a clear message that holds no cell value, and files that parse round-trip through generate and export, in `tests/integration/corpus.test.ts`
 
@@ -113,10 +113,10 @@ with unsupported columns safely excluded.
 - [X] T037 [US1] Implement batched column statistics SQL in `src/workers/profile/stats.ts` and the `profile` and `columnProfile` messages, reporting progress per batch
 - [ ] T038 [US1] Build the ingest screen in `src/features/ingest/IngestScreen.tsx` (file picker, detected delimiter, encoding, quote and header with editing, row count, column count, names only; shows the parse error message from T036)
 - [ ] T039 [US1] Build the basic review screen in `src/features/review/ReviewScreen.tsx` and `ColumnCard.tsx` with a hand-drawn SVG chart in `src/features/review/Sparkline.tsx`; show unsupported and excluded labels
-- [ ] T040 [P] [US1] Implement the per-column generator (rank placement of NA and sentinels, categorical by cumulative counts, numeric by mode with exact min and max) in `src/lib/generate/column.ts`, `categorical.ts` and `numeric.ts`
-- [ ] T041 [P] [US1] Implement date, datetime and time generation (number to string using the original pattern and granularity) in `src/lib/generate/datetime.ts`
+- [X] T040 [P] [US1] Implement the per-column generator (rank placement of NA and sentinels, categorical by cumulative counts, numeric by mode with exact min and max) in `src/lib/generate/column.ts`, `categorical.ts` and `numeric.ts`
+- [X] T041 [P] [US1] Implement date, datetime and time generation (number to string using the original pattern and granularity) in `src/lib/generate/datetime.ts`
 - [ ] T042 [US1] Implement the generate worker (chunked rows, preview of 50 rows, CSV encoding with the original settings, excluded columns dropped or kept as all-NA) in `src/workers/generate.worker.ts`
-- [ ] T043 [US1] Implement the check table computation (target versus achieved for counts, NA, sentinels, min, max, mean, sd) in `src/lib/generate/checks.ts`
+- [X] T043 [US1] Implement the check table computation (target versus achieved for counts, NA, sentinels, min, max, mean, sd) in `src/lib/generate/checks.ts`
 - [ ] T044 [US1] Build the generate screen in `src/features/generate/GenerateScreen.tsx` (seed field that rejects a blank or out-of-range value, 0 to 4,294,967,295, with a message and a component test in `tests/component/seed-field.test.tsx`; Generate, preview table, check table) and `ExportButton.tsx` (Blob download, `_fake` suffix with a keep-original-name toggle)
 - [ ] T045 [P] [US1] Create `scripts/verify-roundtrip.mjs` that parses real and fake files with the same code and compares names, order and types (SC-004)
 - [ ] T046 [US1] Wire the three screens through the app state in `src/App.tsx` and verify quickstart scenarios A and G

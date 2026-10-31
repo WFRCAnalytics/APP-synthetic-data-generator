@@ -49,6 +49,8 @@ export interface NumericSummary {
   histogram: number[];
   /** Integers written with thousands separators (1,234). */
   thousands?: boolean;
+  /** Numbers written in scientific notation (1.2e-5). */
+  scientific?: boolean;
 }
 
 export type ColumnSummary =

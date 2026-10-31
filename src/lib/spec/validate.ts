@@ -44,6 +44,7 @@ const numeric = {
   quantiles: v.optional(v.array(finite)),
   rescale: v.optional(v.boolean()),
   thousands: v.optional(v.boolean()),
+  scientific: v.optional(v.boolean()),
 };
 
 const MaskTokenSchema = v.union([
