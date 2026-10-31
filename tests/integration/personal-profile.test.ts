@@ -143,3 +143,23 @@ describe("50,000 distinct names (SC-001)", () => {
     expect(JSON.stringify(source.spec).length).toBeLessThan(100_000);
   }, 180_000);
 });
+
+describe("very long text (specs/002 edge case, research R13)", () => {
+  it("counts a value of 150,000 characters at 100,000, says so, and still generates a valid column", async () => {
+    // 80 different answers, one of them far too long.
+    const rows = Array.from({ length: 80 }, (_, i) => `${i},${"w".repeat(10 + i)}${i === 40 ? "x".repeat(150000) : ""}`);
+    const bytes = new TextEncoder().encode(`${["id,blob", ...rows].join("\n")}\n`);
+    const source = await profileBytes(db, bytes, "long_text.csv");
+    const blob = source.profiles.find((p) => p.name === "blob")!;
+    expect(blob.type).toBe("free_text");
+    if (blob.summary.kind !== "free_text") throw new Error("expected free text");
+    expect(blob.summary.max).toBe(100000);
+    expect(blob.attentionReasons).toContain("text_length_capped");
+    expect(blob.status).toBe("needs_attention");
+
+    const fake = await profileBytes(db, renderSpec(source.spec), "fake_long_text.csv");
+    const got = fake.profiles.find((p) => p.name === "blob")!;
+    if (got.summary.kind !== "free_text") throw new Error("expected free text");
+    expect(got.summary.max).toBe(100000);
+  }, 120_000);
+});

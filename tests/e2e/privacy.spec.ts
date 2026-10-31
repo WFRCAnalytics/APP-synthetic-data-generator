@@ -135,7 +135,7 @@ test.describe("no real personal value is ever shown", () => {
   // Values from columns the app must never reproduce: personal data, free text, coordinates and
   // text IDs. Numeric IDs are left out because short numbers can match other columns by chance.
   const header = readFileSync(join(ZOO, "zoo_small.csv"), "utf8").split("\n")[0].split(",");
-  const personal = ["person_name", "email", "street_address", "phone_us", "ssn_like", "free_text", "url", "ip_address", "lat", "lon", "coord_pair"];
+  const personal = ["person_name", "first_name", "last_name", "email", "email_mixed", "street_address", "phone_us", "ssn_like", "free_text", "comments", "url", "ip_address", "plate", "vendor_code", "short_code_many", "lat", "lon", "coord_pair"];
 
   function valuesOf(columns: string[]): string[] {
     // The zoo's personal columns contain no commas or quotes, so a plain split is exact here.
@@ -143,8 +143,13 @@ test.describe("no real personal value is ever shown", () => {
     return [...new Set(columns.flatMap((c) => rows.map((r) => r[header.indexOf(c)] ?? "")).filter((v) => v.length >= 8))];
   }
 
+  /** The made-up words of the free text columns: no real word may reach the page, the spec or the file. */
+  function wordsOf(columns: string[]): string[] {
+    return [...new Set(valuesOf(columns).flatMap((v) => v.split(/[\s.,]+/)).filter((w) => w.length >= 8))];
+  }
+
   test("at every stage, in the page and in the downloaded file", async ({ page }) => {
-    const secrets = valuesOf(personal);
+    const secrets = [...valuesOf(personal), ...wordsOf(["free_text", "comments"])];
     expect(secrets.length).toBeGreaterThan(1000);
 
     const leaks = async (stage: string) => {

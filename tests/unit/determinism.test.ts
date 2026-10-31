@@ -19,6 +19,11 @@ const columns: ColumnSpec[] = [
   { name: "hh_id", type: "survey_id", mask: ["digit", "digit", "digit", "digit", "digit"], min: 10000, max: 99999, pad_width: 0, repeat_structure: { "1": 1500, "2": 500 } },
   { name: "site", type: "survey_id", mask: ["upper", { literal: "-" }, "digit", "digit"], repeat_structure: { "1": 2500 } },
   { name: "flag", type: "boolean", storage: "string", counts: { N: 1700, Y: 800 } },
+  // Slice 2: personal, free text and short string columns
+  { name: "who", type: "personal", kind: "full_name", repeat_structure: { "1": 1500, "2": 500 } },
+  { name: "mail", type: "personal", kind: "email", repeat_structure: { "1": 2400, "10": 10 }, na: { tokens: [""], count: 0 } } as unknown as ColumnSpec,
+  { name: "comments", type: "free_text", mode: "uniform", min: 5, max: 120, decimals: 0, line_breaks: false },
+  { name: "plate", type: "short_string", pattern: ["upper", "upper", { literal: "-" }, "digit", "digit", "digit", "digit"], length_groups: { "7": 2500 }, repeat_structure: { "1": 2500 } },
 ];
 
 const spec = (cols: ColumnSpec[] = columns, over: Partial<SpecFile> = {}): SpecFile => ({
@@ -99,6 +104,20 @@ describe("changing one column changes no other (per-column sub-seeds)", () => {
       const was = base.map((r) => r[index(c.name)]);
       const now = after.map((r) => r[columns.filter((x) => x.name !== "spread").findIndex((x) => x.name === c.name)]);
       expect(now, `column ${c.name}`).toEqual(was);
+    }
+  });
+
+  it("changing a text column (kind, length range, pattern) changes no other column", () => {
+    const edits: [string, (c: ColumnSpec) => ColumnSpec][] = [
+      ["who", (c) => ({ ...c, kind: "last_name" }) as ColumnSpec],
+      ["mail", (c) => ({ ...c, kind: "phone" }) as ColumnSpec],
+      ["comments", (c) => ({ ...c, min: 10, max: 60 }) as ColumnSpec],
+      ["plate", (c) => ({ ...c, pattern: ["lower", "lower", { literal: "_" }, "digit", "digit", "digit", "digit"] }) as ColumnSpec],
+    ];
+    for (const [name, edit] of edits) {
+      const after = changed(name, edit);
+      othersUnchanged(after, name);
+      expect(after.map((r) => r[index(name)]), name).not.toEqual(base.map((r) => r[index(name)]));
     }
   });
 

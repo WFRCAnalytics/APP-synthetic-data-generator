@@ -27,9 +27,10 @@ test("a CSV goes in and a fake CSV comes out, entirely on this device", async ({
 
   // Review: one card per column.
   await expect(page.getByRole("heading", { name: "Review columns" })).toBeVisible({ timeout: 120_000 });
-  await expect(page.locator(".column-card")).toHaveCount(82);
+  await expect(page.locator(".column-card")).toHaveCount(88);
   await expect(page.locator('[data-column="cat_str_5"]')).toContainText("Categorical");
-  await expect(page.locator('[data-column="email"]')).toContainText("Left out");
+  await expect(page.locator('[data-column="email"]')).toContainText("Personal identifier");
+  await expect(page.locator('[data-column="lat"]')).toContainText("Left out"); // coordinates are not supported yet
   await expect(page.locator('[data-column="int_sentinels"]')).toContainText("Needs attention");
 
   // No real personal value is anywhere on the page.
@@ -52,7 +53,8 @@ test("a CSV goes in and a fake CSV comes out, entirely on this device", async ({
   const fake = readFileSync(await download.path(), "utf8");
   const header = fake.split("\n")[0];
   expect(header.startsWith("bool_tf,bool_yn,bool_yesno,bool_01")).toBe(true);
-  expect(header).not.toContain("email");
+  expect(header.split(",")).toContain("email"); // personal columns are generated now, with invented values
+  expect(header.split(",")).not.toContain("lat"); // coordinates are still left out
   expect(fake).not.toMatch(/@example\.com/);
 
   // Everything stayed on this device.

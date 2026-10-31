@@ -126,3 +126,23 @@ describe("round trip against the fixture files", () => {
     expect(rewritten).toBe(text);
   });
 });
+
+describe("free text with line breaks (specs/002 FR-006)", () => {
+  const text = "first line\nsecond line, with a comma";
+
+  it.each(["minimal", "all", "per_column"] as const)("keeps a value with a line break whole and parseable under %s quoting", (quoteStyle) => {
+    const dialect = d({ quoteStyle });
+    const row = formatRow(["id", text, "tail"], dialect, [false, false, false]);
+    const parsed = parseCsv(row);
+    expect(parsed.rows).toEqual([["id", text, "tail"]]);
+  });
+
+  it("quotes it even when the real column's other values were not quoted", () => {
+    expect(formatField(text, d({ quoteStyle: "per_column" }), false).startsWith('"')).toBe(true);
+  });
+
+  it("round trips a carriage return and line feed pair inside a value", () => {
+    const value = "a\r\nb";
+    expect(parseCsv(formatRow([value, "x"], d())).rows).toEqual([[value, "x"]]);
+  });
+});

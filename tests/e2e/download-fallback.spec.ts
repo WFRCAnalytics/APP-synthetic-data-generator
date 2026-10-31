@@ -29,6 +29,6 @@ test("the fake CSV and the spec each download as a single file", async ({ page }
   const [spec] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: /Download spec/ }).click()]);
   expect(spec.suggestedFilename()).toBe("zoo_small_spec.json");
   const json = JSON.parse(readFileSync(await spec.path(), "utf8"));
-  expect(json.spec_version).toBe(1);
+  expect(json.spec_version).toBe(2);
   expect(json.columns.length).toBeGreaterThan(50);
 });

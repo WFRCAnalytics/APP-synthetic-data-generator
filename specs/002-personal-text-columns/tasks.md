@@ -85,7 +85,7 @@
 
 - [x] T028 [P] [US4] Spy integration test: record every row the engine returns while profiling the personal, free text and short string fixture columns and fail if any real value appears; confirm no frequent-value query runs for them, in `tests/integration/personal-inference.test.ts`
 - [x] T029 [P] [US4] Spec privacy test: the spec for `text_50k.csv` holds none of the real values, is under 100 KB, and a hand-edited spec with a `values` list on a new column type is rejected, in `tests/integration/text-privacy.test.ts`
-- [ ] T030 [P] [US4] Browser leak test: extend `tests/e2e/privacy.spec.ts` so the new fixture columns (real names, emails, phones, addresses, comment words, codes) never appear in the page text, the spec download, the preview, the fake file or error messages
+- [x] T030 [P] [US4] Browser leak test: extend `tests/e2e/privacy.spec.ts` so the new fixture columns (real names, emails, phones, addresses, comment words, codes) never appear in the page text, the spec download, the preview, the fake file or error messages
 - [x] T031 [P] [US4] Bundle test `tests/unit/bundle-wordlists.test.ts` (run after `npm run build`, skipped when `dist` is absent): the profile worker bundle and the main bundle contain none of a list of faker word-list marker strings, and the generate worker bundle does
 
 ### Implementation for User Story 4
@@ -105,17 +105,17 @@
 
 ### Tests for User Story 2
 
-- [ ] T034 [US2] Unit tests for free text detection (mean length, spaces, names like comment) in `tests/unit/classify-text.test.ts`
-- [ ] T035 [P] [US2] Unit tests for the lorem generator and the free text column: exact min and max length, spread follows quantiles, no real word, line breaks only when `line_breaks`, determinism, in `tests/unit/generate-free-text.test.ts`
+- [x] T034 [US2] Unit tests for free text detection (mean length, spaces, names like comment) in `tests/unit/classify-text.test.ts`
+- [x] T035 [P] [US2] Unit tests for the lorem generator and the free text column: exact min and max length, spread follows quantiles, no real word, line breaks only when `line_breaks`, determinism, in `tests/unit/generate-free-text.test.ts`
 - [x] T036 [P] [US2] Component test for the free text card (length summary, explanation, sample) in `tests/component/review-free-text.test.tsx`
 
 ### Implementation for User Story 2
 
 - [x] T037 [US2] Implement `src/lib/textgen/lorem.ts` (own small word list, sentence punctuation, cut at the chosen length) and the `free_text` case in `src/lib/generate/column.ts` reusing the numeric length generator; add `min`, `max` checks in `checks.ts`
 - [x] T038 [US2] Extend `classifyColumn` and `src/workers/profile/personal.ts` (or `text.ts`) to return `free_text` with the length fields and `line_breaks`, and the card summary for it
-- [ ] T039 [US2] Quote embedded line breaks as the source did: add a case with line breaks to `tests/unit/csv-writer.test.ts` and confirm `src/lib/csv/writer.ts` quotes them under every quote style
-- [ ] T059 [US2] Cap free text lengths at 100,000 characters in the profiler and validator, with the reason `text_length_capped` and a card note; tests in `tests/unit/generate-free-text.test.ts` and `tests/unit/spec-validate-text.test.ts`
-- [ ] T040 [US2] Integration test profile then generate then re-profile the comments column in `tests/integration/text-roundtrip.test.ts`
+- [x] T039 [US2] Quote embedded line breaks as the source did: add a case with line breaks to `tests/unit/csv-writer.test.ts` and confirm `src/lib/csv/writer.ts` quotes them under every quote style
+- [x] T059 [US2] Cap free text lengths at 100,000 characters in the profiler and validator, with the reason `text_length_capped` and a card note; tests in `tests/unit/generate-free-text.test.ts` and `tests/unit/spec-validate-text.test.ts`
+- [x] T040 [US2] Integration test profile then generate then re-profile the comments column in `tests/integration/text-roundtrip.test.ts`
 
 **Checkpoint**: comments columns keep lengths and no word.
 
@@ -129,8 +129,8 @@
 
 ### Tests for User Story 3
 
-- [ ] T041 [P] [US3] Unit tests for short string detection (not ID-named, distinct above the limit, not personal) in `tests/unit/classify-text.test.ts`
-- [ ] T042 [P] [US3] Unit tests for the short string generator: pattern and length per value, `length_groups` counts exact, distinct count and repeat structure exact, determinism, in `tests/unit/generate-short-string.test.ts`
+- [x] T041 [P] [US3] Unit tests for short string detection (not ID-named, distinct above the limit, not personal) in `tests/unit/classify-text.test.ts`
+- [x] T042 [P] [US3] Unit tests for the short string generator: pattern and length per value, `length_groups` counts exact, distinct count and repeat structure exact, determinism, in `tests/unit/generate-short-string.test.ts`
 - [x] T043 [P] [US3] Component tests for the pattern editor and sample in `tests/component/review-short-string.test.tsx`
 
 ### Implementation for User Story 3
@@ -139,7 +139,7 @@
 - [x] T045 [US3] Profile short strings in `src/workers/profile/personal.ts`: per-position classes for the longest length (reuse `tokenForPosition`), `length_groups`, repeat structure; classification in `classify.ts`
 - [x] T046 [US3] Build `src/features/review/ShortStringEditor.tsx` (reuse the ID token editor parts from `IdMaskEditor.tsx` where possible) with the shortfall message and Generate gating as for IDs (`narrowIdColumns` generalized in `src/lib/profile/idCapacity.ts`)
 - [x] T060 [US3] Make the short string shortfall (FR-013) block Generate with the ID-style message and no suffix; test in `tests/component/review-short-string.test.tsx`
-- [ ] T047 [US3] Integration test profile then generate then re-profile the plate and vendor code columns in `tests/integration/text-roundtrip.test.ts`
+- [x] T047 [US3] Integration test profile then generate then re-profile the plate and vendor code columns in `tests/integration/text-roundtrip.test.ts`
 
 **Checkpoint**: no string column is left out for being text.
 
@@ -147,7 +147,7 @@
 
 ## Phase 7: Polish & Cross-Cutting
 
-- [ ] T061 [P] Extend `tests/unit/determinism.test.ts` with personal, free text and short string columns: byte-identical output across chunk sizes and seeds, and changing one of them changes no other column (SC-003)
+- [x] T061 [P] Extend `tests/unit/determinism.test.ts` with personal, free text and short string columns: byte-identical output across chunk sizes and seeds, and changing one of them changes no other column (SC-003)
 - [ ] T062 Record the person-timing sign-off lines for SC-008 (and the slice 1 SC-007 and SC-008) in this feature's `quickstart.md`
 - [ ] T048 [P] Extend `tests/e2e/a11y.spec.ts` to open the new editors in light and dark themes and fix any violation
 - [ ] T049 [P] Browser tests for the whole slice 2 flow and spec save, reload, load in `tests/e2e/quickstart.spec.ts` (scenarios A, D, E, F) in Chromium, then run `npm run test:e2e:browsers`

@@ -125,7 +125,8 @@ test("neutral label codes and rare-category merging change the written labels", 
   const values = new Set(all.slice(1).map((r) => r[header.indexOf("cat_str_5")]).filter(Boolean));
   expect(values.size).toBe(5);
   expect([...values].every((v) => /^cat_0[1-5]$/.test(v))).toBe(true);
-  for (const real of ["North", "South", "East", "West", "Central"]) expect(fake).not.toContain(real);
+  // (The other columns hold invented street names and words, so the whole file is not searched for "North".)
+  for (const real of ["North", "South", "East", "West", "Central"]) expect(values.has(real)).toBe(false);
 });
 
 test("the mean and spread can be restored exactly, and the spec says so", async ({ page }) => {
@@ -161,16 +162,16 @@ test("the spec notice is on the screen and the optional protections start off", 
   await expect(c.getByLabel(/Replace labels with neutral codes/)).not.toBeChecked();
 });
 
-test("search and filters work on the real 82-column table", async ({ page }) => {
+test("search and filters work on the real 88-column table", async ({ page }) => {
   await toReview(page);
-  await expect(page.locator(".column-card")).toHaveCount(82);
+  await expect(page.locator(".column-card")).toHaveCount(88);
   await page.getByLabel("Search columns").fill("na_");
   await expect(page.locator(".column-card")).toHaveCount(6);
   await page.getByRole("button", { name: "Clear filters" }).click();
   await page.getByLabel("Needs attention only").check();
   const attention = await page.locator(".column-card").count();
-  expect(attention).toBeGreaterThan(20);
-  expect(attention).toBeLessThan(82);
+  expect(attention).toBeGreaterThan(10);
+  expect(attention).toBeLessThan(88);
   await expect(page.locator(".attention-banner")).toContainText(`${attention} columns need a look`);
 });
 

@@ -18,7 +18,7 @@ const read = (prefix: string): string => {
 };
 
 // Long words from three of the lists (not street suffixes: words like "Extension" occur in other code), so a match cannot be a coincidence.
-const longest = (list: readonly string[] | undefined, n: number) => [...(list ?? [])].filter((w) => /^[A-Za-z]{9,}$/.test(w)).sort().slice(0, n);
+const longest = (list: readonly string[] | null | undefined, n: number) => [...(list ?? [])].filter((w) => /^[A-Za-z]{9,}$/.test(w)).sort().slice(0, n);
 const MARKERS = [...longest(en.person?.last_name?.generic, 6), ...longest(en.person?.first_name?.female, 6), ...longest(en.lorem?.word, 6)];
 
 describe.skipIf(!built)("the word lists are in the generate worker only", () => {
