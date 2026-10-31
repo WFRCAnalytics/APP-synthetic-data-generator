@@ -417,13 +417,18 @@
       "kind": "phone"
     },
     "phone_intl": {
-      "type": "short_string",
-      "status": "ok",
-      "reasons": [],
+      "type": "personal",
+      "status": "needs_attention",
+      "reasons": [
+        "kind_mixed"
+      ],
+      "kind": "phone",
       "assert": [
         "type",
-        "status"
-      ]
+        "status",
+        "reasons"
+      ],
+      "notes": "the name says phone but the shapes are international"
     },
     "person_name": {
       "type": "personal",

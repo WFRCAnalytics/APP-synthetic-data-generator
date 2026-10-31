@@ -9,6 +9,12 @@ import type { ColumnSpec } from "../spec/types";
 import { makeLabelLookup } from "./categorical";
 import { makeDateFormatter } from "./datetime";
 import { formatNumber, makeNumericSource, withRescale, type NumericPlan } from "./numeric";
+import { mix32 } from "../rng/sfc32";
+import { makeUniqueSpace } from "../textgen/compose";
+import { loremText } from "../textgen/lorem";
+import { makeShortStringGenerator, ShortStringError } from "../textgen/shortstring";
+import { makePersonalComposer } from "../textgen/personal";
+import { makeGroupMapper } from "./groups";
 import { makePlacer } from "./placement";
 import { IdPatternError, makeIdGenerator, rowsCovered } from "./survey-id";
 
@@ -93,6 +99,61 @@ export function createColumnGen(col: ColumnSpec, ctx: ColumnContext): ColumnGen 
         // Rounding can step outside the real range by less than a unit; keep min and max exact.
         const n = Math.min(col.max, Math.max(col.min, fmt.round(source(row, p.index))));
         return fmt.format(n);
+      });
+    }
+
+    case "personal": {
+      const placer = makePlacer(ctx.nRows, key, col.na, col.sentinels);
+      const groups = makeGroupMapper(col.repeat_structure);
+      if (groups.rows !== placer.valueTotal) {
+        throw new GenerationError(`Column "${col.name}": the repeat structure covers ${groups.rows} rows, but ${placer.valueTotal} rows are left after NA and sentinels.`);
+      }
+      const composer = makePersonalComposer(col.kind, col.format);
+      if (!composer.suffixes && groups.groups > composer.natural) {
+        throw new GenerationError(`Column "${col.name}": ${groups.groups} distinct values are needed but only ${composer.natural} can be invented for this kind.`);
+      }
+      const space = makeUniqueSpace(composer.natural, groups.groups, key);
+      return gen((row) => {
+        const p = placer(row);
+        if (p.kind !== "value") return p.token;
+        const { index, suffix } = space.map(groups(p.index));
+        return composer.valueAt(index, suffix);
+      });
+    }
+
+    case "free_text": {
+      // The length of each value is drawn like a number (exact min and max, the chosen mode), then the
+      // filler text is made to that length.
+      const placer = makePlacer(ctx.nRows, key, col.na, col.sentinels);
+      const source = numericSourceFor(col, key, placer, ctx.nRows);
+      const textKey = mix32((key ^ 0x7e47) >>> 0);
+      return gen((row) => {
+        const p = placer(row);
+        if (p.kind !== "value") return p.token;
+        const length = Math.min(col.max, Math.max(col.min, Math.round(source(row, p.index))));
+        return loremText(length, textKey, row, col.line_breaks === true);
+      });
+    }
+
+    case "short_string": {
+      const placer = makePlacer(ctx.nRows, key, col.na, col.sentinels);
+      const groups = makeGroupMapper(col.repeat_structure);
+      if (groups.rows !== placer.valueTotal) {
+        throw new GenerationError(`Column "${col.name}": the repeat structure covers ${groups.rows} rows, but ${placer.valueTotal} rows are left after NA and sentinels.`);
+      }
+      let strings;
+      try {
+        strings = makeShortStringGenerator({ pattern: col.pattern, length_groups: col.length_groups }, key);
+      } catch (err) {
+        if (err instanceof ShortStringError) throw new GenerationError(`Column "${col.name}": ${err.message}`);
+        throw err;
+      }
+      if (strings.groups !== groups.groups) {
+        throw new GenerationError(`Column "${col.name}": the length groups hold ${strings.groups} distinct values but the repeat structure has ${groups.groups}.`);
+      }
+      return gen((row) => {
+        const p = placer(row);
+        return p.kind === "value" ? strings(groups(p.index)) : p.token;
       });
     }
 

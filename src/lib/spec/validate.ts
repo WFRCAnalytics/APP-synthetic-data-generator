@@ -257,7 +257,9 @@ function checkColumn(col: ColumnSpec, rows: number, out: SpecProblem[]): void {
         if (longest !== col.pattern.length) problem("pattern", `The pattern has ${col.pattern.length} positions but the longest length is ${longest}.`);
         const groups = sum(Object.values(col.length_groups));
         if (distinct !== null && groups !== distinct) problem("length_groups", `The length groups add up to ${groups}, but the repeat structure has ${distinct} distinct values.`);
-        for (const k of lengths) {
+        // A column that is left out needs no room in its pattern; one that is generated does.
+        const generated = col.exclude === undefined || col.exclude === "include";
+        for (const k of generated ? lengths : []) {
           const allowed = maskCapacity(col.pattern.slice(0, Number(k)));
           if (allowed < BigInt(col.length_groups[k])) {
             problem("pattern", `For length ${k} the pattern allows ${allowed} distinct values but the column needs ${col.length_groups[k]}.`);

@@ -30,7 +30,8 @@ describe("verify-roundtrip", () => {
     const result = run(real, fake);
     expect(result.stdout).toMatch(/^OK:/m);
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain("left out by the app");
+    // every column of this file is generated now, so nothing is reported as left out
+    expect(result.stdout).not.toContain("left out by the app");
   });
 
   it("passes for the type zoo, reporting the columns it left out", async () => {

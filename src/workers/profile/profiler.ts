@@ -2,7 +2,7 @@
 // compute the type-specific summary with exact numbers from the full table (FR-005 to FR-009).
 // Runs against an abstract SqlRunner, so it works in the browser worker and in Node tests.
 
-import { classifyColumn, DEFAULT_THRESHOLD, resolveDate } from "../../lib/classify/classify";
+import { classifyColumn, DEFAULT_THRESHOLD, personalKindFromName, resolveDate } from "../../lib/classify/classify";
 import { detectNa, withExtraTokens, type NaInfo } from "../../lib/classify/na";
 import { detectSentinels } from "../../lib/classify/sentinels";
 import { KNOWN_NA_TOKENS, type BasicStats } from "../../lib/classify/stats";
@@ -16,7 +16,12 @@ import type {
   NumericSummary,
   ReasonCode,
 } from "../../lib/profile/types";
+import { shortStringFit } from "../../lib/profile/idCapacity";
+import { needsSuffix } from "../../lib/textgen/space";
+import { MAX_TEXT_LENGTH } from "../../lib/spec/types";
+import type { PersonalKind } from "../../lib/spec/types";
 import { profileIds } from "./ids";
+import { freeTextFlags, profilePersonal, profileShortString } from "./personal";
 import { collectBasic, createSample, isValue } from "./stats";
 import { ident, lit, litList, QUANTILE_LIST, SRC, toNumber, toNumberArray, type SqlRunner } from "./sql";
 
@@ -129,6 +134,9 @@ async function numericSummary(
 /** The most labels a column the user forces to categorical may have. */
 export const MAX_FORCED_LABELS = 2000;
 
+/** Short string patterns hold at most this many positions (longer values are free text). */
+export const MAX_SHORT_STRING_LENGTH = 64;
+
 interface Forced {
   type: ColumnType;
   storage?: "integer" | "string";
@@ -168,6 +176,15 @@ function forceType(target: ColumnType, basic: BasicStats, sentinelKeys: readonly
         extraNa: basic.unparsedCount > 0 ? basic.unparsedTop : undefined,
       };
     }
+
+    case "personal":
+      return { type: "personal" };
+
+    case "free_text":
+      return { type: "free_text" };
+
+    case "short_string":
+      return basic.maxLength > MAX_SHORT_STRING_LENGTH ? null : { type: "short_string" };
 
     default:
       return null; // dates need a pattern; empty and survey_id are not offered as choices
@@ -305,6 +322,32 @@ export async function profileColumn(
       break;
     }
 
+    case "personal": {
+      const kind: PersonalKind = cls.personalKind ?? personalKindFromName(name);
+      const agg = await profilePersonal(sql, c, where, kind);
+      summary = { kind: "personal", personalKind: kind, repeatStructure: agg.repeatStructure, distinct: agg.distinct, ...(agg.format ? { format: agg.format } : {}) };
+      if (needsSuffix(kind, agg.distinct)) reasons.push("suffix_needed");
+      break;
+    }
+
+    case "free_text": {
+      // Length in characters, capped; exact min and max come from the full table.
+      const num = await numericSummary(sql, `least(length(${c}), ${MAX_TEXT_LENGTH})`, where);
+      const flags = await freeTextFlags(sql, c, where);
+      const { thousands: _thousands, scientific: _scientific, ...length } = num as typeof num & { thousands?: boolean; scientific?: boolean };
+      void _thousands;
+      void _scientific;
+      summary = { kind: "free_text", ...length, decimals: 0, lineBreaks: flags.lineBreaks };
+      if (flags.capped > 0) reasons.push("text_length_capped");
+      break;
+    }
+
+    case "short_string": {
+      const agg = await profileShortString(sql, c, where);
+      summary = { kind: "short_string", pattern: agg.pattern, lengthGroups: agg.lengthGroups, repeatStructure: agg.repeatStructure, distinct: agg.distinct };
+      break;
+    }
+
     case "survey_id": {
       // A pattern, a min and max for whole numbers, and the repeat structure: no ID value is kept.
       const ids = await profileIds(sql, name, where);
@@ -315,11 +358,16 @@ export async function profileColumn(
     }
 
     default:
-      summary = { kind: "unsupported" };
+      // An SSN-style column is unsupported until acknowledged, but keeps its figures so that the
+      // acknowledgement on Review can switch it on without profiling again.
+      if (cls.personalKind === "ssn") {
+        const agg = await profilePersonal(sql, c, where, "ssn");
+        summary = { kind: "personal", personalKind: "ssn", repeatStructure: agg.repeatStructure, distinct: agg.distinct, ...(agg.format ? { format: agg.format } : {}) };
+      } else summary = { kind: "unsupported" };
   }
 
   // Numeric modes: match mean and sd by default, uniform when no beta can fit (FR-011).
-  if (summary.kind === "numeric" || summary.kind === "datetime") {
+  if (summary.kind === "numeric" || summary.kind === "datetime" || summary.kind === "free_text") {
     const fit = fitBeta(summary.mean, summary.sd, summary.min, summary.max);
     if (fit) mode = "match_mean_sd";
     else {
@@ -331,9 +379,13 @@ export async function profileColumn(
   // An ID with no readable pattern cannot be generated, so it is left out like any unsupported column.
   const noPattern = summary.kind === "survey_id" && summary.mask.length === 0;
   if (noPattern) reasons.push("id_mixed_masks");
+  // A short string whose pattern cannot hold its distinct values (punctuation that varies, say) is
+  // left out until the user widens the pattern on Review.
+  const narrowShort = summary.kind === "short_string" && shortStringFit({ summary } as ColumnProfile)?.short === true;
+  if (narrowShort) reasons.push("id_mask_too_narrow");
   if (reasons.length > 0 && status === "ok") status = "needs_attention";
 
-  const exclude: ColumnProfile["exclude"] = type === "unsupported" || noPattern ? "drop" : "include";
+  const exclude: ColumnProfile["exclude"] = type === "unsupported" || noPattern || narrowShort ? "drop" : "include";
 
   return {
     name,

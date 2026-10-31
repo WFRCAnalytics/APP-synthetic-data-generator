@@ -29,6 +29,12 @@ export interface BasicStats {
   topValues: ValueCount[];
   /** Shapes from a random sample of the values. */
   shapes: ShapeCount[];
+  /**
+   * The same sample with every run of letters (and of digits) collapsed to one character, so that
+   * AAAA.AAAA@AAA.AAA becomes A.A@A.A. Values of very different lengths share a shape here, which
+   * is what recognizing emails and URLs needs.
+   */
+  runShapes?: ShapeCount[];
   shapeSample: number;
   /** Values that parse as whole numbers (no decimal point, no separators). */
   intCount: number;

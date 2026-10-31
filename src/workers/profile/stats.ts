@@ -4,7 +4,7 @@
 
 import { DEFAULT_THRESHOLD, isIdName } from "../../lib/classify/classify";
 import { KNOWN_NA_TOKENS, type BasicStats } from "../../lib/classify/stats";
-import { ident, litList, shapeOf, SMP, SRC, toNumber, toNumberOrNull, type SqlRunner } from "./sql";
+import { ident, litList, runShapeOf, shapeOf, SMP, SRC, toNumber, toNumberOrNull, type SqlRunner } from "./sql";
 
 export const SAMPLE_ROWS = 50_000;
 const TOP_VALUES = 60;
@@ -94,6 +94,9 @@ export async function collectBasic(
   const shapeRows = await sql.all(
     `SELECT ${shapeOf(c)} AS shape, count(*) AS n FROM ${SMP} WHERE ${value} GROUP BY 1 ORDER BY n DESC, shape LIMIT ${TOP_SHAPES}`,
   );
+  const runRows = await sql.all(
+    `SELECT ${runShapeOf(c)} AS shape, count(*) AS n FROM ${SMP} WHERE ${value} GROUP BY 1 ORDER BY n DESC, shape LIMIT ${TOP_SHAPES}`,
+  );
   const [sample] = await sql.all(`SELECT count(*) AS n FROM ${SMP} WHERE ${value}`);
 
   // Frequent values are real values, so they are fetched only where they are needed (specs/002 R6):
@@ -132,6 +135,7 @@ export async function collectBasic(
     valueCount: toNumber(agg.value_count),
     topValues: top.map((r) => ({ value: String(r.v), count: toNumber(r.n) })),
     shapes: shapeRows.map((r) => ({ shape: String(r.shape), count: toNumber(r.n) })),
+    runShapes: runRows.map((r) => ({ shape: String(r.shape), count: toNumber(r.n) })),
     shapeSample: toNumber(sample.n),
     intCount: toNumber(agg.int_count),
     floatCount: toNumber(agg.float_count),

@@ -191,7 +191,7 @@ describe("integer and float", () => {
 
   it("does not call a mostly text column numeric", () => {
     const s = makeStats({ name: "notes", valueCount: 1000, intCount: 100, floatCount: 100, unparsedCount: 900, unparsedDistinct: 800, distinct: 850, shapes: [{ shape: "AAAA AAAA", count: 900 }], maxLength: 30 });
-    expect(classify(s).type).toBe("unsupported");
+    expect(classify(s).type).toBe("free_text"); // mostly text with spaces: described by lengths, not read as numbers
   });
 });
 
@@ -229,35 +229,71 @@ describe("survey IDs come before categorical", () => {
   });
 });
 
-describe("unsupported columns (nothing may leak)", () => {
-  it("catches emails by shape", () => {
-    const s = strings("contact", [{ shape: "AAAA.AAAA@AAAAAAA.AAA", count: 700 }, { shape: "AAAAAA99@AAAAAAA.AAA", count: 300 }]);
-    const c = classify(s);
-    expect(c.type).toBe("unsupported");
-    expect(c.reasons).toContain("possible_identifier");
+describe("personal data is described by kind, never by value (specs/002 FR-001)", () => {
+  it("proposes email by shape, and flags a mixed column", () => {
+    const clean = classify(strings("contact", [{ shape: "AAAA.AAAA@AAAAAAA.AAA", count: 700 }, { shape: "AAAAAA99@AAAAAAA.AAA", count: 300 }]));
+    expect(clean.type).toBe("personal");
+    expect(clean.personalKind).toBe("email");
+    expect(clean.status).toBe("ok");
+    expect(clean.reasons).toEqual([]);
+    const mixed = classify(strings("contact", [{ shape: "AAAA.AAAA@AAAAAAA.AAA", count: 650 }, { shape: "AAAA AAAA", count: 350 }]));
+    expect(mixed.type).toBe("personal");
+    expect(mixed.status).toBe("needs_attention");
+    expect(mixed.reasons).toContain("kind_mixed");
+  });
+
+  it.each([["(999) 999-9999"], ["999-999-9999"], ["999.999.9999"], ["9999999999"], ["999-999-9999 A9999"], ["1-999-999-9999".replace("1", "9")]])(
+    "proposes phone for US shape %s",
+    (shape) => {
+      const c = classify(strings("number", [{ shape, count: 1000 }]));
+      expect(c.type).toBe("personal");
+      expect(c.personalKind).toBe("phone");
+    },
+  );
+
+  it("leaves international phone numbers to short strings (US only in this version)", () => {
+    expect(classify(strings("number", [{ shape: "+99 99 9999 9999", count: 1000 }], { distinct: 900 })).type).toBe("short_string");
+  });
+
+  it("proposes url and ip by shape", () => {
+    expect(classify(strings("link", [{ shape: "AAAAA://AAA.AAAAAAA.AAA/AAAA", count: 1000 }], { distinct: 900 })).personalKind).toBe("url");
+    expect(classify(strings("host", [{ shape: "999.999.9.99", count: 1000 }], { distinct: 900 })).personalKind).toBe("ip");
   });
 
   it.each([
-    ["(999) 999-9999"],
-    ["999-999-9999"],
-    ["999-999-9999 A9999"],
-    ["+99 99 9999 9999"],
-  ])("catches phone numbers shaped %s", (shape) => {
-    const c = classify(strings("number", [{ shape, count: 1000 }]));
-    expect(c.type).toBe("unsupported");
-    expect(c.reasons).toContain("possible_identifier");
-  });
-
-  it("catches social-security-like numbers", () => {
-    expect(classify(strings("code", [{ shape: "999-99-9999", count: 1000 }])).type).toBe("unsupported");
-  });
-
-  it.each(["email", "full_name", "street_address", "Phone", "ip_address"])("catches the column name %s", (name) => {
+    ["email", "email"],
+    ["respondent_email", "email"],
+    ["full_name", "full_name"],
+    ["person_name", "full_name"],
+    ["first_name", "first_name"],
+    ["given_name", "first_name"],
+    ["last_name", "last_name"],
+    ["surname", "last_name"],
+    ["street_address", "address"],
+    ["Phone", "phone"],
+    ["mobile", "phone"],
+  ])("proposes the kind of the column name %s", (name, kind) => {
     const c = classify(strings(name, [{ shape: "AAAA AAAA", count: 1000 }]));
-    expect(c.type).toBe("unsupported");
-    expect(c.reasons).toContain("possible_identifier");
+    expect(c.type).toBe("personal");
+    expect(c.personalKind).toBe(kind);
   });
 
+  it("leaves social-security-like numbers unsupported until the user acknowledges them", () => {
+    for (const shape of ["999-99-9999", "999999999"]) {
+      const c = classify(strings("code", [{ shape, count: 1000 }]));
+      expect(c.type).toBe("unsupported");
+      expect(c.status).toBe("unsupported");
+      expect(c.personalKind).toBe("ssn");
+      expect(c.reasons).toEqual(expect.arrayContaining(["possible_identifier", "ssn_needs_acknowledgement"]));
+    }
+  });
+
+  it("does not treat a numeric column named like a name as personal", () => {
+    expect(classify(floats("name_length")).type).toBe("float");
+  });
+});
+
+describe("unsupported columns (nothing may leak)", () => {
   it("catches latitude and longitude by name", () => {
     expect(classify(floats("o_lat")).type).toBe("unsupported");
     expect(classify(floats("longitude")).type).toBe("unsupported");
@@ -274,29 +310,46 @@ describe("unsupported columns (nothing may leak)", () => {
     expect(classify(strings("geom", [{ shape: "POINT (-999.999999 99.999999)", count: 1000 }])).type).toBe("unsupported");
   });
 
-  it("catches free text and many-valued short codes", () => {
-    const text = strings("comment", [{ shape: "AAAA AAAA AAAA AAAA", count: 1000 }], { maxLength: 200, meanLength: 80 });
-    expect(classify(text).type).toBe("unsupported");
-    const codes = strings("code", [{ shape: "AA9999", count: 1000 }], { distinct: 900 });
-    expect(classify(codes).type).toBe("unsupported");
-  });
-
-  it("catches 51 distinct short strings", () => {
-    expect(classify(strings("label", [{ shape: "AAAAA_99", count: 1000 }], { distinct: 51 })).type).toBe("unsupported");
-  });
-
-  it("catches zip-like codes with leading zeros instead of losing the zero", () => {
-    const s = makeStats({ name: "zip", valueCount: 1000, intCount: 1000, floatCount: 1000, leadingZeroCount: 90, distinct: 300 });
-    expect(classify(s).type).toBe("unsupported");
-  });
-
-  it("marks every unsupported column as status unsupported", () => {
-    expect(classify(strings("email", [{ shape: "AAAA@AAAA.AAA", count: 1000 }])).status).toBe("unsupported");
-  });
-
   it("flags a time zone offset as unsupported", () => {
     const s = strings("when", [{ shape: "9999-99-99A99:99:99-99:99", count: 1000 }]);
     expect(classify(s).type).toBe("unsupported");
+  });
+});
+
+describe("free text and short strings (specs/002 FR-006, FR-007)", () => {
+  it("calls long text free text", () => {
+    const text = strings("answer", [{ shape: "AAAA AAAA AAAA AAAA", count: 1000 }], { maxLength: 200, meanLength: 80, distinct: 900 });
+    expect(classify(text).type).toBe("free_text");
+    expect(classify(text).status).toBe("ok");
+  });
+
+  it("calls a very long value free text whatever its mean", () => {
+    expect(classify(strings("answer", [{ shape: "AAAA", count: 1000 }], { maxLength: 500, meanLength: 12, distinct: 900 })).type).toBe("free_text");
+  });
+
+  it("calls a comment-like name with spaces free text even when short", () => {
+    const s = strings("comments", [{ shape: "AAAA AAAA", count: 1000 }], { maxLength: 40, meanLength: 20, distinct: 900, spaceCount: 1000 });
+    expect(classify(s).type).toBe("free_text");
+  });
+
+  it("calls many-valued short codes short strings", () => {
+    const codes = strings("code", [{ shape: "AA9999", count: 1000 }], { distinct: 900 });
+    expect(classify(codes).type).toBe("short_string");
+    expect(classify(codes).status).toBe("ok");
+  });
+
+  it("calls 51 distinct labels a short string, 50 a category", () => {
+    expect(classify(strings("label", [{ shape: "AAAAA_99", count: 1000 }], { distinct: 51 })).type).toBe("short_string");
+    expect(classify(strings("label", [{ shape: "AAAAA_99", count: 1000 }], { distinct: 50 })).type).toBe("categorical");
+  });
+
+  it("keeps zip-like codes with leading zeros as short strings instead of losing the zero", () => {
+    const s = makeStats({ name: "zip", valueCount: 1000, intCount: 1000, floatCount: 1000, leadingZeroCount: 90, distinct: 300 });
+    expect(classify(s).type).toBe("short_string");
+  });
+
+  it("survey IDs still win over short strings", () => {
+    expect(classify(integers("hh_id", { distinct: 900, shapes: [{ shape: "99999", count: 1000 }] })).type).toBe("survey_id");
   });
 });
 

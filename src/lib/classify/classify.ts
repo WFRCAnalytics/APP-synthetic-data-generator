@@ -4,13 +4,14 @@
 // (labels and sentinel candidates, which the privacy model allows in the spec).
 //
 // Safety rules that matter most:
-//  - Anything that looks like personal data, free text or a coordinate becomes `unsupported`, so
-//    its values can never reach the preview, the spec or the export (Principle I and II).
+//  - Personal data (names, email, phone, address, ...), free text and short strings are described by
+//    counts, lengths and shapes only, never by values; coordinates stay `unsupported`, so their
+//    values can never reach the preview, the spec or the export (Principle I and II).
 //  - A column named like an ID is a survey ID before it can be categorical, so a household ID with
 //    few distinct values is never stored as category labels.
 
 import { parseDate } from "../datefmt/directives";
-import type { ColumnStatus, ColumnType, ReasonCode } from "../profile/types";
+import type { ColumnStatus, ColumnType, PersonalKind, ReasonCode } from "../profile/types";
 import { withExtraTokens, type NaInfo } from "./na";
 import type { BasicStats, ShapeCount, ValueCount } from "./stats";
 
@@ -31,6 +32,8 @@ export interface Classification {
   datePatterns?: string[];
   /** Stray non-numeric markers in a numeric column, treated as extra NA tokens. */
   extraNa?: ValueCount[];
+  /** The kind proposed for a personal identifier column. */
+  personalKind?: PersonalKind;
   na: NaInfo;
 }
 
@@ -41,7 +44,7 @@ export const DEFAULT_THRESHOLD = 50;
 const ID_NAME_PATTERNS = [/(^|[^A-Za-z])id$/i, /[a-z]Id$/, /^[A-Z0-9]{4,}ID$/, /_num$/i];
 export const isIdName = (name: string) => ID_NAME_PATTERNS.some((r) => r.test(name));
 const TIME_NAME = /time|hhmm|hour|depart|arriv|start|end|(^|_)tm$/i;
-const PERSONAL_NAME = /(^|[^a-z])(e_?mail|phone|tel|telephone|mobile|ssn|name|address|street)([^a-z]|$)/i;
+const PERSONAL_NAME = /(^|[^a-z])(e_?mail|phone|tel|telephone|mobile|ssn|name|address|street|surname|firstname|lastname|fullname|givenname)([^a-z]|$)/i;
 const LAT_LON_NAME = /(^|[^a-z])(lat|latitude|lon|lng|long|longitude)([^a-z]|$)/i;
 
 const BOOLEAN_PAIRS: string[][] = [
@@ -65,19 +68,64 @@ const SHAPE_PATTERNS: Record<string, string[]> = {
   "99:99:99": ["%H:%M:%S"],
 };
 
-const EMAIL_SHAPE = /@/;
-const PHONE_SHAPES = [/^\(?9{3}\)?[ .-]?9{3}[ .-]9{4}/, /^\+9{1,3}[ -]9[9 -]+$/];
-const SSN_SHAPE = /^9{3}-9{2}-9{4}$/;
+const EMAIL_SHAPE = /^[A9._%+-]+@[A9.-]+\.A{2,}$/;
+const PHONE_SHAPES = [/^(\+?9[ .-])?(\(9{3}\) ?|9{3}[ .-]?)9{3}[ .-]?9{4}( ?A{1,3}\.? ?9{1,5})?$/];
+const SSN_SHAPE = /^9{3}-?9{2}-?9{4}$/;
+// The same two kinds seen through run-collapsed shapes (A.A@A.A), which do not depend on lengths.
+const EMAIL_RUN = /^[A9._%+-]+@[A9.-]+\.A$/;
+const URL_RUN = /^A:\/\/[A9._~:/?#@!$&'()*+,;=%-]+$/;
+const URL_SHAPE = /^A{3,5}:\/\/[A9._~:/?#@!$&'()*+,;=%-]+$/;
+const IPV4_SHAPE = /^9{1,3}\.9{1,3}\.9{1,3}\.9{1,3}$/;
+const FREE_TEXT_NAME = /(^|[^a-z])(comments?|notes?|remarks?|description|desc|feedback|text|narrative|other_specify|specify)([^a-z]|$)/i;
+const MAX_SHORT_STRING = 64;
+const FREE_TEXT_MEAN = 40;
 const TZ_SHAPE = /(\d{2}:\d{2}|9{2}:9{2})[+-]9{2}:9{2}$|[+-]9{2}:9{2}$|9Z$|AZ$/;
-const COORD_SHAPES = [/^\(9+\.9+, -?9+\.9+\)$/, /^POINT/i, /^\(-?9+\.9+, -?9+\.9+\)$/];
+const COORD_SHAPES = [/^\(9+\.9+, -?9+\.9+\)$/, /^POINT/i, /^A{4,10} ?\(-?9+(\.9+)? -?9+(\.9+)?\)$/, /^\(-?9+\.9+, -?9+\.9+\)$/];
 
 function shareOf(shapes: ShapeCount[], sample: number, test: (s: string) => boolean): number {
   if (sample === 0) return 0;
   return shapes.filter((s) => test(s.shape)).reduce((a, s) => a + s.count, 0) / sample;
 }
 
-function unsupported(na: NaInfo, reasons: ReasonCode[] = []): Classification {
-  return { type: "unsupported", status: "unsupported", reasons: ["unsupported_type", ...reasons], na };
+function unsupported(na: NaInfo, reasons: ReasonCode[] = [], personalKind?: PersonalKind): Classification {
+  return { type: "unsupported", status: "unsupported", reasons: ["unsupported_type", ...reasons], na, ...(personalKind ? { personalKind } : {}) };
+}
+
+/** The kind of a personal identifier column and how much of the column fits it, or null. */
+function personalKindFor(
+  stats: BasicStats,
+  numberLike: boolean,
+  textShare: (test: (s: string) => boolean) => number,
+): { kind: PersonalKind; share: number } | null {
+  const ssn = textShare((s) => SSN_SHAPE.test(s));
+  if (ssn > 0.5) return { kind: "ssn", share: ssn };
+  const runShare = (test: (s: string) => boolean) => (stats.runShapes ? shareOf(stats.runShapes, stats.shapeSample, test) : 0);
+  const email = Math.max(textShare((s) => EMAIL_SHAPE.test(s)), runShare((s) => EMAIL_RUN.test(s)));
+  if (email > 0.5) return { kind: "email", share: email };
+  const phone = textShare((s) => PHONE_SHAPES.some((r) => r.test(s)));
+  if (phone > 0.5) return { kind: "phone", share: phone };
+  const url = Math.max(textShare((s) => URL_SHAPE.test(s)), runShare((s) => URL_RUN.test(s)));
+  if (url > 0.5) return { kind: "url", share: url };
+  const ip = textShare((s) => IPV4_SHAPE.test(s));
+  if (ip > 0.5) return { kind: "ip", share: ip };
+  if (PERSONAL_NAME.test(stats.name) && !numberLike) {
+    // The name proposes the kind; where the kind has a recognizable shape, the values must agree.
+    const kind = personalKindFromName(stats.name);
+    const shaped: Partial<Record<PersonalKind, number>> = { email, phone, url, ip };
+    return { kind, share: shaped[kind] ?? 1 };
+  }
+  return null;
+}
+
+/** The personal kind a column name suggests; full name when it only says "name" or nothing helps. */
+export function personalKindFromName(n: string): PersonalKind {
+  if (/e_?mail/i.test(n)) return "email";
+  if (/phone|(^|[^a-z])tel(ephone)?([^a-z]|$)|mobile/i.test(n)) return "phone";
+  if (/ssn/i.test(n)) return "ssn";
+  if (/address|street/i.test(n)) return "address";
+  if (/first|given/i.test(n)) return "first_name";
+  if (/last|sur|family/i.test(n)) return "last_name";
+  return "full_name";
 }
 
 function pairMatches(values: string[]): boolean {
@@ -152,12 +200,12 @@ export function classifyColumn(
     return done("date", { datePatterns }); // resolveDate settles the exact type and format
   }
 
-  // 5. Personal identifiers.
-  const emailish = textShare((s) => EMAIL_SHAPE.test(s)) > 0.5;
-  const phoneish = textShare((s) => PHONE_SHAPES.some((r) => r.test(s))) > 0.5;
-  const ssnish = textShare((s) => SSN_SHAPE.test(s)) > 0.5;
-  if (emailish || phoneish || ssnish || (PERSONAL_NAME.test(stats.name) && !numberLike)) {
-    return unsupported(na, ["possible_identifier"]);
+  // 5. Personal identifiers (kinds are proposed from value shapes first, then from the column name).
+  const personal = personalKindFor(stats, numberLike, textShare);
+  if (personal) {
+    if (personal.kind === "ssn") return unsupported(na, ["possible_identifier", "ssn_needs_acknowledgement"], "ssn");
+    if (personal.share < 0.8) reasons.push("kind_mixed");
+    return done("personal", { personalKind: personal.kind });
   }
 
   // 6. Survey IDs: the name says ID, and the values are whole numbers or short codes.
@@ -207,8 +255,14 @@ export function classifyColumn(
     };
   }
 
-  // 10-11. Free text and short strings are not supported in this version.
-  return unsupported(na);
+  // 10-11. Free text and short strings: described by lengths and patterns, never by values.
+  const values10 = Math.max(1, stats.valueCount);
+  const spaceShare = (stats.spaceCount ?? textShare((s) => s.includes(" "))) / (stats.spaceCount === undefined ? 1 : values10);
+  const isFreeText =
+    stats.maxLength > MAX_SHORT_STRING ||
+    stats.meanLength >= FREE_TEXT_MEAN ||
+    (FREE_TEXT_NAME.test(stats.name) && spaceShare > 0.3);
+  return done(isFreeText ? "free_text" : "short_string");
 }
 
 export interface DateResolution {

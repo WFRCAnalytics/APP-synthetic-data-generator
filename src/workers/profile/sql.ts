@@ -66,5 +66,9 @@ export function normalizeRow(row: Row): Row {
 export const QUANTILE_LIST = `[${Array.from({ length: 101 }, (_, i) => (i / 100).toString()).join(", ")}]`;
 
 /** SQL expression turning a value into its character shape: digits to 9, letters to A. */
+/** A shape with each run of letters, and each run of digits, collapsed to a single A or 9. */
+export const runShapeOf = (col: string): string =>
+  `regexp_replace(regexp_replace(left(${col}, 128), '[A-Za-z]+', 'A', 'g'), '[0-9]+', '9', 'g')`;
+
 export const shapeOf = (col: string): string =>
   `regexp_replace(regexp_replace(left(${col}, 64), '[0-9]', '9', 'g'), '[A-Za-z]', 'A', 'g')`;

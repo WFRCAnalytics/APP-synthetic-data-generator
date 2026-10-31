@@ -50,18 +50,18 @@
 
 ### Tests for User Story 1
 
-- [ ] T015 [P] [US1] Unit tests for detection of personal kinds from shapes and column names, mixed columns (`kind_mixed`), SSN-style left unsupported until acknowledged, and unchanged behavior for other types, in `tests/unit/classify-personal.test.ts`
-- [ ] T016 [P] [US1] Unit tests for each composer (full, first, last name; email; phone with shapes; address; URL; IPv4; SSN with 9xx area): values match the kind's format, are unique across the space, never in assigned ranges for SSN, deterministic, in `tests/unit/textgen-personal.test.ts`
-- [ ] T017 [P] [US1] Unit tests that a personal column keeps its repeat structure, distinct count and NA and sentinel counts exactly, across chunk sizes, in `tests/unit/generate-personal.test.ts`
+- [x] T015 [P] [US1] Unit tests for detection of personal kinds from shapes and column names, mixed columns (`kind_mixed`), SSN-style left unsupported until acknowledged, and unchanged behavior for other types, in `tests/unit/classify-personal.test.ts`
+- [x] T016 [P] [US1] Unit tests for each composer (full, first, last name; email; phone with shapes; address; URL; IPv4; SSN with 9xx area): values match the kind's format, are unique across the space, never in assigned ranges for SSN, deterministic, in `tests/unit/textgen-personal.test.ts`
+- [x] T017 [P] [US1] Unit tests that a personal column keeps its repeat structure, distinct count and NA and sentinel counts exactly, across chunk sizes, in `tests/unit/generate-personal.test.ts`
 - [ ] T018 [P] [US1] Component tests for the kind editor (kind change updates the sample through a mocked worker, explanation text, the suffix note, SSN acknowledgement toggles generation) in `tests/component/review-personal.test.tsx`
 
 ### Implementation for User Story 1
 
-- [ ] T019 [US1] Create `src/lib/textgen/wordlists.ts` (the only importer of `@faker-js/faker`, reading the en_US definitions for first and last names, street suffixes, city names, states, free email domains, and a small set of URL words) and export plain arrays
-- [ ] T020 [US1] Implement the composers in `src/lib/textgen/personal.ts`, `src/lib/textgen/phone.ts` and `src/lib/textgen/ssn.ts` per R3 and R8, each returning `{space, valueAt(index)}` and honoring the profiled `format`
-- [ ] T021 [US1] Extend `classifyColumn` in `src/lib/classify/classify.ts` to return `personal` with a proposed kind instead of `unsupported` (R5), reason `kind_mixed` below 80% shape share, and `unsupported` plus `ssn_needs_acknowledgement` for SSN-style columns
-- [ ] T022 [US1] Create `src/workers/profile/personal.ts`: repeat structure (reuse `repeatStructure` from `ids.ts`), distinct count, format shapes (at most 5 with shares), name `last_first`, address `unit` and `zip4`; wire it into `src/workers/profile/profiler.ts` for the `personal` case, never returning a value
-- [ ] T023 [US1] Add the `personal` case to `src/lib/generate/column.ts` (placer for NA and sentinels, group mapper, composer, suffix when the group count exceeds the natural space) and the checks in `src/lib/generate/checks.ts` (`distinct_count`, `repeat_structure`, `na_count`, `sentinel_counts`)
+- [x] T019 [US1] Create `src/lib/textgen/wordlists.ts` (the only importer of `@faker-js/faker`, reading the en_US definitions for first and last names, street suffixes, city names, states, free email domains, and a small set of URL words) and export plain arrays
+- [x] T020 [US1] Implement the composers in `src/lib/textgen/personal.ts`, `src/lib/textgen/phone.ts` and `src/lib/textgen/ssn.ts` per R3 and R8, each returning `{space, valueAt(index)}` and honoring the profiled `format`
+- [x] T021 [US1] Extend `classifyColumn` in `src/lib/classify/classify.ts` to return `personal` with a proposed kind instead of `unsupported` (R5), reason `kind_mixed` below 80% shape share, and `unsupported` plus `ssn_needs_acknowledgement` for SSN-style columns
+- [x] T022 [US1] Create `src/workers/profile/personal.ts`: repeat structure (reuse `repeatStructure` from `ids.ts`), distinct count, format shapes (at most 5 with shares), name `last_first`, address `unit` and `zip4`; wire it into `src/workers/profile/profiler.ts` for the `personal` case, never returning a value
+- [x] T023 [US1] Add the `personal` case to `src/lib/generate/column.ts` (placer for NA and sentinels, group mapper, composer, suffix when the group count exceeds the natural space) and the checks in `src/lib/generate/checks.ts` (`distinct_count`, `repeat_structure`, `na_count`, `sentinel_counts`)
 - [ ] T024 [US1] Build `src/features/review/PersonalKindEditor.tsx`: kind selector, explanation text, live sample (via a new `session.requestSamples` using the generate worker), suffix note, SSN acknowledgement checkbox; mount it in `ColumnEditors.tsx`; add the kind labels and reason texts to `src/features/review/summary.ts`
 - [ ] T025 [US1] Update `ExcludeControl.tsx`, `AttentionBanner.tsx` and the card summary lines so personal columns show "Invented values, N distinct" and never a value
 - [ ] T026 [US1] Integration test for profiling the personal fixtures against `expected.json` and a roundtrip generate and re-profile (same distinct count, repeat structure, NA counts) in `tests/integration/personal-profile.test.ts` and update `tests/integration/roundtrip.test.ts`

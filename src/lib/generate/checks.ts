@@ -5,12 +5,13 @@
 import { parseDate, patternKind, toNumber as dateToNumber } from "../datefmt/directives";
 import { effectiveCounts } from "../protections";
 import { fitBeta } from "../sampling";
-import type { CategoricalColumn, ColumnSpec, DateColumn, NumericColumn } from "../spec/types";
+import type { CategoricalColumn, ColumnSpec, DateColumn, FreeTextColumn, NumericColumn } from "../spec/types";
+import { DistinctCounter } from "./distinct";
 import type { TablePlan } from "./table";
 
 export interface CheckRow {
   column: string;
-  metric: "label_counts" | "na_count" | "sentinel_counts" | "min" | "max" | "mean" | "sd" | "repeat_structure";
+  metric: "label_counts" | "na_count" | "sentinel_counts" | "min" | "max" | "mean" | "sd" | "repeat_structure" | "distinct_count" | "length_min" | "length_max";
   target: string;
   achieved: string;
   /** Exact metrics must be equal; mean and sd are fitted targets and pass within a tolerance. */
@@ -18,8 +19,8 @@ export interface CheckRow {
 }
 
 const isCategorical = (c: ColumnSpec): c is CategoricalColumn => c.type === "categorical" || c.type === "boolean";
-const isNumericLike = (c: ColumnSpec): c is NumericColumn | DateColumn =>
-  c.type === "integer" || c.type === "float" || c.type === "date" || c.type === "datetime" || c.type === "time";
+const isNumericLike = (c: ColumnSpec): c is NumericColumn | DateColumn | FreeTextColumn =>
+  c.type === "integer" || c.type === "float" || c.type === "date" || c.type === "datetime" || c.type === "time" || c.type === "free_text";
 
 interface Acc {
   col: ColumnSpec;
@@ -28,6 +29,11 @@ interface Acc {
   naByToken: Map<string, number>;
   sentinelByKey: Map<string, number>;
   labels: Map<string, number>;
+  /** Repeat structure and distinct count of invented values, kept as hashes (see distinct.ts). */
+  distinct: DistinctCounter | null;
+  /** Shortest and longest value written, for text columns. */
+  lenMin: number;
+  lenMax: number;
   n: number;
   min: number;
   max: number;
@@ -41,9 +47,12 @@ const numberParser = (thousands: boolean) => (text: string) => {
   return Number.isFinite(n) ? n : null;
 };
 
+const hasDistinct = (col: ColumnSpec): boolean => col.type === "survey_id" || col.type === "personal" || col.type === "short_string";
+
 function makeAcc(col: ColumnSpec): Acc {
   let parse: Acc["parse"] = null;
   if (col.type === "integer" || col.type === "float") parse = numberParser(col.thousands ?? false);
+  if (col.type === "free_text") parse = (text) => text.length;
   if (col.type === "date" || col.type === "datetime" || col.type === "time") {
     const kind = patternKind(col.format);
     parse = (text) => {
@@ -58,6 +67,9 @@ function makeAcc(col: ColumnSpec): Acc {
     naByToken: new Map(),
     sentinelByKey: new Map(),
     labels: new Map(),
+    distinct: hasDistinct(col) ? new DistinctCounter() : null,
+    lenMin: Infinity,
+    lenMax: 0,
     n: 0,
     min: Infinity,
     max: -Infinity,
@@ -106,8 +118,14 @@ export class CheckAccumulator {
         bump(a.sentinelByKey, text);
         continue;
       }
-      if (isCategorical(a.col) || a.col.type === "survey_id") {
-        bump(a.labels, text); // for an ID column this tallies how often each (invented) ID appears
+      if (a.distinct) {
+        a.distinct.add(text); // how often each invented value appears, kept as hashes
+        if (a.col.type === "personal" || a.col.type === "short_string") {
+          if (text.length < a.lenMin) a.lenMin = text.length;
+          if (text.length > a.lenMax) a.lenMax = text.length;
+        }
+      } else if (isCategorical(a.col)) {
+        bump(a.labels, text);
       } else if (a.parse) {
         const x = a.parse(text);
         if (x === null) continue;
@@ -149,12 +167,21 @@ export class CheckAccumulator {
         const want = sortedObject(effectiveCounts(col.counts, col));
         const got = toObject(a.labels);
         add("label_counts", show(want), show(got), sameCounts(want, got));
-      } else if (col.type === "survey_id") {
-        // How many IDs appear once, twice, three times: the repeat structure must be reproduced exactly.
-        const sizes: Record<string, number> = {};
-        for (const n of a.labels.values()) sizes[n] = (sizes[n] ?? 0) + 1;
+      } else if (col.type === "survey_id" || col.type === "personal" || col.type === "short_string") {
+        // How many values appear once, twice, three times: the repeat structure must be reproduced
+        // exactly, and with it the distinct count.
+        const { structure, distinct } = a.distinct ? a.distinct.finish() : { structure: {}, distinct: 0 };
         const want = sortedObject(col.repeat_structure);
-        add("repeat_structure", show(want), show(sortedObject(sizes)), sameCounts(want, sortedObject(sizes)));
+        const wantDistinct = Object.values(want).reduce((x, y) => x + y, 0);
+        add("distinct_count", String(wantDistinct), String(distinct), distinct === wantDistinct);
+        add("repeat_structure", show(want), show(sortedObject(structure)), sameCounts(want, sortedObject(structure)));
+        if (col.type === "short_string") {
+          const lengths = Object.keys(col.length_groups).map(Number);
+          const wantMin = Math.min(...lengths);
+          const wantMax = Math.max(...lengths);
+          add("length_min", String(wantMin), a.lenMax > 0 ? String(a.lenMin) : "n/a", a.lenMax > 0 && a.lenMin === wantMin);
+          add("length_max", String(wantMax), a.lenMax > 0 ? String(a.lenMax) : "n/a", a.lenMax > 0 && a.lenMax === wantMax);
+        }
       } else if (isNumericLike(col)) {
         add("min", String(col.min), a.n > 0 ? String(a.min) : "n/a", a.n > 0 && a.min === col.min);
         add("max", String(col.max), a.n > 0 ? String(a.max) : "n/a", a.n > 0 && a.max === col.max);

@@ -48,7 +48,7 @@ describe("the type zoo", () => {
   it("drops every unsupported column, so none of its values are in the output", () => {
     const text = new TextDecoder().decode(bytes);
     const dropped = source.profiles.filter((p) => p.exclude === "drop").map((p) => p.name);
-    expect(dropped.length).toBeGreaterThan(15);
+    expect(dropped.length).toBeGreaterThan(4); // coordinates, an unacknowledged SSN-style column, and columns that cannot be read
     const header = text.split("\n")[0].split(",");
     for (const name of dropped) expect(header).not.toContain(name);
   });
@@ -153,10 +153,10 @@ describe("dialect variants", () => {
   it("quote_percolumn.csv: the same columns stay quoted", async () => {
     const source = await profilePath(db, join(ZOO, "quote_percolumn.csv"));
     const fake = await profileBytes(db, renderSpec(source.spec), "fake_percolumn.csv");
-    // The note column is not written (free text is unsupported); the ID column is.
+    // Every column is written now: the ID column and the free text note too.
     const written = source.profiles.filter((p) => p.exclude !== "drop");
     expect(fake.profiles.map((p) => p.quoted)).toEqual(written.map((p) => p.quoted));
     expect(source.profiles.map((p) => p.quoted)).toEqual([false, true, false, true, true, true]);
-    expect(written.map((p) => p.name)).toEqual(["id", "label", "amount", "when", "flag"]);
+    expect(written.map((p) => p.name)).toEqual(["id", "label", "amount", "when", "flag", "note"]);
   });
 });

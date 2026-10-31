@@ -213,7 +213,7 @@ function buildZoo() {
   const personal = (kind, extra = {}) => ({ type: "personal", status: "ok", reasons: [], kind, ...extra });
   add("email", (i) => `${slug(pools.names[i % POOL])}.${i}@example.org`, personal("email"));
   add("phone_us", (i) => pools.phones[i % POOL], personal("phone"));
-  add("phone_intl", (i) => pools.intlPhones[i % POOL], { type: "short_string", status: "ok", reasons: [], assert: ["type", "status"] });
+  add("phone_intl", (i) => pools.intlPhones[i % POOL], { type: "personal", status: "needs_attention", reasons: ["kind_mixed"], kind: "phone", assert: ["type", "status", "reasons"], notes: "the name says phone but the shapes are international" });
   add("person_name", (i) => pools.names[i % POOL], personal("full_name"));
   add("first_name", (i) => firstName(i * 7), personal("first_name"));
   add("last_name", (i) => lastName(i * 11), personal("last_name"));

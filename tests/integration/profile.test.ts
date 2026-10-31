@@ -17,7 +17,7 @@ const ZOO = join(__dirname, "../fixtures/zoo");
 const zooPath = join(ZOO, "zoo_small.csv");
 const expected = JSON.parse(readFileSync(join(ZOO, "expected.json"), "utf8")) as {
   n_rows: number;
-  columns: Record<string, { type: string; status: string; reasons: string[]; assert?: string[]; na_tokens?: string[]; decimals?: number; storage?: string; format?: string; mask?: string }>;
+  columns: Record<string, { type: string; status: string; reasons: string[]; assert?: string[]; na_tokens?: string[]; decimals?: number; storage?: string; format?: string; mask?: string; kind?: string }>;
 };
 const raw = parseCsv(readFileSync(zooPath, "utf8"));
 const header = raw.rows[0];
@@ -53,6 +53,9 @@ describe("detection matches the expected result for every zoo column", () => {
 
       // The inferred ID pattern, written readably, matches the one the fixture was built from.
       if (want.mask && got!.summary.kind === "survey_id") expect(maskToRegexString(got!.summary.mask)).toBe(want.mask);
+
+      // The proposed kind of a personal identifier column.
+      if (want.kind && got!.summary.kind === "personal") expect(got!.summary.personalKind).toBe(want.kind);
 
       if (want.na_tokens && asserted.includes("type")) expect(new Set(got!.naTokens)).toEqual(new Set(want.na_tokens));
       if (want.format && asserted.includes("type") && got!.summary.kind === "datetime") expect(got!.summary.format).toBe(want.format);
@@ -173,16 +176,32 @@ describe("categorical counts, NA counts and sentinels are exact", () => {
   });
 });
 
-describe("privacy: unsupported columns carry no values", () => {
-  const leakers = ["email", "person_name", "street_address", "phone_us", "free_text", "ssn_like", "lat", "lon", "coord_pair", "wkt_point", "url", "uuid", "ip_address"];
+describe("privacy: profiles carry no values", () => {
+  const unsupportedColumns = ["lat", "lon", "coord_pair", "wkt_point"];
+  const describedColumns = ["email", "person_name", "first_name", "last_name", "street_address", "phone_us", "phone_intl", "free_text", "comments", "ssn_like", "url", "uuid", "ip_address", "plate", "vendor_code", "short_code_many", "zip_text", "currency_text", "email_mixed"];
 
-  it.each(leakers)("the profile of %s holds no cell value", (name) => {
+  it.each(unsupportedColumns)("the profile of %s holds no cell value", (name) => {
     const p = profiles.get(name)!;
     expect(p.type).toBe("unsupported");
     expect(p.exclude).toBe("drop");
     expect(p.summary).toEqual({ kind: "unsupported" });
     const text = JSON.stringify(p);
     for (const v of column(name).slice(0, 300)) if (v.length > 6) expect(text.includes(v)).toBe(false);
+  });
+
+  it.each(describedColumns)("the profile of %s is counts, lengths and shapes, never a value", (name) => {
+    const p = profiles.get(name)!;
+    expect(["personal", "free_text", "short_string"]).toContain(p.summary.kind);
+    const text = JSON.stringify(p);
+    for (const v of column(name).slice(0, 400)) if (v.length > 6) expect(text.includes(v), `${name} leaks "${v}"`).toBe(false);
+  });
+
+  it("an SSN-style column is unsupported and left out until acknowledged, with its figures kept", () => {
+    const p = profiles.get("ssn_like")!;
+    expect(p.type).toBe("unsupported");
+    expect(p.exclude).toBe("drop");
+    expect(p.attentionReasons).toContain("ssn_needs_acknowledgement");
+    expect(p.summary).toMatchObject({ kind: "personal", personalKind: "ssn" });
   });
 
   it("no profile of an ID column holds an ID value", () => {
