@@ -10,5 +10,6 @@ export function sha256Hex(bytes: Uint8Array): string;
 export function formatChecksums(entries: readonly ChecksumEntry[]): string;
 export function parseChecksums(text: string): ChecksumEntry[];
 export function checkTag(tag: string, version: string, options?: { dryRun?: boolean }): { ok: true } | { ok: false; reason: string };
+export function normalizeLineEndings(name: string, bytes: Uint8Array): Uint8Array;
 export function collectFiles(root: string): Promise<string[]>;
 export function safeJoin(root: string, rel: string): string;

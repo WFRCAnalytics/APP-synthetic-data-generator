@@ -47,6 +47,18 @@ export function checkTag(tag, version, { dryRun = false } = {}) {
   return { ok: false, reason: `The tag ${tag} does not match package.json version ${version}; expected ${exact}${dryRun ? ` or ${exact}-<pre-release>` : ""}.` };
 }
 
+/**
+ * Text files get the line endings their platform expects, so a Windows and a Linux checkout give the same
+ * zip: scripts for Unix and notes in LF, Windows scripts and README.txt in CRLF, and index.html in LF (the
+ * hosted build's own bytes; a Windows checkout of the source can leave it with CRLF).
+ */
+export function normalizeLineEndings(name, bytes) {
+  if (!/\.(sh|cmd|ps1|txt|md|html)$/.test(name)) return bytes;
+  const text = new TextDecoder().decode(bytes).replace(/\r\n/g, "\n");
+  const crlf = /\.(cmd|ps1|txt)$/.test(name);
+  return new TextEncoder().encode(crlf ? text.replace(/\n/g, "\r\n") : text);
+}
+
 /** Every file under a folder as a path relative to it, forward slashes, sorted by path. */
 export async function collectFiles(root) {
   const out = [];

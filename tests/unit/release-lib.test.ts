@@ -6,7 +6,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
-import { checkTag, collectFiles, formatChecksums, parseChecksums, releaseName, safeJoin, sha256Hex, stem, zipName } from "../../scripts/release-lib.mjs";
+import { checkTag, collectFiles, formatChecksums, normalizeLineEndings, parseChecksums, releaseName, safeJoin, sha256Hex, stem, zipName } from "../../scripts/release-lib.mjs";
 
 describe("names", () => {
   it("builds the stem, zip name and release name from the two versions", () => {
@@ -60,6 +60,31 @@ describe("the tag check", () => {
   it("allows a pre-release of the version in a dry run only", () => {
     expect(checkTag("v0.2.0-rc1", "0.2.0", { dryRun: true })).toEqual({ ok: true });
     expect(checkTag("v0.3.0-rc1", "0.2.0", { dryRun: true })).toMatchObject({ ok: false });
+  });
+});
+
+describe("line endings", () => {
+  const enc = new TextEncoder();
+  const dec = new TextDecoder();
+  const run = (name: string, text: string) => dec.decode(normalizeLineEndings(name, enc.encode(text)));
+
+  it("puts Windows scripts and the README in CRLF, whatever they came as", () => {
+    expect(run("start.cmd", "a\nb\r\nc")).toBe("a\r\nb\r\nc");
+    expect(run("start.ps1", "a\r\nb")).toBe("a\r\nb");
+    expect(run("README.txt", "a\nb")).toBe("a\r\nb");
+  });
+
+  it("puts the Unix script, notes and index.html in LF, so a Windows checkout builds the same zip", () => {
+    expect(run("start.sh", "a\r\nb\r\n")).toBe("a\nb\n");
+    expect(run("LICENSES.md", "a\r\nb")).toBe("a\nb");
+    expect(run("index.html", "<html>\r\n</html>\r\n")).toBe("<html>\n</html>\n");
+  });
+
+  it("leaves binary files and bundles alone", () => {
+    const wasm = new Uint8Array([0, 13, 10, 97]);
+    expect(normalizeLineEndings("x.wasm", wasm)).toBe(wasm);
+    const js = enc.encode("a\r\nb");
+    expect(normalizeLineEndings("index-abc.js", js)).toBe(js);
   });
 });
 

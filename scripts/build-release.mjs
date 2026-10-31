@@ -8,7 +8,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildLicenses } from "./licenses.mjs";
-import { collectFiles, formatChecksums, releaseName, safeJoin, sha256Hex, stem, zipName } from "./release-lib.mjs";
+import { collectFiles, formatChecksums, normalizeLineEndings, releaseName, safeJoin, sha256Hex, stem, zipName } from "./release-lib.mjs";
 import { createZip } from "./zip-writer.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -43,24 +43,16 @@ const mtime = buildTime();
 const date = mtime.toISOString().slice(0, 10);
 const top = stem(pkg.version, specVersion);
 
-/** Text files get the line endings their platform expects, so a Windows and a Linux checkout agree. */
-function normalized(name, bytes) {
-  if (!/\.(sh|cmd|ps1|txt|md)$/.test(name)) return bytes;
-  const text = new TextDecoder().decode(bytes).replace(/\r\n/g, "\n");
-  const eol = /\.(cmd|ps1|txt)$/.test(name) ? "\r\n" : "\n";
-  return new TextEncoder().encode(eol === "\n" ? text : text.replace(/\n/g, "\r\n"));
-}
-
 const files = [];
 const add = (path, data, mode) => files.push({ path: `${top}/${path}`, data, ...(mode ? { mode } : {}) });
 
 // The site: dist/ unchanged.
-for (const rel of await collectFiles(dist)) add(`site/APP-synthetic-data-generator/${rel}`, new Uint8Array(readFileSync(safeJoin(dist, rel))));
+for (const rel of await collectFiles(dist)) add(`site/APP-synthetic-data-generator/${rel}`, normalizeLineEndings(rel, new Uint8Array(readFileSync(safeJoin(dist, rel)))));
 
 // The launcher.
 const launcherDir = join(root, "release", "launcher");
 for (const name of ["start.cmd", "start.ps1", "start.sh"]) {
-  add(name, normalized(name, new Uint8Array(readFileSync(join(launcherDir, name)))), name.endsWith(".sh") ? 0o755 : undefined);
+  add(name, normalizeLineEndings(name, new Uint8Array(readFileSync(join(launcherDir, name)))), name.endsWith(".sh") ? 0o755 : undefined);
 }
 
 // README and licences.
@@ -72,8 +64,8 @@ if (/\{\{[A-Z_]+\}\}/.test(readme)) {
   console.error("build-release: README.template.txt has a placeholder that was not filled.");
   process.exit(1);
 }
-add("README.txt", normalized("README.txt", new TextEncoder().encode(readme)));
-add("LICENSES.md", normalized("LICENSES.md", new TextEncoder().encode(buildLicenses(root))));
+add("README.txt", normalizeLineEndings("README.txt", new TextEncoder().encode(readme)));
+add("LICENSES.md", normalizeLineEndings("LICENSES.md", new TextEncoder().encode(buildLicenses(root))));
 
 // The checksum list covers every file except itself, and goes in last.
 const checksums = formatChecksums(files.map((f) => ({ path: f.path.slice(top.length + 1), sha256: sha256Hex(f.data) })));

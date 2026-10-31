@@ -21,7 +21,7 @@ if ! command -v python3 >/dev/null 2>&1; then
 fi
 
 exec python3 - "$here/site" "$@" <<'PY'
-import http.server, os, socket, sys, threading, webbrowser
+import http.server, os, socketserver, sys, threading, webbrowser
 
 root = os.path.realpath(sys.argv[1])
 args = sys.argv[2:]
@@ -85,6 +85,13 @@ class Handler(http.server.BaseHTTPRequestHandler):
 class Server(http.server.ThreadingHTTPServer):
     allow_reuse_address = False
     daemon_threads = True
+
+    def server_bind(self):
+        # The standard server looks up the host name of the address it binds, a reverse DNS query. With no
+        # internet (this release's whole purpose) that can stall for a long time, so it is skipped.
+        socketserver.TCPServer.server_bind(self)
+        self.server_name = "127.0.0.1"
+        self.server_port = self.server_address[1]
 
 
 server = None
