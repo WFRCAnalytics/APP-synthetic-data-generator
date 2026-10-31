@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wfrcanalytics.github.io/APP-synthetic-data-generator/spec-file.schema.json",
+  "title": "Synthetic data spec file (version 1)",
+  "description": "The only artifact derived from real data. Holds summaries and settings, never rows, ID values, free text, personal identifiers or coordinates.",
+  "type": "object",
+  "required": ["spec_version", "source", "n_rows", "seed", "columns"],
+  "additionalProperties": false,
+  "properties": {
+    "spec_version": { "const": 1 },
+    "source": {
+      "type": "object",
+      "required": ["format", "file_name", "encoding", "delimiter", "header"],
+      "additionalProperties": false,
+      "properties": {
+        "format": { "const": "csv" },
+        "file_name": { "type": "string", "minLength": 1 },
+        "encoding": { "enum": ["utf-8", "utf-16le", "utf-16be", "windows-1252"] },
+        "bom": { "type": "boolean", "default": false },
+        "delimiter": { "type": "string", "minLength": 1, "maxLength": 1 },
+        "quote": { "type": ["string", "null"], "maxLength": 1, "default": "\"" },
+        "quote_style": { "enum": ["minimal", "all", "nonnumeric"], "default": "minimal" },
+        "line_ending": { "enum": ["lf", "crlf", "cr"], "default": "lf" },
+        "trailing_newline": { "type": "boolean", "default": true },
+        "header": { "type": "boolean" }
+      }
+    },
+    "n_rows": { "type": "integer", "minimum": 0 },
+    "seed": { "type": "integer", "minimum": 0, "maximum": 4294967295, "default": 42 },
+    "keep_original_name": { "type": "boolean", "default": false },
+    "categorical_threshold": { "type": "integer", "minimum": 2, "default": 50 },
+    "columns": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/column" }
+    }
+  },
+  "$defs": {
+    "na": {
+      "type": "object",
+      "required": ["tokens", "count"],
+      "additionalProperties": false,
+      "properties": {
+        "tokens": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "sentinels": {
+      "description": "Sentinel code to exact count. Real codes are allowed by the privacy model.",
+      "type": "object",
+      "additionalProperties": { "type": "integer", "minimum": 1 }
+    },
+    "numericBlock": {
+      "type": "object",
+      "required": ["mode", "min", "max"],
+      "properties": {
+        "mode": { "enum": ["uniform", "match_mean_sd", "match_shape"] },
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "mean": { "type": "number" },
+        "sd": { "type": "number", "minimum": 0 },
+        "decimals": { "type": "integer", "minimum": 0, "maximum": 15 },
+        "quantiles": {
+          "type": "array",
+          "minItems": 101,
+          "maxItems": 101,
+          "items": { "type": "number" }
+        },
+        "rescale": { "type": "boolean", "default": false }
+      }
+    },
+    "column": {
+      "type": "object",
+      "required": ["name", "type"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "output_name": { "type": "string", "minLength": 1 },
+        "type": {
+          "enum": [
+            "empty",
+            "boolean",
+            "categorical",
+            "integer",
+            "float",
+            "date",
+            "datetime",
+            "time",
+            "survey_id",
+            "unsupported"
+          ]
+        },
+        "exclude": { "enum": ["drop", "keep_as_na", "include"], "default": "include" },
+        "na": { "$ref": "#/$defs/na" },
+        "sentinels": { "$ref": "#/$defs/sentinels" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "enum": ["categorical", "boolean"] } } },
+          "then": {
+            "required": ["counts"],
+            "properties": {
+              "storage": { "enum": ["integer", "string"] },
+              "counts": {
+                "description": "Label to count. Real labels allowed by the privacy model.",
+                "type": "object",
+                "additionalProperties": { "type": "integer", "minimum": 1 }
+              },
+              "merge_under_k": { "type": ["integer", "null"], "minimum": 2 },
+              "label_codes": { "type": "boolean", "default": false }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "enum": ["integer", "float"] } } },
+          "then": { "$ref": "#/$defs/numericBlock" }
+        },
+        {
+          "if": { "properties": { "type": { "enum": ["date", "datetime", "time"] } } },
+          "then": {
+            "required": ["format", "granularity"],
+            "allOf": [{ "$ref": "#/$defs/numericBlock" }],
+            "properties": {
+              "format": {
+                "description": "Pattern using only the supported directives: %Y %y %m %d %H %I %M %S %p %b %B %j and literal text.",
+                "type": "string",
+                "minLength": 1
+              },
+              "granularity": { "enum": ["day", "minute", "second"] }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "survey_id" } } },
+          "then": {
+            "required": ["mask", "repeat_structure"],
+            "properties": {
+              "mask": {
+                "description": "Token list; never a list of ID values.",
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "oneOf": [
+                    { "enum": ["digit", "letter", "alnum"] },
+                    {
+                      "type": "object",
+                      "required": ["literal"],
+                      "additionalProperties": false,
+                      "properties": { "literal": { "type": "string", "minLength": 1, "maxLength": 1 } }
+                    }
+                  ]
+                }
+              },
+              "min": { "type": "integer" },
+              "max": { "type": "integer" },
+              "pad_width": { "type": "integer", "minimum": 0 },
+              "repeat_structure": {
+                "description": "Group size (as a string key) to number of distinct IDs with that size.",
+                "type": "object",
+                "additionalProperties": { "type": "integer", "minimum": 1 }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "unsupported" } } },
+          "then": { "not": { "anyOf": [{ "required": ["counts"] }, { "required": ["quantiles"] }, { "required": ["mask"] }] } }
+        }
+      ]
+    }
+  }
+}
