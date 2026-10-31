@@ -1,0 +1,172 @@
+// Ingest (FR-001 to FR-003): choose a CSV, confirm the detected settings, and see the row count,
+// column count and column names. Never any row values.
+
+import { FileUp } from "lucide-react";
+import { useRef } from "react";
+import { EmptyState } from "../../components/EmptyState";
+import type { FileSettings } from "../../lib/profile/types";
+import type { Progress, SessionState } from "../../app/session";
+
+export interface IngestScreenProps {
+  session: SessionState;
+  onChooseFile: (file: File) => void;
+  onEditSettings: (patch: Partial<FileSettings>) => void;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+const DELIMITERS: [string, string][] = [
+  [",", "Comma (,)"],
+  [";", "Semicolon (;)"],
+  ["\t", "Tab"],
+  ["|", "Pipe (|)"],
+];
+
+const ENCODINGS: [FileSettings["encoding"], string][] = [
+  ["utf-8", "UTF-8"],
+  ["utf-16le", "UTF-16 (little endian)"],
+  ["utf-16be", "UTF-16 (big endian)"],
+  ["windows-1252", "Windows-1252 / Latin-1"],
+];
+
+const MAX_NAMES_SHOWN = 40;
+
+function ProgressBar({ progress, label }: { progress: Progress | null; label: string }) {
+  const known = progress && progress.total > 0;
+  return (
+    <div className="progress-block" role="status" aria-live="polite">
+      <label>
+        {label}
+        {known ? ` (${Math.round((progress.done / progress.total) * 100)}%)` : ""}
+        <progress max={known ? progress.total : undefined} value={known ? progress.done : undefined} />
+      </label>
+    </div>
+  );
+}
+
+export function IngestScreen({ session, onChooseFile, onEditSettings, onConfirm, onCancel }: IngestScreenProps) {
+  const input = useRef<HTMLInputElement>(null);
+  const { phase, settings } = session;
+  const busy = phase === "opening" || phase === "loading" || phase === "profiling";
+  const names = session.columnNames;
+
+  return (
+    <section aria-labelledby="ingest-heading">
+      <h2 id="ingest-heading">Choose a file</h2>
+
+      <div className="field">
+        <label htmlFor="file-input">CSV file</label>
+        <input
+          id="file-input"
+          ref={input}
+          type="file"
+          accept=".csv,.tsv,.txt,text/csv,text/plain"
+          disabled={busy}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) onChooseFile(file);
+          }}
+        />
+        <span className="field-hint">Up to about 500 MB. The file stays on this device.</span>
+      </div>
+
+      {session.error && (
+        <div className="banner banner-error" role="alert">
+          {session.error}
+        </div>
+      )}
+
+      {phase === "idle" && <EmptyState icon={FileUp} message="Choose a CSV file to begin." hint="Nothing is uploaded; everything happens in this tab." />}
+
+      {phase === "opening" && <ProgressBar progress={null} label="Reading the start of the file" />}
+
+      {settings && phase !== "idle" && phase !== "opening" && (
+        <div className="card">
+          <h3>Detected settings</h3>
+          <p className="field-hint">
+            {session.fileName} ({(session.fileSize / 1048576).toFixed(1)} MB)
+            {session.confidence === "low" ? ". The encoding is a best guess; check it below." : ""}
+          </p>
+
+          <div className="settings-grid">
+            <div className="field">
+              <label htmlFor="delimiter">Delimiter</label>
+              <select id="delimiter" value={settings.delimiter} disabled={busy || phase === "profiled"} onChange={(e) => onEditSettings({ delimiter: e.target.value })}>
+                {DELIMITERS.map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="field">
+              <label htmlFor="encoding">Encoding</label>
+              <select id="encoding" value={settings.encoding} disabled={busy || phase === "profiled"} onChange={(e) => onEditSettings({ encoding: e.target.value as FileSettings["encoding"] })}>
+                {ENCODINGS.map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="field">
+              <label htmlFor="quote">Quote character</label>
+              <select id="quote" value={settings.quote ?? ""} disabled={busy || phase === "profiled"} onChange={(e) => onEditSettings({ quote: e.target.value === "" ? null : e.target.value })}>
+                <option value={'"'}>Double quote (&quot;)</option>
+                <option value="">None</option>
+              </select>
+            </div>
+
+            <div className="field">
+              <label htmlFor="header">
+                <input id="header" type="checkbox" checked={settings.header} disabled={busy || phase === "profiled"} onChange={(e) => onEditSettings({ header: e.target.checked })} /> First row is a header
+              </label>
+            </div>
+          </div>
+
+          <p className="field-hint">
+            Line endings: {settings.lineEnding.toUpperCase()} &middot; quoting: {settings.quoteStyle.replace("_", " ")} &middot; ends with a newline: {settings.trailingNewline ? "yes" : "no"}
+          </p>
+
+          {session.rowCount > 0 && (
+            <p>
+              <strong>{session.rowCount.toLocaleString("en-US")}</strong> rows and <strong>{names.length}</strong> columns.
+            </p>
+          )}
+
+          <details open={names.length <= 12}>
+            <summary>
+              {names.length} column {names.length === 1 ? "name" : "names"}
+            </summary>
+            <ul className="name-list">
+              {names.slice(0, MAX_NAMES_SHOWN).map((n) => (
+                <li key={n}>{n}</li>
+              ))}
+              {names.length > MAX_NAMES_SHOWN && <li>and {names.length - MAX_NAMES_SHOWN} more</li>}
+            </ul>
+          </details>
+
+          {phase === "opened" && (
+            <div className="actions-row">
+              <button type="button" className="button button-primary" onClick={onConfirm}>
+                Looks right, profile this file
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {phase === "loading" && <ProgressBar progress={session.progress} label="Reading the file" />}
+      {phase === "profiling" && (
+        <>
+          <ProgressBar progress={session.progress} label="Profiling columns" />
+          <button type="button" className="button button-secondary" onClick={onCancel}>
+            Cancel
+          </button>
+        </>
+      )}
+    </section>
+  );
+}

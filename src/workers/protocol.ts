@@ -20,10 +20,19 @@ export type ProfileRequest =
 export type ProfileJob = "open" | "load" | "profile" | "reprofile";
 
 export type ProfileResponse =
-  | { type: "settingsDetected"; settings: FileSettings; confidence: "high" | "medium" | "low" }
-  | { type: "loaded"; rowCount: number; columnNames: string[] }
+  | {
+      type: "settingsDetected";
+      settings: FileSettings;
+      confidence: "high" | "medium" | "low";
+      /** Names only (never values), so the user can confirm the header setting. */
+      columnNames: string[];
+      fileName: string;
+      fileSize: number;
+    }
+  | { type: "loaded"; rowCount: number; columnNames: string[]; settings: FileSettings }
   | { type: "progress"; job: ProfileJob; done: number; total: number }
   | { type: "columnProfile"; profile: ColumnProfile }
+  | { type: "profiled"; count: number }
   | { type: "datePatternResult"; column: string; parsed: number; total: number }
   | { type: "net"; url: string; sameOrigin: boolean }
   | { type: "error"; error: WireError };
@@ -41,6 +50,6 @@ export type GenerateResponse =
   | { type: "chunk"; bytes: ArrayBuffer }
   | { type: "progress"; rowsDone: number; rowsTotal: number }
   | { type: "checks"; checks: CheckRow[] }
-  | { type: "done"; totalBytes: number }
+  | { type: "done"; totalBytes: number; replaced: number }
   | { type: "net"; url: string; sameOrigin: boolean }
   | { type: "error"; error: WireError };

@@ -2,7 +2,7 @@
 // worker reads the bytes from the browser File and hands them in, tests read them from disk.
 
 import { detectEncoding, decodeText, SAMPLE_BYTES, type Confidence } from "../../lib/encoding/detect";
-import { hasTrailingNewline, sniffDialect } from "../../lib/csv/sniff";
+import { hasTrailingNewline, inferQuoting, sniffDialect, splitRecords, uniqueNames } from "../../lib/csv/sniff";
 import type { FileSettings } from "../../lib/profile/types";
 
 export const HEAD_BYTES = SAMPLE_BYTES;
@@ -55,4 +55,39 @@ export function detectFileSettings(head: Uint8Array, tail: Uint8Array, fileSize:
 export function detectQuotedColumns(head: Uint8Array, fileSize: number): boolean[] {
   const detected = detectEncoding(head);
   return sniffDialect(decodeText(head, detected.encoding), fileSize > head.length).quoted;
+}
+
+/**
+ * Column names for the settings the user confirmed or edited: the header row if there is one,
+ * otherwise column_1, column_2, ... Re-derived from the first bytes whenever the delimiter, quote
+ * or header setting changes.
+ */
+export function columnNamesFor(head: Uint8Array, settings: FileSettings, fileSize: number): string[] {
+  const text = decodeText(head, settings.encoding);
+  const { rows } = splitRecords(text, settings.delimiter, settings.quote, fileSize > head.length, 1);
+  const first = rows[0] ?? [];
+  if (settings.header) return uniqueNames(first);
+  return Array.from({ length: first.length }, (_, i) => `column_${i + 1}`);
+}
+
+/**
+ * Quote style and per-column quoting for the settings the user confirmed, read from the first
+ * bytes. Re-derived after the delimiter or header changes, since both change how fields split.
+ */
+export function quotingFor(
+  head: Uint8Array,
+  settings: FileSettings,
+  columnCount: number,
+  fileSize: number,
+): { quoteStyle: FileSettings["quoteStyle"]; quoted: boolean[]; headerQuoted: boolean } {
+  const text = decodeText(head, settings.encoding);
+  const { rows, quoted } = splitRecords(text, settings.delimiter, settings.quote, fileSize > head.length);
+  const dataRows = settings.header ? rows.slice(1) : rows;
+  const dataFlags = settings.header ? quoted.slice(1) : quoted;
+  const result = inferQuoting(dataRows, dataFlags, columnCount, settings.delimiter, settings.quote);
+  return {
+    quoteStyle: result.quoteStyle,
+    quoted: result.quoted,
+    headerQuoted: settings.header && quoted[0] !== undefined && quoted[0].length > 0 && quoted[0].every(Boolean),
+  };
 }

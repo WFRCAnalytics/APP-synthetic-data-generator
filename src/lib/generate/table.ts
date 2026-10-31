@@ -70,10 +70,17 @@ export function formatHeader(plan: TablePlan): string {
   return formatRow(plan.header, plan.dialect, plan.header.map(() => plan.headerQuoted));
 }
 
-/** Data rows [start, end) as CSV text, each ending in the file's line ending. */
-export function formatRows(plan: TablePlan, start: number, end: number): string {
+/**
+ * Data rows [start, end) as CSV text, each ending in the file's line ending. `observe` sees each
+ * row's cell texts, so the check table can be measured while the rows are produced.
+ */
+export function formatRows(plan: TablePlan, start: number, end: number, observe?: (values: string[]) => void): string {
   let text = "";
   const last = Math.min(end, plan.nRows);
-  for (let row = start; row < last; row++) text += formatRow(rowValues(plan, row), plan.dialect, plan.quotedFlags);
+  for (let row = start; row < last; row++) {
+    const values = rowValues(plan, row);
+    observe?.(values);
+    text += formatRow(values, plan.dialect, plan.quotedFlags);
+  }
   return text;
 }

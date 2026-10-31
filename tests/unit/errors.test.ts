@@ -16,6 +16,8 @@ describe("AppError messages", () => {
     "file_empty",
     "file_unreadable",
     "cancelled",
+    "spec_invalid",
+    "generation_error",
     "engine_error",
     "internal_error",
   ];

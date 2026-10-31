@@ -13,6 +13,8 @@ export type ErrorCode =
   | "file_empty"
   | "file_unreadable"
   | "cancelled"
+  | "spec_invalid"
+  | "generation_error"
   | "engine_error"
   | "internal_error";
 
@@ -42,6 +44,10 @@ export function describeError(code: ErrorCode, ctx: ErrorContext = {}): string {
       return "The file could not be opened.";
     case "cancelled":
       return "The operation was cancelled.";
+    case "spec_invalid":
+      return "The spec has problems. Go back to Review to fix them.";
+    case "generation_error":
+      return "The table could not be generated from this spec.";
     case "engine_error":
       return "Something went wrong while processing the file.";
     case "internal_error":

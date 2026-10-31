@@ -1,0 +1,124 @@
+/* Styles for the ingest, review and generate screens. Brand tokens only (constitution Principle VII);
+   nothing here invents a color. */
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--space-3) var(--space-5);
+}
+
+.progress-block {
+  margin: var(--space-3) 0;
+}
+
+.progress-block progress {
+  display: block;
+  width: 100%;
+  max-width: 28rem;
+  margin-top: var(--space-1);
+}
+
+.name-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  list-style: none;
+  padding: 0;
+  margin: var(--space-2) 0 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Review */
+.column-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+
+.column-card {
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.column-card[data-status="needs_attention"] {
+  border-color: var(--color-wfrc-yellow);
+}
+
+.column-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.column-card-name {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-base);
+  overflow-wrap: anywhere;
+}
+
+.column-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.column-card-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.column-card-facts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: var(--text-sm);
+}
+
+.column-card-reasons {
+  margin: 0;
+  padding-left: var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--color-wfrc-gray);
+}
+
+.sparkline {
+  flex: none;
+}
+
+.sparkline-bar {
+  fill: var(--color-link);
+}
+
+/* Generate */
+.check-table td,
+.preview-table td,
+.preview-table th {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+  max-width: 24rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.check-table tr[data-pass="false"] td {
+  font-weight: var(--font-weight-semibold);
+}
+
+.table-wrap--scroll {
+  max-height: 24rem;
+  overflow: auto;
+}

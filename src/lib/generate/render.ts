@@ -16,7 +16,11 @@ export interface RenderedChunk {
 
 export const DEFAULT_CHUNK_ROWS = 5000;
 
-export function* renderChunks(plan: TablePlan, chunkRows: number = DEFAULT_CHUNK_ROWS): Generator<RenderedChunk> {
+export function* renderChunks(
+  plan: TablePlan,
+  chunkRows: number = DEFAULT_CHUNK_ROWS,
+  observe?: (values: string[]) => void,
+): Generator<RenderedChunk> {
   const size = Math.max(1, Math.floor(chunkRows));
   const total = plan.nRows;
   let start = 0;
@@ -25,7 +29,7 @@ export function* renderChunks(plan: TablePlan, chunkRows: number = DEFAULT_CHUNK
   do {
     const end = Math.min(total, start + size);
     const last = end >= total;
-    let text = (first ? formatHeader(plan) : "") + formatRows(plan, start, end);
+    let text = (first ? formatHeader(plan) : "") + formatRows(plan, start, end, observe);
     if (last && !plan.dialect.trailingNewline) text = stripFinalEol(text, plan.dialect);
 
     const { bytes, replaced } = encodeText(text, plan.encoding);

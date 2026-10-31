@@ -174,7 +174,7 @@ function needsQuoting(value: string, delimiter: string, quote: string | null): b
   );
 }
 
-function inferQuoting(
+export function inferQuoting(
   rows: string[][],
   flags: boolean[][],
   columnCount: number,
