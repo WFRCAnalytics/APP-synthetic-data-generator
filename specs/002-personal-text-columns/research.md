@@ -166,6 +166,16 @@ No NEEDS CLARIFICATION items remained after the spec. The decisions below settle
   counted at 100,000 and the card shows the reason `text_length_capped`.
 - **Rationale**: keeps the spec valid and generation memory bounded.
 
+## Bundle size baseline (T003, before this feature)
+
+| Bundle | Size (minified, not compressed) |
+|---|---|
+| Main (`index-*.js`) | 269,755 bytes |
+| Profile worker (`profile.worker-*.js`) | 224,952 bytes |
+| Generate worker (`generate.worker-*.js`) | 36,386 bytes |
+
+Budget: the generate worker grows by less than 1.5 MB; the main bundle and the profile worker do not change.
+
 ## Open items
 
 None.

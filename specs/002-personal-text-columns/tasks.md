@@ -18,9 +18,9 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Move `@faker-js/faker` from devDependencies to dependencies in `package.json` and run `npm install`; confirm only `src/lib/textgen/wordlists.ts` will import it (add an ESLint `no-restricted-imports` rule for `@faker-js/faker` everywhere else in `eslint.config.js`, allowing `src/lib/textgen/wordlists.ts` and `scripts/` and `tests/`)
-- [ ] T002 [P] Extend `scripts/make-fixtures.mjs` with text columns in `zoo_small.csv` (full name, first name, last name, email, phone in three formats, street address, URL, IP, SSN-like, comments, plate, vendor code, a mixed email-and-text column) and a new `tests/fixtures/zoo/text_50k.csv` (50,000 distinct invented-looking names, emails, phones, addresses, with repeats and NA tokens); update `tests/fixtures/zoo/expected.json` with the new expected types and reasons, then regenerate fixtures. Fixture "real" values must be synthetic strings that do not come from faker's word lists (use a seeded script with its own lists) so the leak tests can tell a real value from an invented one
-- [ ] T003 [P] Record the current size of the generate worker, profile worker and main bundles in `specs/002-personal-text-columns/research.md` (baseline for R11)
+- [x] T001 Move `@faker-js/faker` from devDependencies to dependencies in `package.json` and run `npm install`; confirm only `src/lib/textgen/wordlists.ts` will import it (add an ESLint `no-restricted-imports` rule for `@faker-js/faker` everywhere else in `eslint.config.js`, allowing `src/lib/textgen/wordlists.ts` and `scripts/` and `tests/`)
+- [x] T002 [P] Extend `scripts/make-fixtures.mjs` with text columns in `zoo_small.csv` (full name, first name, last name, email, phone in three formats, street address, URL, IP, SSN-like, comments, plate, vendor code, a mixed email-and-text column) and a new `tests/fixtures/zoo/text_50k.csv` (50,000 distinct invented-looking names, emails, phones, addresses, with repeats and NA tokens); update `tests/fixtures/zoo/expected.json` with the new expected types and reasons, then regenerate fixtures. Fixture "real" values must be synthetic strings that do not come from faker's word lists (use a seeded script with its own lists) so the leak tests can tell a real value from an invented one
+- [x] T003 [P] Record the current size of the generate worker, profile worker and main bundles in `specs/002-personal-text-columns/research.md` (baseline for R11)
 
 ---
 

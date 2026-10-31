@@ -6,13 +6,14 @@
 //   node scripts/make-fixtures.mjs --100k     .fixtures/zoo_100k.csv (not committed)
 //   node scripts/make-fixtures.mjs --large    .fixtures/zoo_500mb.csv (~500 MB, not committed)
 //
-// All data is fake. Personal-data columns use @faker-js/faker with a fixed seed, sampled from
-// small pools so even the 500 MB file generates in a few minutes.
+// All data is fake. The "real" personal values are built from made-up syllables below, NOT from
+// faker's word lists, so a leak test can tell a real fixture value from a value the app invents
+// (the app composes its values from faker's lists). Phone numbers use the 555 exchange, addresses
+// and names use the made-up syllables, IPs use the documentation ranges, emails use example.org.
 
 import { createWriteStream, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { faker } from "@faker-js/faker";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const SEED = 20261030;
@@ -74,16 +75,26 @@ const dateCol = (pattern) => (_i, r) => fmt(randomDate(r), pattern);
 
 // ---------------------------------------------------------------- pools of fake personal data
 
-faker.seed(SEED);
 const POOL = 4000;
 const poolRng = mulberry32(SEED ^ 0x5bd1e995);
+
+// Made-up syllables: none of these names, streets or words is in a real or faker word list.
+const FIRST_A = ["Zan", "Quil", "Brax", "Vorn", "Kess", "Torv", "Malk", "Drev", "Nyx", "Pell", "Rux", "Sarv", "Tev", "Ulm", "Varq", "Wex", "Xan", "Yorl", "Zeph", "Quor"];
+const FIRST_B = ["ade", "elle", "ira", "oma", "usk", "enn", "ova", "ilda", "ark", "yth"];
+const LAST_A = ["Ardq", "Bexl", "Corv", "Dunq", "Elvx", "Fyrn", "Gorq", "Hevl", "Ixtr", "Jorv", "Kwel", "Lunq", "Morv", "Nexl", "Orvq", "Pyxl", "Qarn", "Rovl", "Sylq", "Tarx", "Uvrn", "Vexq", "Wyrl", "Xorv", "Yelq"];
+const LAST_B = ["ston", "wick", "dale", "mere", "holt", "vane", "ridge", "lund", "brook", "field"];
+const STREET_SUFFIX = ["Qrd", "Vxn", "Zlk", "Wyr", "Jnt"];
+const firstName = (i) => FIRST_A[i % 20] + FIRST_B[Math.floor(i / 20) % 10];
+const lastName = (i) => LAST_A[i % 25] + LAST_B[Math.floor(i / 25) % 10];
+const WORDS = Array.from({ length: 800 }, (_, k) => `${FIRST_A[k % 20].toLowerCase()}${LAST_B[(k >> 2) % 10]}${k % 7}x`.replace(/[0-9]/g, (d) => "abcdefg"[d]));
+
 const pools = {
-  names: Array.from({ length: POOL }, () => faker.person.fullName()),
-  streets: Array.from({ length: POOL }, () => faker.location.streetAddress()),
-  phones: Array.from({ length: POOL }, () => faker.phone.number({ style: "national" })),
+  names: Array.from({ length: POOL }, (_, i) => `${firstName(i * 13)} ${lastName(i * 29 + 3)}`),
+  streets: Array.from({ length: POOL }, (_, i) => `${100 + (i % 899)} ${lastName(i * 7 + 11)} ${STREET_SUFFIX[i % 5]}`),
+  phones: Array.from({ length: POOL }, (_, i) => `(${["801", "385", "435"][i % 3]}) 555-${pad(i % 10000, 4)}`),
   intlPhones: Array.from({ length: POOL }, () => `+44 20 ${intIn(poolRng, 7000, 7999)} ${intIn(poolRng, 1000, 9999)}`),
-  urls: Array.from({ length: POOL }, () => faker.internet.url()),
-  words: Array.from({ length: 800 }, () => faker.lorem.words({ min: 3, max: 9 })),
+  urls: Array.from({ length: POOL }, (_, i) => `https://www.${lastName(i * 3).toLowerCase()}.example.org/${firstName(i).toLowerCase()}`),
+  words: WORDS,
 };
 const slug = (s) => s.toLowerCase().replace(/[^a-z]+/g, ".").replace(/^\.|\.$/g, "");
 
@@ -110,7 +121,7 @@ function buildZoo() {
   const l50 = Array.from({ length: 50 }, (_, k) => `Label_${pad(k + 1, 2)}`);
   add("cat_str_50", coverAll(l50), ok("categorical", { storage: "string" }));
   const l51 = Array.from({ length: 51 }, (_, k) => `Label_${pad(k + 1, 2)}`);
-  add("cat_str_51", coverAll(l51), unsupported({ assert: ["type", "status"] }));
+  add("cat_str_51", coverAll(l51), { type: "short_string", status: "ok", reasons: [], assert: ["type", "status"] });
   const codes = [1, 1, 1, 1, 2, 2, 2, 3, 3, 5, 8, 97];
   add("cat_int_codes", (_i, r) => String(pick(r, codes)), ok("categorical", { storage: "integer" }));
   const months = Array.from({ length: 12 }, (_, k) => pad(k + 1, 2));
@@ -198,25 +209,34 @@ function buildZoo() {
   add("mixed_mask_id", (i, r) => (i % 2 ? `A${intIn(r, 100, 999)}` : String(intIn(r, 10000, 99999))), attention("survey_id", ["id_mixed_masks"], { assert: ["status"] }));
   add("few_distinct_hh_id", (_i, r) => String(7000 + intIn(r, 0, 39)), ok("survey_id", { assert: ["type"], notes: "40 distinct values, never categorical" }));
 
-  // Unsupported in this version (no real value may leak)
-  add("email", (i) => `${slug(pools.names[i % POOL])}.${i}@example.com`, unsupported({ reasons: ["unsupported_type", "possible_identifier"], assert: ["type", "status"] }));
-  add("phone_us", (i) => pools.phones[i % POOL], unsupported({ assert: ["type", "status"] }));
-  add("phone_intl", (i) => pools.intlPhones[i % POOL], unsupported({ assert: ["type", "status"] }));
-  add("person_name", (i) => pools.names[i % POOL], unsupported({ assert: ["type", "status"] }));
-  add("street_address", (i) => pools.streets[(i * 7) % POOL], unsupported({ assert: ["type", "status"] }));
-  add("ssn_like", (_i, r) => `${intIn(r, 100, 899)}-${pad(intIn(r, 1, 99), 2)}-${pad(intIn(r, 1, 9999), 4)}`, unsupported({ assert: ["type", "status"] }));
-  add("free_text", (i, r) => `${pick(r, pools.words)}. ${pools.words[(i * 11) % pools.words.length]} ${pools.words[(i * 5) % pools.words.length]}, ref ${i}`, unsupported({ assert: ["type", "status"] }));
-  add("short_code_many", (_i, r) => `${String.fromCharCode(65 + intIn(r, 0, 25))}${String.fromCharCode(65 + intIn(r, 0, 25))}${pad(intIn(r, 0, 9999), 4)}`, unsupported({ assert: ["type", "status"] }));
-  add("url", (i) => pools.urls[i % POOL], unsupported({ assert: ["type", "status"] }));
-  add("uuid", (i, r) => `${pad(intIn(r, 0, 0xffffff).toString(16), 8)}-${pad(intIn(r, 0, 0xffff).toString(16), 4)}-4${pad(intIn(r, 0, 0xfff).toString(16), 3)}-a${pad(intIn(r, 0, 0xfff).toString(16), 3)}-${pad((i * 2654435761 % 0xffffffffffff).toString(16), 12)}`, unsupported({ assert: ["type", "status"] }));
-  add("ip_address", (_i, r) => `${intIn(r, 1, 254)}.${intIn(r, 0, 255)}.${intIn(r, 0, 255)}.${intIn(r, 1, 254)}`, unsupported({ assert: ["type", "status"] }));
+  // Personal identifiers, free text, short strings (no real value may leak)
+  const personal = (kind, extra = {}) => ({ type: "personal", status: "ok", reasons: [], kind, ...extra });
+  add("email", (i) => `${slug(pools.names[i % POOL])}.${i}@example.org`, personal("email"));
+  add("phone_us", (i) => pools.phones[i % POOL], personal("phone"));
+  add("phone_intl", (i) => pools.intlPhones[i % POOL], { type: "short_string", status: "ok", reasons: [], assert: ["type", "status"] });
+  add("person_name", (i) => pools.names[i % POOL], personal("full_name"));
+  add("first_name", (i) => firstName(i * 7), personal("first_name"));
+  add("last_name", (i) => lastName(i * 11), personal("last_name"));
+  add("street_address", (i) => pools.streets[(i * 7) % POOL], personal("address"));
+  add("ssn_like", (_i, r) => `${intIn(r, 100, 899)}-${pad(intIn(r, 1, 99), 2)}-${pad(intIn(r, 1, 9999), 4)}`, unsupported({ reasons: ["unsupported_type", "possible_identifier", "ssn_needs_acknowledgement"], assert: ["type", "status"] }));
+  add("free_text", (i, r) => `${pick(r, pools.words)}. ${pools.words[(i * 11) % pools.words.length]} ${pools.words[(i * 5) % pools.words.length]}, ref ${i}`, { type: "free_text", status: "ok", reasons: [], assert: ["type", "status"] });
+  add("comments", (i, r) => Array.from({ length: intIn(r, 3, 40) }, (_, k) => pools.words[(i * 3 + k * 17) % pools.words.length]).join(" "), { type: "free_text", status: "ok", reasons: [], assert: ["type", "status"] });
+  add("short_code_many", (_i, r) => `${String.fromCharCode(65 + intIn(r, 0, 25))}${String.fromCharCode(65 + intIn(r, 0, 25))}${pad(intIn(r, 0, 9999), 4)}`, { type: "short_string", status: "ok", reasons: [], assert: ["type", "status"] });
+  add("plate", (_i, r) => `${String.fromCharCode(65 + intIn(r, 0, 25))}${String.fromCharCode(65 + intIn(r, 0, 25))}-${pad(intIn(r, 0, 9999), 4)}`, { type: "short_string", status: "ok", reasons: [], assert: ["type", "status"] });
+  add("vendor_code", (_i, r) => `V${intIn(r, 10000, 99999)}${String.fromCharCode(97 + intIn(r, 0, 25))}`, { type: "short_string", status: "ok", reasons: [], assert: ["type", "status"] });
+  add("email_mixed", (i, r) => (r() < 0.65 ? `${slug(pools.names[i % POOL])}.${i}@example.org` : `${pick(r, pools.words)} ${pick(r, pools.words)}`), { type: "personal", status: "needs_attention", reasons: ["kind_mixed"], kind: "email", assert: ["type", "status", "reasons"] });
+  add("url", (i) => pools.urls[i % POOL], personal("url"));
+  add("uuid", (i, r) => `${pad(intIn(r, 0, 0xffffff).toString(16), 8)}-${pad(intIn(r, 0, 0xffff).toString(16), 4)}-4${pad(intIn(r, 0, 0xfff).toString(16), 3)}-a${pad(intIn(r, 0, 0xfff).toString(16), 3)}-${pad((i * 2654435761 % 0xffffffffffff).toString(16), 12)}`, { type: "short_string", status: "ok", reasons: [], assert: ["type", "status"] });
+  add("ip_address", (_i, r) => `${pick(r, ["198.51.100", "203.0.113", "192.0.2"])}.${intIn(r, 1, 254)}`, personal("ip"));
+
+  // Unsupported in this version (coordinates and the like)
   add("lat", (_i, r) => (40.5 + r() * 0.6).toFixed(6), unsupported({ assert: ["type", "status"], notes: "coordinates" }));
   add("lon", (_i, r) => (-112.1 + r() * 0.5).toFixed(6), unsupported({ assert: ["type", "status"], notes: "coordinates" }));
   add("coord_pair", (_i, r) => `(${(40.5 + r() * 0.6).toFixed(6)}, ${(-112.1 + r() * 0.5).toFixed(6)})`, unsupported({ assert: ["type", "status"] }));
   add("wkt_point", (_i, r) => `POINT (${(-112.1 + r() * 0.5).toFixed(6)} ${(40.5 + r() * 0.6).toFixed(6)})`, unsupported({ assert: ["type", "status"] }));
-  add("zip_text", (_i, r) => pad(intIn(r, 1000, 99999), 5), unsupported({ assert: ["type", "status"], notes: "leading zero must not be lost" }));
-  add("currency_text", (_i, r) => `$${intIn(r, 1, 9999).toLocaleString("en-US")}.${pad(intIn(r, 0, 99), 2)}`, unsupported({ assert: ["type", "status"] }));
-  add("percent_text", (_i, r) => `${intIn(r, 0, 100)}%`, unsupported({ assert: ["type", "status"] }));
+  add("zip_text", (_i, r) => pad(intIn(r, 1000, 99999), 5), { type: "short_string", status: "ok", reasons: [], assert: ["type", "status"], notes: "leading zero must not be lost" });
+  add("currency_text", (_i, r) => `$${intIn(r, 1, 9999).toLocaleString("en-US")}.${pad(intIn(r, 0, 99), 2)}`, { type: "short_string", status: "ok", reasons: [], assert: ["type", "status"] });
+  add("percent_text", (_i, r) => `${intIn(r, 0, 100)}%`, { type: "short_string", status: "ok", reasons: [], assert: ["type", "status"] });
 
   // Empty, NA tokens
   add("all_na", () => "", ok("empty", { na_tokens: [""] }));
@@ -293,7 +313,7 @@ function zooTable(n, { extraColumns = 0 } = {}) {
   // Optional wide variant: repeat the first N simple columns with a suffix to reach ~120 columns.
   const cols = [...zoo];
   if (extraColumns > 0) {
-    const base = zoo.filter((c) => !["email", "person_name", "street_address", "free_text", "url", "phone_us", "phone_intl"].includes(c.name));
+    const base = zoo.filter((c) => !["email", "person_name", "first_name", "last_name", "street_address", "free_text", "comments", "email_mixed", "url", "phone_us", "phone_intl"].includes(c.name));
     for (let k = 0; k < extraColumns; k++) {
       const src = base[k % base.length];
       cols.push({ name: `${src.name}_r${Math.floor(k / base.length) + 1}`, gen: src.gen, expected: src.expected });
@@ -329,6 +349,31 @@ function writeIds50k() {
   }
   writeText(join(ZOO_DIR, "ids_50k.csv"), rows.join(""));
   console.log(`ids_50k.csv: 50000 distinct hh_id values, ${rows.length - 1} rows`);
+}
+
+function writeText50k() {
+  const r = rngFor("text_50k");
+  const header = ["respondent_name", "email", "phone", "address", "plate"];
+  const rows = [formatRow(header)];
+  const N = 50000;
+  const total = 60000; // 10,000 names appear twice, so repeats are exercised
+  for (let k = 0; k < total; k++) {
+    const i = k < N ? k : k - N; // the last 10,000 rows repeat the first 10,000 people
+    const name = `${firstName(i % 200)} ${lastName(Math.floor(i / 200))}`;
+    const na = r() < 0.03;
+    const phoneArea = ["801", "385", "435", "970", "208", "307"][Math.floor(i / 10000) % 6];
+    rows.push(
+      formatRow([
+        na ? (r() < 0.5 ? "" : "NA") : name,
+        `${slug(name)}.${i}@example.org`,
+        `(${phoneArea}) 555-${pad(i % 10000, 4)}`,
+        `${10 + i} ${lastName(i * 3)} ${STREET_SUFFIX[i % 5]}`,
+        `${String.fromCharCode(65 + intIn(r, 0, 25))}${String.fromCharCode(65 + intIn(r, 0, 25))}-${pad(intIn(r, 0, 9999), 4)}`,
+      ]),
+    );
+  }
+  writeText(join(ZOO_DIR, "text_50k.csv"), rows.join(""));
+  console.log(`text_50k.csv: ${total} rows, 50000 distinct people`);
 }
 
 function writeVariants() {
@@ -437,5 +482,6 @@ else if (args.has("--large")) await writeLarge({ targetBytes: 500 * 1024 * 1024 
 else {
   writeZooSmall();
   writeIds50k();
+  writeText50k();
   writeVariants();
 }

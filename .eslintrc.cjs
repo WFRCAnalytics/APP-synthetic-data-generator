@@ -15,5 +15,8 @@ module.exports = {
   rules: {
     "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
     "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+    // Faker word lists are only for the generating step (specs/002 research R1, R11).
+    "no-restricted-imports": ["error", { patterns: [{ group: ["@faker-js/faker", "@faker-js/faker/*"], message: "Import faker data only in src/lib/textgen/wordlists.ts, which only the generate worker loads." }] }],
   },
+  overrides: [{ files: ["src/lib/textgen/wordlists.ts", "tests/**", "scripts/**"], rules: { "no-restricted-imports": "off" } }],
 };

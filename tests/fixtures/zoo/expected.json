@@ -44,11 +44,9 @@
       "storage": "string"
     },
     "cat_str_51": {
-      "type": "unsupported",
-      "status": "unsupported",
-      "reasons": [
-        "unsupported_type"
-      ],
+      "type": "short_string",
+      "status": "ok",
+      "reasons": [],
       "assert": [
         "type",
         "status"
@@ -407,66 +405,57 @@
       "notes": "40 distinct values, never categorical"
     },
     "email": {
-      "type": "unsupported",
-      "status": "unsupported",
-      "reasons": [
-        "unsupported_type",
-        "possible_identifier"
-      ],
-      "assert": [
-        "type",
-        "status"
-      ]
+      "type": "personal",
+      "status": "ok",
+      "reasons": [],
+      "kind": "email"
     },
     "phone_us": {
-      "type": "unsupported",
-      "status": "unsupported",
-      "reasons": [
-        "unsupported_type"
-      ],
-      "assert": [
-        "type",
-        "status"
-      ]
+      "type": "personal",
+      "status": "ok",
+      "reasons": [],
+      "kind": "phone"
     },
     "phone_intl": {
-      "type": "unsupported",
-      "status": "unsupported",
-      "reasons": [
-        "unsupported_type"
-      ],
+      "type": "short_string",
+      "status": "ok",
+      "reasons": [],
       "assert": [
         "type",
         "status"
       ]
     },
     "person_name": {
-      "type": "unsupported",
-      "status": "unsupported",
-      "reasons": [
-        "unsupported_type"
-      ],
-      "assert": [
-        "type",
-        "status"
-      ]
+      "type": "personal",
+      "status": "ok",
+      "reasons": [],
+      "kind": "full_name"
+    },
+    "first_name": {
+      "type": "personal",
+      "status": "ok",
+      "reasons": [],
+      "kind": "first_name"
+    },
+    "last_name": {
+      "type": "personal",
+      "status": "ok",
+      "reasons": [],
+      "kind": "last_name"
     },
     "street_address": {
-      "type": "unsupported",
-      "status": "unsupported",
-      "reasons": [
-        "unsupported_type"
-      ],
-      "assert": [
-        "type",
-        "status"
-      ]
+      "type": "personal",
+      "status": "ok",
+      "reasons": [],
+      "kind": "address"
     },
     "ssn_like": {
       "type": "unsupported",
       "status": "unsupported",
       "reasons": [
-        "unsupported_type"
+        "unsupported_type",
+        "possible_identifier",
+        "ssn_needs_acknowledgement"
       ],
       "assert": [
         "type",
@@ -474,59 +463,83 @@
       ]
     },
     "free_text": {
-      "type": "unsupported",
-      "status": "unsupported",
-      "reasons": [
-        "unsupported_type"
-      ],
+      "type": "free_text",
+      "status": "ok",
+      "reasons": [],
+      "assert": [
+        "type",
+        "status"
+      ]
+    },
+    "comments": {
+      "type": "free_text",
+      "status": "ok",
+      "reasons": [],
       "assert": [
         "type",
         "status"
       ]
     },
     "short_code_many": {
-      "type": "unsupported",
-      "status": "unsupported",
-      "reasons": [
-        "unsupported_type"
-      ],
+      "type": "short_string",
+      "status": "ok",
+      "reasons": [],
       "assert": [
         "type",
         "status"
+      ]
+    },
+    "plate": {
+      "type": "short_string",
+      "status": "ok",
+      "reasons": [],
+      "assert": [
+        "type",
+        "status"
+      ]
+    },
+    "vendor_code": {
+      "type": "short_string",
+      "status": "ok",
+      "reasons": [],
+      "assert": [
+        "type",
+        "status"
+      ]
+    },
+    "email_mixed": {
+      "type": "personal",
+      "status": "needs_attention",
+      "reasons": [
+        "kind_mixed"
+      ],
+      "kind": "email",
+      "assert": [
+        "type",
+        "status",
+        "reasons"
       ]
     },
     "url": {
-      "type": "unsupported",
-      "status": "unsupported",
-      "reasons": [
-        "unsupported_type"
-      ],
-      "assert": [
-        "type",
-        "status"
-      ]
+      "type": "personal",
+      "status": "ok",
+      "reasons": [],
+      "kind": "url"
     },
     "uuid": {
-      "type": "unsupported",
-      "status": "unsupported",
-      "reasons": [
-        "unsupported_type"
-      ],
+      "type": "short_string",
+      "status": "ok",
+      "reasons": [],
       "assert": [
         "type",
         "status"
       ]
     },
     "ip_address": {
-      "type": "unsupported",
-      "status": "unsupported",
-      "reasons": [
-        "unsupported_type"
-      ],
-      "assert": [
-        "type",
-        "status"
-      ]
+      "type": "personal",
+      "status": "ok",
+      "reasons": [],
+      "kind": "ip"
     },
     "lat": {
       "type": "unsupported",
@@ -575,11 +588,9 @@
       ]
     },
     "zip_text": {
-      "type": "unsupported",
-      "status": "unsupported",
-      "reasons": [
-        "unsupported_type"
-      ],
+      "type": "short_string",
+      "status": "ok",
+      "reasons": [],
       "assert": [
         "type",
         "status"
@@ -587,22 +598,18 @@
       "notes": "leading zero must not be lost"
     },
     "currency_text": {
-      "type": "unsupported",
-      "status": "unsupported",
-      "reasons": [
-        "unsupported_type"
-      ],
+      "type": "short_string",
+      "status": "ok",
+      "reasons": [],
       "assert": [
         "type",
         "status"
       ]
     },
     "percent_text": {
-      "type": "unsupported",
-      "status": "unsupported",
-      "reasons": [
-        "unsupported_type"
-      ],
+      "type": "short_string",
+      "status": "ok",
+      "reasons": [],
       "assert": [
         "type",
         "status"
