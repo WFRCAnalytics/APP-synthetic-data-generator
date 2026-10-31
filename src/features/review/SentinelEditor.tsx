@@ -14,7 +14,7 @@ export interface SentinelEditorProps {
 
 export function SentinelEditor({ profile, busy, onApply }: SentinelEditorProps) {
   // Numeric order (-9, 998, 999); object keys would put the whole numbers first and -9 last.
-  const current = Object.keys(profile.sentinels).sort((a, b) => Number(a) - Number(b));
+  const current = Object.keys(profile.sentinels).sort((a, b) => (Number.isNaN(Number(a)) || Number.isNaN(Number(b)) ? a.localeCompare(b) : Number(a) - Number(b)));
   return (
     <TextApply
       label="Sentinel codes"

@@ -2,6 +2,7 @@
 // No message ever carries a real data row. Error messages come from lib/errors.ts and never hold a
 // cell value.
 
+import type { SampleDescription } from "../lib/textgen/sample";
 import type { WireError } from "../lib/errors";
 import type { ColumnOverrides, ColumnProfile, FileSettings } from "../lib/profile/types";
 import type { CheckRow } from "../lib/generate/checks";
@@ -42,6 +43,8 @@ export type { CheckRow };
 
 export type GenerateRequest =
   | { type: "generate"; spec: SpecFile; seed: number; chunkRows: number }
+  /** A few invented values for a column description (live samples on Review). Holds no real value. */
+  | { type: "sample"; id: number; description: SampleDescription; count: number; seed: number }
   | { type: "cancel" };
 
 export type GenerateResponse =
@@ -50,4 +53,5 @@ export type GenerateResponse =
   | { type: "progress"; rowsDone: number; rowsTotal: number }
   | { type: "checks"; checks: CheckRow[] }
   | { type: "done"; totalBytes: number; replaced: number }
+  | { type: "samples"; id: number; values: string[] }
   | { type: "error"; error: WireError };

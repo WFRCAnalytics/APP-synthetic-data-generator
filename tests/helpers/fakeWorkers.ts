@@ -2,7 +2,7 @@
 // and let a test choose which profiles come back and how a column re-profiles after a change.
 
 import { vi } from "vitest";
-import type { ColumnOverrides, ColumnProfile, FileSettings } from "../../src/lib/profile/types";
+import type { ColumnOverrides, ColumnProfile, FileSettings, PersonalKind } from "../../src/lib/profile/types";
 import type { GenerateRequest, GenerateResponse, ProfileRequest, ProfileResponse } from "../../src/workers/protocol";
 
 export const settings: FileSettings = {
@@ -52,6 +52,55 @@ export const idColumn = (name: string, over: Partial<ColumnProfile> = {}, groups
   type: "survey_id",
   status: "ok",
   summary: { kind: "survey_id", mask: ["digit", "digit", "digit", "digit", "digit"], min: 10000, max: 10000 + groups - 1, padWidth: 0, repeatStructure: { "1": groups / 2, "2": groups / 4, "4": groups / 4 }, distinct: groups },
+  ...over,
+});
+
+/** A personal identifier column holding `distinct` distinct values (each once). */
+export const personalColumn = (name: string, personalKind: PersonalKind = "full_name", over: Partial<ColumnProfile> = {}, distinct = 90): ColumnProfile => ({
+  ...base,
+  name,
+  outputName: name,
+  detectedType: "personal",
+  type: "personal",
+  status: "ok",
+  summary: { kind: "personal", personalKind, repeatStructure: { "1": distinct }, distinct },
+  ...over,
+});
+
+/** An SSN-style column as profiling leaves it: unsupported and left out until acknowledged. */
+export const ssnColumn = (name: string): ColumnProfile => ({
+  ...base,
+  name,
+  outputName: name,
+  detectedType: "unsupported",
+  type: "unsupported",
+  status: "unsupported",
+  exclude: "drop",
+  attentionReasons: ["unsupported_type", "possible_identifier", "ssn_needs_acknowledgement"],
+  acknowledged: false,
+  summary: { kind: "personal", personalKind: "ssn", repeatStructure: { "1": 100 }, distinct: 100, format: { shape: "999-99-9999" } },
+});
+
+export const freeTextColumn = (name: string, over: Partial<ColumnProfile> = {}): ColumnProfile => ({
+  ...base,
+  name,
+  outputName: name,
+  detectedType: "free_text",
+  type: "free_text",
+  status: "ok",
+  mode: "match_mean_sd",
+  summary: { kind: "free_text", min: 3, max: 400, mean: 120, sd: 80, decimals: 0, quantiles: Array.from({ length: 101 }, (_, i) => 3 + (i * 397) / 100), histogram: hist, lineBreaks: false },
+  ...over,
+});
+
+export const shortStringColumn = (name: string, over: Partial<ColumnProfile> = {}, distinct = 100): ColumnProfile => ({
+  ...base,
+  name,
+  outputName: name,
+  detectedType: "short_string",
+  type: "short_string",
+  status: "ok",
+  summary: { kind: "short_string", pattern: ["upper", "upper", { literal: "-" }, "digit", "digit", "digit", "digit"], lengthGroups: { "7": distinct }, repeatStructure: { "1": distinct }, distinct },
   ...over,
 });
 
@@ -205,6 +254,10 @@ class FakeWorker {
 
   private generateMessage(m: GenerateRequest) {
     sent.generate.push(m);
+    if (m.type === "sample") {
+      const label = m.description.kind === "personal" ? m.description.personalKind : m.description.kind;
+      return this.reply({ type: "samples", id: m.id, values: Array.from({ length: m.count }, (_, i) => `${label}-sample-${i + 1}`) });
+    }
     if (m.type !== "generate") return;
     if (scenario.generateFails) return this.reply({ type: "error", error: { code: "generation_error", message: "The table could not be generated from this spec." } });
     this.reply({ type: "preview", header: ["mode"], rows: [["1"]] });

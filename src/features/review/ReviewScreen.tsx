@@ -7,6 +7,7 @@ import { EmptyState } from "../../components/EmptyState";
 import type { SessionState } from "../../app/session";
 import type { LocalEdits } from "../../lib/profile/edits";
 import type { ColumnOverrides } from "../../lib/profile/types";
+import type { SampleDescription } from "../../lib/textgen/sample";
 import { AttentionBanner } from "./AttentionBanner";
 import { ProfileProgress } from "../ingest/ProfileProgress";
 import { ColumnCard } from "./ColumnCard";
@@ -20,6 +21,7 @@ export interface ReviewActions {
   editColumn: (name: string, patch: LocalEdits) => void;
   overrideColumn: (name: string, patch: Partial<ColumnOverrides>) => void;
   checkDatePattern: (name: string, pattern: string) => void;
+  requestSamples: (name: string, description: SampleDescription) => void;
   setThreshold: (threshold: number) => void;
   onContinue: () => void;
   onSaveSpec: () => void;
@@ -103,6 +105,9 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
               onEdit={(patch) => actions.editColumn(p.name, patch)}
               onOverride={(patch) => actions.overrideColumn(p.name, patch)}
               onCheckDate={(pattern) => actions.checkDatePattern(p.name, pattern)}
+              samples={session.samples[p.name]}
+              onRequestSamples={(description) => actions.requestSamples(p.name, description)}
+              specOnly={specOnly}
             />
           )}
         />

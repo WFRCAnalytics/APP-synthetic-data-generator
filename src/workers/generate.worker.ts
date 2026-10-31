@@ -9,6 +9,7 @@ import { installNetPatch } from "./netpatch";
 import { CheckAccumulator } from "../lib/generate/checks";
 import { renderChunks } from "../lib/generate/render";
 import { planTable, rowValues } from "../lib/generate/table";
+import { sampleValues } from "../lib/textgen/sample";
 import { validateSpec } from "../lib/spec/validate";
 import type { GenerateRequest, GenerateResponse } from "./protocol";
 
@@ -62,6 +63,14 @@ self.onmessage = async (event: MessageEvent<GenerateRequest>) => {
   const msg = event.data;
   if (msg.type === "cancel") {
     cancelled = true;
+    return;
+  }
+  if (msg.type === "sample") {
+    try {
+      post({ type: "samples", id: msg.id, values: sampleValues(msg.description, msg.count, msg.seed) });
+    } catch (err) {
+      post({ type: "error", error: toWireError(sanitizeError(err)) });
+    }
     return;
   }
   try {

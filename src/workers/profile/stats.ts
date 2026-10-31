@@ -9,8 +9,9 @@ import { ident, litList, runShapeOf, shapeOf, SMP, SRC, toNumber, toNumberOrNull
 export const SAMPLE_ROWS = 50_000;
 const TOP_VALUES = 60;
 const TOP_SHAPES = 30;
-// A date written with digits only (9999-99-99, 99/99/9999, 9:99), as a shape of 9s and separators.
-const DIGIT_DATE_SHAPE = /^9{1,4}([-/.: ]9{1,4}){1,5}$/;
+// A date or time written with digits, as a shape of 9s and separators (not 999-99-9999 or 9.9.9.9,
+// which are social-security-style numbers and IP addresses).
+const DIGIT_DATE_SHAPE = /^(9{4}-9{2}-9{2}([ T]9{2}:9{2}(:9{2})?)?|9{1,2}\/9{1,2}\/9{2,4}( 9{1,2}:9{2}(:9{2})?)?|9{1,2}:9{2}(:9{2})?)$/;
 
 /** Condition for "a real value": not empty and not one of the NA tokens. */
 export function isValue(col: string, naTokens: readonly string[] = KNOWN_NA_TOKENS): string {
@@ -104,9 +105,12 @@ export async function collectBasic(
   // dates written as digits (stray NA markers). A string column with many distinct values, which
   // may hold names, addresses or text, never has a value read.
   const valueCount = toNumber(agg.value_count);
-  const numericish = valueCount > 0 && toNumber(agg.float_count) * 2 >= valueCount;
+  // Numbers with leading zeros are codes (zip codes), not numbers with sentinel values.
+  const numericish = valueCount > 0 && toNumber(agg.float_count) * 2 >= valueCount && toNumber(agg.leading_zero_count) === 0;
   const digitDateShape = shapeRows.some((r) => DIGIT_DATE_SHAPE.test(String(r.shape)) && toNumber(r.n) >= toNumber(sample.n) * 0.2);
-  const fetchTop = !idLike && (toNumber(agg.distinct_count) <= threshold + 1 || numericish || digitDateShape);
+  // Four digits such as 0815 may be a clock time (HHMM), which needs its stray markers found.
+  const hhmmShape = shapeRows.some((r) => String(r.shape) === "9999" && toNumber(r.n) >= toNumber(sample.n) * 0.2);
+  const fetchTop = !idLike && (toNumber(agg.distinct_count) <= threshold + 1 || numericish || digitDateShape || hhmmShape);
   const top = fetchTop
     ? await sql.all(`SELECT ${c} AS v, count(*) AS n FROM ${SRC} WHERE ${value} GROUP BY ${c} ORDER BY n DESC, v LIMIT ${TOP_VALUES}`)
     : [];

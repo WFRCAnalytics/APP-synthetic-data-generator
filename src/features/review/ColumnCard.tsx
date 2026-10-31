@@ -6,6 +6,7 @@ import { Badge } from "../../components/Badge";
 import type { DatePatternCheck } from "../../app/session";
 import type { LocalEdits } from "../../lib/profile/edits";
 import type { ColumnOverrides, ColumnProfile } from "../../lib/profile/types";
+import type { SampleDescription } from "../../lib/textgen/sample";
 import { ColumnEditors } from "./ColumnEditors";
 import { Sparkline } from "./Sparkline";
 import { reasonText, sparkBars, summaryLines, typeLabel } from "./summary";
@@ -19,11 +20,14 @@ export interface ColumnCardProps {
   onEdit?: (patch: LocalEdits) => void;
   onOverride?: (patch: Partial<ColumnOverrides>) => void;
   onCheckDate?: (pattern: string) => void;
+  samples?: string[];
+  onRequestSamples?: (description: SampleDescription) => void;
+  specOnly?: boolean;
 }
 
 const noop = () => {};
 
-export function ColumnCard({ profile, otherNames, busy = false, dateCheck, onEdit = noop, onOverride = noop, onCheckDate = noop }: ColumnCardProps) {
+export function ColumnCard({ profile, otherNames, busy = false, dateCheck, onEdit = noop, onOverride = noop, onCheckDate = noop, samples, onRequestSamples, specOnly }: ColumnCardProps) {
   // The settings are only built while open, so a hundred cards stay light.
   const [open, setOpen] = useState(false);
   const dropped = profile.exclude === "drop";
@@ -73,7 +77,7 @@ export function ColumnCard({ profile, otherNames, busy = false, dateCheck, onEdi
           Settings
         </summary>
         {open && (
-          <ColumnEditors profile={profile} otherNames={otherNames} busy={busy} dateCheck={dateCheck} onEdit={onEdit} onOverride={onOverride} onCheckDate={onCheckDate} />
+          <ColumnEditors profile={profile} otherNames={otherNames} busy={busy} dateCheck={dateCheck} onEdit={onEdit} onOverride={onOverride} onCheckDate={onCheckDate} samples={samples} onRequestSamples={onRequestSamples} specOnly={specOnly} />
         )}
       </details>
     </article>

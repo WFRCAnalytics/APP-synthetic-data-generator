@@ -291,9 +291,12 @@ Slice 1 is complete when Phases 1 to 9 are done, regardless of this section.
 ### Column types and formats
 
 - [ ] T107 Parquet input and output preserving dtypes, nullable integers and time zones
-- [ ] T108 Personal identifier columns through `@faker-js/faker` (en_US only for v1), with repeat structure
-- [ ] T109 Free text columns (length-distribution lorem)
-- [ ] T110 Short string columns (character-class fake strings, or shuffle option)
+- [x] T108 Personal identifier columns through `@faker-js/faker` (en_US only for v1), with repeat structure
+  - Superseded by `specs/002-personal-text-columns` (done there).
+- [x] T109 Free text columns (length-distribution lorem)
+  - Superseded by `specs/002-personal-text-columns` (done there).
+- [x] T110 Short string columns (character-class fake strings, or shuffle option)
+  - Superseded by `specs/002-personal-text-columns` (done there).
 - [ ] T111 Latitude and longitude columns and combined coordinate columns (bounding box, precision, pair detection)
 - [ ] T112 Fuller handling of empty and single-value columns beyond the basics
 

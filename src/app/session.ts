@@ -8,6 +8,7 @@ import type { ColumnOverrides, ColumnProfile, FileSettings } from "../lib/profil
 import { buildSpec } from "../lib/spec/build";
 import { profilesFromSpec, settingsFromSource } from "../lib/spec/toProfiles";
 import type { SpecFile, SpecProblem } from "../lib/spec/types";
+import type { SampleDescription } from "../lib/textgen/sample";
 import { readSpecFile } from "../features/spec/loadSpec";
 import { specBlobOf, specFileNameFor } from "../features/spec/saveSpec";
 import type { GenerateRequest, GenerateResponse, ProfileJob, ProfileRequest, ProfileResponse } from "../workers/protocol";
@@ -65,6 +66,8 @@ export interface SessionState {
   specOnly: boolean;
   /** Problems found in the last spec file the user tried to load, by column. */
   specProblems: SpecProblem[] | null;
+  /** Invented sample values for the cards that show them, by column name. */
+  samples: Record<string, string[]>;
 }
 
 const emptyGen: GenState = { status: "idle", progress: null, header: [], preview: [], checks: [], error: null, totalBytes: 0, replaced: 0 };
@@ -89,6 +92,7 @@ export const initialSession: SessionState = {
   gen: emptyGen,
   specOnly: false,
   specProblems: null,
+  samples: {},
 };
 
 export const MAX_SEED = 4294967295;
@@ -117,6 +121,12 @@ export class Session {
   private generateWorker: Worker | null = null;
   private parts: Uint8Array[] = [];
   private pending = new Map<string, ColumnProfile>();
+  /** Makes the invented sample values for Review cards; created on first use, never sees real data. */
+  private sampleWorker: Worker | null = null;
+  private sampleSeq = 0;
+  /** Request id to column name, so a late reply for an older request is ignored. */
+  private sampleRequests = new Map<number, string>();
+  private sampleLatest = new Map<string, number>();
   /** What the worker last reported for each column, before the user's local edits. */
   private base: ColumnProfile[] = [];
   /** Settings that need no data (leave out, mode, decimals, protections, rename). */
@@ -297,6 +307,28 @@ export class Session {
     this.send({ type: "datePattern", column: name, pattern });
   }
 
+  // ---- Samples ------------------------------------------------------------------------------
+
+  /** Asks the generating worker for a few invented values to show on a card. */
+  requestSamples(name: string, description: SampleDescription): void {
+    if (!this.sampleWorker) {
+      const worker = new Worker(new URL("../workers/generate.worker.ts", import.meta.url), { type: "module" });
+      worker.onmessage = (e: MessageEvent<GenerateResponse>) => {
+        const msg = e.data;
+        if (msg.type !== "samples") return;
+        const column = this.sampleRequests.get(msg.id);
+        this.sampleRequests.delete(msg.id);
+        if (column === undefined || this.sampleLatest.get(column) !== msg.id) return; // an older request
+        this.set({ samples: { ...this.state.samples, [column]: msg.values } });
+      };
+      this.sampleWorker = worker;
+    }
+    const id = ++this.sampleSeq;
+    this.sampleRequests.set(id, name);
+    this.sampleLatest.set(name, id);
+    this.sampleWorker.postMessage({ type: "sample", id, description, count: 5, seed: parseSeed(this.state.seedText) ?? 42 } satisfies GenerateRequest);
+  }
+
   // ---- Generate -----------------------------------------------------------------------------
 
   setSeedText(seedText: string): void {
@@ -392,8 +424,12 @@ export class Session {
   reset(): void {
     this.profileWorker?.terminate();
     this.generateWorker?.terminate();
+    this.sampleWorker?.terminate();
     this.profileWorker = null;
     this.generateWorker = null;
+    this.sampleWorker = null;
+    this.sampleRequests.clear();
+    this.sampleLatest.clear();
     this.parts = [];
     this.pending.clear();
     this.base = [];

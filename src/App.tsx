@@ -63,6 +63,7 @@ export function App() {
               editColumn: (name, patch) => session.editColumn(name, patch),
               overrideColumn: (name, patch) => session.overrideColumn(name, patch),
               checkDatePattern: (name, pattern) => session.checkDatePattern(name, pattern),
+              requestSamples: (name, description) => session.requestSamples(name, description),
               setThreshold: (n) => session.setThreshold(n),
               onContinue: () => dispatch({ type: "goTo", step: "generate" }),
               onSaveSpec: () => {

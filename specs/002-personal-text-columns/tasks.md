@@ -34,7 +34,7 @@
 - [x] T009 [P] Unit tests for the composition core (bijection uniqueness over a space, mixed-radix decode, suffix extension beyond the natural space, determinism, chunk independence) in `tests/unit/textgen-compose.test.ts`
 - [x] T010 Implement `src/lib/textgen/compose.ts`: `mixedRadix(index, radices)`, `makeUniqueSpace(naturalSpace, key)` returning `{space, valueIndexAt(group)}` that adds a numeric suffix counter beyond the natural space, built on `makePermutation` and `makePermutationBig`
 - [x] T011 Generalize the repeat-structure bucketing from `src/lib/generate/survey-id.ts` into a shared `src/lib/generate/groups.ts` (`makeGroupMapper(repeatStructure, key, space)` returning rank to group index) and make `survey-id.ts` use it, keeping `tests/unit/mask.test.ts` and the ID tests green
-- [ ] T012 [P] Add the generate worker `sample` request and `samples` reply to `src/workers/protocol.ts` and `src/workers/generate.worker.ts` (up to 10 invented values for a column description, no real data), with a unit test of the handler in `tests/unit/sample-request.test.ts`
+- [x] T012 [P] Add the generate worker `sample` request and `samples` reply to `src/workers/protocol.ts` and `src/workers/generate.worker.ts` (up to 10 invented values for a column description, no real data), with a unit test of the handler in `tests/unit/sample-request.test.ts`
 - [x] T013 Change `collectBasic` in `src/workers/profile/stats.ts` so frequent and unparsed values are not fetched for string-like columns (fewer than half the values numeric) whose distinct count exceeds the categorical limit; numeric columns keep fetching them; add the built-in sentinel vocabulary match returning counts only; add a regression test in `tests/integration/profile.test.ts` that a high-cardinality numeric column still finds its sentinels (research R6)
 - [x] T014 [P] Add length and shape aggregates to `BasicStats` in `src/lib/classify/stats.ts` and the SQL that fills them in `src/workers/profile/stats.ts` (mean, sd and 101 quantiles of length, share of values with spaces, share with line breaks, count of values with letters, digits and punctuation); no value is returned
 
@@ -53,7 +53,7 @@
 - [x] T015 [P] [US1] Unit tests for detection of personal kinds from shapes and column names, mixed columns (`kind_mixed`), SSN-style left unsupported until acknowledged, and unchanged behavior for other types, in `tests/unit/classify-personal.test.ts`
 - [x] T016 [P] [US1] Unit tests for each composer (full, first, last name; email; phone with shapes; address; URL; IPv4; SSN with 9xx area): values match the kind's format, are unique across the space, never in assigned ranges for SSN, deterministic, in `tests/unit/textgen-personal.test.ts`
 - [x] T017 [P] [US1] Unit tests that a personal column keeps its repeat structure, distinct count and NA and sentinel counts exactly, across chunk sizes, in `tests/unit/generate-personal.test.ts`
-- [ ] T018 [P] [US1] Component tests for the kind editor (kind change updates the sample through a mocked worker, explanation text, the suffix note, SSN acknowledgement toggles generation) in `tests/component/review-personal.test.tsx`
+- [x] T018 [P] [US1] Component tests for the kind editor (kind change updates the sample through a mocked worker, explanation text, the suffix note, SSN acknowledgement toggles generation) in `tests/component/review-personal.test.tsx`
 
 ### Implementation for User Story 1
 
@@ -62,14 +62,14 @@
 - [x] T021 [US1] Extend `classifyColumn` in `src/lib/classify/classify.ts` to return `personal` with a proposed kind instead of `unsupported` (R5), reason `kind_mixed` below 80% shape share, and `unsupported` plus `ssn_needs_acknowledgement` for SSN-style columns
 - [x] T022 [US1] Create `src/workers/profile/personal.ts`: repeat structure (reuse `repeatStructure` from `ids.ts`), distinct count, format shapes (at most 5 with shares), name `last_first`, address `unit` and `zip4`; wire it into `src/workers/profile/profiler.ts` for the `personal` case, never returning a value
 - [x] T023 [US1] Add the `personal` case to `src/lib/generate/column.ts` (placer for NA and sentinels, group mapper, composer, suffix when the group count exceeds the natural space) and the checks in `src/lib/generate/checks.ts` (`distinct_count`, `repeat_structure`, `na_count`, `sentinel_counts`)
-- [ ] T024 [US1] Build `src/features/review/PersonalKindEditor.tsx`: kind selector, explanation text, live sample (via a new `session.requestSamples` using the generate worker), suffix note, SSN acknowledgement checkbox; mount it in `ColumnEditors.tsx`; add the kind labels and reason texts to `src/features/review/summary.ts`
-- [ ] T025 [US1] Update `ExcludeControl.tsx`, `AttentionBanner.tsx` and the card summary lines so personal columns show "Invented values, N distinct" and never a value
-- [ ] T026 [US1] Integration test for profiling the personal fixtures against `expected.json` and a roundtrip generate and re-profile (same distinct count, repeat structure, NA counts) in `tests/integration/personal-profile.test.ts` and update `tests/integration/roundtrip.test.ts`
-- [ ] T027 [US1] Mark slice 1 deferred tasks T108 (personal identifiers), T109 (free text) and T110 (short strings) superseded in `specs/001-csv-synthetic-slice/tasks.md` with a pointer to this feature
+- [x] T024 [US1] Build `src/features/review/PersonalKindEditor.tsx`: kind selector, explanation text, live sample (via a new `session.requestSamples` using the generate worker), suffix note, SSN acknowledgement checkbox; mount it in `ColumnEditors.tsx`; add the kind labels and reason texts to `src/features/review/summary.ts`
+- [x] T025 [US1] Update `ExcludeControl.tsx`, `AttentionBanner.tsx` and the card summary lines so personal columns show "Invented values, N distinct" and never a value
+- [x] T026 [US1] Integration test for profiling the personal fixtures against `expected.json` and a roundtrip generate and re-profile (same distinct count, repeat structure, NA counts) in `tests/integration/personal-profile.test.ts` and update `tests/integration/roundtrip.test.ts`
+- [x] T027 [US1] Mark slice 1 deferred tasks T108 (personal identifiers), T109 (free text) and T110 (short strings) superseded in `specs/001-csv-synthetic-slice/tasks.md` with a pointer to this feature
 
-- [ ] T056 [US1] Add the new types to the Type selector choices in `src/features/review/ColumnEditors.tsx` and forced-type support in `src/workers/profile/profiler.ts` (`forceType`), so a slice 1 unsupported column can be switched to a kind when the file is open; in spec-only mode disable the selector for unsupported columns with the reason `needs_source_file` and the explanation (FR-017, research R7b); tests in `tests/component/review-personal.test.tsx` and `tests/integration/personal-profile.test.ts`
-- [ ] T057 [US1] Card notes and warnings in `PersonalKindEditor.tsx` and `src/features/review/summary.ts`: non-English characters note for names and free text, the mix of phone formats with shares shown for confirmation, and the warning when a personal column is switched to numeric or categorical (real labels would be kept in the spec); component tests in `tests/component/review-personal.test.tsx`
-- [ ] T058 [P] [US1] Extend `tests/helpers/fakeWorkers.ts` to answer the `sample` request and make `Session` create the generate worker lazily for samples in `src/app/session.ts` (`requestSamples`), so Review samples work before any generation
+- [x] T056 [US1] Add the new types to the Type selector choices in `src/features/review/ColumnEditors.tsx` and forced-type support in `src/workers/profile/profiler.ts` (`forceType`), so a slice 1 unsupported column can be switched to a kind when the file is open; in spec-only mode disable the selector for unsupported columns with the reason `needs_source_file` and the explanation (FR-017, research R7b); tests in `tests/component/review-personal.test.tsx` and `tests/integration/personal-profile.test.ts`
+- [x] T057 [US1] Card notes and warnings in `PersonalKindEditor.tsx` and `src/features/review/summary.ts`: non-English characters note for names and free text, the mix of phone formats with shares shown for confirmation, and the warning when a personal column is switched to numeric or categorical (real labels would be kept in the spec); component tests in `tests/component/review-personal.test.tsx`
+- [x] T058 [P] [US1] Extend `tests/helpers/fakeWorkers.ts` to answer the `sample` request and make `Session` create the generate worker lazily for samples in `src/app/session.ts` (`requestSamples`), so Review samples work before any generation
 
 **Checkpoint**: a table with name, email, phone and address columns generates with exact distinct and NA counts. MVP.
 
@@ -83,14 +83,14 @@
 
 ### Tests for User Story 4
 
-- [ ] T028 [P] [US4] Spy integration test: record every row the engine returns while profiling the personal, free text and short string fixture columns and fail if any real value appears; confirm no frequent-value query runs for them, in `tests/integration/personal-inference.test.ts`
-- [ ] T029 [P] [US4] Spec privacy test: the spec for `text_50k.csv` holds none of the real values, is under 100 KB, and a hand-edited spec with a `values` list on a new column type is rejected, in `tests/integration/text-privacy.test.ts`
+- [x] T028 [P] [US4] Spy integration test: record every row the engine returns while profiling the personal, free text and short string fixture columns and fail if any real value appears; confirm no frequent-value query runs for them, in `tests/integration/personal-inference.test.ts`
+- [x] T029 [P] [US4] Spec privacy test: the spec for `text_50k.csv` holds none of the real values, is under 100 KB, and a hand-edited spec with a `values` list on a new column type is rejected, in `tests/integration/text-privacy.test.ts`
 - [ ] T030 [P] [US4] Browser leak test: extend `tests/e2e/privacy.spec.ts` so the new fixture columns (real names, emails, phones, addresses, comment words, codes) never appear in the page text, the spec download, the preview, the fake file or error messages
 - [ ] T031 [P] [US4] Bundle test `tests/unit/bundle-wordlists.test.ts` (run after `npm run build`, skipped when `dist` is absent): the profile worker bundle and the main bundle contain none of a list of faker word-list marker strings, and the generate worker bundle does
 
 ### Implementation for User Story 4
 
-- [ ] T032 [US4] Make the validator in `src/lib/spec/validate.ts` report a clear, per-column message for a value-bearing key on the new types, and ensure error messages never quote a value (extend `tests/unit/errors.test.ts`)
+- [x] T032 [US4] Make the validator in `src/lib/spec/validate.ts` report a clear, per-column message for a value-bearing key on the new types, and ensure error messages never quote a value (extend `tests/unit/errors.test.ts`)
 - [ ] T033 [US4] Add CI wiring: run the bundle test after the build step in `.github/workflows/deploy.yml`
 
 **Checkpoint**: every guarantee has a failing-if-broken test.
@@ -107,12 +107,12 @@
 
 - [ ] T034 [US2] Unit tests for free text detection (mean length, spaces, names like comment) in `tests/unit/classify-text.test.ts`
 - [ ] T035 [P] [US2] Unit tests for the lorem generator and the free text column: exact min and max length, spread follows quantiles, no real word, line breaks only when `line_breaks`, determinism, in `tests/unit/generate-free-text.test.ts`
-- [ ] T036 [P] [US2] Component test for the free text card (length summary, explanation, sample) in `tests/component/review-free-text.test.tsx`
+- [x] T036 [P] [US2] Component test for the free text card (length summary, explanation, sample) in `tests/component/review-free-text.test.tsx`
 
 ### Implementation for User Story 2
 
-- [ ] T037 [US2] Implement `src/lib/textgen/lorem.ts` (own small word list, sentence punctuation, cut at the chosen length) and the `free_text` case in `src/lib/generate/column.ts` reusing the numeric length generator; add `min`, `max` checks in `checks.ts`
-- [ ] T038 [US2] Extend `classifyColumn` and `src/workers/profile/personal.ts` (or `text.ts`) to return `free_text` with the length fields and `line_breaks`, and the card summary for it
+- [x] T037 [US2] Implement `src/lib/textgen/lorem.ts` (own small word list, sentence punctuation, cut at the chosen length) and the `free_text` case in `src/lib/generate/column.ts` reusing the numeric length generator; add `min`, `max` checks in `checks.ts`
+- [x] T038 [US2] Extend `classifyColumn` and `src/workers/profile/personal.ts` (or `text.ts`) to return `free_text` with the length fields and `line_breaks`, and the card summary for it
 - [ ] T039 [US2] Quote embedded line breaks as the source did: add a case with line breaks to `tests/unit/csv-writer.test.ts` and confirm `src/lib/csv/writer.ts` quotes them under every quote style
 - [ ] T059 [US2] Cap free text lengths at 100,000 characters in the profiler and validator, with the reason `text_length_capped` and a card note; tests in `tests/unit/generate-free-text.test.ts` and `tests/unit/spec-validate-text.test.ts`
 - [ ] T040 [US2] Integration test profile then generate then re-profile the comments column in `tests/integration/text-roundtrip.test.ts`
@@ -131,14 +131,14 @@
 
 - [ ] T041 [P] [US3] Unit tests for short string detection (not ID-named, distinct above the limit, not personal) in `tests/unit/classify-text.test.ts`
 - [ ] T042 [P] [US3] Unit tests for the short string generator: pattern and length per value, `length_groups` counts exact, distinct count and repeat structure exact, determinism, in `tests/unit/generate-short-string.test.ts`
-- [ ] T043 [P] [US3] Component tests for the pattern editor and sample in `tests/component/review-short-string.test.tsx`
+- [x] T043 [P] [US3] Component tests for the pattern editor and sample in `tests/component/review-short-string.test.tsx`
 
 ### Implementation for User Story 3
 
-- [ ] T044 [US3] Implement `src/lib/textgen/shortstring.ts` (prefix of the pattern by length, per-length space and bijection via `compose.ts` and `groups.ts`) and the `short_string` case in `column.ts` and checks (`length_groups`, `distinct_count`, `repeat_structure`)
-- [ ] T045 [US3] Profile short strings in `src/workers/profile/personal.ts`: per-position classes for the longest length (reuse `tokenForPosition`), `length_groups`, repeat structure; classification in `classify.ts`
-- [ ] T046 [US3] Build `src/features/review/ShortStringEditor.tsx` (reuse the ID token editor parts from `IdMaskEditor.tsx` where possible) with the shortfall message and Generate gating as for IDs (`narrowIdColumns` generalized in `src/lib/profile/idCapacity.ts`)
-- [ ] T060 [US3] Make the short string shortfall (FR-013) block Generate with the ID-style message and no suffix; test in `tests/component/review-short-string.test.tsx`
+- [x] T044 [US3] Implement `src/lib/textgen/shortstring.ts` (prefix of the pattern by length, per-length space and bijection via `compose.ts` and `groups.ts`) and the `short_string` case in `column.ts` and checks (`length_groups`, `distinct_count`, `repeat_structure`)
+- [x] T045 [US3] Profile short strings in `src/workers/profile/personal.ts`: per-position classes for the longest length (reuse `tokenForPosition`), `length_groups`, repeat structure; classification in `classify.ts`
+- [x] T046 [US3] Build `src/features/review/ShortStringEditor.tsx` (reuse the ID token editor parts from `IdMaskEditor.tsx` where possible) with the shortfall message and Generate gating as for IDs (`narrowIdColumns` generalized in `src/lib/profile/idCapacity.ts`)
+- [x] T060 [US3] Make the short string shortfall (FR-013) block Generate with the ID-style message and no suffix; test in `tests/component/review-short-string.test.tsx`
 - [ ] T047 [US3] Integration test profile then generate then re-profile the plate and vendor code columns in `tests/integration/text-roundtrip.test.ts`
 
 **Checkpoint**: no string column is left out for being text.

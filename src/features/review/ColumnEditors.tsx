@@ -8,7 +8,11 @@ import type { LocalEdits } from "../../lib/profile/edits";
 import type { ColumnOverrides, ColumnProfile, ColumnType } from "../../lib/profile/types";
 import { DatePatternBox } from "./DatePatternBox";
 import { ExcludeControl } from "./ExcludeControl";
+import type { SampleDescription } from "../../lib/textgen/sample";
 import { IdMaskEditor } from "./IdMaskEditor";
+import { PersonalKindEditor } from "./PersonalKindEditor";
+import { SamplePreview } from "./SamplePreview";
+import { ShortStringEditor } from "./ShortStringEditor";
 import { NaTokenEditor } from "./NaTokenEditor";
 import { NumericControls } from "./NumericControls";
 import { ProtectionsPanel } from "./ProtectionsPanel";
@@ -24,6 +28,11 @@ export interface ColumnEditorsProps {
   onEdit: (patch: LocalEdits) => void;
   onOverride: (patch: Partial<ColumnOverrides>) => void;
   onCheckDate: (pattern: string) => void;
+  /** Invented sample values for this column, and how to ask for new ones. */
+  samples?: string[];
+  onRequestSamples?: (description: SampleDescription) => void;
+  /** The columns came from a saved spec, so there is no file to read again. */
+  specOnly?: boolean;
 }
 
 /** The types a user can choose. Dates are chosen by typing their pattern; IDs arrive with ID patterns. */
@@ -32,23 +41,31 @@ const CHOICES: [string, string][] = [
   ["integer", "Integer"],
   ["float", "Decimal number"],
   ["boolean", "Yes / No"],
+  ["personal", "Personal data (invented values)"],
+  ["free_text", "Free text (lengths only)"],
+  ["short_string", "Short string (pattern only)"],
   ["date", "Date or time (type its pattern)"],
   ["unsupported", "Not supported: leave it out"],
 ];
 
 const isDateLike = (t: ColumnType) => t === "date" || t === "datetime" || t === "time";
 
-export function ColumnEditors({ profile, otherNames, busy, dateCheck, onEdit, onOverride, onCheckDate }: ColumnEditorsProps) {
+export function ColumnEditors({ profile, otherNames, busy, dateCheck, onEdit, onOverride, onCheckDate, samples, onRequestSamples, specOnly = false }: ColumnEditorsProps) {
   const typeId = useId();
   const [chooseDate, setChooseDate] = useState(false);
   const kind = profile.summary.kind;
+  // A saved spec holds no figures for an unsupported column, so its kind can only change with the file.
+  const lockedForSpec = specOnly && profile.type === "unsupported" && profile.summary.kind === "unsupported";
+  // A text-like column read as categories or numbers keeps real labels or values in the spec.
+  const textLike = profile.detectedType === "personal" || profile.detectedType === "free_text" || profile.detectedType === "short_string";
+  const realValuesKept = textLike && ["categorical", "boolean", "integer", "float"].includes(profile.type);
 
   const selected = isDateLike(profile.type) || chooseDate ? "date" : profile.type;
   const choices = CHOICES.some(([v]) => v === selected) ? CHOICES : [[selected, selected] as [string, string], ...CHOICES];
   const showDate = isDateLike(profile.type) || chooseDate || profile.attentionReasons.some((r) => r.startsWith("date_format"));
 
   const hasValues = kind !== "empty" && kind !== "unsupported";
-  const supportsSentinels = kind === "numeric" || kind === "categorical" || kind === "datetime";
+  const supportsSentinels = kind === "numeric" || kind === "categorical" || kind === "datetime" || kind === "personal" || kind === "short_string";
 
   const currentPattern = profile.summary.kind === "datetime" ? (profile.summary.format ?? "") : "";
 
@@ -59,7 +76,7 @@ export function ColumnEditors({ profile, otherNames, busy, dateCheck, onEdit, on
         <select
           id={typeId}
           value={selected}
-          disabled={busy}
+          disabled={busy || lockedForSpec}
           onChange={(e) => {
             const value = e.target.value;
             if (value === "date") {
@@ -78,6 +95,12 @@ export function ColumnEditors({ profile, otherNames, busy, dateCheck, onEdit, on
         </select>
         {profile.detectedType !== profile.type && <span className="field-hint">Detected as {profile.detectedType.replace("_", " ")}.</span>}
         {busy && <span className="field-hint">Profiling this column again&hellip;</span>}
+        {lockedForSpec && <span className="field-hint" data-testid="needs-source-file">Open the original file to change this column&apos;s kind; a saved spec has no figures for it.</span>}
+        {realValuesKept && (
+          <span className="field-hint" role="note">
+            Warning: read this way, real values or labels from this column are kept in the spec file.
+          </span>
+        )}
       </div>
 
       {showDate && (
@@ -92,6 +115,17 @@ export function ColumnEditors({ profile, otherNames, busy, dateCheck, onEdit, on
             onOverride({ datePattern, type: undefined });
           }}
         />
+      )}
+
+      {kind === "personal" && <PersonalKindEditor profile={profile} samples={samples} onEdit={onEdit} onRequestSamples={onRequestSamples} />}
+      {kind === "short_string" && <ShortStringEditor profile={profile} samples={samples} onEdit={onEdit} onRequestSamples={onRequestSamples} />}
+      {kind === "free_text" && profile.summary.kind === "free_text" && (
+        <div className="field">
+          <p className="field-hint">
+            Only the lengths of the real text are used ({profile.summary.min.toLocaleString("en-US")} to {profile.summary.max.toLocaleString("en-US")} characters). The fake text is made-up filler; no real word is kept. Invented values use plain US English characters, so accents or other scripts are not kept.
+          </p>
+          <SamplePreview column={profile.name} description={{ kind: "free_text", min: profile.summary.min, max: profile.summary.max }} samples={samples} onRequest={onRequestSamples} />
+        </div>
       )}
 
       {kind === "survey_id" && <IdMaskEditor profile={profile} onChange={(idPattern) => onEdit({ idPattern })} />}
