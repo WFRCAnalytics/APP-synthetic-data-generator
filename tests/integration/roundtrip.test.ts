@@ -3,6 +3,7 @@
 // parser as the original. Profile a real file, generate a fake one from the spec alone, then
 // profile the fake one and compare. Run on the type zoo and on every dialect variant.
 
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { CheckAccumulator } from "../../src/lib/generate/checks";
@@ -109,7 +110,7 @@ describe("the type zoo", () => {
 
   it("never writes a real name, email or address (privacy)", () => {
     const text = new TextDecoder().decode(bytes);
-    const raw = parseCsv(new TextDecoder().decode(new Uint8Array(require("node:fs").readFileSync(join(ZOO, "zoo_small.csv")))));
+    const raw = parseCsv(readFileSync(join(ZOO, "zoo_small.csv"), "utf8"));
     const header = raw.rows[0];
     for (const col of ["person_name", "email", "street_address", "ssn_like"]) {
       const idx = header.indexOf(col);
