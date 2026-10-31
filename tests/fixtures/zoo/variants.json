@@ -1,0 +1,125 @@
+{
+  "variant_utf8.csv": {
+    "encoding": "utf-8",
+    "bom": false,
+    "delimiter": ",",
+    "header": true
+  },
+  "variant_utf8_bom.csv": {
+    "encoding": "utf-8",
+    "bom": true,
+    "delimiter": ",",
+    "header": true
+  },
+  "variant_utf16le.csv": {
+    "encoding": "utf-16le",
+    "bom": true,
+    "delimiter": ",",
+    "header": true
+  },
+  "variant_utf16be.csv": {
+    "encoding": "utf-16be",
+    "bom": true,
+    "delimiter": ",",
+    "header": true
+  },
+  "variant_cp1252.csv": {
+    "encoding": "windows-1252",
+    "bom": false,
+    "delimiter": ",",
+    "header": true,
+    "notes": "accents and the euro sign"
+  },
+  "delim_semicolon_decimal_comma.csv": {
+    "encoding": "utf-8",
+    "delimiter": ";",
+    "header": true,
+    "notes": "amount uses a decimal comma"
+  },
+  "delim_tab.tsv": {
+    "encoding": "utf-8",
+    "delimiter": "\t",
+    "header": true
+  },
+  "delim_pipe.csv": {
+    "encoding": "utf-8",
+    "delimiter": "|",
+    "header": true
+  },
+  "no_header.csv": {
+    "encoding": "utf-8",
+    "delimiter": ",",
+    "header": false
+  },
+  "eol_crlf.csv": {
+    "encoding": "utf-8",
+    "delimiter": ",",
+    "header": true,
+    "line_ending": "crlf"
+  },
+  "eol_cr.csv": {
+    "encoding": "utf-8",
+    "delimiter": ",",
+    "header": true,
+    "line_ending": "cr"
+  },
+  "quote_all.csv": {
+    "encoding": "utf-8",
+    "delimiter": ",",
+    "header": true,
+    "quote_style": "all"
+  },
+  "quote_percolumn.csv": {
+    "encoding": "utf-8",
+    "delimiter": ",",
+    "header": true,
+    "quote_style": "per_column",
+    "quoted": {
+      "id": false,
+      "label": true,
+      "amount": false,
+      "when": true,
+      "flag": true,
+      "note": true
+    }
+  },
+  "no_trailing_newline.csv": {
+    "encoding": "utf-8",
+    "delimiter": ",",
+    "header": true,
+    "trailing_newline": false
+  },
+  "ragged.csv": {
+    "expect": "parse_error",
+    "notes": "message must not contain a cell value"
+  },
+  "empty.csv": {
+    "expect": "error_or_zero_columns"
+  },
+  "header_only.csv": {
+    "expect": "zero_rows",
+    "columns": 3
+  },
+  "one_row.csv": {
+    "expect": "one_row",
+    "columns": 3
+  },
+  "dup_columns.csv": {
+    "expect": "duplicate_column_names"
+  },
+  "blank_col_name.csv": {
+    "expect": "blank_column_name"
+  },
+  "single_column.csv": {
+    "expect": "one_column",
+    "columns": 1
+  },
+  "wide_500.csv": {
+    "expect": "profiles",
+    "columns": 500
+  },
+  "big_cell.csv": {
+    "expect": "no_freeze",
+    "notes": "one 1 MB cell"
+  }
+}

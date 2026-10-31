@@ -1,0 +1,9 @@
+node_modules
+dist
+coverage
+public/duckdb
+.fixtures
+package-lock.json
+.specify
+.claude
+specs

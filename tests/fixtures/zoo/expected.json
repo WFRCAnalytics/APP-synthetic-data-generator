@@ -1,0 +1,681 @@
+{
+  "generator": "scripts/make-fixtures.mjs",
+  "seed": 20261030,
+  "n_rows": 2000,
+  "columns": {
+    "bool_tf": {
+      "type": "boolean",
+      "status": "ok",
+      "reasons": []
+    },
+    "bool_yn": {
+      "type": "boolean",
+      "status": "ok",
+      "reasons": [],
+      "na_tokens": [
+        ""
+      ]
+    },
+    "bool_yesno": {
+      "type": "boolean",
+      "status": "ok",
+      "reasons": []
+    },
+    "bool_01": {
+      "type": "boolean",
+      "status": "ok",
+      "reasons": []
+    },
+    "bool_one_value": {
+      "type": "categorical",
+      "status": "ok",
+      "reasons": []
+    },
+    "cat_str_5": {
+      "type": "categorical",
+      "status": "ok",
+      "reasons": [],
+      "storage": "string"
+    },
+    "cat_str_50": {
+      "type": "categorical",
+      "status": "ok",
+      "reasons": [],
+      "storage": "string"
+    },
+    "cat_str_51": {
+      "type": "unsupported",
+      "status": "unsupported",
+      "reasons": [
+        "unsupported_type"
+      ],
+      "assert": [
+        "type",
+        "status"
+      ]
+    },
+    "cat_int_codes": {
+      "type": "categorical",
+      "status": "ok",
+      "reasons": [],
+      "storage": "integer"
+    },
+    "cat_int_zero_pad": {
+      "type": "categorical",
+      "status": "ok",
+      "reasons": [],
+      "storage": "string",
+      "notes": "leading zeros must survive"
+    },
+    "cat_int_sentinel": {
+      "type": "categorical",
+      "status": "needs_attention",
+      "reasons": [
+        "possible_sentinel"
+      ]
+    },
+    "cat_rare": {
+      "type": "categorical",
+      "status": "ok",
+      "reasons": [],
+      "notes": "RARE appears exactly once"
+    },
+    "cat_unicode": {
+      "type": "categorical",
+      "status": "ok",
+      "reasons": []
+    },
+    "cat_special_chars": {
+      "type": "categorical",
+      "status": "ok",
+      "reasons": [],
+      "notes": "quoting round trip"
+    },
+    "cat_int_50": {
+      "type": "categorical",
+      "status": "needs_attention",
+      "reasons": [
+        "near_categorical_threshold"
+      ],
+      "storage": "integer"
+    },
+    "cat_int_51": {
+      "type": "integer",
+      "status": "needs_attention",
+      "reasons": [
+        "near_categorical_threshold"
+      ]
+    },
+    "int_plain": {
+      "type": "integer",
+      "status": "ok",
+      "reasons": []
+    },
+    "int_negative": {
+      "type": "integer",
+      "status": "ok",
+      "reasons": []
+    },
+    "int_sentinels": {
+      "type": "integer",
+      "status": "needs_attention",
+      "reasons": [
+        "possible_sentinel"
+      ]
+    },
+    "int_thousands": {
+      "type": "integer",
+      "status": "ok",
+      "reasons": [],
+      "notes": "thousands separator, quoted by minimal style",
+      "assert": [
+        "type"
+      ]
+    },
+    "int_constant": {
+      "type": "categorical",
+      "status": "needs_attention",
+      "reasons": [],
+      "assert": [
+        "type"
+      ]
+    },
+    "int_one_plus_na": {
+      "type": "categorical",
+      "status": "needs_attention",
+      "reasons": [],
+      "assert": [
+        "type"
+      ],
+      "na_tokens": [
+        ""
+      ]
+    },
+    "int_skew_zero_inflated": {
+      "type": "integer",
+      "status": "ok",
+      "reasons": []
+    },
+    "int_big": {
+      "type": "integer",
+      "status": "ok",
+      "reasons": [],
+      "assert": [
+        "type"
+      ]
+    },
+    "float_2dp": {
+      "type": "float",
+      "status": "ok",
+      "reasons": [],
+      "decimals": 2
+    },
+    "float_6dp": {
+      "type": "float",
+      "status": "ok",
+      "reasons": [],
+      "decimals": 6
+    },
+    "float_trailing_zero": {
+      "type": "float",
+      "status": "ok",
+      "reasons": [],
+      "decimals": 2,
+      "notes": "1.50 keeps its trailing zero"
+    },
+    "float_sci": {
+      "type": "float",
+      "status": "ok",
+      "reasons": [],
+      "assert": [
+        "type"
+      ],
+      "notes": "scientific notation fidelity not yet decided"
+    },
+    "float_lognormal": {
+      "type": "float",
+      "status": "ok",
+      "reasons": []
+    },
+    "float_bimodal": {
+      "type": "float",
+      "status": "ok",
+      "reasons": []
+    },
+    "float_negative": {
+      "type": "float",
+      "status": "ok",
+      "reasons": []
+    },
+    "float_sd_zero": {
+      "type": "float",
+      "status": "ok",
+      "reasons": [],
+      "assert": [
+        "type"
+      ],
+      "notes": "beta fit fails at generation, falls back to uniform"
+    },
+    "float_with_sentinel": {
+      "type": "float",
+      "status": "needs_attention",
+      "reasons": [
+        "possible_sentinel"
+      ]
+    },
+    "date_iso": {
+      "type": "date",
+      "status": "ok",
+      "reasons": [],
+      "format": "%Y-%m-%d"
+    },
+    "date_us": {
+      "type": "date",
+      "status": "needs_attention",
+      "reasons": [
+        "date_format_ambiguous"
+      ],
+      "assert": [
+        "type"
+      ],
+      "notes": "days up to 28 so %m/%d/%Y and %d/%m/%Y both fit when the day is 12 or less; detection must pick the one that parses all values"
+    },
+    "date_eu": {
+      "type": "date",
+      "status": "ok",
+      "reasons": [],
+      "format": "%d/%m/%Y",
+      "assert": [
+        "type"
+      ]
+    },
+    "date_text_month": {
+      "type": "date",
+      "status": "ok",
+      "reasons": [],
+      "format": "%d-%b-%Y"
+    },
+    "datetime_iso_t": {
+      "type": "datetime",
+      "status": "ok",
+      "reasons": [],
+      "format": "%Y-%m-%dT%H:%M:%S"
+    },
+    "datetime_space": {
+      "type": "datetime",
+      "status": "ok",
+      "reasons": [],
+      "format": "%Y-%m-%d %H:%M:%S"
+    },
+    "datetime_12h": {
+      "type": "datetime",
+      "status": "ok",
+      "reasons": [],
+      "format": "%m/%d/%Y %I:%M:%S %p",
+      "assert": [
+        "type"
+      ]
+    },
+    "time_hhmm_text": {
+      "type": "time",
+      "status": "needs_attention",
+      "reasons": [
+        "possible_sentinel"
+      ],
+      "format": "%H%M"
+    },
+    "time_hh_mm": {
+      "type": "time",
+      "status": "ok",
+      "reasons": [],
+      "format": "%H:%M"
+    },
+    "time_hh_mm_ss": {
+      "type": "time",
+      "status": "ok",
+      "reasons": [],
+      "format": "%H:%M:%S"
+    },
+    "date_ambiguous": {
+      "type": "date",
+      "status": "needs_attention",
+      "reasons": [
+        "date_format_ambiguous"
+      ],
+      "assert": [
+        "status",
+        "reasons"
+      ]
+    },
+    "date_mixed_formats": {
+      "type": "unsupported",
+      "status": "needs_attention",
+      "reasons": [
+        "date_format_mixed"
+      ],
+      "assert": [
+        "status",
+        "reasons"
+      ]
+    },
+    "date_with_offset": {
+      "type": "unsupported",
+      "status": "unsupported",
+      "reasons": [
+        "unsupported_type"
+      ],
+      "assert": [
+        "type",
+        "status"
+      ]
+    },
+    "date_year_only": {
+      "type": "categorical",
+      "status": "ok",
+      "reasons": [],
+      "assert": [
+        "type"
+      ],
+      "notes": "a year is not a date"
+    },
+    "date_bad_values": {
+      "type": "date",
+      "status": "needs_attention",
+      "reasons": [
+        "date_format_unrecognized"
+      ],
+      "assert": [
+        "status"
+      ]
+    },
+    "hh_id": {
+      "type": "survey_id",
+      "status": "ok",
+      "reasons": [],
+      "mask": "[0-9]{5}"
+    },
+    "padded_id": {
+      "type": "survey_id",
+      "status": "ok",
+      "reasons": [],
+      "mask": "[0-9]{5}",
+      "notes": "zero padding kept"
+    },
+    "site_id": {
+      "type": "survey_id",
+      "status": "ok",
+      "reasons": [],
+      "mask": "UT-[0-9]{3}-[0-9]{3}"
+    },
+    "hh_prefix_id": {
+      "type": "survey_id",
+      "status": "ok",
+      "reasons": [],
+      "mask": "HH[0-9]{7}"
+    },
+    "row_id": {
+      "type": "survey_id",
+      "status": "ok",
+      "reasons": [],
+      "mask": "[0-9]{6}",
+      "notes": "unique per row"
+    },
+    "person_id": {
+      "type": "survey_id",
+      "status": "ok",
+      "reasons": [],
+      "mask": "[0-9]{2}",
+      "notes": "sequence within a group"
+    },
+    "mixed_mask_id": {
+      "type": "survey_id",
+      "status": "needs_attention",
+      "reasons": [
+        "id_mixed_masks"
+      ],
+      "assert": [
+        "status"
+      ]
+    },
+    "few_distinct_hh_id": {
+      "type": "survey_id",
+      "status": "ok",
+      "reasons": [],
+      "assert": [
+        "type"
+      ],
+      "notes": "40 distinct values, never categorical"
+    },
+    "email": {
+      "type": "unsupported",
+      "status": "unsupported",
+      "reasons": [
+        "unsupported_type",
+        "possible_identifier"
+      ],
+      "assert": [
+        "type",
+        "status"
+      ]
+    },
+    "phone_us": {
+      "type": "unsupported",
+      "status": "unsupported",
+      "reasons": [
+        "unsupported_type"
+      ],
+      "assert": [
+        "type",
+        "status"
+      ]
+    },
+    "phone_intl": {
+      "type": "unsupported",
+      "status": "unsupported",
+      "reasons": [
+        "unsupported_type"
+      ],
+      "assert": [
+        "type",
+        "status"
+      ]
+    },
+    "person_name": {
+      "type": "unsupported",
+      "status": "unsupported",
+      "reasons": [
+        "unsupported_type"
+      ],
+      "assert": [
+        "type",
+        "status"
+      ]
+    },
+    "street_address": {
+      "type": "unsupported",
+      "status": "unsupported",
+      "reasons": [
+        "unsupported_type"
+      ],
+      "assert": [
+        "type",
+        "status"
+      ]
+    },
+    "ssn_like": {
+      "type": "unsupported",
+      "status": "unsupported",
+      "reasons": [
+        "unsupported_type"
+      ],
+      "assert": [
+        "type",
+        "status"
+      ]
+    },
+    "free_text": {
+      "type": "unsupported",
+      "status": "unsupported",
+      "reasons": [
+        "unsupported_type"
+      ],
+      "assert": [
+        "type",
+        "status"
+      ]
+    },
+    "short_code_many": {
+      "type": "unsupported",
+      "status": "unsupported",
+      "reasons": [
+        "unsupported_type"
+      ],
+      "assert": [
+        "type",
+        "status"
+      ]
+    },
+    "url": {
+      "type": "unsupported",
+      "status": "unsupported",
+      "reasons": [
+        "unsupported_type"
+      ],
+      "assert": [
+        "type",
+        "status"
+      ]
+    },
+    "uuid": {
+      "type": "unsupported",
+      "status": "unsupported",
+      "reasons": [
+        "unsupported_type"
+      ],
+      "assert": [
+        "type",
+        "status"
+      ]
+    },
+    "ip_address": {
+      "type": "unsupported",
+      "status": "unsupported",
+      "reasons": [
+        "unsupported_type"
+      ],
+      "assert": [
+        "type",
+        "status"
+      ]
+    },
+    "lat": {
+      "type": "unsupported",
+      "status": "unsupported",
+      "reasons": [
+        "unsupported_type"
+      ],
+      "assert": [
+        "type",
+        "status"
+      ],
+      "notes": "coordinates"
+    },
+    "lon": {
+      "type": "unsupported",
+      "status": "unsupported",
+      "reasons": [
+        "unsupported_type"
+      ],
+      "assert": [
+        "type",
+        "status"
+      ],
+      "notes": "coordinates"
+    },
+    "coord_pair": {
+      "type": "unsupported",
+      "status": "unsupported",
+      "reasons": [
+        "unsupported_type"
+      ],
+      "assert": [
+        "type",
+        "status"
+      ]
+    },
+    "wkt_point": {
+      "type": "unsupported",
+      "status": "unsupported",
+      "reasons": [
+        "unsupported_type"
+      ],
+      "assert": [
+        "type",
+        "status"
+      ]
+    },
+    "zip_text": {
+      "type": "unsupported",
+      "status": "unsupported",
+      "reasons": [
+        "unsupported_type"
+      ],
+      "assert": [
+        "type",
+        "status"
+      ],
+      "notes": "leading zero must not be lost"
+    },
+    "currency_text": {
+      "type": "unsupported",
+      "status": "unsupported",
+      "reasons": [
+        "unsupported_type"
+      ],
+      "assert": [
+        "type",
+        "status"
+      ]
+    },
+    "percent_text": {
+      "type": "unsupported",
+      "status": "unsupported",
+      "reasons": [
+        "unsupported_type"
+      ],
+      "assert": [
+        "type",
+        "status"
+      ]
+    },
+    "all_na": {
+      "type": "empty",
+      "status": "ok",
+      "reasons": [],
+      "na_tokens": [
+        ""
+      ]
+    },
+    "mostly_na": {
+      "type": "categorical",
+      "status": "ok",
+      "reasons": [],
+      "assert": [
+        "type"
+      ],
+      "na_tokens": [
+        ""
+      ]
+    },
+    "na_blank": {
+      "type": "integer",
+      "status": "ok",
+      "reasons": [],
+      "na_tokens": [
+        ""
+      ]
+    },
+    "na_NA": {
+      "type": "integer",
+      "status": "ok",
+      "reasons": [],
+      "na_tokens": [
+        "NA"
+      ]
+    },
+    "na_N_A": {
+      "type": "integer",
+      "status": "ok",
+      "reasons": [],
+      "na_tokens": [
+        "N/A"
+      ]
+    },
+    "na_NULL": {
+      "type": "integer",
+      "status": "ok",
+      "reasons": [],
+      "na_tokens": [
+        "NULL"
+      ]
+    },
+    "na_dot": {
+      "type": "integer",
+      "status": "ok",
+      "reasons": [],
+      "na_tokens": [
+        "."
+      ]
+    },
+    "na_mixed_tokens": {
+      "type": "integer",
+      "status": "ok",
+      "reasons": [],
+      "na_tokens": [
+        "",
+        "NA",
+        "."
+      ]
+    }
+  }
+}

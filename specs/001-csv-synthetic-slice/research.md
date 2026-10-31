@@ -179,3 +179,24 @@ No runtime dependency makes network requests or includes telemetry.
 
 None blocking. The VERIFY items above become the first prototype tasks, ahead of the work that
 depends on them.
+
+## R15. Brand fonts are self-hosted (found while copying the reference theme)
+
+- **Decision**: Use the `@fontsource/poppins`, `@fontsource/inter` and `@fontsource/fira-code` npm
+  packages, imported in `src/main.tsx`, so Vite bundles the font files as same-origin assets.
+- **Why**: The reference app's `theme/fonts.ts` injects Google Fonts `<link>` tags at runtime. That
+  is a third-party request, which Principle I forbids and the page CSP (`connect-src`,
+  `font-src 'self' data:`) would block. `tokens.css` is copied unchanged because it only names the
+  families.
+- **Alternative**: Vendor the font files by hand (more upkeep, same result).
+
+## R16. Icons and the theme preference
+
+- **Decision**: Add `lucide-react` (the reference header and theme toggle use it), and keep the
+  reference's light/dark preference in `localStorage` under an app-specific key.
+- **Why**: Icons ship in the bundle and make no requests. The theme preference is a display setting,
+  not data and not a tracking identifier; it is the only thing the app ever writes to browser
+  storage. The reload and privacy tests (T071, T076) therefore assert that no key except the theme
+  preference exists.
+- **Note**: This updates the R12 dependency table: `lucide-react` is now used (the earlier
+  "skipped" note is superseded).

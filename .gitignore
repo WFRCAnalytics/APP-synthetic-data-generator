@@ -32,3 +32,6 @@ Thumbs.db
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Large generated and downloaded fixtures (never committed)
+.fixtures/

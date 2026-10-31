@@ -1,0 +1,206 @@
+﻿id,label,amount,when,flag,note
+1,€5,889.30,2024-08-08,true,"has, comma and ""quotes"""
+2,naïve,543.52,2021-10-15,false,"two
+lines"
+3,€5,504.11,2017-02-09,true,note 2
+4,naïve,588.08,2020-04-17,true,note 3
+5,Straße,513.43,2015-06-18,false,note 4
+6,€5,452.63,2021-09-14,true,note 5
+7,señor,254.68,2020-11-23,false,note 6
+8,Café,782.21,2024-08-19,true,note 7
+9,Straße,298.32,2019-10-25,false,note 8
+10,señor,27.22,2024-04-06,true,note 9
+11,señor,202.29,2024-08-11,true,note 10
+12,naïve,509.65,2020-10-17,false,note 11
+13,€5,225.13,2020-10-02,true,note 12
+14,Straße,269.14,2015-10-04,true,note 13
+15,Café,796.23,2021-05-03,true,note 14
+16,señor,424.69,2017-01-20,true,note 15
+17,naïve,711.30,2017-02-23,true,note 16
+18,Zürich,614.17,2020-05-20,false,note 17
+19,naïve,420.45,2021-01-01,false,note 18
+20,naïve,832.48,2023-11-19,false,note 19
+21,Zürich,136.08,2017-11-26,true,note 20
+22,naïve,602.91,2016-04-27,false,note 21
+23,naïve,711.60,2017-12-23,true,note 22
+24,€5,977.50,2024-11-03,true,note 23
+25,€5,603.50,2019-04-05,true,note 24
+26,naïve,396.00,2020-04-14,false,"has, comma and ""quotes"""
+27,naïve,239.26,2023-02-19,false,note 26
+28,Café,959.68,2018-05-16,false,note 27
+29,señor,26.57,2017-12-04,false,note 28
+30,Zürich,848.15,2016-07-06,false,note 29
+31,señor,118.56,2024-12-01,true,note 30
+32,Straße,521.48,2016-11-09,false,note 31
+33,Straße,92.30,2022-06-01,false,note 32
+34,Zürich,907.33,2019-06-17,true,note 33
+35,señor,763.45,2015-09-05,false,note 34
+36,Straße,401.08,2020-03-18,false,note 35
+37,Café,529.95,2024-11-27,true,note 36
+38,Straße,487.01,2018-03-14,true,note 37
+39,Café,557.57,2023-06-14,true,note 38
+40,naïve,811.58,2018-04-23,true,note 39
+41,Straße,337.45,2024-08-22,true,note 40
+42,señor,387.19,2021-09-25,false,"two
+lines"
+43,€5,36.75,2017-01-25,true,note 42
+44,Café,208.95,2023-08-27,true,note 43
+45,Café,213.21,2016-09-18,false,note 44
+46,Straße,199.25,2016-08-11,false,note 45
+47,Straße,651.60,2020-02-17,false,note 46
+48,señor,192.21,2017-04-19,true,note 47
+49,naïve,578.04,2018-04-12,false,note 48
+50,Straße,594.23,2024-07-01,true,note 49
+51,Zürich,855.56,2016-10-09,true,"has, comma and ""quotes"""
+52,naïve,411.58,2017-04-08,true,note 51
+53,Straße,222.23,2016-06-17,false,note 52
+54,señor,647.40,2021-02-03,false,note 53
+55,Straße,249.62,2021-06-07,false,note 54
+56,Straße,849.45,2015-01-12,true,note 55
+57,Zürich,341.01,2015-02-04,true,note 56
+58,naïve,492.76,2022-06-12,true,note 57
+59,Straße,222.80,2021-06-09,true,note 58
+60,naïve,563.61,2020-01-12,false,note 59
+61,Café,518.20,2020-03-05,true,note 60
+62,€5,239.53,2017-04-02,true,note 61
+63,señor,249.78,2021-11-16,true,note 62
+64,€5,844.61,2022-01-06,false,note 63
+65,Café,331.58,2015-12-26,false,note 64
+66,Zürich,931.71,2024-04-26,false,note 65
+67,señor,50.23,2018-09-25,true,note 66
+68,Zürich,169.94,2015-11-08,true,note 67
+69,señor,974.60,2018-07-03,true,note 68
+70,Straße,426.87,2018-03-25,false,note 69
+71,señor,368.77,2021-06-06,true,note 70
+72,Zürich,962.70,2022-09-21,false,note 71
+73,Zürich,599.49,2019-06-17,true,note 72
+74,Zürich,187.89,2020-11-08,true,note 73
+75,Café,856.53,2015-09-12,false,note 74
+76,señor,527.84,2015-09-10,false,"has, comma and ""quotes"""
+77,Café,44.80,2019-03-17,false,note 76
+78,Café,545.36,2020-10-27,false,note 77
+79,Straße,90.61,2022-08-20,true,note 78
+80,Café,201.19,2023-08-28,true,note 79
+81,naïve,429.16,2017-01-11,false,note 80
+82,señor,741.62,2020-01-20,false,"two
+lines"
+83,señor,109.26,2019-02-05,true,note 82
+84,naïve,517.56,2015-04-21,false,note 83
+85,€5,436.40,2023-05-19,false,note 84
+86,Café,46.95,2023-06-16,false,note 85
+87,Zürich,336.73,2015-09-02,false,note 86
+88,€5,950.08,2022-10-06,true,note 87
+89,Café,769.98,2024-11-11,true,note 88
+90,naïve,854.70,2015-12-21,false,note 89
+91,Zürich,283.51,2021-04-25,false,note 90
+92,Straße,307.58,2021-05-07,true,note 91
+93,naïve,442.76,2018-07-26,true,note 92
+94,naïve,742.42,2020-09-25,false,note 93
+95,Café,294.93,2021-07-08,false,note 94
+96,Zürich,84.33,2023-05-04,true,note 95
+97,Café,222.20,2024-07-18,false,note 96
+98,Zürich,346.55,2015-02-23,true,note 97
+99,señor,989.33,2020-07-23,false,note 98
+100,Café,943.18,2017-10-19,true,note 99
+101,Straße,382.56,2019-09-04,false,"has, comma and ""quotes"""
+102,señor,128.30,2024-07-27,true,note 101
+103,€5,782.81,2023-09-11,true,note 102
+104,Zürich,592.84,2023-06-07,true,note 103
+105,€5,16.06,2019-01-04,false,note 104
+106,Zürich,583.05,2017-09-09,false,note 105
+107,señor,58.92,2022-11-21,true,note 106
+108,Café,188.99,2022-08-28,true,note 107
+109,Straße,627.33,2019-10-02,true,note 108
+110,Straße,234.65,2015-11-21,false,note 109
+111,Straße,60.87,2020-02-11,false,note 110
+112,Zürich,351.95,2024-02-07,false,note 111
+113,€5,551.43,2016-02-18,true,note 112
+114,Café,824.56,2015-06-01,true,note 113
+115,naïve,413.59,2024-04-15,true,note 114
+116,Straße,265.62,2023-05-08,true,note 115
+117,Straße,446.05,2015-02-27,true,note 116
+118,Straße,957.99,2016-02-20,false,note 117
+119,Straße,706.17,2015-03-10,true,note 118
+120,señor,203.84,2017-03-26,true,note 119
+121,Straße,567.72,2021-09-23,false,note 120
+122,Zürich,695.93,2021-12-05,false,"two
+lines"
+123,€5,209.32,2018-09-18,false,note 122
+124,€5,237.51,2019-04-01,true,note 123
+125,Straße,971.06,2021-09-20,false,note 124
+126,Café,762.42,2022-03-09,true,"has, comma and ""quotes"""
+127,naïve,355.05,2023-11-04,true,note 126
+128,señor,257.18,2018-03-05,true,note 127
+129,Straße,661.13,2019-08-20,false,note 128
+130,señor,803.35,2019-11-05,false,note 129
+131,naïve,788.81,2016-01-10,true,note 130
+132,naïve,918.62,2019-04-21,false,note 131
+133,Café,635.04,2020-04-27,true,note 132
+134,señor,819.45,2018-06-26,false,note 133
+135,señor,804.74,2015-07-16,false,note 134
+136,naïve,180.75,2021-07-07,true,note 135
+137,naïve,470.61,2024-02-16,false,note 136
+138,Zürich,728.90,2015-12-18,false,note 137
+139,€5,138.81,2015-08-19,true,note 138
+140,Straße,969.94,2020-12-23,true,note 139
+141,naïve,155.09,2016-05-07,true,note 140
+142,€5,913.64,2020-03-12,false,note 141
+143,Café,337.31,2023-07-21,true,note 142
+144,Café,968.24,2018-02-23,false,note 143
+145,Straße,767.09,2023-09-05,true,note 144
+146,€5,617.14,2018-09-16,true,note 145
+147,naïve,733.89,2024-01-28,true,note 146
+148,Zürich,92.95,2024-04-26,true,note 147
+149,Straße,59.06,2022-02-22,false,note 148
+150,€5,745.43,2024-09-01,true,note 149
+151,Zürich,576.68,2022-07-12,true,"has, comma and ""quotes"""
+152,Café,509.27,2021-06-19,false,note 151
+153,Straße,8.60,2020-11-27,false,note 152
+154,Café,572.66,2023-02-03,false,note 153
+155,señor,941.87,2017-03-24,false,note 154
+156,Café,228.74,2019-04-28,true,note 155
+157,Zürich,727.32,2019-03-12,false,note 156
+158,señor,512.58,2016-10-24,false,note 157
+159,€5,576.72,2019-04-18,false,note 158
+160,Straße,367.82,2015-09-08,true,note 159
+161,Zürich,712.40,2020-11-07,false,note 160
+162,naïve,287.69,2022-02-28,false,"two
+lines"
+163,señor,807.08,2020-01-21,true,note 162
+164,Straße,919.84,2016-01-02,false,note 163
+165,Straße,506.02,2016-12-06,false,note 164
+166,señor,673.19,2023-04-05,false,note 165
+167,Café,92.38,2024-10-11,true,note 166
+168,Straße,625.20,2015-10-27,false,note 167
+169,€5,387.52,2017-02-02,false,note 168
+170,naïve,715.97,2015-02-01,false,note 169
+171,€5,56.70,2020-06-17,true,note 170
+172,Café,311.35,2024-12-26,true,note 171
+173,Zürich,148.64,2021-04-09,true,note 172
+174,Zürich,120.72,2024-07-03,false,note 173
+175,Café,683.85,2022-07-15,true,note 174
+176,señor,126.54,2016-04-24,false,"has, comma and ""quotes"""
+177,Café,932.32,2016-03-03,true,note 176
+178,naïve,313.78,2017-04-08,true,note 177
+179,Café,232.33,2020-10-14,false,note 178
+180,Café,689.37,2017-01-28,false,note 179
+181,Zürich,155.92,2017-04-25,true,note 180
+182,€5,683.77,2018-02-03,true,note 181
+183,€5,780.79,2020-09-04,true,note 182
+184,€5,177.55,2016-09-01,true,note 183
+185,€5,394.58,2018-04-10,false,note 184
+186,€5,523.71,2024-12-14,false,note 185
+187,señor,578.76,2022-10-03,false,note 186
+188,Zürich,47.22,2015-08-25,false,note 187
+189,€5,488.72,2015-12-28,true,note 188
+190,señor,836.44,2019-05-07,true,note 189
+191,Straße,720.69,2015-11-04,true,note 190
+192,señor,289.09,2015-09-02,true,note 191
+193,señor,899.21,2021-12-09,true,note 192
+194,señor,528.21,2022-07-01,true,note 193
+195,€5,477.83,2016-02-13,true,note 194
+196,€5,411.86,2015-09-12,false,note 195
+197,señor,553.27,2021-12-19,false,note 196
+198,Zürich,661.02,2022-12-07,false,note 197
+199,Straße,458.84,2018-12-10,true,note 198
+200,€5,705.48,2020-09-10,false,note 199

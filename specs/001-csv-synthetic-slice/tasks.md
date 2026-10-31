@@ -37,14 +37,14 @@ real data.
 
 **Purpose**: Project initialization and tooling, mirroring the Scoresheet reference app
 
-- [ ] T001 Create `package.json` (React 18.3, Vite 5.4, TypeScript 5.x, Vitest 2, ESLint 8, Prettier 3, `@duckdb/duckdb-wasm` pinned to an exact version, `@tanstack/react-virtual`, `valibot`, `@playwright/test`, React Testing Library) with scripts `dev`, `build`, `preview`, `lint`, `typecheck`, `test`, `test:e2e`, `fixtures`, `verify:roundtrip`, `format`
-- [ ] T002 [P] Create `tsconfig.json` and `vite.config.ts` (base `/APP-synthetic-data-generator/`, ES-module workers, `.wasm` asset handling, Vitest config with jsdom and `tests/setup.ts`)
-- [ ] T003 [P] Copy and adapt `.eslintrc.cjs`, `.eslintignore`, `.prettierrc.json`, `.prettierignore` from `WFRCAnalytics/APP-Project-Scoresheet`
-- [ ] T004 [P] Create `scripts/copy-duckdb.mjs` that copies the DuckDB-WASM binaries and workers from `node_modules` into `public/duckdb/` with no network access, and wire it into `predev` and `prebuild` in `package.json`
-- [ ] T005 [P] Create `tests/setup.ts` and add `.fixtures/` to `.gitignore`
-- [ ] T006 [P] Create `scripts/make-fixtures.mjs` (fixed seed, `@faker-js/faker` as a dev dependency for personal-data columns) that writes the "type zoo" per `contracts/fixture-matrix.md`: `tests/fixtures/zoo/zoo_small.csv` (2,000 rows, committed), `tests/fixtures/zoo/expected.json` (expected type, status and reason codes per column), `tests/fixtures/zoo/ids_50k.csv`, and the file-level variants (UTF-8 BOM, UTF-16 LE and BE, Windows-1252, delimiters, no header, line endings, quote styles including per-column quoting, ragged, empty and header-only files)
-- [ ] T007 Create `index.html` with the Content-Security-Policy meta tag from `contracts/worker-protocol.md` section 4 and the app mount point. Apply the strict policy in build and preview only and use a dev-safe variant through `transformIndexHtml` (Vite's React plugin injects an inline script in dev; see research.md R9). Browser tests run against `vite preview`
-- [ ] T008 [P] Create `README.md` with the privacy statement, dev commands, and a link to `specs/001-csv-synthetic-slice/quickstart.md`
+- [X] T001 Create `package.json` (React 18.3, Vite 5.4, TypeScript 5.x, Vitest 2, ESLint 8, Prettier 3, `@duckdb/duckdb-wasm` pinned to an exact version, `@tanstack/react-virtual`, `valibot`, `@playwright/test`, React Testing Library) with scripts `dev`, `build`, `preview`, `lint`, `typecheck`, `test`, `test:e2e`, `fixtures`, `verify:roundtrip`, `format`
+- [X] T002 [P] Create `tsconfig.json` and `vite.config.ts` (base `/APP-synthetic-data-generator/`, ES-module workers, `.wasm` asset handling, Vitest config with jsdom and `tests/setup.ts`)
+- [X] T003 [P] Copy and adapt `.eslintrc.cjs`, `.eslintignore`, `.prettierrc.json`, `.prettierignore` from `WFRCAnalytics/APP-Project-Scoresheet`
+- [X] T004 [P] Create `scripts/copy-duckdb.mjs` that copies the DuckDB-WASM binaries and workers from `node_modules` into `public/duckdb/` with no network access, and wire it into `predev` and `prebuild` in `package.json`
+- [X] T005 [P] Create `tests/setup.ts` and add `.fixtures/` to `.gitignore`
+- [X] T006 [P] Create `scripts/make-fixtures.mjs` (fixed seed, `@faker-js/faker` as a dev dependency for personal-data columns) that writes the "type zoo" per `contracts/fixture-matrix.md`: `tests/fixtures/zoo/zoo_small.csv` (2,000 rows, committed), `tests/fixtures/zoo/expected.json` (expected type, status and reason codes per column), `tests/fixtures/zoo/ids_50k.csv`, and the file-level variants (UTF-8 BOM, UTF-16 LE and BE, Windows-1252, delimiters, no header, line endings, quote styles including per-column quoting, ragged, empty and header-only files)
+- [X] T007 Create `index.html` with the Content-Security-Policy meta tag from `contracts/worker-protocol.md` section 4 and the app mount point. Apply the strict policy in build and preview only and use a dev-safe variant through `transformIndexHtml` (Vite's React plugin injects an inline script in dev; see research.md R9). Browser tests run against `vite preview`
+- [X] T008 [P] Create `README.md` with the privacy statement, dev commands, and a link to `specs/001-csv-synthetic-slice/quickstart.md`
 
 ---
 
