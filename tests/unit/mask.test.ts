@@ -214,7 +214,7 @@ describe("example IDs for the editor", () => {
 
   it("makes no more than the pattern allows, and nothing for an empty one", () => {
     expect(sampleIds(["digit"], 5)).toHaveLength(5);
-    expect(sampleIds(["digit"], 50)).toHaveLength(50 > 10 ? 10 : 50);
+    expect(sampleIds(["digit"], 50)).toHaveLength(10);
     expect(sampleIds([], 5)).toEqual([]);
   });
 
