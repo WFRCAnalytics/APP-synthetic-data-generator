@@ -6,6 +6,7 @@
 // group to a different position in the pattern's space, so no two groups share an ID. Everything is
 // a pure function of the row, so output does not depend on chunk size.
 
+import { makeGroupMapper } from "./groups";
 import { idCapacity, isNumericMask, maskValueAt, maskValueAtNumber } from "../mask/mask";
 import { makePermutation, makePermutationBig } from "../rng/permute";
 import { mix32 } from "../rng/sfc32";
@@ -52,22 +53,8 @@ const TWO_32 = 2n ** 32n;
 const TWO_53 = BigInt(Number.MAX_SAFE_INTEGER);
 
 export function makeIdGenerator(plan: IdPlan, key: number): IdGenerator {
-  const buckets = Object.entries(plan.repeat_structure)
-    .map(([size, count]) => ({ size: Number(size), count }))
-    .filter((b) => b.size > 0 && b.count > 0)
-    .sort((a, b) => a.size - b.size);
-
-  // Where each size's block of rows and block of groups starts.
-  const rowStart: number[] = [];
-  const groupStart: number[] = [];
-  let rows = 0;
-  let groups = 0;
-  for (const b of buckets) {
-    rowStart.push(rows);
-    groupStart.push(groups);
-    rows += b.size * b.count;
-    groups += b.count;
-  }
+  const mapGroup = makeGroupMapper(plan.repeat_structure);
+  const groups = mapGroup.groups;
 
   const capacity = idCapacity(plan.mask, plan.min, plan.max);
   if (BigInt(groups) > capacity) throw new IdPatternError(capacity, groups);
@@ -88,18 +75,7 @@ export function makeIdGenerator(plan: IdPlan, key: number): IdGenerator {
     return exact ? maskValueAtNumber(plan.mask as MaskToken[], Number(index)) : maskValueAt(plan.mask, index);
   };
 
-  const generator = ((valueIndex: number): string => {
-    // The block of rows this rank falls in, then the group within it.
-    let lo = 0;
-    let hi = buckets.length - 1;
-    while (lo < hi) {
-      const mid = (lo + hi + 1) >> 1;
-      if (rowStart[mid] <= valueIndex) lo = mid;
-      else hi = mid - 1;
-    }
-    const group = groupStart[lo] + Math.floor((valueIndex - rowStart[lo]) / buckets[lo].size);
-    return idOf(permute(group));
-  }) as IdGenerator;
+  const generator = ((valueIndex: number): string => idOf(permute(mapGroup(valueIndex)))) as IdGenerator;
   generator.groups = groups;
   generator.capacity = capacity;
   return generator;

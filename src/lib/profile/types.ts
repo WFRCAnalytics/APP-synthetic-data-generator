@@ -1,11 +1,11 @@
 // Types for what profiling produces and the user edits (data-model.md). These hold summaries only;
 // real rows never appear in them (constitution Principle I).
 
-import type { ColumnType, ExcludeMode, Granularity, MaskToken, NumericMode } from "../spec/types";
+import type { ColumnType, ExcludeMode, Granularity, MaskToken, NumericMode, PersonalFormat, PersonalKind } from "../spec/types";
 import type { Encoding } from "../encoding/detect";
 import type { QuoteStyle, LineEnding } from "../csv/writer";
 
-export type { ColumnType, ExcludeMode, Granularity, MaskToken, NumericMode };
+export type { ColumnType, ExcludeMode, Granularity, MaskToken, NumericMode, PersonalFormat, PersonalKind };
 
 export interface FileSettings {
   encoding: Encoding;
@@ -35,6 +35,11 @@ export type ReasonCode =
   | "id_not_yet_supported"
   | "override_not_possible"
   | "beta_fit_failed"
+  | "kind_mixed"
+  | "suffix_needed"
+  | "ssn_needs_acknowledgement"
+  | "text_length_capped"
+  | "needs_source_file"
   | "unsupported_type";
 
 /** The numeric part shared by integer, float, date, datetime and time summaries. */
@@ -65,6 +70,23 @@ export type ColumnSummary =
       max?: number;
       padWidth?: number;
       /** Group size to number of distinct IDs with that size. */
+      repeatStructure: Record<string, number>;
+      distinct: number;
+    }
+  | {
+      kind: "personal";
+      personalKind: PersonalKind;
+      /** Group size to the number of distinct values with that size. */
+      repeatStructure: Record<string, number>;
+      distinct: number;
+      format?: PersonalFormat;
+    }
+  | (Omit<NumericSummary, "thousands" | "scientific"> & { kind: "free_text"; lineBreaks: boolean })
+  | {
+      kind: "short_string";
+      pattern: MaskToken[];
+      /** Length to the number of distinct values of that length. */
+      lengthGroups: Record<string, number>;
       repeatStructure: Record<string, number>;
       distinct: number;
     }
@@ -108,5 +130,7 @@ export interface ColumnProfile {
   mergeUnderK?: number | null;
   /** Replace category labels with neutral codes. */
   labelCodes?: boolean;
+  /** Only for SSN-style columns: the user accepted generating invented numbers. */
+  acknowledged?: boolean;
   summary: ColumnSummary;
 }

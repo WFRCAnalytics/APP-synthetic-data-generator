@@ -104,7 +104,7 @@ describe("structure problems are named by column", () => {
 
 describe("version check", () => {
   it("explains a newer spec", () => {
-    const result = validateSpec({ ...validSpec(), spec_version: 2 });
+    const result = validateSpec({ ...validSpec(), spec_version: 3 });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.problems[0].message).toMatch(/newer version/);
   });
@@ -249,7 +249,7 @@ describe("the validator and the published JSON schema agree", () => {
   it("allows the same column types", () => {
     const types: string[] = schema.$defs.column.properties.type.enum;
     expect(types.sort()).toEqual(
-      ["boolean", "categorical", "date", "datetime", "empty", "float", "integer", "survey_id", "time", "unsupported"].sort(),
+      ["boolean", "categorical", "date", "datetime", "empty", "float", "integer", "personal", "free_text", "short_string", "survey_id", "time", "unsupported"].sort(),
     );
   });
 

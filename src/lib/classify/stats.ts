@@ -54,6 +54,10 @@ export interface BasicStats {
   minLength: number;
   maxLength: number;
   meanLength: number;
+  /** Values that contain a space (full table). */
+  spaceCount?: number;
+  /** Values that contain a line break (full table). */
+  lineBreakCount?: number;
 }
 
 /** NA tokens recognized in the data. Empty fields are always treated as NA too. */

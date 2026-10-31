@@ -26,6 +26,11 @@ const spec: SpecFile = {
     { name: "hh_id", output_name: "household", type: "survey_id", quoted: false, mask: ["digit", "digit", "digit", "digit"], min: 1000, max: 9999, pad_width: 0, repeat_structure: { "1": 600, "2": 200 } },
     { name: "site", type: "survey_id", quoted: false, mask: ["upper", { literal: "-" }, "digit", "digit"], pad_width: 0, repeat_structure: { "1": 1000 } },
     { name: "flag", type: "boolean", quoted: false, storage: "string", counts: { N: 700, Y: 300 }, merge_under_k: 5, label_codes: true },
+    { name: "who", type: "personal", quoted: true, kind: "full_name", repeat_structure: { "1": 900, "2": 50 }, format: { last_first: true } },
+    { name: "phone", type: "personal", quoted: false, kind: "phone", repeat_structure: { "1": 1000 }, format: { shapes: [{ shape: "(999) 999-9999", share: 0.8 }, { shape: "999-999-9999", share: 0.2 }] } },
+    { name: "ssn", type: "personal", quoted: false, kind: "ssn", repeat_structure: { "1": 1000 }, format: { shape: "999-99-9999" }, acknowledged: true },
+    { name: "comments", type: "free_text", quoted: false, mode: "match_shape", min: 3, max: 403, mean: 200, sd: 100, decimals: 0, quantiles: Array.from({ length: 101 }, (_, i) => 3 + i * 4), line_breaks: true },
+    { name: "plate", type: "short_string", quoted: false, pattern: ["upper", "upper", { literal: "-" }, "digit", "digit", "digit", "digit"], length_groups: { "7": 1000 }, repeat_structure: { "1": 1000 } },
     { name: "note", type: "unsupported", exclude: "drop", quoted: false } as never,
     { name: "blank", type: "empty", quoted: false, exclude: "keep_as_na" },
   ],
@@ -77,6 +82,39 @@ describe("save then load", () => {
     expect(col("hh_id")).toMatchObject({ mask: ["digit", "digit", "digit", "digit", "digit"], min: 10000, max: 99999 });
     // and they survive a second round
     expect(rebuild(loaded.spec)).toEqual(loaded.spec);
+  });
+});
+
+describe("the text column types", () => {
+  it("round trip with their format fields and the SSN acknowledgement", () => {
+    const loaded = profilesFromSpec(spec.columns);
+    const who = loaded.find((p) => p.name === "who")!;
+    expect(who.type).toBe("personal");
+    expect(who.summary).toMatchObject({ kind: "personal", personalKind: "full_name", distinct: 950, format: { last_first: true } });
+    expect(loaded.find((p) => p.name === "ssn")!.acknowledged).toBe(true);
+    expect(loaded.find((p) => p.name === "comments")!.summary).toMatchObject({ kind: "free_text", lineBreaks: true });
+    expect(loaded.find((p) => p.name === "plate")!.summary).toMatchObject({ kind: "short_string", distinct: 1000 });
+  });
+
+  it("an SSN-style column without the acknowledgement loads as unsupported and left out", () => {
+    const col = { name: "ssn", type: "personal", kind: "ssn", repeat_structure: { "1": 5 }, exclude: "drop" } as never;
+    const p = profilesFromSpec([col])[0];
+    expect(p.type).toBe("unsupported");
+    expect(p.exclude).toBe("drop");
+    expect(p.attentionReasons).toContain("ssn_needs_acknowledgement");
+  });
+
+  it("edits to the kind and the acknowledgement are kept in the saved spec", () => {
+    const base = profilesFromSpec([{ name: "ssn", type: "personal", kind: "ssn", repeat_structure: { "1": 5 }, exclude: "drop" } as never]);
+    const acked = applyAllEdits(base, { ssn: { ssnAcknowledged: true } })[0];
+    expect(acked.type).toBe("personal");
+    expect(acked.exclude).toBe("include");
+    const saved = buildSpec({ fileName: "t.csv", settings: settingsFromSource(spec.source), rowCount: 5, seed: 1, keepOriginalName: false, threshold: 50, profiles: [acked] });
+    expect(saved.columns[0]).toMatchObject({ type: "personal", kind: "ssn", acknowledged: true });
+    const asEmail = applyAllEdits(base, { ssn: { personalKind: "email" } })[0];
+    expect(asEmail.type).toBe("personal");
+    expect(asEmail.status).toBe("ok");
+    expect(asEmail.summary).toMatchObject({ personalKind: "email" });
   });
 });
 

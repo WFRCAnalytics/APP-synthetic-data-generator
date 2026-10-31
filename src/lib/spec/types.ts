@@ -3,7 +3,10 @@
 // ID pattern masks and repeat structures, and format settings. Never rows, ID lists, free text,
 // personal identifiers or coordinates (constitution Principle II).
 
-export const SPEC_VERSION = 1;
+/** The version this app writes. Version 2 added the personal, free_text and short_string types. */
+export const SPEC_VERSION = 2;
+/** The versions this app reads. */
+export const READABLE_SPEC_VERSIONS: readonly number[] = [1, 2];
 
 export type ColumnType =
   | "empty"
@@ -15,6 +18,9 @@ export type ColumnType =
   | "datetime"
   | "time"
   | "survey_id"
+  | "personal"
+  | "free_text"
+  | "short_string"
   | "unsupported";
 
 export type NumericMode = "uniform" | "match_mean_sd" | "match_shape";
@@ -106,6 +112,46 @@ export interface SurveyIdColumn extends ColumnBase {
   repeat_structure: Record<string, number>;
 }
 
+export type PersonalKind = "full_name" | "first_name" | "last_name" | "email" | "phone" | "address" | "url" | "ip" | "ssn";
+
+/** Format classes kept from the real column. Shapes hold 9 for a digit and A for a letter; never a value. */
+export interface PersonalFormat {
+  shapes?: { shape: string; share: number }[];
+  shape?: string;
+  last_first?: boolean;
+  unit?: boolean;
+  zip4?: boolean;
+}
+
+/** A column of invented personal values (names, email, phone, address, ...). Holds no value. */
+export interface PersonalColumn extends ColumnBase {
+  type: "personal";
+  kind: PersonalKind;
+  /** Group size (as a string key) to the number of distinct values with that size. */
+  repeat_structure: Record<string, number>;
+  format?: PersonalFormat;
+  /** Only for kind "ssn": the user accepted generating invented SSN-style numbers. */
+  acknowledged?: boolean;
+}
+
+/** Free text: only the length distribution, in characters. */
+export interface FreeTextColumn extends ColumnBase, Omit<NumericFields, "thousands" | "scientific"> {
+  type: "free_text";
+  line_breaks?: boolean;
+}
+
+/** A short code-like string: a per-position pattern for the longest length, lengths and repeats. */
+export interface ShortStringColumn extends ColumnBase {
+  type: "short_string";
+  pattern: MaskToken[];
+  /** Length (as a string key) to the number of distinct values of that length. */
+  length_groups: Record<string, number>;
+  repeat_structure: Record<string, number>;
+}
+
+export const MAX_TEXT_LENGTH = 100000;
+export const MAX_LENGTH_GROUPS = 64;
+
 export interface EmptyColumn extends ColumnBase {
   type: "empty";
 }
@@ -120,6 +166,9 @@ export type ColumnSpec =
   | NumericColumn
   | DateColumn
   | SurveyIdColumn
+  | PersonalColumn
+  | FreeTextColumn
+  | ShortStringColumn
   | EmptyColumn
   | UnsupportedColumn;
 

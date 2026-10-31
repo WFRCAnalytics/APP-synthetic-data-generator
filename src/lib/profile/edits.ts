@@ -3,8 +3,8 @@
 // apart from the engine-side overrides and applied on top of a profile, so changing one never
 // touches the database and a re-profile never loses them.
 
-import { idFit } from "./idCapacity";
-import type { ColumnProfile, ExcludeMode, MaskToken, NumericMode, ReasonCode } from "./types";
+import { idFit, shortStringFit } from "./idCapacity";
+import type { ColumnProfile, ExcludeMode, MaskToken, NumericMode, PersonalKind, ReasonCode } from "./types";
 
 /** An ID pattern chosen in the token editor, replacing the detected one. */
 export interface IdPattern {
@@ -17,6 +17,12 @@ export interface IdPattern {
 export interface LocalEdits {
   /** A pattern for a survey ID column; undefined means the detected one. */
   idPattern?: IdPattern;
+  /** A kind for a personal identifier column, replacing the proposed one. */
+  personalKind?: PersonalKind;
+  /** Accepts generating invented SSN-style numbers. */
+  ssnAcknowledged?: boolean;
+  /** A pattern for a short string column; undefined means the detected one. */
+  shortPattern?: MaskToken[];
   exclude?: ExcludeMode;
   mode?: NumericMode;
   /** Decimal places for a decimal column. */
@@ -61,6 +67,47 @@ export function applyEdits(p: ColumnProfile, e: LocalEdits | undefined): ColumnP
   if (isCategorical(p)) {
     if (e.mergeUnderK !== undefined) out.mergeUnderK = e.mergeUnderK;
     if (e.labelCodes !== undefined) out.labelCodes = e.labelCodes;
+  }
+
+  if (p.summary.kind === "personal") {
+    const kind = e.personalKind ?? p.summary.personalKind;
+    if (kind !== p.summary.personalKind) out.summary = { ...p.summary, personalKind: kind, format: undefined };
+    const ack = e.ssnAcknowledged ?? p.acknowledged ?? false;
+    if (kind === "ssn") {
+      out.acknowledged = ack;
+      // Until acknowledged, an SSN-style column stays unsupported and left out.
+      if (!ack) {
+        out.type = "unsupported";
+        out.status = "unsupported";
+        out.attentionReasons = [...new Set<ReasonCode>([...p.attentionReasons.filter((r) => r !== "kind_mixed"), "unsupported_type", "ssn_needs_acknowledgement"])];
+        out.exclude = e.exclude === "keep_as_na" ? "keep_as_na" : "drop";
+      } else {
+        out.type = "personal";
+        out.status = "ok";
+        out.attentionReasons = p.attentionReasons.filter((r) => r !== "unsupported_type" && r !== "ssn_needs_acknowledgement");
+        out.exclude = e.exclude ?? (p.exclude === "drop" && p.type === "unsupported" ? "include" : p.exclude);
+      }
+    } else {
+      out.acknowledged = undefined;
+      if (p.type === "unsupported") {
+        // An SSN-style column switched to another kind becomes an ordinary personal column.
+        out.type = "personal";
+        out.status = "ok";
+        out.attentionReasons = p.attentionReasons.filter((r) => r !== "unsupported_type" && r !== "ssn_needs_acknowledgement");
+        out.exclude = e.exclude ?? "include";
+      }
+    }
+  }
+
+  if (p.summary.kind === "short_string" && e.shortPattern !== undefined) {
+    const longest = Math.max(0, ...Object.keys(p.summary.lengthGroups).map(Number));
+    const pattern = e.shortPattern;
+    out.summary = { ...p.summary, pattern };
+    const reasons: ReasonCode[] = p.attentionReasons.filter((r) => r !== "id_mask_too_narrow");
+    const fit = shortStringFit({ ...p, summary: { ...p.summary, pattern } });
+    if (fit?.short || pattern.length !== longest) reasons.push("id_mask_too_narrow");
+    out.attentionReasons = reasons;
+    out.status = reasons.length > 0 ? "needs_attention" : "ok";
   }
 
   if (p.summary.kind === "survey_id" && e.idPattern !== undefined) {

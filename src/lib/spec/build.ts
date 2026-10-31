@@ -99,6 +99,34 @@ export function columnSpecOf(p: ColumnProfile): ColumnSpec {
         format: s.format ?? "",
         granularity: s.granularity,
       };
+    case "personal":
+      return {
+        ...detail,
+        type: "personal",
+        kind: s.personalKind,
+        repeat_structure: s.repeatStructure,
+        ...(s.format && Object.keys(s.format).length > 0 ? { format: s.format } : {}),
+        ...(s.personalKind === "ssn" && p.acknowledged ? { acknowledged: true } : {}),
+      };
+    case "free_text": {
+      const { histogram: _histogram, ...length } = s;
+      void _histogram;
+      return {
+        ...detail,
+        type: "free_text",
+        mode: p.mode ?? "match_mean_sd",
+        min: length.min,
+        max: length.max,
+        mean: length.mean,
+        sd: length.sd,
+        decimals: 0,
+        quantiles: length.quantiles,
+        ...(p.rescale ? { rescale: true } : {}),
+        line_breaks: s.lineBreaks,
+      };
+    }
+    case "short_string":
+      return { ...detail, type: "short_string", pattern: s.pattern, length_groups: s.lengthGroups, repeat_structure: s.repeatStructure };
     case "survey_id":
       return {
         ...detail,

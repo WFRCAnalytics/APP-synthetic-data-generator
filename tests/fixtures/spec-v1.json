@@ -1,0 +1,61 @@
+{
+  "spec_version": 1,
+  "source": {
+    "format": "csv",
+    "file_name": "survey.csv",
+    "encoding": "utf-8",
+    "bom": false,
+    "delimiter": ",",
+    "quote": "\"",
+    "quote_style": "minimal",
+    "line_ending": "lf",
+    "trailing_newline": true,
+    "header": true,
+    "header_quoted": false
+  },
+  "n_rows": 200,
+  "seed": 42,
+  "keep_original_name": false,
+  "categorical_threshold": 50,
+  "columns": [
+    {
+      "name": "mode",
+      "type": "categorical",
+      "quoted": false,
+      "storage": "integer",
+      "counts": {
+        "1": 120,
+        "2": 70,
+        "97": 10
+      }
+    },
+    {
+      "name": "hh_id",
+      "type": "survey_id",
+      "quoted": false,
+      "mask": [
+        "digit",
+        "digit",
+        "digit",
+        "digit"
+      ],
+      "min": 1000,
+      "max": 1199,
+      "pad_width": 0,
+      "repeat_structure": {
+        "1": 100,
+        "2": 50
+      }
+    },
+    {
+      "name": "respondent_email",
+      "type": "unsupported",
+      "exclude": "drop"
+    },
+    {
+      "name": "comments",
+      "type": "unsupported",
+      "exclude": "drop"
+    }
+  ]
+}

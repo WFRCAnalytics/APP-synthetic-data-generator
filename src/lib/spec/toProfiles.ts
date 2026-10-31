@@ -3,7 +3,7 @@
 // summaries, not the data, so the card chart is redrawn from the quantiles.
 
 import { groupsNeeded } from "../generate/survey-id";
-import { idFit } from "../profile/idCapacity";
+import { idFit, shortStringFit } from "../profile/idCapacity";
 import type { ColumnProfile, FileSettings, ReasonCode } from "../profile/types";
 import type { ColumnSpec, NumericFields, SourceSpec } from "./types";
 
@@ -100,6 +100,45 @@ export function profileFromSpec(c: ColumnSpec): ColumnProfile {
         rescale: c.rescale ?? false,
         summary: { kind: "datetime", format: c.format, granularity: c.granularity, ...numericSummary(c) },
       };
+    case "personal": {
+      const summary = { kind: "personal" as const, personalKind: c.kind, repeatStructure: { ...c.repeat_structure }, distinct: groupsNeeded(c.repeat_structure), ...(c.format ? { format: c.format } : {}) };
+      const unacknowledged = c.kind === "ssn" && c.acknowledged !== true;
+      return {
+        ...base,
+        detectedType: "personal",
+        type: unacknowledged ? "unsupported" : "personal",
+        status: unacknowledged ? "unsupported" : "ok",
+        attentionReasons: unacknowledged ? ["unsupported_type", "ssn_needs_acknowledgement"] : [],
+        exclude: unacknowledged ? "drop" : (c.exclude ?? "include"),
+        ...(c.kind === "ssn" ? { acknowledged: c.acknowledged === true } : {}),
+        summary,
+      };
+    }
+    case "free_text": {
+      const quantiles = c.quantiles && c.quantiles.length === 101 ? [...c.quantiles] : linearQuantiles(c.min, c.max);
+      return {
+        ...base,
+        detectedType: "free_text",
+        type: "free_text",
+        status: "ok",
+        exclude: c.exclude ?? "include",
+        mode: c.mode,
+        rescale: c.rescale ?? false,
+        summary: { kind: "free_text", min: c.min, max: c.max, mean: c.mean ?? (c.min + c.max) / 2, sd: c.sd ?? 0, decimals: 0, quantiles, histogram: histogramFromQuantiles(quantiles, c.min, c.max), lineBreaks: c.line_breaks ?? false },
+      };
+    }
+    case "short_string": {
+      const profile: ColumnProfile = {
+        ...base,
+        detectedType: "short_string",
+        type: "short_string",
+        status: "ok",
+        exclude: c.exclude ?? "include",
+        summary: { kind: "short_string", pattern: [...c.pattern], lengthGroups: { ...c.length_groups }, repeatStructure: { ...c.repeat_structure }, distinct: groupsNeeded(c.repeat_structure) },
+      };
+      if (shortStringFit(profile)?.short) return { ...profile, status: "needs_attention", attentionReasons: ["id_mask_too_narrow"] };
+      return profile;
+    }
     case "survey_id": {
       const profile: ColumnProfile = {
         ...base,

@@ -2,7 +2,20 @@
 // counts, min and max, which the privacy model allows. No row of the real file appears anywhere.
 
 import { formatDate, fromNumber, patternKind } from "../../lib/datefmt/directives";
-import type { ColumnProfile, ReasonCode } from "../../lib/profile/types";
+import { maskToRegexString } from "../../lib/mask/mask";
+import type { ColumnProfile, PersonalKind, ReasonCode } from "../../lib/profile/types";
+
+export const PERSONAL_LABELS: Record<PersonalKind, string> = {
+  full_name: "full names",
+  first_name: "first names",
+  last_name: "last names",
+  email: "email addresses",
+  phone: "phone numbers",
+  address: "street addresses",
+  url: "web addresses",
+  ip: "IP addresses",
+  ssn: "social-security-style numbers",
+};
 
 const TYPE_LABELS: Record<string, string> = {
   empty: "Empty",
@@ -14,6 +27,9 @@ const TYPE_LABELS: Record<string, string> = {
   datetime: "Date and time",
   time: "Time",
   survey_id: "Survey ID",
+  personal: "Personal identifier",
+  free_text: "Free text",
+  short_string: "Short string",
   unsupported: "Unsupported in this version",
 };
 
@@ -33,6 +49,11 @@ const REASON_TEXT: Record<ReasonCode, string> = {
   override_not_possible: "The type you chose does not fit this column's values, so the detected type was kept.",
   id_not_yet_supported: "Survey ID patterns are not available yet, so this column is left out of the fake file.",
   unsupported_type: "This kind of column is not supported in this version, so it is left out of the fake file.",
+  kind_mixed: "The values look like more than one kind, so the commonest kind was proposed. Check it or choose another.",
+  suffix_needed: "More distinct values are needed than can be invented naturally, so a short number is added to some of them.",
+  ssn_needs_acknowledgement: "This looks like social-security-style numbers. It stays left out unless you accept that invented numbers will be generated.",
+  text_length_capped: "Some values are longer than 100,000 characters; they are counted as 100,000.",
+  needs_source_file: "Open the original file to change this column's kind; a saved spec has no figures for it.",
 };
 
 export const reasonText = (code: ReasonCode): string => REASON_TEXT[code] ?? code;
@@ -68,6 +89,16 @@ export function summaryLines(p: ColumnProfile): string[] {
     case "survey_id":
       lines.push(`${s.distinct.toLocaleString("en-US")} distinct IDs`);
       break;
+    case "personal":
+      lines.push(`Invented ${PERSONAL_LABELS[s.personalKind]}, ${s.distinct.toLocaleString("en-US")} distinct`);
+      break;
+    case "free_text":
+      lines.push(`Length ${fmt(s.min)} to ${fmt(s.max)} characters`);
+      lines.push(`Typical length ${fmt(s.mean)}`);
+      break;
+    case "short_string":
+      lines.push(`${s.distinct.toLocaleString("en-US")} distinct values, pattern ${maskToRegexString(s.pattern)}`);
+      break;
     case "empty":
       lines.push("Every value is missing");
       break;
@@ -87,7 +118,7 @@ export function sparkBars(p: ColumnProfile): number[] {
   const s = p.summary;
   let raw: number[] = [];
   if (s.kind === "categorical") raw = Object.values(s.counts).sort((a, b) => b - a).slice(0, 24);
-  else if (s.kind === "numeric" || s.kind === "datetime") raw = s.histogram;
+  else if (s.kind === "numeric" || s.kind === "datetime" || s.kind === "free_text") raw = s.histogram;
   const max = Math.max(0, ...raw);
   return max > 0 ? raw.map((n) => n / max) : [];
 }

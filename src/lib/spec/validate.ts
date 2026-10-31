@@ -5,7 +5,11 @@
 
 import * as v from "valibot";
 import { isSupportedPattern, patternGranularity, patternKind } from "../datefmt/directives";
+import { maskCapacity } from "../mask/mask";
 import {
+  MAX_LENGTH_GROUPS,
+  MAX_TEXT_LENGTH,
+  READABLE_SPEC_VERSIONS,
   SPEC_VERSION,
   type ColumnSpec,
   type SpecFile,
@@ -52,6 +56,51 @@ const MaskTokenSchema = v.union([
   v.strictObject({ literal: v.pipe(v.string(), v.length(1)) }),
 ]);
 
+const RepeatStructureSchema = v.record(v.string(), positiveCount);
+
+// A shape holds 9 for a digit and A for a letter and keeps punctuation. A real digit or letter in it
+// would be a value, so only the placeholders and non-alphanumeric characters are allowed.
+const ShapeSchema = v.pipe(v.string(), v.regex(/^[9A\W_]*$/, "A shape may hold only 9, A and punctuation, never a real digit or letter."));
+
+const PersonalFormatSchema = v.strictObject({
+  shapes: v.optional(v.pipe(v.array(v.strictObject({ shape: ShapeSchema, share: v.pipe(v.number(), v.minValue(0), v.maxValue(1)) })), v.maxLength(5))),
+  shape: v.optional(ShapeSchema),
+  last_first: v.optional(v.boolean()),
+  unit: v.optional(v.boolean()),
+  zip4: v.optional(v.boolean()),
+});
+
+const PersonalSchema = v.strictObject({
+  ...base,
+  type: v.literal("personal"),
+  kind: v.picklist(["full_name", "first_name", "last_name", "email", "phone", "address", "url", "ip", "ssn"]),
+  repeat_structure: RepeatStructureSchema,
+  format: v.optional(PersonalFormatSchema),
+  acknowledged: v.optional(v.boolean()),
+});
+
+const FreeTextSchema = v.strictObject({
+  ...base,
+  type: v.literal("free_text"),
+  mode: numeric.mode,
+  min: v.pipe(v.number(), v.finite(), v.minValue(0)),
+  max: finite,
+  mean: numeric.mean,
+  sd: numeric.sd,
+  decimals: numeric.decimals,
+  quantiles: numeric.quantiles,
+  rescale: numeric.rescale,
+  line_breaks: v.optional(v.boolean()),
+});
+
+const ShortStringSchema = v.strictObject({
+  ...base,
+  type: v.literal("short_string"),
+  pattern: v.pipe(v.array(MaskTokenSchema), v.minLength(1)),
+  length_groups: v.record(v.string(), positiveCount),
+  repeat_structure: RepeatStructureSchema,
+});
+
 const CategoricalSchema = (type: "categorical" | "boolean") =>
   v.strictObject({
     ...base,
@@ -90,6 +139,9 @@ const ColumnSchema = v.variant("type", [
     pad_width: v.optional(v.pipe(v.number(), v.integer(), v.minValue(0))),
     repeat_structure: v.record(v.string(), positiveCount),
   }),
+  PersonalSchema,
+  FreeTextSchema,
+  ShortStringSchema,
   v.strictObject({ ...base, type: v.literal("empty") }),
   v.strictObject({ ...base, type: v.literal("unsupported") }),
 ]);
@@ -109,7 +161,7 @@ const SourceSchema = v.strictObject({
 });
 
 const SpecSchema = v.strictObject({
-  spec_version: v.literal(SPEC_VERSION),
+  spec_version: v.picklist(READABLE_SPEC_VERSIONS as [number, ...number[]]),
   source: SourceSchema,
   n_rows: count,
   seed: v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(4294967295)),
@@ -126,6 +178,20 @@ function columnNameAt(input: unknown, index: number): string {
 
 function sum(values: number[]): number {
   return values.reduce((a, b) => a + b, 0);
+}
+
+/** Checks a repeat structure and returns the distinct count, or null after reporting a problem. */
+function checkRepeat(structure: Record<string, number>, remaining: number, problem: (path: string, message: string) => void): number | null {
+  const keys = Object.keys(structure);
+  if (keys.some((k) => !/^[1-9]\d*$/.test(k))) {
+    problem("repeat_structure", "Group sizes must be positive whole numbers.");
+    return null;
+  }
+  const rowsCovered = keys.reduce((acc, k) => acc + Number(k) * structure[k], 0);
+  if (rowsCovered !== remaining) {
+    problem("repeat_structure", `The repeat structure covers ${rowsCovered} rows, but ${remaining} rows are left after NA.`);
+  }
+  return keys.reduce((acc, k) => acc + structure[k], 0);
 }
 
 // Cross-field rules for one column. `rows` is the table's row count.
@@ -161,12 +227,53 @@ function checkColumn(col: ColumnSpec, rows: number, out: SpecProblem[]): void {
       }
       break;
     }
+    case "personal": {
+      checkRepeat(col.repeat_structure, remaining, problem);
+      if (col.acknowledged !== undefined && col.kind !== "ssn") problem("acknowledged", "Only SSN-style columns take an acknowledgement.");
+      if (col.kind === "ssn" && col.acknowledged !== true && (col.exclude === undefined || col.exclude === "include")) {
+        problem("acknowledged", "SSN-style numbers are generated only after the user acknowledges it (acknowledged: true), or the column must be left out.");
+      }
+      const f = col.format;
+      if (f) {
+        const allowed: Record<string, string[]> = {
+          phone: ["shapes"],
+          ssn: ["shape"],
+          full_name: ["last_first"],
+          address: ["unit", "zip4"],
+        };
+        const extra = Object.keys(f).filter((k) => !(allowed[col.kind] ?? []).includes(k));
+        if (extra.length > 0) problem("format", `The format field ${extra.join(", ")} does not apply to the kind ${col.kind}.`);
+      }
+      break;
+    }
+    case "short_string": {
+      const distinct = checkRepeat(col.repeat_structure, remaining, problem);
+      const lengths = Object.keys(col.length_groups);
+      if (lengths.length > MAX_LENGTH_GROUPS) problem("length_groups", `At most ${MAX_LENGTH_GROUPS} different lengths are kept.`);
+      if (lengths.some((k) => !/^[1-9]\d*$/.test(k))) {
+        problem("length_groups", "Lengths must be positive whole numbers.");
+      } else {
+        const longest = Math.max(0, ...lengths.map(Number));
+        if (longest !== col.pattern.length) problem("pattern", `The pattern has ${col.pattern.length} positions but the longest length is ${longest}.`);
+        const groups = sum(Object.values(col.length_groups));
+        if (distinct !== null && groups !== distinct) problem("length_groups", `The length groups add up to ${groups}, but the repeat structure has ${distinct} distinct values.`);
+        for (const k of lengths) {
+          const allowed = maskCapacity(col.pattern.slice(0, Number(k)));
+          if (allowed < BigInt(col.length_groups[k])) {
+            problem("pattern", `For length ${k} the pattern allows ${allowed} distinct values but the column needs ${col.length_groups[k]}.`);
+          }
+        }
+      }
+      break;
+    }
+    case "free_text":
     case "integer":
     case "float":
     case "date":
     case "datetime":
     case "time": {
       if (col.min > col.max) problem("min", "min is greater than max.");
+      if (col.type === "free_text" && col.max > MAX_TEXT_LENGTH) problem("max", `Text lengths are kept up to ${MAX_TEXT_LENGTH.toLocaleString("en-US")} characters.`);
       if (col.mode === "match_mean_sd" && (col.mean === undefined || col.sd === undefined)) {
         problem("mode", "match_mean_sd needs both mean and sd.");
       }
@@ -202,15 +309,7 @@ function checkColumn(col: ColumnSpec, rows: number, out: SpecProblem[]): void {
     }
     case "survey_id": {
       if (col.min !== undefined && col.max !== undefined && col.min > col.max) problem("min", "min is greater than max.");
-      const keys = Object.keys(col.repeat_structure);
-      if (keys.some((k) => !/^[1-9]\d*$/.test(k))) {
-        problem("repeat_structure", "Group sizes must be positive whole numbers.");
-      } else {
-        const rowsCovered = keys.reduce((acc, k) => acc + Number(k) * col.repeat_structure[k], 0);
-        if (rowsCovered !== remaining) {
-          problem("repeat_structure", `The repeat structure covers ${rowsCovered} rows, but ${remaining} rows are left after NA.`);
-        }
-      }
+      checkRepeat(col.repeat_structure, remaining, problem);
       break;
     }
     case "empty":
@@ -223,11 +322,12 @@ function checkColumn(col: ColumnSpec, rows: number, out: SpecProblem[]): void {
 export function validateSpec(input: unknown): SpecResult {
   // A version mismatch is the most useful thing to report first.
   const version = (input as { spec_version?: unknown } | null)?.spec_version;
-  if (typeof version === "number" && Number.isInteger(version) && version !== SPEC_VERSION) {
+  if (typeof version === "number" && Number.isInteger(version) && !READABLE_SPEC_VERSIONS.includes(version)) {
+    const reads = `this app reads versions ${READABLE_SPEC_VERSIONS[0]} to ${SPEC_VERSION}`;
     const message =
       version > SPEC_VERSION
-        ? `This spec was made by a newer version of the app (spec version ${version}); this app reads version ${SPEC_VERSION}.`
-        : `This spec uses an older, unsupported format (spec version ${version}); this app reads version ${SPEC_VERSION}.`;
+        ? `This spec was made by a newer version of the app (spec version ${version}); ${reads}.`
+        : `This spec uses an older, unsupported format (spec version ${version}); ${reads}.`;
     return { ok: false, problems: [{ column: null, path: "spec_version", message }] };
   }
 

@@ -6,7 +6,7 @@ import { CircleCheck, CircleX, Download } from "lucide-react";
 import { parseSeed, type SessionState } from "../../app/session";
 import type { CheckRow } from "../../lib/generate/checks";
 import { GenerateProgress } from "./GenerateProgress";
-import { idFit, narrowIdColumns, shortfallText } from "../../lib/profile/idCapacity";
+import { narrowIdColumns, patternFit, shortfallText } from "../../lib/profile/idCapacity";
 
 export interface GenerateScreenProps {
   session: SessionState;
@@ -107,7 +107,7 @@ export function GenerateScreen(props: GenerateScreenProps) {
       {narrow.length > 0 && (
         <div id="narrow-ids" className="banner banner-error" role="alert">
           {narrow.map((p) => {
-            const fit = idFit(p);
+            const fit = patternFit(p);
             return (
               <p key={p.name}>
                 {p.outputName}: {fit ? shortfallText(fit) : ""} Widen its ID pattern on Review, or leave the column out.

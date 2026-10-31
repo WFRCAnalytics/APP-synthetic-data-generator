@@ -7,7 +7,7 @@
   "required": ["spec_version", "source", "n_rows", "seed", "columns"],
   "additionalProperties": false,
   "properties": {
-    "spec_version": { "const": 1 },
+    "spec_version": { "enum": [1, 2], "description": "2 adds personal, free_text and short_string columns; files of version 1 still load." },
     "source": {
       "type": "object",
       "required": ["format", "file_name", "encoding", "delimiter", "header"],
@@ -93,6 +93,9 @@
             "datetime",
             "time",
             "survey_id",
+            "personal",
+            "free_text",
+            "short_string",
             "unsupported"
           ]
         },
@@ -167,6 +170,54 @@
                 "additionalProperties": { "type": "integer", "minimum": 1 }
               }
             }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "personal" } } },
+          "then": {
+            "required": ["kind", "repeat_structure"],
+            "properties": {
+              "kind": { "enum": ["full_name", "first_name", "last_name", "email", "phone", "address", "url", "ip", "ssn"] },
+              "repeat_structure": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 1 } },
+              "format": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "shapes": {
+                    "description": "Character-class shapes (9 for a digit, A for a letter, punctuation kept); never a real value.",
+                    "type": "array",
+                    "maxItems": 5,
+                    "items": { "type": "object", "required": ["shape", "share"], "additionalProperties": false, "properties": { "shape": { "type": "string" }, "share": { "type": "number", "minimum": 0, "maximum": 1 } } }
+                  },
+                  "shape": { "type": "string" },
+                  "last_first": { "type": "boolean" },
+                  "unit": { "type": "boolean" },
+                  "zip4": { "type": "boolean" }
+                }
+              },
+              "acknowledged": { "type": "boolean", "description": "Only for kind ssn: the user accepted generating invented SSN-style numbers." }
+            },
+            "not": { "anyOf": [{ "required": ["counts"] }, { "required": ["values"] }, { "required": ["mask"] }] }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "free_text" } } },
+          "then": {
+            "allOf": [{ "$ref": "#/$defs/numericBlock" }],
+            "properties": { "line_breaks": { "type": "boolean" } },
+            "not": { "anyOf": [{ "required": ["counts"] }, { "required": ["values"] }, { "required": ["words"] }] }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "short_string" } } },
+          "then": {
+            "required": ["pattern", "length_groups", "repeat_structure"],
+            "properties": {
+              "pattern": { "type": "array", "minItems": 1, "items": { "oneOf": [{ "enum": ["digit", "upper", "lower", "letter", "alnum"] }, { "type": "object", "required": ["literal"], "additionalProperties": false, "properties": { "literal": { "type": "string", "minLength": 1, "maxLength": 1 } } }] } },
+              "length_groups": { "type": "object", "maxProperties": 64, "additionalProperties": { "type": "integer", "minimum": 1 } },
+              "repeat_structure": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 1 } }
+            },
+            "not": { "anyOf": [{ "required": ["counts"] }, { "required": ["values"] }] }
           }
         },
         {

@@ -197,7 +197,7 @@ export async function profileColumn(
 ): Promise<ColumnProfile> {
   const c = ident(name);
   const naList = overrides.naTokens ?? [...KNOWN_NA_TOKENS];
-  const basic = await collectBasic(sql, name, rowCount, naList);
+  const basic = await collectBasic(sql, name, rowCount, naList, options.threshold);
   const na0 = detectNa(basic);
   const sentinels = overrides.sentinels ? await countValues(sql, c, overrides.sentinels) : detectSentinels(basic);
   const sentinelKeys = Object.keys(sentinels);
