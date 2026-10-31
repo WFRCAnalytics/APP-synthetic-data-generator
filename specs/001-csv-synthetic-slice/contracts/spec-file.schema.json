@@ -7,24 +7,42 @@
   "required": ["spec_version", "source", "n_rows", "seed", "columns"],
   "additionalProperties": false,
   "properties": {
-    "spec_version": { "enum": [1, 2], "description": "2 adds personal, free_text and short_string columns; files of version 1 still load." },
+    "spec_version": { "enum": [1, 2, 3], "description": "2 adds personal, free_text and short_string columns; 3 adds the xlsx source and cell_format; older files still load." },
     "source": {
-      "type": "object",
-      "required": ["format", "file_name", "encoding", "delimiter", "header"],
-      "additionalProperties": false,
-      "properties": {
-        "format": { "const": "csv" },
-        "file_name": { "type": "string", "minLength": 1 },
-        "encoding": { "enum": ["utf-8", "utf-16le", "utf-16be", "windows-1252"] },
-        "bom": { "type": "boolean", "default": false },
-        "delimiter": { "type": "string", "minLength": 1, "maxLength": 1 },
-        "quote": { "type": ["string", "null"], "maxLength": 1, "default": "\"" },
-        "quote_style": { "enum": ["minimal", "all", "per_column"], "default": "minimal" },
-        "line_ending": { "enum": ["lf", "crlf", "cr"], "default": "lf" },
-        "trailing_newline": { "type": "boolean", "default": true },
-        "header": { "type": "boolean" },
-        "header_quoted": { "type": "boolean", "default": false }
-      }
+      "oneOf": [
+        {
+              "type": "object",
+              "required": ["format", "file_name", "encoding", "delimiter", "header"],
+              "additionalProperties": false,
+              "properties": {
+                "format": { "const": "csv" },
+                "file_name": { "type": "string", "minLength": 1 },
+                "encoding": { "enum": ["utf-8", "utf-16le", "utf-16be", "windows-1252"] },
+                "bom": { "type": "boolean", "default": false },
+                "delimiter": { "type": "string", "minLength": 1, "maxLength": 1 },
+                "quote": { "type": ["string", "null"], "maxLength": 1, "default": "\"" },
+                "quote_style": { "enum": ["minimal", "all", "per_column"], "default": "minimal" },
+                "line_ending": { "enum": ["lf", "crlf", "cr"], "default": "lf" },
+                "trailing_newline": { "type": "boolean", "default": true },
+                "header": { "type": "boolean" },
+                "header_quoted": { "type": "boolean", "default": false }
+              }
+            },
+        {
+              "type": "object",
+              "required": ["format", "file_name", "sheet", "skip_rows", "header", "date1904"],
+              "additionalProperties": false,
+              "properties": {
+                "format": { "const": "xlsx" },
+                "file_name": { "type": "string", "minLength": 1 },
+                "sheet": { "type": "string", "minLength": 1, "maxLength": 31, "description": "Sheet name exactly as in the workbook." },
+                "range": { "type": "string", "pattern": "^[A-Za-z]{1,3}[1-9][0-9]*(:[A-Za-z]{1,3}[1-9][0-9]*)?$", "description": "Cell range of the table from the header row, such as A3:I203." },
+                "skip_rows": { "type": "integer", "minimum": 0, "description": "Rows above the header, written empty in the fake sheet." },
+                "header": { "type": "boolean" },
+                "date1904": { "type": "boolean" }
+              }
+            }
+      ]
     },
     "n_rows": { "type": "integer", "minimum": 0 },
     "seed": { "type": "integer", "minimum": 0, "maximum": 4294967295, "default": 42 },
@@ -100,6 +118,7 @@
           ]
         },
         "exclude": { "enum": ["drop", "keep_as_na", "include"], "default": "include" },
+        "cell_format": { "type": "string", "minLength": 1, "maxLength": 255, "description": "Number format code of the column's cells in a workbook, such as #,##0.00 or mm/dd/yyyy. Never a value." },
         "quoted": { "type": "boolean", "description": "Source wrote this column's non-empty fields in quotes; used when source.quote_style is per_column." },
         "na": { "$ref": "#/$defs/na" },
         "sentinels": { "$ref": "#/$defs/sentinels" }

@@ -78,4 +78,5 @@ export async function createEngine(baseUrl: string): Promise<Engine> {
   };
 }
 
+export { loadExcelExtension } from "./extension";
 export { duckdb };

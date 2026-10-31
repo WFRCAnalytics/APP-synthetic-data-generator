@@ -104,7 +104,7 @@ describe("structure problems are named by column", () => {
 
 describe("version check", () => {
   it("explains a newer spec", () => {
-    const result = validateSpec({ ...validSpec(), spec_version: 3 });
+    const result = validateSpec({ ...validSpec(), spec_version: 4 });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.problems[0].message).toMatch(/newer version/);
   });
@@ -254,6 +254,6 @@ describe("the validator and the published JSON schema agree", () => {
   });
 
   it("allows the same quote styles", () => {
-    expect(schema.properties.source.properties.quote_style.enum).toEqual(["minimal", "all", "per_column"]);
+    expect(schema.properties.source.oneOf[0].properties.quote_style.enum).toEqual(["minimal", "all", "per_column"]);
   });
 });

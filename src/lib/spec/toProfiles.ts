@@ -4,7 +4,7 @@
 
 import { groupsNeeded } from "../generate/survey-id";
 import { idFit, shortStringFit } from "../profile/idCapacity";
-import type { ColumnProfile, FileSettings, ReasonCode } from "../profile/types";
+import type { ColumnProfile, ReasonCode, SourceSettings } from "../profile/types";
 import type { ColumnSpec, NumericFields, SourceSpec } from "./types";
 
 const BINS = 20;
@@ -22,7 +22,8 @@ export function histogramFromQuantiles(q: readonly number[], min: number, max: n
 
 const linearQuantiles = (min: number, max: number): number[] => Array.from({ length: 101 }, (_, i) => min + ((max - min) * i) / 100);
 
-export function settingsFromSource(s: SourceSpec): FileSettings {
+export function settingsFromSource(s: SourceSpec): SourceSettings {
+  if (s.format === "xlsx") return { sheet: s.sheet, ...(s.range ? { range: s.range } : {}), skipRows: s.skip_rows, header: s.header, date1904: s.date1904 };
   return {
     encoding: s.encoding,
     bom: s.bom ?? false,
@@ -61,6 +62,7 @@ export function profileFromSpec(c: ColumnSpec): ColumnProfile {
     naByToken: c.na ? (c.na.by_token ? { ...c.na.by_token } : { [tokens[0] ?? ""]: c.na.count }) : {},
     sentinels: { ...(c.sentinels ?? {}) },
     quoted: c.quoted ?? false,
+    ...(c.cell_format ? { cellFormat: c.cell_format } : {}),
     attentionReasons: [] as ReasonCode[],
   };
 

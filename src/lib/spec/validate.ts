@@ -6,6 +6,8 @@
 import * as v from "valibot";
 import { isSupportedPattern, patternGranularity, patternKind } from "../datefmt/directives";
 import { maskCapacity } from "../mask/mask";
+import { describeFormat } from "../xlsx/formats";
+import { isValidSheetName, parseRange } from "../xlsx/names";
 import {
   MAX_LENGTH_GROUPS,
   MAX_TEXT_LENGTH,
@@ -36,6 +38,7 @@ const base = {
   quoted: v.optional(v.boolean()),
   na: v.optional(NaSchema),
   sentinels: v.optional(SentinelsSchema),
+  cell_format: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(255), v.check((text) => ![...text].some((ch) => ch.charCodeAt(0) < 32), "A cell format may not hold control characters."))),
 };
 
 const numeric = {
@@ -146,7 +149,17 @@ const ColumnSchema = v.variant("type", [
   v.strictObject({ ...base, type: v.literal("unsupported") }),
 ]);
 
-const SourceSchema = v.strictObject({
+const XlsxSourceSchema = v.strictObject({
+  format: v.literal("xlsx"),
+  file_name: v.pipe(v.string(), v.minLength(1)),
+  sheet: v.pipe(v.string(), v.minLength(1)),
+  range: v.optional(v.string()),
+  skip_rows: v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(1048575)),
+  header: v.boolean(),
+  date1904: v.boolean(),
+});
+
+const CsvSourceSchema = v.strictObject({
   format: v.literal("csv"),
   file_name: v.pipe(v.string(), v.minLength(1)),
   encoding: v.picklist(["utf-8", "utf-16le", "utf-16be", "windows-1252"]),
@@ -159,6 +172,8 @@ const SourceSchema = v.strictObject({
   header: v.boolean(),
   header_quoted: v.optional(v.boolean()),
 });
+
+const SourceSchema = v.variant("format", [CsvSourceSchema, XlsxSourceSchema]);
 
 const SpecSchema = v.strictObject({
   spec_version: v.picklist(READABLE_SPEC_VERSIONS as [number, ...number[]]),
@@ -178,6 +193,28 @@ function columnNameAt(input: unknown, index: number): string {
 
 function sum(values: number[]): number {
   return values.reduce((a, b) => a + b, 0);
+}
+
+/** A cell format must suit its column: dates and times for date columns, numbers for number columns, text only for text-like ones. */
+function checkCellFormat(col: ColumnSpec, problem: (path: string, message: string) => void): void {
+  const kind = describeFormat(col.cell_format as string).kind;
+  const temporal = kind === "date" || kind === "time" || kind === "datetime";
+  switch (col.type) {
+    case "date":
+    case "datetime":
+    case "time":
+      if (!temporal) problem("cell_format", "A date column needs a date or time format.");
+      break;
+    case "integer":
+    case "float":
+      if (temporal || kind === "text") problem("cell_format", "A number column needs a number, percent, currency or scientific format.");
+      break;
+    case "empty":
+    case "unsupported":
+      break;
+    default:
+      if (temporal && col.type !== "categorical" && col.type !== "boolean") problem("cell_format", "A date or time format does not suit this column.");
+  }
 }
 
 /** Checks a repeat structure and returns the distinct count, or null after reporting a problem. */
@@ -214,6 +251,8 @@ function checkColumn(col: ColumnSpec, rows: number, out: SpecProblem[]): void {
       problem("na", "A per-token NA count names a token that is not in the token list.");
     }
   }
+
+  if (col.cell_format !== undefined) checkCellFormat(col, problem);
 
   switch (col.type) {
     case "categorical":
@@ -346,6 +385,16 @@ export function validateSpec(input: unknown): SpecResult {
 
   const spec = parsed.output as unknown as SpecFile;
   const problems: SpecProblem[] = [];
+
+  if (spec.source.format === "xlsx") {
+    const src = spec.source;
+    if (!isValidSheetName(src.sheet)) problems.push({ column: null, path: "source.sheet", message: "The sheet name is not valid: it must be 1 to 31 characters without []:*?/\\ and without an apostrophe at either end." });
+    if (src.range !== undefined) {
+      const range = parseRange(src.range);
+      if (!range) problems.push({ column: null, path: "source.range", message: "The cell range is not valid. Use a range such as A3:I203." });
+      else if (range.firstRow !== src.skip_rows) problems.push({ column: null, path: "source.skip_rows", message: `The range starts at row ${range.firstRow + 1}, so the rows skipped must be ${range.firstRow}, not ${src.skip_rows}.` });
+    }
+  }
 
   const seen = new Set<string>();
   for (const col of spec.columns) {

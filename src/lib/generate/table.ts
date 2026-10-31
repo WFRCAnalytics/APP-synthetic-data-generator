@@ -20,6 +20,9 @@ export interface TablePlan {
 
 /** The CSV dialect recorded in the spec, with defaults for fields it leaves out. */
 export function dialectOf(source: SourceSpec): CsvDialect {
+  // A workbook has no CSV dialect; the plan still needs one for the shared row code, and only
+  // `header` is read from it (the workbook writer decides everything else).
+  if (source.format === "xlsx") return { ...DEFAULT_DIALECT, header: source.header };
   return {
     delimiter: source.delimiter,
     quote: source.quote === undefined ? DEFAULT_DIALECT.quote : source.quote,
@@ -51,9 +54,9 @@ export function planTable(spec: SpecFile, seed: number = spec.seed): TablePlan {
     columns,
     quotedFlags: columns.map((c) => c.quoted),
     dialect: dialectOf(spec.source),
-    headerQuoted: spec.source.header_quoted ?? false,
-    encoding: spec.source.encoding,
-    bom: spec.source.bom ?? false,
+    headerQuoted: spec.source.format === "csv" ? (spec.source.header_quoted ?? false) : false,
+    encoding: spec.source.format === "csv" ? spec.source.encoding : "utf-8",
+    bom: spec.source.format === "csv" ? (spec.source.bom ?? false) : false,
   };
 }
 

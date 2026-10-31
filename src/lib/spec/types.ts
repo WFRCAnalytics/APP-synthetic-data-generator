@@ -3,10 +3,16 @@
 // ID pattern masks and repeat structures, and format settings. Never rows, ID lists, free text,
 // personal identifiers or coordinates (constitution Principle II).
 
-/** The version this app writes. Version 2 added the personal, free_text and short_string types. */
-export const SPEC_VERSION = 2;
+/** The version this app writes. Version 2 added the personal, free_text and short_string types; version 3 the xlsx source. */
+export const SPEC_VERSION = 3;
 /** The versions this app reads. */
-export const READABLE_SPEC_VERSIONS: readonly number[] = [1, 2];
+export const READABLE_SPEC_VERSIONS: readonly number[] = [1, 2, 3];
+
+/**
+ * In `na.tokens`, the token for a cell that holds empty text (as opposed to "" for a blank cell). It is
+ * one control character that no real value holds, so it cannot be mistaken for a label.
+ */
+export const EMPTY_TEXT_TOKEN = "\u0001";
 
 export type ColumnType =
   | "empty"
@@ -33,7 +39,7 @@ export type Granularity = "day" | "minute" | "second";
  */
 export type MaskToken = "digit" | "upper" | "lower" | "letter" | "alnum" | { literal: string };
 
-export interface SourceSpec {
+export interface CsvSourceSpec {
   format: "csv";
   file_name: string;
   encoding: "utf-8" | "utf-16le" | "utf-16be" | "windows-1252";
@@ -47,6 +53,24 @@ export interface SourceSpec {
   /** Whether the header row's names were quoted in the source. */
   header_quoted?: boolean;
 }
+
+/** A sheet of an .xlsx workbook (specs/003). Nothing here is a cell value. */
+export interface XlsxSourceSpec {
+  format: "xlsx";
+  file_name: string;
+  /** Sheet name, exactly as in the workbook. */
+  sheet: string;
+  /** Cell range of the table, starting at the header row, such as A3:I203. */
+  range?: string;
+  /** Rows above the header, written empty in the fake sheet. */
+  skip_rows: number;
+  /** The first row of the range holds column names. */
+  header: boolean;
+  /** The workbook uses the 1904 date system. */
+  date1904: boolean;
+}
+
+export type SourceSpec = CsvSourceSpec | XlsxSourceSpec;
 
 export interface NaSpec {
   tokens: string[];
@@ -62,6 +86,8 @@ export interface ColumnBase {
   exclude?: ExcludeMode;
   /** Whether the source quoted this column's non-empty fields (used by per_column quoting). */
   quoted?: boolean;
+  /** The number format code of the column's cells in a workbook, such as #,##0.00 or mm/dd/yyyy. Never a value. */
+  cell_format?: string;
   na?: NaSpec;
   /** Sentinel code to exact count. */
   sentinels?: Record<string, number>;

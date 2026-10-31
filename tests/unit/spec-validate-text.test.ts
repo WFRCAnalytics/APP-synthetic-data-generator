@@ -49,7 +49,7 @@ describe("spec versions", () => {
   });
 
   it("refuses a newer version with the newer-version message", () => {
-    const [p] = problems(base([personal()], { spec_version: 3 }));
+    const [p] = problems(base([personal()], { spec_version: 4 }));
     expect(p.message).toMatch(/newer version of the app/);
   });
 

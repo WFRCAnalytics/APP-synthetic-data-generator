@@ -20,6 +20,21 @@ export interface FileSettings {
   trailingNewline: boolean;
 }
 
+/** How a worksheet of an .xlsx workbook is read (specs/003). The sheet name is the only text from the workbook. */
+export interface ExcelSettings {
+  sheet: string;
+  /** Cell range of the table from the header row, such as A3:I203; absent means the used range. */
+  range?: string;
+  /** Rows above the header (also the first row of `range`, minus one). */
+  skipRows: number;
+  header: boolean;
+  date1904: boolean;
+}
+
+/** What a file is read with: CSV settings or the settings of one worksheet. */
+export type SourceSettings = FileSettings | ExcelSettings;
+export const isExcelSettings = (s: SourceSettings): s is ExcelSettings => "sheet" in s;
+
 export type ColumnStatus = "ok" | "needs_attention" | "unsupported";
 
 export type ReasonCode =
@@ -35,6 +50,9 @@ export type ReasonCode =
   | "id_not_yet_supported"
   | "override_not_possible"
   | "beta_fit_failed"
+  | "merged_cells"
+  | "format_mismatch"
+  | "sheet_hidden"
   | "kind_mixed"
   | "suffix_needed"
   | "ssn_needs_acknowledgement"
@@ -132,5 +150,7 @@ export interface ColumnProfile {
   labelCodes?: boolean;
   /** Only for SSN-style columns: the user accepted generating invented numbers. */
   acknowledged?: boolean;
+  /** The number format code of the column's cells in a workbook (a format, never a value). */
+  cellFormat?: string;
   summary: ColumnSummary;
 }

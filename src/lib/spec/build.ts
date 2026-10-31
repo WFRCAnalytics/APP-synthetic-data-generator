@@ -3,12 +3,12 @@
 // masks and repeat structures, and format settings. An unsupported column keeps only its name and
 // the user's choice, so none of its values can leak (constitution Principle II).
 
-import type { ColumnProfile, FileSettings } from "../profile/types";
+import { isExcelSettings, type ColumnProfile, type SourceSettings } from "../profile/types";
 import { SPEC_VERSION, type ColumnSpec, type NumericFields, type SourceSpec, type SpecFile } from "./types";
 
 export interface BuildInput {
   fileName: string;
-  settings: FileSettings;
+  settings: SourceSettings;
   rowCount: number;
   seed: number;
   keepOriginalName: boolean;
@@ -16,7 +16,10 @@ export interface BuildInput {
   profiles: readonly ColumnProfile[];
 }
 
-export function buildSource(fileName: string, s: FileSettings): SourceSpec {
+export function buildSource(fileName: string, s: SourceSettings): SourceSpec {
+  if (isExcelSettings(s)) {
+    return { format: "xlsx", file_name: fileName, sheet: s.sheet, ...(s.range ? { range: s.range } : {}), skip_rows: s.skipRows, header: s.header, date1904: s.date1904 };
+  }
   return {
     format: "csv",
     file_name: fileName,
@@ -51,6 +54,7 @@ function numericFields(p: ColumnProfile): NumericFields | null {
 export function columnSpecOf(p: ColumnProfile): ColumnSpec {
   const common = {
     name: p.name,
+    ...(p.cellFormat ? { cell_format: p.cellFormat } : {}),
     ...(p.outputName !== p.name ? { output_name: p.outputName } : {}),
     ...(p.exclude !== "include" ? { exclude: p.exclude } : {}),
   };

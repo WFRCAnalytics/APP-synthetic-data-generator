@@ -167,3 +167,41 @@ describe("a spec that cannot be used", () => {
     if (!r.ok) expect(r.problems.some((p) => p.column === "fee")).toBe(true);
   });
 });
+
+describe("the xlsx source and cell formats (specs/003 FR-010)", () => {
+  const xlsxSpec: SpecFile = {
+    spec_version: SPEC_VERSION,
+    source: { format: "xlsx", file_name: "survey.xlsx", sheet: "Survey Data", range: "A3:E203", skip_rows: 2, header: true, date1904: true },
+    n_rows: 200,
+    seed: 5,
+    columns: [
+      { name: "amount", type: "float", quoted: false, mode: "uniform", min: 10, max: 110, mean: 60, sd: 29, decimals: 2, quantiles: Array.from({ length: 101 }, (_, i) => 10 + i), cell_format: "#,##0.00" },
+      { name: "when", type: "date", quoted: false, mode: "uniform", min: 19000, max: 19100, mean: 19050, sd: 29, decimals: 0, quantiles: Array.from({ length: 101 }, (_, i) => 19000 + i), format: "%Y-%m-%d", granularity: "day", cell_format: "mm/dd/yyyy" },
+      { name: "zip", type: "short_string", quoted: false, cell_format: "@", pattern: ["digit", "digit", "digit", "digit", "digit"], length_groups: { "5": 200 }, repeat_structure: { "1": 200 } },
+      { name: "flag", type: "categorical", quoted: false, storage: "string", counts: { N: 90, Y: 86 }, na: { tokens: ["", "\u0001"], count: 24, by_token: { "": 10, "\u0001": 14 } } },
+    ],
+  };
+
+  it("round trips the source settings and the cell formats", () => {
+    const loaded = parseSpecText(specToJson(xlsxSpec));
+    if (!loaded.ok) throw new Error(JSON.stringify(loaded.problems));
+    const settings = settingsFromSource(loaded.spec.source);
+    expect(settings).toEqual({ sheet: "Survey Data", range: "A3:E203", skipRows: 2, header: true, date1904: true });
+    const profiles = profilesFromSpec(loaded.spec.columns);
+    expect(profiles.map((p) => p.cellFormat)).toEqual(["#,##0.00", "mm/dd/yyyy", "@", undefined]);
+    const again = buildSpec({ fileName: "survey.xlsx", settings, rowCount: 200, seed: 5, keepOriginalName: false, threshold: 50, profiles });
+    expect(again.source).toEqual(xlsxSpec.source);
+    expect(again.columns.map((c) => c.cell_format)).toEqual(["#,##0.00", "mm/dd/yyyy", "@", undefined]);
+  });
+
+  it("keeps blank cells and empty text apart in the NA counts", () => {
+    const flag = profilesFromSpec(xlsxSpec.columns)[3];
+    expect(flag.naByToken).toEqual({ "": 10, "\u0001": 14 });
+    expect(flag.naCount).toBe(24);
+  });
+
+  it("a CSV source still builds a CSV source", () => {
+    const csv = buildSpec({ fileName: "a.csv", settings: settingsFromSource(spec.source), rowCount: 1000, seed: 7, keepOriginalName: false, threshold: 50, profiles: profilesFromSpec(spec.columns) });
+    expect(csv.source.format).toBe("csv");
+  });
+});
