@@ -10,6 +10,7 @@ playwright-report/
 
 # DuckDB-WASM binaries and extensions are fetched at build time by scripts/fetch-duckdb.mjs
 public/duckdb/
+public/duckdb-ext/
 
 # Offline bundle produced by the release workflow
 *.zip

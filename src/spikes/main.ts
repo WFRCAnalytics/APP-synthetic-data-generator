@@ -95,6 +95,49 @@ const spike = {
     return results;
   },
 
+  /** Slice 3 R1: can the self-hosted Excel extension load under the strict CSP, and what does it read and write? */
+  async excel() {
+    const [file] = inputFiles();
+    const engine = await createEngine(BASE);
+    const conn = await engine.db.connect();
+    const out: Record<string, unknown> = { violations: violations, fileMb: Math.round((file.size / 1048576) * 100) / 100 };
+    const attempt = async (key: string, fn: () => Promise<unknown>) => {
+      try {
+        out[key] = await fn();
+      } catch (e) {
+        out[key] = { error: String((e as Error).message).slice(0, 300) };
+      }
+    };
+    await attempt("repository", async () => {
+      await conn.query(`SET custom_extension_repository = '${location.origin}${import.meta.env.BASE_URL}duckdb-ext'`);
+      await conn.query("SET autoinstall_known_extensions = false");
+      await conn.query("SET autoload_known_extensions = false");
+      return "set";
+    });
+    await attempt("load", async () => {
+      await conn.query("LOAD excel");
+      return await scalar(conn, "SELECT count(*) FROM duckdb_extensions() WHERE extension_name = 'excel' AND loaded");
+    });
+    await engine.db.registerFileHandle(file.name, file, duckdb.DuckDBDataProtocol.BROWSER_FILEREADER, true);
+    const rows = async (sql: string) => (await conn.query(sql)).toArray().map((r) => r.toJSON());
+    await attempt("typed", async () => rows(`DESCRIBE SELECT * FROM read_xlsx('${file.name}', sheet = 'Survey Data', range = 'A3:I203', header = true)`));
+    await attempt("typedHead", async () => rows(`SELECT * FROM read_xlsx('${file.name}', sheet = 'Survey Data', range = 'A3:I203', header = true) LIMIT 3`));
+    await attempt("allVarchar", async () => rows(`SELECT * FROM read_xlsx('${file.name}', sheet = 'Survey Data', range = 'A3:I203', header = true, all_varchar = true) LIMIT 3`));
+    await attempt("count", async () => rows(`SELECT count(*) AS n FROM read_xlsx('${file.name}', sheet = 'Survey Data', range = 'A3:I203', header = true)`));
+    await attempt("noRange", async () => rows(`DESCRIBE SELECT * FROM read_xlsx('${file.name}', sheet = 'Survey Data', header = false) LIMIT 1`));
+    await attempt("blanksAndEmpty", async () => rows(`SELECT count(*) FILTER (WHERE score IS NULL) AS null_score, count(*) FILTER (WHERE flag = '') AS empty_flag, count(*) FILTER (WHERE flag IS NULL) AS null_flag FROM read_xlsx('${file.name}', sheet = 'Survey Data', range = 'A3:I203', header = true)`));
+    await attempt("formula", async () => rows(`SELECT amount, total FROM read_xlsx('${file.name}', sheet = 'Survey Data', range = 'A3:I203', header = true) LIMIT 2`));
+    await attempt("write", async () => {
+      await conn.query("CREATE TABLE t AS SELECT 'a' AS name, 1.5 AS amount, DATE '2024-02-03' AS d, '00123' AS code");
+      await conn.query("COPY t TO 'fake.xlsx' (FORMAT xlsx, HEADER true, SHEET 'Mine')");
+      const bytes = await engine.db.copyFileToBuffer("fake.xlsx");
+      return { bytes: bytes.length, magic: Array.from(bytes.slice(0, 4)) };
+    });
+    await conn.close();
+    await engine.dispose();
+    return JSON.parse(JSON.stringify(out, (_k, v) => (typeof v === "bigint" ? Number(v) : v)));
+  },
+
   /** R14: can a large Blob be assembled from chunks and downloaded? */
   async download(megabytes: number) {
     const chunk = new Uint8Array(1024 * 1024).fill(97);
