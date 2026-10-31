@@ -15,6 +15,8 @@ export interface FileSettings {
   quoteStyle: QuoteStyle;
   lineEnding: LineEnding;
   header: boolean;
+  /** Whether the header row's names were quoted in the source. */
+  headerQuoted: boolean;
   trailingNewline: boolean;
 }
 
@@ -29,6 +31,8 @@ export type ReasonCode =
   | "date_format_ambiguous"
   | "id_mask_too_narrow"
   | "id_mixed_masks"
+  | "possible_na_token"
+  | "id_not_yet_supported"
   | "beta_fit_failed"
   | "unsupported_type";
 
@@ -43,6 +47,8 @@ export interface NumericSummary {
   quantiles: number[];
   /** 20 bin counts, used only for the card chart. */
   histogram: number[];
+  /** Integers written with thousands separators (1,234). */
+  thousands?: boolean;
 }
 
 export type ColumnSummary =
@@ -71,6 +77,8 @@ export interface ColumnProfile {
   attentionReasons: ReasonCode[];
   naTokens: string[];
   naCount: number;
+  /** Rows per NA token (the empty field is the token ""). */
+  naByToken: Record<string, number>;
   sentinels: Record<string, number>;
   exclude: ExcludeMode;
   /** Whether the source wrote this column's non-empty fields in quotes. */

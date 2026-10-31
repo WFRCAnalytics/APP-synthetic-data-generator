@@ -27,6 +27,7 @@ only inside the in-memory database and are never copied into these objects.
 | quoteStyle | `minimal` (quote only when needed), `all` (quote every field), `per_column` (quote exactly the columns whose `quoted` flag is true, as in files where text is quoted and numbers are not) |
 | lineEnding | `lf`, `crlf`, `cr` |
 | header | boolean |
+| headerQuoted | boolean (the header row's names were quoted in the source) |
 | trailingNewline | boolean |
 
 ### ColumnProfile *(memory; its settings are saved in the spec)*
@@ -51,7 +52,7 @@ only inside the in-memory database and are never copied into these objects.
 
 **Reason codes**: `possible_identifier`, `possible_sentinel`, `near_categorical_threshold`,
 `date_format_unrecognized`, `date_format_mixed`, `date_format_ambiguous`, `id_mask_too_narrow`, `id_mixed_masks`,
-`beta_fit_failed`,
+`possible_na_token`, `id_not_yet_supported` (temporary, removed when ID masks land in US3), `beta_fit_failed`,
 `unsupported_type`.
 
 ### Summary blocks

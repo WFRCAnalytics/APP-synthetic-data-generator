@@ -22,7 +22,8 @@
         "quote_style": { "enum": ["minimal", "all", "per_column"], "default": "minimal" },
         "line_ending": { "enum": ["lf", "crlf", "cr"], "default": "lf" },
         "trailing_newline": { "type": "boolean", "default": true },
-        "header": { "type": "boolean" }
+        "header": { "type": "boolean" },
+        "header_quoted": { "type": "boolean", "default": false }
       }
     },
     "n_rows": { "type": "integer", "minimum": 0 },
@@ -41,7 +42,12 @@
       "additionalProperties": false,
       "properties": {
         "tokens": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
-        "count": { "type": "integer", "minimum": 0 }
+        "count": { "type": "integer", "minimum": 0 },
+        "by_token": {
+          "description": "Rows per token when a column uses several; must add up to count.",
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        }
       }
     },
     "sentinels": {
@@ -65,7 +71,8 @@
           "maxItems": 101,
           "items": { "type": "number" }
         },
-        "rescale": { "type": "boolean", "default": false }
+        "rescale": { "type": "boolean", "default": false },
+        "thousands": { "type": "boolean", "default": false }
       }
     },
     "column": {

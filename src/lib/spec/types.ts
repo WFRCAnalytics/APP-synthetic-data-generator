@@ -35,11 +35,16 @@ export interface SourceSpec {
   line_ending?: "lf" | "crlf" | "cr";
   trailing_newline?: boolean;
   header: boolean;
+  /** Whether the header row's names were quoted in the source. */
+  header_quoted?: boolean;
 }
 
 export interface NaSpec {
   tokens: string[];
+  /** Total NA rows. */
   count: number;
+  /** Rows per token, when a column uses more than one. Must add up to count. */
+  by_token?: Record<string, number>;
 }
 
 export interface ColumnBase {
@@ -63,6 +68,8 @@ export interface NumericFields {
   /** 101 non-decreasing values, 1% steps, used by match_shape. */
   quantiles?: number[];
   rescale?: boolean;
+  /** The source wrote integers with thousands separators (1,234); the export does too. */
+  thousands?: boolean;
 }
 
 export interface CategoricalColumn extends ColumnBase {

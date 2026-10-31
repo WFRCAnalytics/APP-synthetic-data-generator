@@ -20,6 +20,7 @@ const positiveCount = v.pipe(v.number(), v.integer(), v.minValue(1));
 const NaSchema = v.strictObject({
   tokens: v.pipe(v.array(v.string()), v.minLength(1)),
   count,
+  by_token: v.optional(v.record(v.string(), count)),
 });
 
 const SentinelsSchema = v.record(v.string(), positiveCount);
@@ -42,6 +43,7 @@ const numeric = {
   decimals: v.optional(v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(15))),
   quantiles: v.optional(v.array(finite)),
   rescale: v.optional(v.boolean()),
+  thousands: v.optional(v.boolean()),
 };
 
 const MaskTokenSchema = v.union([
@@ -102,6 +104,7 @@ const SourceSchema = v.strictObject({
   line_ending: v.optional(v.picklist(["lf", "crlf", "cr"])),
   trailing_newline: v.optional(v.boolean()),
   header: v.boolean(),
+  header_quoted: v.optional(v.boolean()),
 });
 
 const SpecSchema = v.strictObject({
@@ -134,6 +137,16 @@ function checkColumn(col: ColumnSpec, rows: number, out: SpecProblem[]): void {
     problem("na", `NA and sentinel counts (${naCount + sentinelCount}) exceed the row count (${rows}).`);
   }
   const remaining = rows - naCount - sentinelCount;
+
+  if (col.na?.by_token) {
+    const byToken = col.na.by_token;
+    if (sum(Object.values(byToken)) !== col.na.count) {
+      problem("na", "Per-token NA counts do not add up to the NA count.");
+    }
+    if (Object.keys(byToken).some((t) => !col.na!.tokens.includes(t))) {
+      problem("na", "A per-token NA count names a token that is not in the token list.");
+    }
+  }
 
   switch (col.type) {
     case "categorical":

@@ -96,8 +96,8 @@ with unsupported columns safely excluded.
 
 ### Tests for User Story 1
 
-- [ ] T028 [P] [US1] Integration test for profiling SQL on small fixtures (counts, NA, min, max, mean, sd, quantiles) using DuckDB's Node bindings in `tests/integration/profile.test.ts`
-- [ ] T029 [P] [US1] Unit tests for type detection rules in SPEC.md order, coded integers defaulting to categorical, the "unsupported" rule (emails, free text, many-valued short codes, latitude and longitude), and survey ID detection taking precedence over categorical (an ID column with 50 or fewer distinct values is never typed categorical), asserted column by column against `tests/fixtures/zoo/expected.json` so a failure names the column and rule, in `tests/unit/classify.test.ts`
+- [X] T028 [P] [US1] Integration test for profiling SQL on small fixtures (counts, NA, min, max, mean, sd, quantiles) using DuckDB's Node bindings in `tests/integration/profile.test.ts`
+- [X] T029 [P] [US1] Unit tests for type detection rules in SPEC.md order, coded integers defaulting to categorical, the "unsupported" rule (emails, free text, many-valued short codes, latitude and longitude), and survey ID detection taking precedence over categorical (an ID column with 50 or fewer distinct values is never typed categorical), asserted column by column against `tests/fixtures/zoo/expected.json` so a failure names the column and rule, in `tests/unit/classify.test.ts`
 - [ ] T030 [P] [US1] Unit tests that generated columns hit exact label counts, NA counts, sentinel counts, min and max in `tests/unit/generate-columns.test.ts`
 - [ ] T031 [P] [US1] Integration test for the CSV round trip (fake file parses with the same code as the real one, SC-004) in `tests/integration/roundtrip.test.ts`
 - [ ] T032 [P] [US1] Component test for the ingest, review and generate flow with mocked workers in `tests/component/flow.test.tsx`
@@ -105,12 +105,12 @@ with unsupported columns safely excluded.
 
 ### Implementation for User Story 1
 
-- [ ] T033 [P] [US1] Implement beta-by-gamma, uniform and quantile-interpolation samplers in `src/lib/sampling/` with moment tests in `tests/unit/sampling.test.ts`
-- [ ] T034 [P] [US1] Implement NA token and sentinel candidate detection in `src/lib/classify/na.ts` and `src/lib/classify/sentinels.ts`, with tests in `tests/unit/na-sentinels.test.ts`
-- [ ] T035 [US1] Implement the type classifier, the "unsupported" rule, and survey ID detection (name ends in `id` or `_num`; unique or grouped integers and codes; checked before categorical, per SPEC.md order) in `src/lib/classify/classify.ts` (uses T034; never reads values, only summaries). Until T065 lands, `survey_id` columns are marked `needs_attention` and excluded by default so no ID value can reach the spec as a category label
+- [X] T033 [P] [US1] Implement beta-by-gamma, uniform and quantile-interpolation samplers in `src/lib/sampling/` with moment tests in `tests/unit/sampling.test.ts`
+- [X] T034 [P] [US1] Implement NA token and sentinel candidate detection in `src/lib/classify/na.ts` and `src/lib/classify/sentinels.ts`, with tests in `tests/unit/na-sentinels.test.ts`
+- [X] T035 [US1] Implement the type classifier, the "unsupported" rule, and survey ID detection (name ends in `id` or `_num`; unique or grouped integers and codes; checked before categorical, per SPEC.md order) in `src/lib/classify/classify.ts` (uses T034; never reads values, only summaries). Until T065 lands, `survey_id` columns are marked `needs_attention` and excluded by default so no ID value can reach the spec as a category label
 - [ ] T036 [US1] Implement `profile.worker.ts` messages `open`, `settingsDetected`, `load`, `loaded` (sniff the file, register the handle, create the all-text table, and infer each column's `quoted` flag and the file's `quoteStyle` by sampling the raw bytes of the first 10,000 rows) in `src/workers/profile.worker.ts`; a file that cannot be parsed returns an `error` that names the problem and a row number, never a cell value (FR-003), with a test in `tests/unit/errors.test.ts`
 - [ ] T120 [US1] Required (T017 spike: UTF-16 BE and Windows-1252 with bytes 0x80-0x9F fail natively): decode UTF-16 BE and every Windows-1252 file with `TextDecoderStream` in the profile worker and register the UTF-8 result in memory with `registerFileBuffer`, in `src/workers/profile/transcode.ts`; UTF-8 and UTF-16 LE keep the native `read_csv` path. See research.md, R2 follow-up
-- [ ] T037 [US1] Implement batched column statistics SQL in `src/workers/profile/stats.ts` and the `profile` and `columnProfile` messages, reporting progress per batch
+- [X] T037 [US1] Implement batched column statistics SQL in `src/workers/profile/stats.ts` and the `profile` and `columnProfile` messages, reporting progress per batch
 - [ ] T038 [US1] Build the ingest screen in `src/features/ingest/IngestScreen.tsx` (file picker, detected delimiter, encoding, quote and header with editing, row count, column count, names only; shows the parse error message from T036)
 - [ ] T039 [US1] Build the basic review screen in `src/features/review/ReviewScreen.tsx` and `ColumnCard.tsx` with a hand-drawn SVG chart in `src/features/review/Sparkline.tsx`; show unsupported and excluded labels
 - [ ] T040 [P] [US1] Implement the per-column generator (rank placement of NA and sentinels, categorical by cumulative counts, numeric by mode with exact min and max) in `src/lib/generate/column.ts`, `categorical.ts` and `numeric.ts`
