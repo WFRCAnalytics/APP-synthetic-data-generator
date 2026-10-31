@@ -24,7 +24,7 @@ describe("the real project", () => {
   it("names the Excel extension and the brand assets, and has no gaps", () => {
     expect(text).toContain("## DuckDB Excel extension");
     expect(text).toContain("## Brand assets");
-    expect(text).not.toMatch(/Licence: (undefined|null)|^
+    expect(text).not.toMatch(/Licence: (undefined|null)|^## .* (undefined|null)$/m);
   });
 
   it("says plainly when a package ships no licence file", () => {
