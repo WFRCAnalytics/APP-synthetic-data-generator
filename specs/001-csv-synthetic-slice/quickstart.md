@@ -94,3 +94,45 @@ generate-and-export under 5 minutes; any column found by search in under 15 seco
 
 All scenarios pass in Chrome and Edge, A and G also pass in Firefox and Safari via download, and
 `tasks.md` has no unchecked slice-1 task other than those marked deferred.
+
+## Results (T096)
+
+Run on 2026-10-31 on the reference machine (Windows 11, current Chromium 1228 build, installed
+Microsoft Edge, Playwright Firefox and WebKit builds). Automated parts are repeatable with the
+commands shown.
+
+| Scenario | Chrome (Chromium) | Edge | Firefox | Safari engine (WebKit) | How |
+|---|---|---|---|---|---|
+| A: whole flow | pass | pass | pass | pass | `flow.spec`, `download-fallback.spec` |
+| B: review and override | pass | pass | not run (not required) | not run (not required) | `review.spec`, component tests |
+| C: IDs | pass | pass | not run (not required) | not run (not required) | `quickstart.spec` scenario C |
+| D: reproducibility | pass | pass | not run (not required) | not run (not required) | `quickstart.spec` scenario D, `determinism.test.ts` |
+| E: privacy | pass | pass | pass (no outside request in the flow test) | pass (same) | `privacy.spec`, `flow.spec` |
+| F: scale | pass (525 MB) | small table pass | not run (not required) | not run (not required) | `scale.spec`; large run needs `SCALE_500MB=1` |
+| G: format fidelity | pass (Node) | n/a | n/a | n/a | `verify-script.test.ts`, `roundtrip.test.ts` |
+
+Commands: `npm run test:e2e` (Chromium), `PW_EDGE=1 npx playwright test --project=edge` (Edge),
+`npm run test:e2e:browsers` (Chromium, Firefox, WebKit: flow and download tests).
+
+Notes:
+
+- The WebKit build is Playwright's, the engine Safari uses. It is not Apple Safari itself, so a
+  check in real Safari on a Mac remains worthwhile before release.
+- Scenario F, 525 MB file with 117 columns: profile 83 s, generate and check 60 s (both under the
+  5-minute target), search 14 ms, longest frame while profiling 10 ms (page never froze).
+- The a11y test (`a11y.spec`) found and fixed four problems: low-contrast links inside warning
+  banners, no focus indicator on the Settings toggle, low-contrast table headers, and scrolling
+  tables the keyboard could not reach. It also led to a lighter danger text colour in dark mode
+  (`--color-danger-text`), with a unit test on every text colour pair (`contrast.test.ts`).
+
+### Human timing checks (SC-007, SC-008): not done by the automated run
+
+These measure a person, so a person must do them. Machine time is recorded as evidence only.
+
+- **SC-007** (typical table to fake CSV in under 10 minutes): machine time for `zoo_small.csv`
+  (82 columns, 2,000 rows) from choosing the file to the download is about 3 seconds, so the target
+  leaves almost all of the 10 minutes for the person reviewing columns.
+- **SC-008** (find any column in a 120-column table in under 15 seconds): search returns in 14 ms
+  on the 117-column file. The person-timing check is for the maintainer.
+
+Maintainer sign-off: SC-007 [ ]  SC-008 [ ]

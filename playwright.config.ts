@@ -17,11 +17,13 @@ export default defineConfig({
   },
   projects: [
     { name: "chromium", use: { browserName: "chromium" } },
-    // Firefox and WebKit only run the single-file download test (`npm run test:e2e:browsers`).
+    // The installed Microsoft Edge, for the quickstart matrix (`PW_EDGE=1`).
+    ...(process.env.PW_EDGE === "1" ? [{ name: "edge", use: { browserName: "chromium" as const, channel: "msedge" } }] : []),
+    // Firefox and WebKit run the whole-flow and single-file download tests (`npm run test:e2e:browsers`).
     ...(process.env.PW_ALL_BROWSERS === "1"
       ? [
-          { name: "firefox", testMatch: /download-fallback\.spec\.ts/, use: { browserName: "firefox" as const } },
-          { name: "webkit", testMatch: /download-fallback\.spec\.ts/, use: { browserName: "webkit" as const } },
+          { name: "firefox", testMatch: /(flow|download-fallback)\.spec\.ts/, use: { browserName: "firefox" as const } },
+          { name: "webkit", testMatch: /(flow|download-fallback)\.spec\.ts/, use: { browserName: "webkit" as const } },
         ]
       : []),
   ],
