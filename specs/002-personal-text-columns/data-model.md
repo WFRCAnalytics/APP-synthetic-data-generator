@@ -31,7 +31,7 @@ allowed on the column (this rejects a hand-added `values` list).
 
 Same numeric fields as an integer column, in characters: `mode`, `min`, `max`, `mean?`, `sd?`,
 `quantiles?` (101 values), `rescale?`, plus `line_breaks` (boolean: values contain line breaks).
-`min` is at least 0 and `max` at most 100,000.
+`min` is at least 0 and `max` at most 100,000 (longer real values are capped, reason `text_length_capped`).
 
 ### short_string
 
@@ -50,7 +50,7 @@ to personal kinds).
 New `ColumnSummary` kinds: `personal` (`kind`, `repeatStructure`, `distinct`, `format`),
 `free_text` (numeric fields plus `lineBreaks`) and `short_string` (`pattern`, `lengthGroups`,
 `repeatStructure`, `distinct`). New reason codes: `kind_mixed`, `suffix_needed`,
-`ssn_needs_acknowledgement`. `LocalEdits` gains `personalKind`, `ssnAcknowledged`,
+`ssn_needs_acknowledgement`, `text_length_capped`, `needs_source_file`. `LocalEdits` gains `personalKind`, `ssnAcknowledged`,
 `shortPattern`. None of these holds a value.
 
 ## Generation entities (pure TypeScript, no state)

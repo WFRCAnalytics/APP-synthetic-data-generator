@@ -35,7 +35,7 @@
 - [ ] T010 Implement `src/lib/textgen/compose.ts`: `mixedRadix(index, radices)`, `makeUniqueSpace(naturalSpace, key)` returning `{space, valueIndexAt(group)}` that adds a numeric suffix counter beyond the natural space, built on `makePermutation` and `makePermutationBig`
 - [ ] T011 Generalize the repeat-structure bucketing from `src/lib/generate/survey-id.ts` into a shared `src/lib/generate/groups.ts` (`makeGroupMapper(repeatStructure, key, space)` returning rank to group index) and make `survey-id.ts` use it, keeping `tests/unit/mask.test.ts` and the ID tests green
 - [ ] T012 [P] Add the generate worker `sample` request and `samples` reply to `src/workers/protocol.ts` and `src/workers/generate.worker.ts` (up to 10 invented values for a column description, no real data), with a unit test of the handler in `tests/unit/sample-request.test.ts`
-- [ ] T013 Change `collectBasic` in `src/workers/profile/stats.ts` so frequent and unparsed values are fetched only when the distinct count is at most the categorical limit; add the built-in sentinel vocabulary match returning counts only; update `tests/integration/profile.test.ts` for the new behavior
+- [ ] T013 Change `collectBasic` in `src/workers/profile/stats.ts` so frequent and unparsed values are not fetched for string-like columns (fewer than half the values numeric) whose distinct count exceeds the categorical limit; numeric columns keep fetching them; add the built-in sentinel vocabulary match returning counts only; add a regression test in `tests/integration/profile.test.ts` that a high-cardinality numeric column still finds its sentinels (research R6)
 - [ ] T014 [P] Add length and shape aggregates to `BasicStats` in `src/lib/classify/stats.ts` and the SQL that fills them in `src/workers/profile/stats.ts` (mean, sd and 101 quantiles of length, share of values with spaces, share with line breaks, count of values with letters, digits and punctuation); no value is returned
 
 **Checkpoint**: spec types, composition core and sample plumbing exist; nothing is detected or generated yet.
@@ -65,7 +65,11 @@
 - [ ] T024 [US1] Build `src/features/review/PersonalKindEditor.tsx`: kind selector, explanation text, live sample (via a new `session.requestSamples` using the generate worker), suffix note, SSN acknowledgement checkbox; mount it in `ColumnEditors.tsx`; add the kind labels and reason texts to `src/features/review/summary.ts`
 - [ ] T025 [US1] Update `ExcludeControl.tsx`, `AttentionBanner.tsx` and the card summary lines so personal columns show "Invented values, N distinct" and never a value
 - [ ] T026 [US1] Integration test for profiling the personal fixtures against `expected.json` and a roundtrip generate and re-profile (same distinct count, repeat structure, NA counts) in `tests/integration/personal-profile.test.ts` and update `tests/integration/roundtrip.test.ts`
-- [ ] T027 [US1] Mark slice 1 deferred tasks T108 (personal identifiers) superseded in `specs/001-csv-synthetic-slice/tasks.md` with a pointer to this feature
+- [ ] T027 [US1] Mark slice 1 deferred tasks T108 (personal identifiers), T109 (free text) and T110 (short strings) superseded in `specs/001-csv-synthetic-slice/tasks.md` with a pointer to this feature
+
+- [ ] T056 [US1] Add the new types to the Type selector choices in `src/features/review/ColumnEditors.tsx` and forced-type support in `src/workers/profile/profiler.ts` (`forceType`), so a slice 1 unsupported column can be switched to a kind when the file is open; in spec-only mode disable the selector for unsupported columns with the reason `needs_source_file` and the explanation (FR-017, research R7b); tests in `tests/component/review-personal.test.tsx` and `tests/integration/personal-profile.test.ts`
+- [ ] T057 [US1] Card notes and warnings in `PersonalKindEditor.tsx` and `src/features/review/summary.ts`: non-English characters note for names and free text, the mix of phone formats with shares shown for confirmation, and the warning when a personal column is switched to numeric or categorical (real labels would be kept in the spec); component tests in `tests/component/review-personal.test.tsx`
+- [ ] T058 [P] [US1] Extend `tests/helpers/fakeWorkers.ts` to answer the `sample` request and make `Session` create the generate worker lazily for samples in `src/app/session.ts` (`requestSamples`), so Review samples work before any generation
 
 **Checkpoint**: a table with name, email, phone and address columns generates with exact distinct and NA counts. MVP.
 
@@ -101,7 +105,7 @@
 
 ### Tests for User Story 2
 
-- [ ] T034 [P] [US2] Unit tests for free text detection (mean length, spaces, names like comment) in `tests/unit/classify-text.test.ts`
+- [ ] T034 [US2] Unit tests for free text detection (mean length, spaces, names like comment) in `tests/unit/classify-text.test.ts`
 - [ ] T035 [P] [US2] Unit tests for the lorem generator and the free text column: exact min and max length, spread follows quantiles, no real word, line breaks only when `line_breaks`, determinism, in `tests/unit/generate-free-text.test.ts`
 - [ ] T036 [P] [US2] Component test for the free text card (length summary, explanation, sample) in `tests/component/review-free-text.test.tsx`
 
@@ -110,6 +114,7 @@
 - [ ] T037 [US2] Implement `src/lib/textgen/lorem.ts` (own small word list, sentence punctuation, cut at the chosen length) and the `free_text` case in `src/lib/generate/column.ts` reusing the numeric length generator; add `min`, `max` checks in `checks.ts`
 - [ ] T038 [US2] Extend `classifyColumn` and `src/workers/profile/personal.ts` (or `text.ts`) to return `free_text` with the length fields and `line_breaks`, and the card summary for it
 - [ ] T039 [US2] Quote embedded line breaks as the source did: add a case with line breaks to `tests/unit/csv-writer.test.ts` and confirm `src/lib/csv/writer.ts` quotes them under every quote style
+- [ ] T059 [US2] Cap free text lengths at 100,000 characters in the profiler and validator, with the reason `text_length_capped` and a card note; tests in `tests/unit/generate-free-text.test.ts` and `tests/unit/spec-validate-text.test.ts`
 - [ ] T040 [US2] Integration test profile then generate then re-profile the comments column in `tests/integration/text-roundtrip.test.ts`
 
 **Checkpoint**: comments columns keep lengths and no word.
@@ -133,6 +138,7 @@
 - [ ] T044 [US3] Implement `src/lib/textgen/shortstring.ts` (prefix of the pattern by length, per-length space and bijection via `compose.ts` and `groups.ts`) and the `short_string` case in `column.ts` and checks (`length_groups`, `distinct_count`, `repeat_structure`)
 - [ ] T045 [US3] Profile short strings in `src/workers/profile/personal.ts`: per-position classes for the longest length (reuse `tokenForPosition`), `length_groups`, repeat structure; classification in `classify.ts`
 - [ ] T046 [US3] Build `src/features/review/ShortStringEditor.tsx` (reuse the ID token editor parts from `IdMaskEditor.tsx` where possible) with the shortfall message and Generate gating as for IDs (`narrowIdColumns` generalized in `src/lib/profile/idCapacity.ts`)
+- [ ] T060 [US3] Make the short string shortfall (FR-013) block Generate with the ID-style message and no suffix; test in `tests/component/review-short-string.test.tsx`
 - [ ] T047 [US3] Integration test profile then generate then re-profile the plate and vendor code columns in `tests/integration/text-roundtrip.test.ts`
 
 **Checkpoint**: no string column is left out for being text.
@@ -141,6 +147,8 @@
 
 ## Phase 7: Polish & Cross-Cutting
 
+- [ ] T061 [P] Extend `tests/unit/determinism.test.ts` with personal, free text and short string columns: byte-identical output across chunk sizes and seeds, and changing one of them changes no other column (SC-003)
+- [ ] T062 Record the person-timing sign-off lines for SC-008 (and the slice 1 SC-007 and SC-008) in this feature's `quickstart.md`
 - [ ] T048 [P] Extend `tests/e2e/a11y.spec.ts` to open the new editors in light and dark themes and fix any violation
 - [ ] T049 [P] Browser tests for the whole slice 2 flow and spec save, reload, load in `tests/e2e/quickstart.spec.ts` (scenarios A, D, E, F) in Chromium, then run `npm run test:e2e:browsers`
 - [ ] T050 [P] Update `src/app/HelpGuideModal.tsx`, `src/features/review/SpecContentsNotice.tsx` and `README.md` for the new column kinds and the "not in this version" list
@@ -179,9 +187,11 @@
 |---|---|
 | Setup | 3 |
 | Foundational | 11 |
-| US1 | 13 |
+| US1 | 16 |
 | US4 | 6 |
-| US2 | 7 |
-| US3 | 7 |
-| Polish | 8 |
-| Total | 55 |
+| US2 | 8 |
+| US3 | 8 |
+| Polish | 10 |
+| Total | 62 |
+
+New IDs T056 to T062 were added after the analysis and sit in the phase they belong to, so earlier IDs did not change.

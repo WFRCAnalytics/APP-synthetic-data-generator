@@ -70,8 +70,10 @@ No NEEDS CLARIFICATION items remained after the spec. The decisions below settle
 
 ## R6: Frequent-value fetching
 
-- **Decision**: For columns whose distinct count exceeds the categorical limit, `collectBasic`
-  does not fetch the most frequent values. Sentinels in such columns are found by matching a fixed
+- **Decision**: For string-like columns (fewer than half of the values parse as numbers) whose
+  distinct count exceeds the categorical limit, `collectBasic` does not fetch the most frequent
+  values. Numeric columns keep fetching them, because slice 1 sentinel detection depends on them
+  (a float column with -9 codes), and a regression test pins that. Sentinels in such columns are found by matching a fixed
   built-in vocabulary (refused, unknown, n/a, none, dk, 99, 999 and similar) in SQL, returning only
   counts per vocabulary word.
 - **Rationale**: Frequent values of a name column are real names. They never leave the profile
@@ -92,6 +94,8 @@ No NEEDS CLARIFICATION items remained after the spec. The decisions below settle
 
 ## R7a: Short strings
 
+- **Decision (shortfall rule)**: unlike personal kinds, a short string pattern that is too narrow
+  blocks generating with the ID-style shortfall message (FR-013); no suffix is added.
 - **Decision**: Store a per-position pattern for the longest length (same tokens as ID masks:
   digit, upper, lower, letter, alnum, literal), `length_groups` (distinct values per length, at most
   64 lengths), and the repeat structure. A value of length L uses the first L positions of the
@@ -99,6 +103,16 @@ No NEEDS CLARIFICATION items remained after the spec. The decisions below settle
   Distinct count is exact; lengths follow the real spread of distinct values.
 - **Rationale**: Reuses the ID mask code (`src/lib/mask/mask.ts`); the real values never appear.
 - **Alternatives**: shuffle of real values (forbidden).
+
+## R7b: Switching a slice 1 unsupported column to a kind
+
+- **Decision**: The Type selector on Review gains the new types, and choosing one re-profiles the
+  column through the profile worker (forced type). It needs the source file. With only a spec
+  loaded, the selector for such a column is disabled and the card explains that the file is
+  needed (FR-017). Spec-only mode otherwise keeps working for columns that already hold a kind.
+- **Rationale**: A version 1 spec keeps no figures for unsupported columns, and inventing
+  defaults would produce a table that does not match the real one.
+- **Alternatives**: default shapes with a unique-per-row assumption (silently wrong).
 
 ## R8: SSN-style columns
 
@@ -145,6 +159,12 @@ No NEEDS CLARIFICATION items remained after the spec. The decisions below settle
   bundle test that fails if the profile worker or the main bundle contains faker word-list markers.
 - **Rationale**: FR-008, FR-014, FR-015, SC-002.
 - **Alternatives**: review by eye (not repeatable).
+
+## R13: Free text length cap
+
+- **Decision**: Lengths are capped at 100,000 characters. A real value longer than that is
+  counted at 100,000 and the card shows the reason `text_length_capped`.
+- **Rationale**: keeps the spec valid and generation memory bounded.
 
 ## Open items
 

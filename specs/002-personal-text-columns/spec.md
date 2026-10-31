@@ -137,8 +137,9 @@ the preview, the downloaded file or any error message.
   the repeat structure keeps that share, and the generated repeated value is invented, not copied.
 - More distinct values needed than the generator can invent (for example 5 million distinct last
   names): values are made unique by adding a short suffix, and a note tells the user so.
-- Very long free text values (tens of thousands of characters): lengths are kept up to the
-  longest real value; generation stays chunked so memory stays bounded.
+- Very long free text values (tens of thousands of characters): lengths are kept up to 100,000
+  characters; a longer real value is capped at that length and the card says so; generation
+  stays chunked so memory stays bounded.
 - Non-English text, accents or emoji in a free text or name column: lengths are kept; the fake
   values use plain US English characters, and a note says so.
 - Unique-by-row columns with 500 MB tables: profiling and generation stay within the slice 1
@@ -171,7 +172,8 @@ the preview, the downloaded file or any error message.
 - **FR-004**: The fake column MUST keep the exact NA and sentinel counts, placed at random
   positions, as in slice 1.
 - **FR-005**: The format of the real values MUST be kept where it matters to parsing: the commonest
-  phone format, email shape and name style. A domain, name or number from the real data MUST NOT
+  phone formats, email shape and name style ("Last, First" is kept when it is at least half of
+  the values). A domain, name or number from the real data MUST NOT
   be copied.
 - **FR-006**: The system MUST detect free text columns and generate filler text of the real
   column's length distribution (exact minimum and maximum, and the spread between them). No real
@@ -191,15 +193,20 @@ the preview, the downloaded file or any error message.
 - **FR-012**: The check table MUST include, for these columns, the distinct count, the repeat
   structure, the length minimum and maximum, and the NA and sentinel counts, each as target versus
   achieved.
-- **FR-013**: When more distinct values are needed than can be invented naturally, the system MUST
-  still deliver the exact distinct count by making values unique, and MUST tell the user.
+- **FR-013**: For personal identifier kinds, when more distinct values are needed than can be
+  invented naturally, the system MUST still deliver the exact distinct count by making values
+  unique, and MUST tell the user. For short strings, a pattern that cannot produce as many
+  distinct values as the column needs MUST be reported with the shortfall and block generating
+  until fixed, as for survey IDs in slice 1.
 - **FR-014**: The existing leak checks (page, spec, preview, output, error messages) MUST be
   extended to cover these column kinds and MUST fail if any real value appears.
 - **FR-015**: The invented-value generator MUST work with no network request and MUST be loaded
   only where generation happens, so profiling never carries it. The added size MUST be recorded.
 - **FR-016**: The change MUST keep the slice 1 time targets for a roughly 500 MB table.
 - **FR-017**: Slice 1 specs (version 1) that mark these columns as unsupported MUST still load and
-  work; the user can then switch them to a kind on Review.
+  work. A spec holds no figures for such a column, so switching one to a kind needs the source
+  file: when the file is open, the user can choose a kind on Review and the column is profiled
+  again; when only the spec is loaded, the card says the file is needed.
 
 ### Key Entities
 
@@ -233,7 +240,7 @@ the preview, the downloaded file or any error message.
 - **SC-007**: The fake CSV parses with the same code as the real one, with identical column names,
   order and types, for tables containing these columns.
 - **SC-008**: An analyst can confirm or change the kind of a personal column and see a sample in
-  under 30 seconds.
+  under 30 seconds (a person-timing check signed off by the maintainer).
 
 ## Assumptions
 
