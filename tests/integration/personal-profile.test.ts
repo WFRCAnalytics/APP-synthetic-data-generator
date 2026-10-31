@@ -9,6 +9,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { ColumnProfile } from "../../src/lib/profile/types";
 import { createNodeDb, type NodeDb } from "../helpers/duckdbNode";
 import { parseCsv } from "../helpers/csvParse";
+import { profileColumn } from "../../src/workers/profile/profiler";
 import { profileBytes, profilePath, renderSpec, type Profiled } from "../helpers/pipeline";
 
 const ZOO = join(__dirname, "../fixtures/zoo");
@@ -162,4 +163,26 @@ describe("very long text (specs/002 edge case, research R13)", () => {
     if (got.summary.kind !== "free_text") throw new Error("expected free text");
     expect(got.summary.max).toBe(100000);
   }, 120_000);
+});
+
+describe("sentinel-like words in a text column (specs/002 edge case)", () => {
+  it("are kept as sentinels with exact counts when the user confirms them, and left out of the repeat structure", async () => {
+    const names = Array.from({ length: 120 }, (_, i) => `Person${String(i).padStart(3, "0")}x`);
+    const rows = [...names, ...Array(7).fill("Refused"), ...Array(3).fill("")];
+    const bytes = new TextEncoder().encode(`${["respondent_name", ...rows].join("\n")}\n`);
+    const { rowCount, profiles } = await profileBytes(db, bytes, "refused.csv");
+    expect(rowCount).toBe(130);
+    // As detected, "Refused" is one more distinct value that repeats 7 times.
+    const plain = profiles[0].summary;
+    if (plain.kind !== "personal") throw new Error("expected personal");
+    expect(plain.repeatStructure).toEqual({ "1": 120, "7": 1 });
+
+    // Confirmed as a sentinel (the loaded table is still the current one), it is counted exactly
+    // and is no longer a value.
+    const confirmed = await profileColumn(db.sql, "respondent_name", rowCount, { threshold: 50 }, { sentinels: ["Refused"] });
+    expect(confirmed.sentinels).toEqual({ Refused: 7 });
+    if (confirmed.summary.kind !== "personal") throw new Error("expected personal");
+    expect(confirmed.summary.repeatStructure).toEqual({ "1": 120 });
+    expect(confirmed.naCount).toBe(3);
+  });
 });
