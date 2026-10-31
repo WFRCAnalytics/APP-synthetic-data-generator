@@ -21,7 +21,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "fixtures": "node scripts/make-fixtures.mjs",
-    "verify:roundtrip": "node scripts/verify-roundtrip.mjs"
+    "verify:roundtrip": "node scripts/verify-roundtrip.mjs",
+    "build:spike": "node scripts/copy-duckdb.mjs && vite build --mode spike"
   },
   "dependencies": {
     "@duckdb/duckdb-wasm": "1.33.1-dev57.0",

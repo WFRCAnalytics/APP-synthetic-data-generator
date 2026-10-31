@@ -7,3 +7,6 @@ package-lock.json
 .specify
 .claude
 specs
+dist-spike
+test-results
+playwright-report

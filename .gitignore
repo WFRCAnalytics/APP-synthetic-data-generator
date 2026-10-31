@@ -3,6 +3,9 @@ node_modules/
 
 # Build output
 dist/
+dist-spike/
+test-results/
+playwright-report/
 *.tsbuildinfo
 
 # DuckDB-WASM binaries and extensions are fetched at build time by scripts/fetch-duckdb.mjs

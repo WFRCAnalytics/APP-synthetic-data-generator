@@ -66,10 +66,10 @@ real data.
 
 - [X] T014 Extend `scripts/make-fixtures.mjs` with `--100k` and `--large` that write `.fixtures/zoo_100k.csv` and the ~500 MB, ~120-column `.fixtures/zoo_500mb.csv` (zoo columns repeated with suffixes; deterministic, never committed)
 - [ ] T121 [P] Create `scripts/fetch-corpus.mjs` that downloads, at a pinned tag, the selected CSV edge-case files from `duckdb/duckdb` `data/csv` (encodings, dates, decimal separators, leading zeros, quoted newlines, null padding, bad dates) and `csv-spectrum`, plus the smoke datasets (NHTS 2017 `trippub.csv`, a 1M-row Chicago Crimes slice), into `.fixtures/corpus/` (gitignored, never committed); tests that need them skip with a clear message when the folder is absent
-- [ ] T015 Spike R9: instantiate DuckDB-WASM under the page CSP from T007 in `tests/e2e/spikes/csp.spec.ts`; record the outcome and any narrowest-needed CSP change in `research.md`
-- [ ] T016 Spike R1: in `tests/e2e/spikes/memory.spec.ts`, register the 500 MB fixture with `registerFileHandle`, load it as an all-text table, and record memory and time in `research.md`; if it does not fit, T091 (profile in column batches from the file handle) becomes required
-- [ ] T017 [P] Spike R2: in `tests/e2e/spikes/encoding.spec.ts`, check `read_csv` with `utf-16` and `latin-1` on the encoding fixtures; record the result and, if it fails, T120 (the `TextDecoderStream` fallback) becomes required
-- [ ] T018 [P] Spike R14: in `tests/e2e/spikes/download.spec.ts`, assemble a 500 MB Blob from chunks and download it in Chrome and Edge; record the result and, if it fails, T092 (streamed save) becomes required
+- [X] T015 Spike R9: instantiate DuckDB-WASM under the page CSP from T007 in `tests/e2e/spikes/csp.spec.ts`; record the outcome and any narrowest-needed CSP change in `research.md`
+- [X] T016 Spike R1: in `tests/e2e/spikes/memory.spec.ts`, register the 500 MB fixture with `registerFileHandle`, load it as an all-text table, and record memory and time in `research.md`; if it does not fit, T091 (profile in column batches from the file handle) becomes required
+- [X] T017 [P] Spike R2: in `tests/e2e/spikes/encoding.spec.ts`, check `read_csv` with `utf-16` and `latin-1` on the encoding fixtures; record the result and, if it fails, T120 (the `TextDecoderStream` fallback) becomes required
+- [X] T018 [P] Spike R14: in `tests/e2e/spikes/download.spec.ts`, assemble a 500 MB Blob from chunks and download it in Chrome and Edge; record the result and, if it fails, T092 (streamed save) becomes required
 
 ### Pure core (unit tests included)
 
@@ -109,7 +109,7 @@ with unsupported columns safely excluded.
 - [ ] T034 [P] [US1] Implement NA token and sentinel candidate detection in `src/lib/classify/na.ts` and `src/lib/classify/sentinels.ts`, with tests in `tests/unit/na-sentinels.test.ts`
 - [ ] T035 [US1] Implement the type classifier, the "unsupported" rule, and survey ID detection (name ends in `id` or `_num`; unique or grouped integers and codes; checked before categorical, per SPEC.md order) in `src/lib/classify/classify.ts` (uses T034; never reads values, only summaries). Until T065 lands, `survey_id` columns are marked `needs_attention` and excluded by default so no ID value can reach the spec as a category label
 - [ ] T036 [US1] Implement `profile.worker.ts` messages `open`, `settingsDetected`, `load`, `loaded` (sniff the file, register the handle, create the all-text table, and infer each column's `quoted` flag and the file's `quoteStyle` by sampling the raw bytes of the first 10,000 rows) in `src/workers/profile.worker.ts`; a file that cannot be parsed returns an `error` that names the problem and a row number, never a cell value (FR-003), with a test in `tests/unit/errors.test.ts`
-- [ ] T120 [US1] Conditional, only if the T017 spike shows `read_csv` cannot read UTF-16 or Latin-1: stream-transcode with `TextDecoderStream` into a virtual UTF-8 file registered with DuckDB, in `src/workers/profile/transcode.ts`; otherwise mark done with "not needed" and the spike result
+- [ ] T120 [US1] Required (T017 spike: UTF-16 BE and Windows-1252 with bytes 0x80-0x9F fail natively): decode UTF-16 BE and every Windows-1252 file with `TextDecoderStream` in the profile worker and register the UTF-8 result in memory with `registerFileBuffer`, in `src/workers/profile/transcode.ts`; UTF-8 and UTF-16 LE keep the native `read_csv` path. See research.md, R2 follow-up
 - [ ] T037 [US1] Implement batched column statistics SQL in `src/workers/profile/stats.ts` and the `profile` and `columnProfile` messages, reporting progress per batch
 - [ ] T038 [US1] Build the ingest screen in `src/features/ingest/IngestScreen.tsx` (file picker, detected delimiter, encoding, quote and header with editing, row count, column count, names only; shows the parse error message from T036)
 - [ ] T039 [US1] Build the basic review screen in `src/features/review/ReviewScreen.tsx` and `ColumnCard.tsx` with a hand-drawn SVG chart in `src/features/review/Sparkline.tsx`; show unsupported and excluded labels
@@ -245,8 +245,10 @@ with unsupported columns safely excluded.
 - [ ] T088 [US6] Add profiling progress and cancel (batch progress, `cancel` message) in `src/features/ingest/ProfileProgress.tsx` and the worker
 - [ ] T089 [US6] Add generation and export progress with cancel in `src/features/generate/GenerateProgress.tsx` and the generate worker
 - [ ] T090 [US6] Add the size warning (large files, and xlsx later) in `src/features/ingest/SizeWarning.tsx`
-- [ ] T091 [US6] If the T016 spike failed, implement profiling in column batches straight from the file handle in `src/workers/profile/batchFromHandle.ts`; otherwise mark this task done with "not needed" and the spike result
-- [ ] T092 [US6] If the T018 spike failed, implement streamed save via `showSaveFilePicker` where available in `src/features/generate/streamSave.ts`; otherwise mark done with "not needed"
+- [X] T091 [US6] If the T016 spike failed, implement profiling in column batches straight from the file handle in `src/workers/profile/batchFromHandle.ts`; otherwise mark this task done with "not needed" and the spike result
+  - Not needed: the T016 spike passed (500 MB loads in 4.1 s; see research.md, Spike results).
+- [X] T092 [US6] If the T018 spike failed, implement streamed save via `showSaveFilePicker` where available in `src/features/generate/streamSave.ts`; otherwise mark done with "not needed"
+  - Not needed for Chromium: the T018 spike passed. Firefox and WebKit are still checked by T086.
 
 **Checkpoint**: Large, wide tables meet the timing targets.
 

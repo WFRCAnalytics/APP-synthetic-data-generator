@@ -8,7 +8,7 @@ module.exports = {
     "plugin:react-hooks/recommended",
     "prettier",
   ],
-  ignorePatterns: ["dist", "coverage", "public", ".fixtures", "node_modules", ".eslintrc.cjs", ".specify", ".claude"],
+  ignorePatterns: ["dist", "dist-spike", "test-results", "playwright-report", "coverage", "public", ".fixtures", "node_modules", ".eslintrc.cjs", ".specify", ".claude"],
   parser: "@typescript-eslint/parser",
   parserOptions: { ecmaVersion: "latest", sourceType: "module" },
   plugins: ["react-refresh"],

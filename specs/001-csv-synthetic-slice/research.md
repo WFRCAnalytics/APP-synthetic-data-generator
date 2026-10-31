@@ -200,3 +200,26 @@ depends on them.
   preference exists.
 - **Note**: This updates the R12 dependency table: `lucide-react` is now used (the earlier
   "skipped" note is superseded).
+
+## Spike results (2026-10-30)
+
+Run in Chromium against the strict-CSP production build (`npm run test:e2e`). Pinned engine:
+`@duckdb/duckdb-wasm` 1.33.1-dev57.0, which runs **DuckDB v1.5.4**.
+
+| Item | Result | Effect on the plan |
+|---|---|---|
+| **R9** DuckDB under the strict CSP (T015) | **Pass.** `SELECT 42` and `version()` run with zero CSP violations. A cross-origin `fetch` is blocked from both the page and a worker (`connect-src`). | CSP stays exactly as in `vite.csp.ts`; no extra sources needed |
+| **R1** 500 MB CSV into an in-memory all-text table (T016) | **Pass.** 525 MB file, 470,000 rows x 117 columns loaded in 4.1 s straight from the `File`; JS heap stayed about 10 MB (the data lives in WASM memory). | No fallback needed: T091 is "not needed" |
+| **R2** `read_csv` encodings (T017) | **Partial.** UTF-8 with and without a BOM: pass. UTF-16 little endian (`encoding='utf-16'`): pass. **UTF-16 big endian: fails** ("File is not utf-16 encoded"). **Windows-1252 as `latin-1`: fails** when the file holds bytes 0x80-0x9F (for example the Euro sign), because Latin-1 does not define them. | The transcoding fallback T120 is **required** for UTF-16 BE and Windows-1252 (see below) |
+| **R14** 500 MB Blob download (T018) | **Pass in Chromium.** The Blob built in 0.3 s and downloaded all 500 MB. Firefox and WebKit are checked later by T086. | No streamed-save fallback needed for Chromium: T092 is "not needed" for now |
+
+### R2 follow-up: transcoding design (T120)
+
+- **Native**: UTF-8 (with or without BOM) and UTF-16 LE go straight to `read_csv`.
+- **Transcode**: UTF-16 BE and every Windows-1252 file are decoded with `TextDecoderStream` in the
+  profile worker and written, as UTF-8, into an in-memory buffer registered with DuckDB
+  (`registerFileBuffer`). Nothing is stored outside memory, so reload still clears everything.
+- **Cost**: the buffer is held in memory next to the table, so these files need roughly twice the
+  memory. The size warning (T090) must say so for such files.
+- **Why not always read Windows-1252 as Latin-1**: it only works when no byte falls in 0x80-0x9F,
+  which cannot be known without scanning the whole file first.

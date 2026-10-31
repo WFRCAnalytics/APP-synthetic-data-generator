@@ -21,15 +21,20 @@ function cspMeta(): Plugin {
   };
 }
 
-export default defineConfig({
+// `vite build --mode spike` also builds spike.html (prototype pages used by tests/e2e/spikes).
+export default defineConfig(({ mode }) => ({
   base: BASE,
   plugins: [react(), cspMeta()],
   worker: { format: "es" },
-  build: { target: "es2022" },
+  build: {
+    target: "es2022",
+    outDir: mode === "spike" ? "dist-spike" : "dist",
+    rollupOptions: mode === "spike" ? { input: { main: "index.html", spike: "spike.html" } } : undefined,
+  },
   test: {
     globals: true,
     environment: "jsdom",
     setupFiles: ["./tests/setup.ts"],
     include: ["tests/unit/**/*.test.{ts,tsx}", "tests/integration/**/*.test.{ts,tsx}", "tests/component/**/*.test.{ts,tsx}"],
   },
-});
+}));

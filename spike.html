@@ -1,0 +1,16 @@
+<!doctype html>
+<!-- Prototype spikes (tasks T015-T018). Built only with `vite build --mode spike`; never part of
+     the shipped app. Served under the same Content-Security-Policy as the real page. -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!--CSP-->
+    <title>DuckDB spikes</title>
+  </head>
+  <body>
+    <h1>DuckDB spikes</h1>
+    <input id="files" type="file" multiple />
+    <pre id="out"></pre>
+    <script type="module" src="/src/spikes/main.ts"></script>
+  </body>
+</html>
