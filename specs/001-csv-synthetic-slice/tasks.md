@@ -263,7 +263,8 @@ with unsupported columns safely excluded.
 - [x] T095 [P] Review `package.json` for any dependency that can make network requests or send telemetry and record the audit in `research.md`
 - [x] T096 Run all quickstart scenarios A to G in Chrome and Edge, and A and G in Firefox and Safari, plus the manual checks for SC-007 (typical table to fake CSV in under 10 minutes) and SC-008 (find any column in a 120-column table in under 15 seconds), and record the results in `specs/001-csv-synthetic-slice/quickstart.md`
   - Results are in `quickstart.md`. Scenarios A to G pass in the browsers listed there. The two human-timing checks (SC-007, SC-008) are left for the maintainer to sign off; machine times are recorded as evidence.
-- [ ] T097 Run `/speckit-converge` to re-sync this file with the code, then mark the slice complete
+- [x] T097 Run `/speckit-converge` to re-sync this file with the code, then mark the slice complete
+  - Converge run 2026-10-31: no code gaps against FR-001 to FR-038 and SC-001 to SC-009, so nothing was appended. Open item that is not code: the maintainer sign-off for the human timing checks SC-007 and SC-008 (see `quickstart.md`).
 
 ---
 
