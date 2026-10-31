@@ -5,10 +5,11 @@
 import { classifyColumn, DEFAULT_THRESHOLD, resolveDate } from "../../lib/classify/classify";
 import { detectNa, withExtraTokens, type NaInfo } from "../../lib/classify/na";
 import { detectSentinels } from "../../lib/classify/sentinels";
-import type { BasicStats } from "../../lib/classify/stats";
-import { patternKind, toDuckdbPattern } from "../../lib/datefmt/directives";
+import { KNOWN_NA_TOKENS, type BasicStats } from "../../lib/classify/stats";
+import { isSupportedPattern, patternKind, toDuckdbPattern } from "../../lib/datefmt/directives";
 import { fitBeta } from "../../lib/sampling";
 import type {
+  ColumnOverrides,
   ColumnProfile,
   ColumnSummary,
   ColumnType,
@@ -28,14 +29,6 @@ export interface ProfileOptions {
   quoted?: readonly boolean[];
 }
 
-/** Settings the user can change on the Review screen; each triggers a re-profile of one column. */
-export interface ColumnOverrides {
-  /** Confirmed sentinel codes (replaces the proposed ones). */
-  sentinels?: string[];
-  /** A date pattern typed by the user. */
-  datePattern?: string;
-}
-
 type DateType = Extract<ColumnType, "date" | "datetime" | "time">;
 const kindOf = (pattern: string): ColumnType => patternKind(pattern) as DateType;
 
@@ -49,9 +42,9 @@ async function countValues(sql: SqlRunner, col: string, values: readonly string[
 }
 
 /** Condition selecting the values that belong to the data: not NA, not a sentinel. */
-function dataCondition(col: string, extraTokens: readonly string[], sentinelKeys: readonly string[]): string {
+function dataCondition(col: string, naTokens: readonly string[], sentinelKeys: readonly string[]): string {
   const notSentinel = sentinelKeys.length > 0 ? ` AND ${col} NOT IN (${litList(sentinelKeys)})` : "";
-  return `${isValue(col, extraTokens)}${notSentinel}`;
+  return `${isValue(col, naTokens)}${notSentinel}`;
 }
 
 /** How many values each candidate date pattern parses. */
@@ -135,34 +128,113 @@ async function numericSummary(
   };
 }
 
-/** Profiles one column. */
+/** The most labels a column the user forces to categorical may have. */
+export const MAX_FORCED_LABELS = 2000;
+
+interface Forced {
+  type: ColumnType;
+  storage?: "integer" | "string";
+  thousands?: boolean;
+  /** Stray non-numeric markers to treat as missing (numeric types only). */
+  extraNa?: { value: string; count: number }[];
+}
+
+/**
+ * Applies a type the user chose, or returns null when the column's values cannot honestly be read
+ * that way (for example a number type for a column of words). Dates are chosen by typing a pattern.
+ */
+function forceType(target: ColumnType, basic: BasicStats, sentinelKeys: readonly string[]): Forced | null {
+  const distinctValues = Math.max(0, basic.distinct - Object.keys(basic.tokenCounts).length - sentinelKeys.length);
+  switch (target) {
+    case "unsupported":
+      return { type: "unsupported" };
+
+    case "categorical":
+    case "boolean": {
+      if (distinctValues > MAX_FORCED_LABELS) return null;
+      if (target === "boolean" && distinctValues !== 2) return null;
+      const plainInteger = basic.intCount === basic.valueCount && basic.leadingZeroCount === 0 && basic.thousandsCount === 0;
+      return { type: target, storage: target === "boolean" ? "string" : plainInteger ? "integer" : "string" };
+    }
+
+    case "integer":
+    case "float": {
+      const numeric = basic.floatCount + basic.thousandsCount;
+      if (numeric === 0 || basic.leadingZeroCount > 0) return null;
+      // A few stray markers can be read as missing; many mean the column is not numeric.
+      if (basic.unparsedCount > 0 && basic.unparsedDistinct > 5) return null;
+      if (target === "integer" && !(basic.sciCount === 0 && basic.intCount + basic.thousandsCount === basic.valueCount - basic.unparsedCount)) return null;
+      return {
+        type: target,
+        thousands: basic.thousandsCount > 0 && basic.plainBigCount === 0,
+        extraNa: basic.unparsedCount > 0 ? basic.unparsedTop : undefined,
+      };
+    }
+
+    default:
+      return null; // dates need a pattern; empty and survey_id are not offered as choices
+  }
+}
+
+/** How many values a typed date pattern parses, among the values that belong to the data. */
+export async function countDatePattern(
+  sql: SqlRunner,
+  name: string,
+  pattern: string,
+  naTokens: readonly string[],
+  sentinels: readonly string[],
+): Promise<{ parsed: number; total: number }> {
+  const c = ident(name);
+  const { parsed, total } = await parseCounts(sql, c, [pattern], dataCondition(c, naTokens, sentinels));
+  return { parsed: parsed[0].parsed, total };
+}
+
+/** Profiles one column, with any settings the user changed applied. */
 export async function profileColumn(
   sql: SqlRunner,
   name: string,
   rowCount: number,
   options: ProfileOptions = { threshold: DEFAULT_THRESHOLD },
   overrides: ColumnOverrides = {},
-  precomputed?: BasicStats,
 ): Promise<ColumnProfile> {
   const c = ident(name);
-  const basic = precomputed ?? (await collectBasic(sql, name, rowCount));
+  const naList = overrides.naTokens ?? [...KNOWN_NA_TOKENS];
+  const basic = await collectBasic(sql, name, rowCount, naList);
   const na0 = detectNa(basic);
   const sentinels = overrides.sentinels ? await countValues(sql, c, overrides.sentinels) : detectSentinels(basic);
   const sentinelKeys = Object.keys(sentinels);
 
   const cls = classifyColumn(basic, na0, sentinels, options);
-  let type = cls.type;
+  let type: ColumnType = cls.type;
   let status = cls.status;
   const reasons: ReasonCode[] = [...cls.reasons];
   let na: NaInfo = cls.na;
   let extraTokens = (cls.extraNa ?? []).map((v) => v.value);
   let datePattern: string | null = null;
+  let storage = cls.storage;
+  let thousands = cls.thousands;
+  let forcedLabels = false;
 
-  // Dates: try the candidate patterns on every value and let the rules pick.
-  if (cls.type === "date" && (cls.datePatterns || overrides.datePattern)) {
-    const patterns = overrides.datePattern ? [overrides.datePattern] : (cls.datePatterns as string[]);
-    const where = dataCondition(c, [], sentinelKeys);
-    const { parsed, total } = await parseCounts(sql, c, patterns, where);
+  if (overrides.datePattern) {
+    // The user typed a pattern: it must parse every value, otherwise the column is not supported (Q2).
+    const pattern = overrides.datePattern;
+    const supported = isSupportedPattern(pattern);
+    const { parsed, total } = supported ? await parseCounts(sql, c, [pattern], dataCondition(c, naList, sentinelKeys)) : { parsed: [{ pattern, parsed: 0 }], total: 0 };
+    reasons.length = 0;
+    if (supported && total > 0 && parsed[0].parsed === total) {
+      type = kindOf(pattern);
+      datePattern = pattern;
+      status = "ok";
+    } else {
+      type = "unsupported";
+      status = "unsupported";
+      reasons.push("unsupported_type", "date_format_unrecognized");
+    }
+    if (sentinelKeys.length > 0 && type !== "unsupported") reasons.push("possible_sentinel");
+  } else if (cls.type === "date" && cls.datePatterns) {
+    // Dates: try the candidate patterns on every value and let the rules pick.
+    const where = dataCondition(c, naList, sentinelKeys);
+    const { parsed, total } = await parseCounts(sql, c, cls.datePatterns, where);
     const topData = basic.topValues.filter((v) => !(v.value in sentinels));
     const res = resolveDate(parsed, total, topData, kindOf);
     type = res.type;
@@ -175,10 +247,29 @@ export async function profileColumn(
       extraTokens = res.extraNa.map((v) => v.value);
     }
     if (sentinelKeys.length > 0) reasons.push("possible_sentinel");
-    if (reasons.length > 0 && status === "ok") status = "needs_attention";
+  } else if (overrides.type && overrides.type !== cls.type) {
+    // A type the user chose instead of the detected one, when the values allow it.
+    const forced = forceType(overrides.type, basic, sentinelKeys);
+    if (forced) {
+      type = forced.type;
+      storage = forced.storage;
+      thousands = forced.thousands;
+      forcedLabels = type === "categorical" || type === "boolean";
+      reasons.length = 0;
+      status = type === "unsupported" ? "unsupported" : "ok";
+      if (type === "unsupported") reasons.push("unsupported_type");
+      if (sentinelKeys.length > 0 && type !== "unsupported") reasons.push("possible_sentinel");
+      if (forced.extraNa) {
+        na = withExtraTokens(na0, forced.extraNa);
+        extraTokens = forced.extraNa.map((v) => v.value);
+        reasons.push("possible_na_token");
+      }
+    } else {
+      reasons.push("override_not_possible");
+    }
   }
 
-  const where = dataCondition(c, extraTokens, sentinelKeys);
+  const where = dataCondition(c, [...naList, ...extraTokens], sentinelKeys);
   let summary: ColumnSummary = { kind: "unsupported" };
   let mode: ColumnProfile["mode"];
 
@@ -189,21 +280,20 @@ export async function profileColumn(
 
     case "boolean":
     case "categorical": {
-      const rows = await sql.all(
-        `SELECT ${c} AS v, count(*) AS n FROM ${SRC} WHERE ${where} GROUP BY ${c} ORDER BY n DESC, v LIMIT ${options.threshold + 1}`,
-      );
+      const limit = forcedLabels ? MAX_FORCED_LABELS + 1 : options.threshold + 1;
+      const rows = await sql.all(`SELECT ${c} AS v, count(*) AS n FROM ${SRC} WHERE ${where} GROUP BY ${c} ORDER BY n DESC, v LIMIT ${limit}`);
       const counts: Record<string, number> = {};
       for (const r of rows) counts[String(r.v)] = toNumber(r.n);
-      summary = { kind: "categorical", storage: cls.storage ?? "string", counts };
+      summary = { kind: "categorical", storage: storage ?? "string", counts };
       break;
     }
 
     case "integer":
     case "float": {
-      const expr = cls.thousands ? `try_cast(replace(${c}, ',', '') AS DOUBLE)` : `try_cast(${c} AS DOUBLE)`;
+      const expr = thousands ? `try_cast(replace(${c}, ',', '') AS DOUBLE)` : `try_cast(${c} AS DOUBLE)`;
       const scientific = type === "float" && basic.sciCount > 0 && basic.sciCount >= basic.valueCount * 0.5;
       const num = await numericSummary(sql, expr, where, type === "float" ? c : undefined, scientific);
-      summary = { kind: "numeric", ...num, ...(cls.thousands ? { thousands: true } : {}) };
+      summary = { kind: "numeric", ...num, ...(thousands ? { thousands: true } : {}) };
       break;
     }
 
@@ -253,7 +343,7 @@ export async function profileColumn(
   return {
     name,
     outputName: name,
-    detectedType: type,
+    detectedType: cls.type,
     type,
     status,
     attentionReasons: [...new Set(reasons)],
@@ -281,12 +371,13 @@ export async function profileAll(
   options: ProfileOptions,
   onProgress?: (p: ProgressReport) => void,
   isCancelled: () => boolean = () => false,
+  overrides: Record<string, ColumnOverrides> = {},
 ): Promise<ColumnProfile[]> {
   await createSample(sql, rowCount);
   const profiles: ColumnProfile[] = [];
   for (let i = 0; i < columnNames.length; i++) {
     if (isCancelled()) break;
-    const profile = await profileColumn(sql, columnNames[i], rowCount, options);
+    const profile = await profileColumn(sql, columnNames[i], rowCount, options, overrides[columnNames[i]]);
     profile.quoted = options.quoted?.[i] ?? false;
     profiles.push(profile);
     onProgress?.({ done: i + 1, total: columnNames.length });

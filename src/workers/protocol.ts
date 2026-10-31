@@ -3,7 +3,7 @@
 // cell value.
 
 import type { WireError } from "../lib/errors";
-import type { ColumnProfile, FileSettings } from "../lib/profile/types";
+import type { ColumnOverrides, ColumnProfile, FileSettings } from "../lib/profile/types";
 import type { CheckRow } from "../lib/generate/checks";
 import type { SpecFile } from "../lib/spec/types";
 
@@ -12,8 +12,8 @@ import type { SpecFile } from "../lib/spec/types";
 export type ProfileRequest =
   | { type: "open"; file: File }
   | { type: "load"; settings: FileSettings }
-  | { type: "profile"; threshold: number }
-  | { type: "reprofile"; column: string; overrides: Record<string, unknown> }
+  | { type: "profile"; threshold: number; overrides?: Record<string, ColumnOverrides> }
+  | { type: "reprofile"; column: string; overrides: ColumnOverrides }
   | { type: "datePattern"; column: string; pattern: string }
   | { type: "cancel" };
 

@@ -277,3 +277,50 @@ are not written.
   "match shape" keeps the shape, and the optional rescale (User Story 2) restores mean and sd.
 - Header detection is a heuristic. For a file whose first row is text and whose other rows are text,
   the user confirms or corrects the "first row is a header" box on the Ingest screen.
+
+## User Story 2 build notes (2026-10-31)
+
+### Two kinds of change on Review
+
+- **Needs no data, applied at once:** leave a column out, numeric mode, decimals, rescale, the label
+  protections, renaming. They are kept apart from what the worker reports (`src/lib/profile/edits.ts`)
+  and applied on top, so they survive any later re-profile. An edit that does not fit the column's
+  current type is ignored rather than failing, and applies again if the type comes back.
+- **Needs the data, sent to the worker:** type, sentinel codes, the missing-value markers, a typed
+  date pattern. The worker profiles that one column again with the overrides. The overrides are
+  also sent with a full re-profile, so changing the categorical limit keeps them.
+
+### A chosen type is honored only when the values allow it
+
+| Chosen | Allowed when | Otherwise |
+|---|---|---|
+| Categorical | up to 2,000 distinct values | detected type kept, with a note |
+| Yes / No | exactly two distinct values | detected type kept, with a note |
+| Integer / decimal | the values are numbers (a few stray markers become missing values), no leading zeros; integer also needs whole numbers | detected type kept, with a note |
+| Not supported | always | |
+| Date | by typing a pattern that parses every value (decision Q2) | column becomes unsupported |
+
+### Rescale (FR-027)
+
+A single affine transform is not enough: clipping to `[min, max]` shifts the statistics again. The
+column is regenerated five times (free, since every value is a pure function of its row) while an
+affine map is refined. The two rows that carry the exact min and max are excluded from the fit and
+never moved, so SC-002 still holds. On a skewed column the fitted mean and sd land within about 0.2%
+of the target, against several percent without it.
+
+### Bugs found
+
+| Where | Bug | Fix |
+|---|---|---|
+| Profiling SQL | Clearing every NA token built `NOT IN (NULL)`, which is never true, so every value was dropped and the column read as empty | An empty token list means no filter |
+| Card and editor | Sentinel codes listed as "998, 999, -9" because object keys put whole numbers first | Always shown in numeric order |
+| Settings panel | The labels "In the fake file" and "Name in the fake file" overlapped, which is ambiguous for assistive technology and for tests | The rename field is "New column name" |
+| Date pattern box | Its wrapper used `data-column`, the same attribute the cards use for lookup | Renamed `data-date-pattern-for` |
+| Network counter | It was a `status` live region and would have announced every count change | Now a labelled group |
+
+### Known limits
+
+- Changing the categorical limit profiles every column again (84 s on the 525 MB file), with a
+  progress bar; one column's own changes re-profile only that column.
+- The settings of a card are built only when it is opened, so a hundred cards stay light, but the
+  list itself is not yet virtualized (User Story 6).

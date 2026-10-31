@@ -1,3 +1,7 @@
+.local-notice svg {
+  flex: none;
+}
+
 .local-notice {
   display: flex;
   align-items: center;

@@ -1,0 +1,17 @@
+// A persistent notice on Review (FR-038): what the spec file will contain. The privacy model allows
+// real category labels, exact min and max, and sentinel codes in it, and the user should know that
+// before saving or sharing one.
+
+import { FileText } from "lucide-react";
+
+export function SpecContentsNotice() {
+  return (
+    <aside className="local-notice spec-notice" role="note" aria-label="What the spec contains">
+      <FileText size={18} strokeWidth={1.75} aria-hidden="true" />
+      <span>
+        The spec you can save will contain real category labels, exact minimum and maximum values, and the sentinel codes you confirm here, and
+        nothing else taken from your data: no rows, no IDs, no free text, no personal details. Use neutral codes or merging below if a label itself is sensitive.
+      </span>
+    </aside>
+  );
+}

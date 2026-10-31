@@ -7,7 +7,7 @@
 import { AppError, sanitizeError, toWireError } from "../lib/errors";
 import { NET_CHANNEL } from "../lib/netChannel";
 import { installNetPatch } from "./netpatch";
-import type { ColumnProfile, FileSettings } from "../lib/profile/types";
+import type { ColumnOverrides, ColumnProfile, FileSettings } from "../lib/profile/types";
 import { createEngine, duckdb, type Engine } from "../lib/duckdb/engine";
 import type { ProfileRequest, ProfileResponse } from "./protocol";
 import { loadCsv } from "./profile/load";
@@ -19,9 +19,11 @@ import {
   quotingFor,
   TAIL_BYTES,
 } from "./profile/open";
-import { profileAll, profileColumn } from "./profile/profiler";
+import { countDatePattern, profileAll, profileColumn } from "./profile/profiler";
 import { runnerFor } from "./profile/runner";
 import type { SqlRunner } from "./profile/sql";
+import { KNOWN_NA_TOKENS } from "../lib/classify/stats";
+import { isSupportedPattern } from "../lib/datefmt/directives";
 import { readModeFor, transcodeToUtf8 } from "./profile/transcode";
 
 installNetPatch(NET_CHANNEL, self.location.origin);
@@ -40,6 +42,10 @@ let quoted: boolean[] = [];
 let rowCount = 0;
 let threshold = 50;
 let cancelled = false;
+// The latest profile of each column, so a typed date pattern is counted against that column's own
+// NA tokens and sentinels.
+const latest = new Map<string, ColumnProfile>();
+let overridesInUse: Record<string, ColumnOverrides> = {};
 
 async function ensureEngine(): Promise<SqlRunner> {
   if (!engine) {
@@ -108,10 +114,11 @@ async function load(confirmed: FileSettings): Promise<void> {
   post({ type: "loaded", rowCount, columnNames, settings });
 }
 
-async function profile(limit: number): Promise<void> {
+async function profile(limit: number, overrides: Record<string, ColumnOverrides> = {}): Promise<void> {
   const runner = await ensureEngine();
   threshold = limit;
   cancelled = false;
+  overridesInUse = overrides;
   const profiles: ColumnProfile[] = await profileAll(
     runner,
     columnNames,
@@ -119,18 +126,38 @@ async function profile(limit: number): Promise<void> {
     { threshold, quoted },
     (p) => post({ type: "progress", job: "profile", done: p.done, total: p.total }),
     () => cancelled,
+    overrides,
   );
   if (cancelled) throw new AppError("cancelled");
-  for (const p of profiles) post({ type: "columnProfile", profile: p });
+  latest.clear();
+  for (const p of profiles) {
+    latest.set(p.name, p);
+    post({ type: "columnProfile", profile: p });
+  }
   post({ type: "profiled", count: profiles.length });
 }
 
-async function reprofile(column: string, overrides: Record<string, unknown>): Promise<void> {
+async function reprofile(column: string, overrides: ColumnOverrides): Promise<void> {
   const runner = await ensureEngine();
   const index = columnNames.indexOf(column);
+  overridesInUse = { ...overridesInUse, [column]: overrides };
   const p = await profileColumn(runner, column, rowCount, { threshold, quoted }, overrides);
   p.quoted = quoted[index] ?? false;
+  latest.set(column, p);
   post({ type: "columnProfile", profile: p });
+}
+
+/** Counts how many values a typed date pattern parses, so the user sees it before applying it. */
+async function datePattern(column: string, pattern: string): Promise<void> {
+  if (!isSupportedPattern(pattern)) {
+    post({ type: "datePatternResult", column, parsed: 0, total: 0 });
+    return;
+  }
+  const runner = await ensureEngine();
+  const current = latest.get(column);
+  const naTokens = overridesInUse[column]?.naTokens ?? [...KNOWN_NA_TOKENS];
+  const { parsed, total } = await countDatePattern(runner, column, pattern, naTokens, Object.keys(current?.sentinels ?? {}));
+  post({ type: "datePatternResult", column, parsed, total });
 }
 
 self.onmessage = async (event: MessageEvent<ProfileRequest>) => {
@@ -144,13 +171,13 @@ self.onmessage = async (event: MessageEvent<ProfileRequest>) => {
         await load(msg.settings);
         break;
       case "profile":
-        await profile(msg.threshold);
+        await profile(msg.threshold, msg.overrides);
         break;
       case "reprofile":
         await reprofile(msg.column, msg.overrides);
         break;
       case "datePattern":
-        // Counting how many values a typed pattern parses arrives with the date pattern box (US2).
+        await datePattern(msg.column, msg.pattern);
         break;
       case "cancel":
         cancelled = true;

@@ -28,11 +28,15 @@ name and format) and run the code locally.
 ## Status
 
 The core flow works end to end for CSV files: choose a file, confirm the detected settings, review
-the profiled columns, generate, check the summaries, and download the fake file. Review is
-read-only for now; the controls to override each decision, ID patterns, and saving and loading a
-spec are next. A counter in the header shows every network request since the page loaded, split
-into local and outside (always 0), and the page's security policy makes the browser refuse any
-request to another site. Everything still to do is tracked in
+and change how each column is understood, generate, check the summaries, and download the fake file.
+On Review you can search and filter the columns, change a column's type, confirm sentinel codes and
+missing-value markers, type a date pattern, choose how numbers are generated, leave columns out, and
+turn on the optional protections (merge rare categories, neutral labels, rename). A counter in the
+header shows every network request since the page loaded, split into local and outside (always 0),
+and the page's security policy makes the browser refuse any request to another site.
+
+Next: survey ID patterns, saving and loading a spec, and a virtualized column list for very wide
+tables. Everything still to do is tracked in
 [`specs/001-csv-synthetic-slice/tasks.md`](specs/001-csv-synthetic-slice/tasks.md).
 
 On a 525 MB, 117-column file it profiles in about 80 seconds and generates in about 50.

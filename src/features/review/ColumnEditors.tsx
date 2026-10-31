@@ -1,0 +1,117 @@
+// The settings of one column (FR-005 to FR-013), opened from its card. Everything here is a change
+// the user chooses; nothing is applied silently. Settings that need the data (type, sentinels,
+// missing-value markers, a date pattern) are sent to the profile worker; the rest are applied at once.
+
+import { useId, useState } from "react";
+import type { DatePatternCheck } from "../../app/session";
+import type { LocalEdits } from "../../lib/profile/edits";
+import type { ColumnOverrides, ColumnProfile, ColumnType } from "../../lib/profile/types";
+import { DatePatternBox } from "./DatePatternBox";
+import { ExcludeControl } from "./ExcludeControl";
+import { NaTokenEditor } from "./NaTokenEditor";
+import { NumericControls } from "./NumericControls";
+import { ProtectionsPanel } from "./ProtectionsPanel";
+import { SentinelEditor } from "./SentinelEditor";
+
+export interface ColumnEditorsProps {
+  profile: ColumnProfile;
+  /** Output names of the other columns (a rename must not collide). */
+  otherNames: readonly string[];
+  /** The worker is profiling this column again. */
+  busy: boolean;
+  dateCheck: DatePatternCheck | undefined;
+  onEdit: (patch: LocalEdits) => void;
+  onOverride: (patch: Partial<ColumnOverrides>) => void;
+  onCheckDate: (pattern: string) => void;
+}
+
+/** The types a user can choose. Dates are chosen by typing their pattern; IDs arrive with ID patterns. */
+const CHOICES: [string, string][] = [
+  ["categorical", "Categorical (coded values)"],
+  ["integer", "Integer"],
+  ["float", "Decimal number"],
+  ["boolean", "Yes / No"],
+  ["date", "Date or time (type its pattern)"],
+  ["unsupported", "Not supported: leave it out"],
+];
+
+const isDateLike = (t: ColumnType) => t === "date" || t === "datetime" || t === "time";
+
+export function ColumnEditors({ profile, otherNames, busy, dateCheck, onEdit, onOverride, onCheckDate }: ColumnEditorsProps) {
+  const typeId = useId();
+  const [chooseDate, setChooseDate] = useState(false);
+  const kind = profile.summary.kind;
+
+  const selected = isDateLike(profile.type) || chooseDate ? "date" : profile.type;
+  const choices = CHOICES.some(([v]) => v === selected) ? CHOICES : [[selected, selected] as [string, string], ...CHOICES];
+  const showDate = isDateLike(profile.type) || chooseDate || profile.attentionReasons.some((r) => r.startsWith("date_format"));
+
+  const hasValues = kind !== "empty" && kind !== "unsupported";
+  const supportsSentinels = kind === "numeric" || kind === "categorical" || kind === "datetime";
+
+  const currentPattern = profile.summary.kind === "datetime" ? (profile.summary.format ?? "") : "";
+
+  return (
+    <div className="column-editors" aria-busy={busy}>
+      <div className="field">
+        <label htmlFor={typeId}>Type</label>
+        <select
+          id={typeId}
+          value={selected}
+          disabled={busy}
+          onChange={(e) => {
+            const value = e.target.value;
+            if (value === "date") {
+              setChooseDate(true);
+              return;
+            }
+            setChooseDate(false);
+            onOverride({ type: value as ColumnType, datePattern: undefined });
+          }}
+        >
+          {choices.map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+        {profile.detectedType !== profile.type && <span className="field-hint">Detected as {profile.detectedType.replace("_", " ")}.</span>}
+        {busy && <span className="field-hint">Profiling this column again&hellip;</span>}
+      </div>
+
+      {showDate && (
+        <DatePatternBox
+          column={profile.name}
+          current={currentPattern}
+          check={dateCheck}
+          busy={busy}
+          onCheck={onCheckDate}
+          onApply={(datePattern) => {
+            setChooseDate(false);
+            onOverride({ datePattern, type: undefined });
+          }}
+        />
+      )}
+
+      <ExcludeControl profile={profile} onChange={(exclude) => onEdit({ exclude })} />
+
+      {supportsSentinels && <SentinelEditor profile={profile} busy={busy} onApply={(sentinels) => onOverride({ sentinels })} />}
+      {hasValues && <NaTokenEditor profile={profile} busy={busy} onApply={(naTokens) => onOverride({ naTokens })} />}
+
+      <NumericControls
+        profile={profile}
+        onMode={(mode) => onEdit({ mode })}
+        onDecimals={(decimals) => onEdit({ decimals })}
+        onRescale={(rescale) => onEdit({ rescale })}
+      />
+
+      <ProtectionsPanel
+        profile={profile}
+        otherNames={otherNames}
+        onMergeUnderK={(mergeUnderK) => onEdit({ mergeUnderK })}
+        onLabelCodes={(labelCodes) => onEdit({ labelCodes })}
+        onRename={(outputName) => onEdit({ outputName })}
+      />
+    </div>
+  );
+}

@@ -9,9 +9,11 @@ export const SAMPLE_ROWS = 50_000;
 const TOP_VALUES = 60;
 const TOP_SHAPES = 30;
 
-/** Condition for "a real value": not empty and not a known NA token. */
-export function isValue(col: string, extraTokens: readonly string[] = []): string {
-  return `${col} IS NOT NULL AND ${col} NOT IN (${litList([...KNOWN_NA_TOKENS, ...extraTokens])})`;
+/** Condition for "a real value": not empty and not one of the NA tokens. */
+export function isValue(col: string, naTokens: readonly string[] = KNOWN_NA_TOKENS): string {
+  // With no tokens there is nothing to exclude; "NOT IN (NULL)" would be NULL and drop every row.
+  if (naTokens.length === 0) return `${col} IS NOT NULL`;
+  return `${col} IS NOT NULL AND ${col} NOT IN (${litList(naTokens)})`;
 }
 
 // Regular expressions as SQL strings. String.raw keeps the backslashes DuckDB's regex engine needs.
@@ -46,10 +48,18 @@ export async function createSample(sql: SqlRunner, rowCount: number): Promise<vo
   }
 }
 
-/** Collects the classifier's inputs for one column. */
-export async function collectBasic(sql: SqlRunner, name: string, rowCount: number): Promise<BasicStats> {
+/**
+ * Collects the classifier's inputs for one column. `naTokens` are the strings that mean "missing"
+ * besides the empty field; the defaults unless the user changed them.
+ */
+export async function collectBasic(
+  sql: SqlRunner,
+  name: string,
+  rowCount: number,
+  naTokens: readonly string[] = KNOWN_NA_TOKENS,
+): Promise<BasicStats> {
   const c = ident(name);
-  const value = isValue(c);
+  const value = isValue(c, naTokens);
 
   const [agg] = await sql.all(`
     SELECT
@@ -78,7 +88,7 @@ export async function collectBasic(sql: SqlRunner, name: string, rowCount: numbe
   );
 
   const tokenRows = await sql.all(
-    `SELECT ${c} AS v, count(*) AS n FROM ${SRC} WHERE ${c} IN (${litList(KNOWN_NA_TOKENS)}) GROUP BY ${c}`,
+    `SELECT ${c} AS v, count(*) AS n FROM ${SRC} WHERE ${c} IN (${litList(naTokens)}) GROUP BY ${c}`,
   );
   const tokenCounts: Record<string, number> = {};
   for (const r of tokenRows) tokenCounts[String(r.v)] = toNumber(r.n);

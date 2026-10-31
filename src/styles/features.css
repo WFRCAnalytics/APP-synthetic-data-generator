@@ -122,3 +122,116 @@
   max-height: 24rem;
   overflow: auto;
 }
+
+/* Review: filters, banner, settings */
+.review-toolbar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: var(--space-3) var(--space-5);
+  align-items: start;
+  margin: var(--space-3) 0;
+}
+
+.column-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-4);
+  align-items: flex-end;
+}
+
+.column-filters .field {
+  margin-bottom: 0;
+}
+
+.column-filters input[type="search"] {
+  min-width: 14rem;
+}
+
+.column-filters-result {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  font-size: var(--text-sm);
+  color: var(--color-wfrc-gray);
+  width: 100%;
+}
+
+.attention-banner {
+  align-items: flex-start;
+}
+
+.attention-banner p {
+  margin: 0 0 var(--space-1);
+}
+
+.attention-banner-title {
+  font-weight: var(--font-weight-semibold);
+}
+
+.attention-banner-names {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  overflow-wrap: anywhere;
+}
+
+.attention-banner-reasons {
+  margin: 0 0 var(--space-2);
+  padding-left: var(--space-4);
+  font-size: var(--text-xs);
+}
+
+.spec-notice {
+  margin-bottom: var(--space-2);
+}
+
+.column-card-renamed {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-wfrc-gray);
+}
+
+.column-card-settings summary {
+  cursor: pointer;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--text-sm);
+}
+
+.column-editors {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+}
+
+.column-editors .field {
+  margin-bottom: 0;
+}
+
+.editor-group {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  margin: 0;
+}
+
+.editor-group legend {
+  padding: 0 var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.text-apply-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.text-apply-row input {
+  flex: 1 1 8rem;
+  min-width: 0;
+}
+
+.field-error {
+  color: var(--color-danger);
+}

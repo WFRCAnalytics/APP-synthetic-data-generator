@@ -36,3 +36,14 @@ export function effectiveCounts(counts: Record<string, number>, settings: Protec
 
   return Object.fromEntries(entries);
 }
+
+/**
+ * Checks a new output name for a column (the rename protection). Returns a plain-language problem,
+ * or null when the name is fine. `taken` are the other columns' output names.
+ */
+export function validateOutputName(candidate: string, taken: readonly string[]): string | null {
+  if (candidate.trim() === "") return "A column needs a name.";
+  if (/[\r\n]/.test(candidate)) return "A column name cannot contain a line break.";
+  if (taken.includes(candidate)) return "Another column already has this name.";
+  return null;
+}

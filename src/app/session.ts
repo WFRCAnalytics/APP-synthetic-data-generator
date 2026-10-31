@@ -3,7 +3,8 @@
 // fake data. Nothing is written to browser storage, so a reload clears it all (Principle I).
 
 import type { CheckRow } from "../lib/generate/checks";
-import type { ColumnProfile, FileSettings } from "../lib/profile/types";
+import { applyAllEdits, type LocalEdits } from "../lib/profile/edits";
+import type { ColumnOverrides, ColumnProfile, FileSettings } from "../lib/profile/types";
 import { buildSpec } from "../lib/spec/build";
 import type { SpecFile } from "../lib/spec/types";
 import type { GenerateRequest, GenerateResponse, ProfileJob, ProfileRequest, ProfileResponse } from "../workers/protocol";
@@ -28,6 +29,14 @@ export interface GenState {
   replaced: number;
 }
 
+/** What a typed date pattern parsed, shown beside the pattern box before it is applied. */
+export interface DatePatternCheck {
+  pattern: string;
+  /** Null while the worker is still counting. */
+  parsed: number | null;
+  total: number | null;
+}
+
 export interface SessionState {
   phase: Phase;
   error: string | null;
@@ -41,6 +50,11 @@ export interface SessionState {
   progress: Progress | null;
   profiles: ColumnProfile[];
   threshold: number;
+  /** Columns being profiled again after a change. */
+  busy: string[];
+  /** A problem with the last change on Review (the screen stays usable). */
+  reviewError: string | null;
+  datePatternChecks: Record<string, DatePatternCheck>;
   seedText: string;
   keepOriginalName: boolean;
   gen: GenState;
@@ -60,6 +74,9 @@ export const initialSession: SessionState = {
   progress: null,
   profiles: [],
   threshold: 50,
+  busy: [],
+  reviewError: null,
+  datePatternChecks: {},
   seedText: "42",
   keepOriginalName: false,
   gen: emptyGen,
@@ -91,6 +108,12 @@ export class Session {
   private generateWorker: Worker | null = null;
   private parts: Uint8Array[] = [];
   private pending = new Map<string, ColumnProfile>();
+  /** What the worker last reported for each column, before the user's local edits. */
+  private base: ColumnProfile[] = [];
+  /** Settings that need no data (leave out, mode, decimals, protections, rename). */
+  private edits: Record<string, LocalEdits> = {};
+  /** Settings the worker applies when it profiles a column (sentinels, NA tokens, type, date pattern). */
+  private engine: Record<string, ColumnOverrides> = {};
   onProfiled: (columns: { name: string; type: string }[]) => void = () => {};
 
   subscribe(listener: Listener): () => void {
@@ -126,7 +149,10 @@ export class Session {
   confirmAndProfile(): void {
     if (!this.state.settings) return;
     this.pending.clear();
-    this.set({ phase: "loading", error: null, progress: null, profiles: [] });
+    this.base = [];
+    this.edits = {};
+    this.engine = {};
+    this.set({ phase: "loading", error: null, progress: null, profiles: [], busy: [], reviewError: null, datePatternChecks: {} });
     this.send({ type: "load", settings: this.state.settings });
   }
 
@@ -160,26 +186,68 @@ export class Session {
         break;
       case "loaded":
         this.set({ phase: "profiling", rowCount: msg.rowCount, columnNames: msg.columnNames, settings: msg.settings, progress: null });
-        this.send({ type: "profile", threshold: this.state.threshold });
+        this.send({ type: "profile", threshold: this.state.threshold, overrides: this.engine });
         break;
       case "progress":
         this.set({ progress: { job: msg.job, done: msg.done, total: msg.total } });
         break;
       case "columnProfile":
-        this.pending.set(msg.profile.name, msg.profile);
+        if (this.state.phase === "profiled") this.replaceBase(msg.profile); // one column profiled again
+        else this.pending.set(msg.profile.name, msg.profile);
         break;
       case "profiled": {
-        const profiles = this.state.columnNames.map((n) => this.pending.get(n)).filter((p): p is ColumnProfile => p !== undefined);
-        this.set({ phase: "profiled", profiles, progress: null });
-        this.onProfiled(profiles.map((p) => ({ name: p.name, type: p.type })));
+        this.base = this.state.columnNames.map((n) => this.pending.get(n)).filter((p): p is ColumnProfile => p !== undefined);
+        this.set({ phase: "profiled", profiles: applyAllEdits(this.base, this.edits), progress: null, busy: [] });
+        this.onProfiled(this.base.map((p) => ({ name: p.name, type: p.type })));
         break;
       }
       case "error":
-        this.set({ phase: "error", error: msg.error.message, progress: null });
+        // Before the review exists a problem blocks everything; after it, the screen stays usable.
+        if (this.state.phase === "profiled" || this.base.length > 0) this.set({ reviewError: msg.error.message, busy: [], progress: null, phase: "profiled" });
+        else this.set({ phase: "error", error: msg.error.message, progress: null });
         break;
-      case "datePatternResult":
+      case "datePatternResult": {
+        const check = this.state.datePatternChecks[msg.column];
+        if (check) this.set({ datePatternChecks: { ...this.state.datePatternChecks, [msg.column]: { ...check, parsed: msg.parsed, total: msg.total } } });
         break;
+      }
     }
+  }
+
+  // ---- Review: change a column --------------------------------------------------------------
+
+  private replaceBase(profile: ColumnProfile): void {
+    this.base = this.base.map((p) => (p.name === profile.name ? profile : p));
+    this.set({ profiles: applyAllEdits(this.base, this.edits), busy: this.state.busy.filter((n) => n !== profile.name), reviewError: null });
+  }
+
+  /** A change that needs no data: applied at once, and kept across any later re-profile. */
+  editColumn(name: string, patch: LocalEdits): void {
+    this.edits = { ...this.edits, [name]: { ...this.edits[name], ...patch } };
+    this.set({ profiles: applyAllEdits(this.base, this.edits) });
+  }
+
+  /** A change the worker must apply by profiling the column again. A key set to undefined is removed. */
+  overrideColumn(name: string, patch: Partial<ColumnOverrides>): void {
+    const next: ColumnOverrides = { ...this.engine[name], ...patch };
+    for (const key of Object.keys(patch) as (keyof ColumnOverrides)[]) if (patch[key] === undefined) delete next[key];
+    this.engine = { ...this.engine, [name]: next };
+    this.set({ busy: [...new Set([...this.state.busy, name])], reviewError: null });
+    this.send({ type: "reprofile", column: name, overrides: next });
+  }
+
+  /** Changes the distinct-value limit for categorical columns and profiles every column again. */
+  setThreshold(threshold: number): void {
+    if (!Number.isInteger(threshold) || threshold < 2 || threshold > 2000) return;
+    this.pending.clear();
+    this.set({ threshold, phase: "profiling", progress: null, reviewError: null });
+    this.send({ type: "profile", threshold, overrides: this.engine });
+  }
+
+  /** Asks the worker how many values a typed date pattern parses (FR-005a). */
+  checkDatePattern(name: string, pattern: string): void {
+    this.set({ datePatternChecks: { ...this.state.datePatternChecks, [name]: { pattern, parsed: null, total: null } } });
+    this.send({ type: "datePattern", column: name, pattern });
   }
 
   // ---- Generate -----------------------------------------------------------------------------
@@ -282,6 +350,9 @@ export class Session {
     this.generateWorker = null;
     this.parts = [];
     this.pending.clear();
+    this.base = [];
+    this.edits = {};
+    this.engine = {};
     this.state = initialSession;
     this.listeners.forEach((l) => l(this.state));
   }

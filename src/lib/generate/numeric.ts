@@ -3,6 +3,7 @@
 // the same whatever the chunk size. Two reserved ranks carry the exact min and max.
 
 import { drawUniform, rowRng } from "../rng/counter";
+import type { Placer } from "./placement";
 import { betaValue, fitBeta, interpolateQuantile, uniformValue, type BetaFit } from "../sampling";
 
 export interface NumericPlan {
@@ -61,4 +62,57 @@ export function formatNumber(x: number, format: NumberFormat): string {
   let text = format.integer ? String(Math.round(x)) : x.toFixed(format.decimals);
   if (/^-0(\.0+)?$/.test(text)) text = text.slice(1); // never write "-0" or "-0.00"
   return format.thousands && format.integer ? withThousands(text) : text;
+}
+
+/**
+ * Restores the exact mean and sd after rounding and clipping (FR-027, research.md R6). The column
+ * is regenerated a few times (free, because every value is a pure function of its row) while an
+ * affine map y = clamp(a + b * x) is refined until the measured mean and sd hit the targets. The two
+ * rows reserved for the exact min and max are left out of the fit and never moved, so SC-002 holds.
+ */
+export function withRescale(
+  source: (row: number, valueIndex: number) => number,
+  placer: Placer,
+  nRows: number,
+  target: { mean: number; sd: number; min: number; max: number },
+  passes = 5,
+): (row: number, valueIndex: number) => number {
+  let a = 0;
+  let b = 1;
+  let fitted = false;
+
+  const measure = () => {
+    let n = 0;
+    let mean = 0;
+    let m2 = 0;
+    for (let row = 0; row < nRows; row++) {
+      const p = placer(row);
+      if (p.kind !== "value" || p.index < 2) continue; // NA, sentinels and the two pinned values
+      const y = Math.min(target.max, Math.max(target.min, a + b * source(row, p.index)));
+      n++;
+      const d = y - mean;
+      mean += d / n;
+      m2 += d * (y - mean);
+    }
+    return { mean, sd: n > 0 ? Math.sqrt(m2 / n) : 0 };
+  };
+
+  const fit = () => {
+    fitted = true;
+    if (!(target.sd > 0)) return;
+    for (let i = 0; i < passes; i++) {
+      const got = measure();
+      if (!(got.sd > 0)) return;
+      b *= target.sd / got.sd;
+      // Shift so the mean lands on target, given the new spread.
+      const after = measure();
+      a += target.mean - after.mean;
+    }
+  };
+
+  return (row, valueIndex) => {
+    if (valueIndex < 2) return source(row, valueIndex); // exact min and max stay exact
+    if (!fitted) fit();
+    return Math.min(target.max, Math.max(target.min, a + b * source(row, valueIndex)));
+  };
 }

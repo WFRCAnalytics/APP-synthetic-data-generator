@@ -43,6 +43,7 @@ function numericFields(p: ColumnProfile): NumericFields | null {
     sd: s.sd,
     decimals: s.decimals,
     quantiles: s.quantiles,
+    ...(p.rescale ? { rescale: true } : {}),
   };
 }
 
@@ -80,7 +81,14 @@ export function columnSpecOf(p: ColumnProfile): ColumnSpec {
     case "empty":
       return { ...detail, type: "empty" };
     case "categorical":
-      return { ...detail, type: p.type === "boolean" ? "boolean" : "categorical", storage: s.storage, counts: s.counts };
+      return {
+        ...detail,
+        type: p.type === "boolean" ? "boolean" : "categorical",
+        storage: s.storage,
+        counts: s.counts,
+        ...(p.mergeUnderK ? { merge_under_k: p.mergeUnderK } : {}),
+        ...(p.labelCodes ? { label_codes: true } : {}),
+      };
     case "numeric":
       return { ...detail, type: p.type as "integer" | "float", ...(numericFields(p) as NumericFields), ...(s.thousands ? { thousands: true } : {}), ...(s.scientific ? { scientific: true } : {}) };
     case "datetime":

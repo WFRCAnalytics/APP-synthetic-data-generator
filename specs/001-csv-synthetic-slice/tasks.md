@@ -133,22 +133,22 @@ with unsupported columns safely excluded.
 
 ### Tests for User Story 2
 
-- [ ] T047 [P] [US2] Component tests for type override, sentinel editor, NA token editor, numeric mode and decimals, exclude options, and protections off by default in `tests/component/review-overrides.test.tsx`
-- [ ] T048 [P] [US2] Component tests for search, the "needs attention" filter, the type filter and the banner in `tests/component/review-filters.test.tsx`
-- [ ] T049 [P] [US2] Unit tests for rare-category merging, label codes and column renaming in `tests/unit/protections.test.ts`
-- [ ] T050 [P] [US2] Unit and integration tests for the date pattern box (live parsed count, fall back to unsupported on failure) in `tests/unit/date-pattern.test.ts`
+- [X] T047 [P] [US2] Component tests for type override, sentinel editor, NA token editor, numeric mode and decimals, exclude options, and protections off by default in `tests/component/review-overrides.test.tsx`
+- [X] T048 [P] [US2] Component tests for search, the "needs attention" filter, the type filter and the banner in `tests/component/review-filters.test.tsx`
+- [X] T049 [P] [US2] Unit tests for rare-category merging, label codes and column renaming in `tests/unit/protections.test.ts`
+- [X] T050 [P] [US2] Unit and integration tests for the date pattern box (live parsed count, fall back to unsupported on failure) in `tests/unit/date-pattern.test.ts`
 
 ### Implementation for User Story 2
 
-- [ ] T051 [US2] Add type override and categorical threshold controls to `ColumnCard.tsx` and `src/features/review/ColumnEditors.tsx`, calling `reprofile` on the profile worker
-- [ ] T052 [P] [US2] Build the sentinel and NA token editors in `src/features/review/SentinelEditor.tsx` and `NaTokenEditor.tsx` (confirmed sentinels leave min, max, mean and sd)
-- [ ] T053 [P] [US2] Build numeric controls (uniform, match mean and sd, match shape, decimals or integer, optional rescale) in `src/features/review/NumericControls.tsx`, and implement the two-pass rescale in `src/lib/sampling/rescale.ts`, leaving the two reserved min and max rows out of the fit and re-pinning them to the exact values afterward, with a unit test in `tests/unit/rescale.test.ts` that exact min and max survive rescale and rounding (FR-024, SC-002)
-- [ ] T054 [P] [US2] Implement exclusion (drop by default, keep as all-NA) in `src/features/review/ExcludeControl.tsx`
-- [ ] T055 [P] [US2] Implement protections (merge under k into "Other", neutral label codes, rename columns), all off by default, in `src/lib/protections.ts` and `src/features/review/ProtectionsPanel.tsx`
-- [ ] T056 [US2] Implement the date pattern box in `src/features/review/DatePatternBox.tsx` with the `datePattern` worker message and `datePatternResult` reply
-- [ ] T057 [US2] Build the column list search, "needs attention" and type filters, and the uncertain-columns banner in `src/features/review/ColumnFilters.tsx` and `AttentionBanner.tsx`
-- [ ] T058 [US2] Handle `beta_fit_failed` (fall back to uniform and flag) in `src/lib/sampling/beta.ts` and show it on the card
-- [ ] T119 [US2] Add the persistent Review notice that the saved spec will contain real category labels, exact min and max and sentinel codes, and nothing else derived from the data (FR-038), in `src/features/review/SpecContentsNotice.tsx`, with a component test in `tests/component/spec-contents-notice.test.tsx`
+- [X] T051 [US2] Add type override and categorical threshold controls to `ColumnCard.tsx` and `src/features/review/ColumnEditors.tsx`, calling `reprofile` on the profile worker
+- [X] T052 [P] [US2] Build the sentinel and NA token editors in `src/features/review/SentinelEditor.tsx` and `NaTokenEditor.tsx` (confirmed sentinels leave min, max, mean and sd)
+- [X] T053 [P] [US2] Build numeric controls (uniform, match mean and sd, match shape, decimals or integer, optional rescale) in `src/features/review/NumericControls.tsx`, and implement the two-pass rescale in `src/lib/sampling/rescale.ts`, leaving the two reserved min and max rows out of the fit and re-pinning them to the exact values afterward, with a unit test in `tests/unit/rescale.test.ts` that exact min and max survive rescale and rounding (FR-024, SC-002)
+- [X] T054 [P] [US2] Implement exclusion (drop by default, keep as all-NA) in `src/features/review/ExcludeControl.tsx`
+- [X] T055 [P] [US2] Implement protections (merge under k into "Other", neutral label codes, rename columns), all off by default, in `src/lib/protections.ts` and `src/features/review/ProtectionsPanel.tsx`
+- [X] T056 [US2] Implement the date pattern box in `src/features/review/DatePatternBox.tsx` with the `datePattern` worker message and `datePatternResult` reply
+- [X] T057 [US2] Build the column list search, "needs attention" and type filters, and the uncertain-columns banner in `src/features/review/ColumnFilters.tsx` and `AttentionBanner.tsx`
+- [X] T058 [US2] Handle `beta_fit_failed` (fall back to uniform and flag) in `src/lib/sampling/beta.ts` and show it on the card
+- [X] T119 [US2] Add the persistent Review notice that the saved spec will contain real category labels, exact min and max and sentinel codes, and nothing else derived from the data (FR-038), in `src/features/review/SpecContentsNotice.tsx`, with a component test in `tests/component/spec-contents-notice.test.tsx`
 
 **Checkpoint**: Every automatic decision can be reviewed and changed.
 

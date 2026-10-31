@@ -33,6 +33,7 @@ export type ReasonCode =
   | "id_mixed_masks"
   | "possible_na_token"
   | "id_not_yet_supported"
+  | "override_not_possible"
   | "beta_fit_failed"
   | "unsupported_type";
 
@@ -70,6 +71,21 @@ export type ColumnSummary =
   | { kind: "empty" }
   | { kind: "unsupported" };
 
+/**
+ * Settings the user can change on the Review screen that need the data to take effect, so the
+ * profile worker recomputes the column with them (FR-005 to FR-008).
+ */
+export interface ColumnOverrides {
+  /** Confirmed sentinel codes, replacing the proposed ones. */
+  sentinels?: string[];
+  /** The tokens that mean "missing" for this column (the empty field always does), replacing the defaults. */
+  naTokens?: string[];
+  /** A date pattern typed by the user. */
+  datePattern?: string;
+  /** A type chosen by the user instead of the detected one. */
+  type?: ColumnType;
+}
+
 export interface ColumnProfile {
   name: string;
   outputName: string;
@@ -86,5 +102,11 @@ export interface ColumnProfile {
   /** Whether the source wrote this column's non-empty fields in quotes. */
   quoted: boolean;
   mode?: NumericMode;
+  /** Restore the exact mean and sd after rounding (optional, FR-027). */
+  rescale?: boolean;
+  /** Merge categories with fewer than this many rows into "Other" (off when null or absent). */
+  mergeUnderK?: number | null;
+  /** Replace category labels with neutral codes. */
+  labelCodes?: boolean;
   summary: ColumnSummary;
 }

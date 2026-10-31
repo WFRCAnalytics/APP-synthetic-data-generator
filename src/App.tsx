@@ -53,7 +53,16 @@ export function App() {
         )}
 
         {state.step === "review" && (
-          <ReviewScreen profiles={data.profiles} rowCount={data.rowCount} fileName={data.fileName} onContinue={() => dispatch({ type: "goTo", step: "generate" })} />
+          <ReviewScreen
+            session={data}
+            actions={{
+              editColumn: (name, patch) => session.editColumn(name, patch),
+              overrideColumn: (name, patch) => session.overrideColumn(name, patch),
+              checkDatePattern: (name, pattern) => session.checkDatePattern(name, pattern),
+              setThreshold: (n) => session.setThreshold(n),
+              onContinue: () => dispatch({ type: "goTo", step: "generate" }),
+            }}
+          />
         )}
 
         {state.step === "generate" && (

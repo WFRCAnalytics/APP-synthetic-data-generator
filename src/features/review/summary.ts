@@ -30,13 +30,15 @@ const REASON_TEXT: Record<ReasonCode, string> = {
   id_mixed_masks: "The IDs follow more than one pattern.",
   beta_fit_failed: "The mean and spread cannot be matched on this range, so values are spread evenly instead.",
   possible_na_token: "A few non-numeric markers were treated as missing values.",
+  override_not_possible: "The type you chose does not fit this column's values, so the detected type was kept.",
   id_not_yet_supported: "Survey ID patterns are not available yet, so this column is left out of the fake file.",
   unsupported_type: "This kind of column is not supported in this version, so it is left out of the fake file.",
 };
 
 export const reasonText = (code: ReasonCode): string => REASON_TEXT[code] ?? code;
 
-const fmt = (n: number): string => (Number.isInteger(n) ? n.toLocaleString("en-US") : String(Math.round(n * 1e6) / 1e6));
+// Whole numbers with separators; others to six significant digits, so a mean reads 299.24, not 299.240235.
+const fmt = (n: number): string => (Number.isInteger(n) ? n.toLocaleString("en-US") : String(Number(n.toPrecision(6))));
 
 /** One-line facts about a column, in reading order. */
 export function summaryLines(p: ColumnProfile): string[] {
@@ -75,7 +77,7 @@ export function summaryLines(p: ColumnProfile): string[] {
   }
 
   if (p.naCount > 0) lines.push(`Missing: ${p.naCount.toLocaleString("en-US")}`);
-  const sentinels = Object.entries(p.sentinels);
+  const sentinels = Object.entries(p.sentinels).sort((a, b) => Number(a[0]) - Number(b[0]));
   if (sentinels.length > 0) lines.push(`Codes kept: ${sentinels.map(([v, n]) => `${v} (${n.toLocaleString("en-US")})`).join(", ")}`);
   return lines;
 }

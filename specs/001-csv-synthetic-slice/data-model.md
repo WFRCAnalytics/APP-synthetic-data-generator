@@ -52,7 +52,7 @@ only inside the in-memory database and are never copied into these objects.
 
 **Reason codes**: `possible_identifier`, `possible_sentinel`, `near_categorical_threshold`,
 `date_format_unrecognized`, `date_format_mixed`, `date_format_ambiguous`, `id_mask_too_narrow`, `id_mixed_masks`,
-`possible_na_token`, `id_not_yet_supported` (temporary, removed when ID masks land in US3), `beta_fit_failed`,
+`possible_na_token`, `id_not_yet_supported` (temporary, removed when ID masks land in US3), `override_not_possible`, `beta_fit_failed`,
 `unsupported_type`.
 
 ### Summary blocks

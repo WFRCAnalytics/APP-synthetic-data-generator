@@ -1,23 +1,40 @@
-// One card per column (FR-009): name, detected type, status, a few facts, and a small chart.
+// One card per column (FR-009): name, detected type, status, a few facts, a small chart, and a
+// "Settings" section where every automatic decision can be changed.
 
+import { useState } from "react";
 import { Badge } from "../../components/Badge";
-import type { ColumnProfile } from "../../lib/profile/types";
+import type { DatePatternCheck } from "../../app/session";
+import type { LocalEdits } from "../../lib/profile/edits";
+import type { ColumnOverrides, ColumnProfile } from "../../lib/profile/types";
+import { ColumnEditors } from "./ColumnEditors";
 import { Sparkline } from "./Sparkline";
 import { reasonText, sparkBars, summaryLines, typeLabel } from "./summary";
 
 export interface ColumnCardProps {
   profile: ColumnProfile;
+  /** Output names of the other columns. */
+  otherNames: readonly string[];
+  busy?: boolean;
+  dateCheck?: DatePatternCheck;
+  onEdit?: (patch: LocalEdits) => void;
+  onOverride?: (patch: Partial<ColumnOverrides>) => void;
+  onCheckDate?: (pattern: string) => void;
 }
 
-export function ColumnCard({ profile }: ColumnCardProps) {
+const noop = () => {};
+
+export function ColumnCard({ profile, otherNames, busy = false, dateCheck, onEdit = noop, onOverride = noop, onCheckDate = noop }: ColumnCardProps) {
+  // The settings are only built while open, so a hundred cards stay light.
+  const [open, setOpen] = useState(false);
   const dropped = profile.exclude === "drop";
   const bars = sparkBars(profile);
   const lines = summaryLines(profile);
 
   return (
-    <article className="card column-card" data-column={profile.name} data-status={profile.status}>
+    <article className="card column-card" data-column={profile.name} data-status={profile.status} aria-busy={busy}>
       <header className="column-card-header">
         <h3 className="column-card-name">{profile.name}</h3>
+        {profile.outputName !== profile.name && <p className="column-card-renamed">Written as {profile.outputName}</p>}
         <div className="column-card-badges">
           <Badge variant={profile.type === "unsupported" ? "danger" : "info"}>{typeLabel(profile.type)}</Badge>
           {profile.status === "needs_attention" && <Badge variant="warning">Needs attention</Badge>}
@@ -42,6 +59,23 @@ export function ColumnCard({ profile }: ColumnCardProps) {
           ))}
         </ul>
       )}
+
+      <details className="column-card-settings" open={open}>
+        {/* The open state is explicit so the settings are built only when shown, and it works the same
+            with a keyboard (Enter or Space on the summary) as with a click. */}
+        <summary
+          aria-expanded={open}
+          onClick={(e) => {
+            e.preventDefault();
+            setOpen(!open);
+          }}
+        >
+          Settings
+        </summary>
+        {open && (
+          <ColumnEditors profile={profile} otherNames={otherNames} busy={busy} dateCheck={dateCheck} onEdit={onEdit} onOverride={onOverride} onCheckDate={onCheckDate} />
+        )}
+      </details>
     </article>
   );
 }

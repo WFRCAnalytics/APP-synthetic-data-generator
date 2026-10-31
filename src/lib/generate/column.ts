@@ -8,7 +8,7 @@ import { subSeed } from "../rng/subseed";
 import type { ColumnSpec } from "../spec/types";
 import { makeLabelLookup } from "./categorical";
 import { makeDateFormatter } from "./datetime";
-import { formatNumber, makeNumericSource } from "./numeric";
+import { formatNumber, makeNumericSource, withRescale, type NumericPlan } from "./numeric";
 import { makePlacer } from "./placement";
 
 export interface ColumnContext {
@@ -35,6 +35,13 @@ export class GenerationError extends Error {
 
 /** The text a column writes for NA: its first recorded token, or an empty field. */
 export const naTokenOf = (col: ColumnSpec): string => col.na?.tokens[0] ?? "";
+
+/** A numeric source, rescaled to the exact mean and sd when the user asked for that. */
+function numericSourceFor(col: NumericPlan & { rescale?: boolean }, key: number, placer: ReturnType<typeof makePlacer>, nRows: number) {
+  const source = makeNumericSource(col, key, placer.valueTotal);
+  const wantsRescale = col.rescale === true && col.mode === "match_mean_sd" && col.mean !== undefined && col.sd !== undefined && col.max > col.min;
+  return wantsRescale ? withRescale(source, placer, nRows, { mean: col.mean as number, sd: col.sd as number, min: col.min, max: col.max }) : source;
+}
 
 export function createColumnGen(col: ColumnSpec, ctx: ColumnContext): ColumnGen {
   const key = subSeed(ctx.seed, col.name);
@@ -65,7 +72,7 @@ export function createColumnGen(col: ColumnSpec, ctx: ColumnContext): ColumnGen 
     case "integer":
     case "float": {
       const placer = makePlacer(ctx.nRows, key, col.na, col.sentinels);
-      const source = makeNumericSource(col, key, placer.valueTotal);
+      const source = numericSourceFor(col, key, placer, ctx.nRows);
       const format = { integer: col.type === "integer", decimals: col.decimals ?? 0, thousands: col.thousands ?? false, scientific: col.scientific ?? false };
       return gen((row) => {
         const p = placer(row);
@@ -77,7 +84,7 @@ export function createColumnGen(col: ColumnSpec, ctx: ColumnContext): ColumnGen 
     case "datetime":
     case "time": {
       const placer = makePlacer(ctx.nRows, key, col.na, col.sentinels);
-      const source = makeNumericSource(col, key, placer.valueTotal);
+      const source = numericSourceFor(col, key, placer, ctx.nRows);
       const fmt = makeDateFormatter(col.format, col.granularity);
       return gen((row) => {
         const p = placer(row);
