@@ -58,11 +58,12 @@
 
 **Independent Test**: `node scripts/verify-release.mjs <zip>` passes on a good zip and fails on each bad one; the page shows the version; the offline test shows zero outside requests.
 
-- [ ] T014 [P] [US2] Unit tests for the verifier in `tests/unit/release-verify.test.ts` using small zips built in the test: passes a good zip; fails on an extra file (a source map, `.env`, a fixture), a missing file, a changed file, a file missing from the checksum list, an outside `http(s)` address in a text file (with the allowed namespace and licence strings accepted), a version mismatch between zip name, README and `site/` build, and a missing content policy tag in `index.html`
+- [ ] T013a [US2] Record the scan of the real `dist/` (hosts found and where each comes from) in `research.md` R8 and as the verifier's allowlist data in `scripts/release-allowlist.json`, so T014 and T015 test against facts
+- [ ] T014 [P] [US2] Unit tests for the verifier in `tests/unit/release-verify.test.ts` using small zips built in the test: passes a good zip; fails on an extra file (a source map, `.env`, a fixture), a missing file, a changed file, a file missing from the checksum list, a new outside `http(s)` host in a text file (every host on the allowlist accepted, any other rejected), a version mismatch between zip name, README and `site/` build, and a missing content policy tag in `index.html`
 - [ ] T015 [US2] Write `scripts/verify-release.mjs` per R8 and `contracts/zip-layout.md` to pass T014; print each failure with the file and the reason, exit 1; run from `npm run verify:release`
 - [ ] T016 [P] [US2] Component test `tests/component/version-display.test.tsx`: the header shows `v0.2.0 · writes spec v3` (from the constants), the help guide repeats it, nothing else changes
 - [ ] T017 [US2] Show the version label in `src/app/AppHeader.tsx` and in `src/app/HelpGuideModal.tsx`, styled with existing classes
-- [ ] T018 [US2] Extend `tests/e2e/offline-zip.spec.ts`: after a full session the in-app counter shows zero cross-origin requests; every file in the unzipped folder matches `CHECKSUMS.sha256`; trying the machine's non-loopback address on the launcher's port is refused (FR-007, SC-002, SC-004)
+- [ ] T018 [US2] Extend `tests/e2e/offline-zip.spec.ts`: after a full session the in-app counter shows zero cross-origin requests; every file in the unzipped folder matches `CHECKSUMS.sha256`; trying the machine's non-loopback address on the launcher's port is refused; no cookie is set and local, session and IndexedDB storage hold nothing after a session (FR-007, FR-016, SC-002, SC-004)
 
 **Checkpoint**: the claim "nothing leaves the machine" is checkable by a tester and by CI.
 
@@ -77,7 +78,7 @@
 - [ ] T019 [P] [US3] Unit test `tests/unit/release-tag.test.ts` for `scripts/check-tag.mjs`: `v0.2.0` passes against version `0.2.0`; `v0.2.1`, `0.2.0` and `v0.2.0-rc1` fail with the reason (the last allowed only in dry-run mode)
 - [ ] T020 [US3] Write `scripts/check-tag.mjs` to pass T019
 - [ ] T021 [P] [US3] Reproducibility test `tests/e2e/release-reproducible.spec.ts` (or a script check in the workflow): run `build-release` twice on one `dist/` and expect equal checksum lists and equal zip bytes (FR-012, SC-004)
-- [ ] T022 [US3] Write `.github/workflows/release.yml`: on `v*` tags and `workflow_dispatch` (dry run: build, verify and test but do not publish): checkout, Node 24, `npm ci`, lint, typecheck, unit tests, `npm run build`, bundle and extension checks as in `deploy.yml`, `check-tag`, `build-release`, `verify-release`, then the offline test on `ubuntu-latest` (`start.sh`) and `windows-latest` (`start.ps1`) using the built zip as an artifact, then `gh release create` with the zip and `CHECKSUMS.sha256`, named `v<app> (writes spec v<N>)`
+- [ ] T022 [US3] Write `.github/workflows/release.yml`: on `v*` tags and `workflow_dispatch` (dry run: build, verify and test but do not publish): checkout, Node 24, `npm ci`, lint, typecheck, unit tests, `npm run build`, bundle and extension checks as in `deploy.yml`, `check-tag`, `build-release`, `verify-release`, then the offline test on `ubuntu-latest` and `macos-latest` (`start.sh`) and `windows-latest` (`start.ps1`) using the built zip as an artifact, then `gh release create` with the zip and `CHECKSUMS.sha256`, named `v<app> (writes spec v<N>)`
 - [ ] T023 [P] [US3] Document the release steps in `README.md` (bump version, tag, what the workflow does, how to build locally and compare)
 
 **Checkpoint**: a tag produces a verified release.
@@ -92,7 +93,7 @@
 
 - [ ] T024 [P] [US4] Write `public/guard.js` (classic script, no module, no inline code): when `location.protocol` is `file:`, write a short message into `#root` (what happened, use `start.cmd` or `start.sh`, see `README.txt`); do nothing when served; add `<script src="./guard.js"></script>` to `index.html` and confirm the build keeps it and the hosted site is unchanged (R5)
 - [ ] T025 [P] [US4] Test `tests/e2e/offline-guard.spec.ts`: open the built `index.html` with `file://` in Chromium, Firefox and WebKit and expect the message and no blank page; open it served and expect no message; the message has no accessibility violation (axe)
-- [ ] T026 [P] [US4] Launcher edge tests in `tests/e2e/offline-zip.spec.ts`: a folder path with spaces; a second launcher while the first runs takes the next port and the first keeps serving; `--port` on a taken port exits 2; a path with `..` and a missing file give 404; POST gives 405; `site/` missing gives exit 3; the launcher leaves no file behind
+- [ ] T026 [P] [US4] Launcher edge tests in `tests/e2e/offline-zip.spec.ts`: a folder path with spaces; a second launcher while the first runs takes the next port and the first keeps serving; `--port` on a taken port exits 2; a path with `..` and a missing file give 404; POST gives 405; `site/` missing gives exit 3; the launcher leaves no file behind; every response carries `Cache-Control: no-store` (FR-015)
 - [ ] T027 [US4] Add `offline-zip` and `offline-guard` to the Firefox and WebKit `testMatch` in `playwright.config.ts` and to `scripts/e2e-browsers.mjs`; run in Chromium, Edge (`PW_EDGE=1`), Firefox and WebKit and fix what differs
 
 **Checkpoint**: every way of opening ends in a working app or a message that says what to do.
