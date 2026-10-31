@@ -1,0 +1,11 @@
+# Source files use LF everywhere, including on Windows checkouts (keeps Prettier and diffs clean).
+* text=auto eol=lf
+
+# Test fixtures must stay byte-exact: line endings, BOMs and encodings are what they test.
+tests/fixtures/** -text
+*.csv -text
+*.tsv -text
+
+# Binary assets
+*.png binary
+*.wasm binary
