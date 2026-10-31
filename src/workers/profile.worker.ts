@@ -50,6 +50,8 @@ let cellFormats: string[] = [];
 let textCells: boolean[] = [];
 /** Columns of the loaded sheet that mix numbers, dates and text (the sheet was read as text). */
 let mixedColumns = new Set<string>();
+/** Columns (by position) whose cells carry different kinds of number format. */
+let mixedFormatColumns = new Set<number>();
 let excelLoaded = false;
 let rowCount = 0;
 let threshold = 50;
@@ -79,8 +81,14 @@ function markCells(p: ColumnProfile, index: number): void {
   // Text cells that read as numbers or dates are written back as text cells, not numbers.
   const reads = p.type === "integer" || p.type === "float" || p.type === "date" || p.type === "datetime" || p.type === "time" || (p.type === "categorical" && p.summary.kind === "categorical" && p.summary.storage === "integer");
   if (textCells[index] && reads) p.storedAsText = true;
-  if (mixedColumns.has(p.name) && !p.attentionReasons.includes("mixed_cells")) {
-    p.attentionReasons = [...p.attentionReasons, "mixed_cells"];
+  // Reasons that belong to one column. Merged cells and a hidden sheet are about the whole sheet, so the
+  // load dialog says them once instead of every card.
+  const reasons: ColumnProfile["attentionReasons"] = [];
+  if (mixedColumns.has(p.name)) reasons.push("mixed_cells");
+  if (mixedFormatColumns.has(index)) reasons.push("format_mismatch");
+  for (const reason of reasons) {
+    if (p.attentionReasons.includes(reason)) continue;
+    p.attentionReasons = [...p.attentionReasons, reason];
     if (p.status === "ok") p.status = "needs_attention";
   }
 }
@@ -117,6 +125,7 @@ async function open(chosen: File): Promise<void> {
   cellFormats = [];
   textCells = [];
   mixedColumns = new Set();
+  mixedFormatColumns = new Set();
   quoted = detectQuotedColumns(head, size);
   post({
     type: "settingsDetected",
@@ -193,6 +202,7 @@ async function loadWorkbookSheet(m: { sheet: string; range?: string; skipRows: n
 
   cellFormats = loaded.columnNames.map((_, i) => hints.formats[i] ?? "General");
   mixedColumns = new Set(loaded.mixedColumns ?? []);
+  mixedFormatColumns = new Set(hints.mixedFormats);
   // A column the engine read as text, or that mixes kinds, held text cells.
   textCells = (loaded.columnTypes ?? []).map((t, i) => t === "VARCHAR" || mixedColumns.has(loaded.columnNames[i]));
   settings = null;
