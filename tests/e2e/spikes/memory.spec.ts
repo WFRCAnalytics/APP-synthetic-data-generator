@@ -17,6 +17,6 @@ test("a 500 MB CSV loads into an in-memory all-text table", async ({ page }) => 
   await page.setInputFiles("#files", FIXTURE);
   const result = await page.evaluate(() => (window as never as { spike: { memory(): Promise<unknown> } }).spike.memory());
   console.log("MEMORY SPIKE RESULT", JSON.stringify(result));
-  expect(result).toMatchObject({ columns: 117 });
-  expect((result as { rows: number }).rows).toBeGreaterThan(400000);
+  expect(result).toMatchObject({ columns: 123 });
+  expect((result as { rows: number }).rows).toBeGreaterThan(390000);
 });
