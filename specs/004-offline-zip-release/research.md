@@ -73,7 +73,7 @@
 
 - **Decision**: `build-release.mjs` collects files, sorts them by path, writes entries with a fixed
   modification time (`SOURCE_DATE_EPOCH` or 2026-01-01), fixed attributes and deflate level 9 via
-  `node:zlib`, and writes `CHECKSUMS.sha256` (sha256, relative path, sorted, LF) last. Two builds of one
+  `node:zlib`, and writes `CHECKSUMS.sha256`; the README date is taken from `SOURCE_DATE_EPOCH` (or the commit date), never from the clock (sha256, relative path, sorted, LF) last. Two builds of one
   commit give the same checksum list, and the zip bytes are equal as well.
 - **Rationale**: FR-012, SC-004. A local build can be compared with the release asset.
 
@@ -81,9 +81,16 @@
 
 - **Decision**: `verify-release.mjs` opens the zip and checks: the expected file set (no extra
   files: no maps with paths, fixtures, `.env`, tokens or `node_modules`), every file in
-  `CHECKSUMS.sha256`, the versions agree, no text file in `site/` contains an `http://` or `https://`
-  address other than the allowed list (the XML namespace strings and licence links in comments,
-  listed in the script with the reason), and `index.html` has the strict content policy meta tag.
+  `CHECKSUMS.sha256`, the versions agree, no text file in `site/` names an `http://` or `https://`
+  host that is not on the allowlist. A scan of the real `dist/` (2026-10-31) finds 12 hosts, all inert
+  constants and never requested: `www.w3.org` and `schemas.openxmlformats.org` (XML namespaces),
+  `github.com`, `reactjs.org` and `fakerjs.dev` (messages and comments), `picsum.photos`,
+  `loremflickr.com` and `avatars.githubusercontent.com` (faker's image-address generators, unused),
+  `www.google.com` and `localhost` (library strings), and `cdn.jsdelivr.net` and
+  `extensions.duckdb.org` (the engine's default bundle and extension locations, which this app never
+  uses: it ships its own binaries, sets `autoinstall_known_extensions` off and loads the extension
+  from the site). Each is listed in the script with its source; a new host fails the check. The
+  offline test, with every non-local request failing, is the proof that none is requested, and `index.html` has the strict content policy meta tag.
 - **Rationale**: FR-013, FR-004, FR-005. The check runs on the zip, not on `dist/`, so it tests what
   ships.
 

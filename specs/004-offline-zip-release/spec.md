@@ -175,7 +175,9 @@ README tells the analyst what to do.
 - **FR-012**: A maintainer MUST be able to build the same zip locally with one documented command, and
   the file list and checksums MUST equal the workflow's for the same commit.
 - **FR-013**: A check on the built zip MUST fail the release when a needed file is missing, a file that
-  does not belong is present, or the app's files reference an address outside the app's own files.
+  does not belong is present, or a file names an outside address that is not on the documented list
+  of inert strings (constants inside bundled libraries that the app never requests); the list says
+  where each comes from, and any new address fails the check.
 - **FR-014**: An automated test MUST open the unzipped copy the way the README says, with outside
   network access blocked, and run a full CSV and a full Excel session, including generating, in at
   least one browser; the test MUST fail if any request leaves the machine.
