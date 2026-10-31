@@ -50,7 +50,8 @@ only inside the in-memory database and are never copied into these objects.
 `survey_id`, `unsupported`.
 
 **Reason codes**: `possible_identifier`, `possible_sentinel`, `near_categorical_threshold`,
-`date_format_unrecognized`, `date_format_mixed`, `id_mask_too_narrow`, `beta_fit_failed`,
+`date_format_unrecognized`, `date_format_mixed`, `date_format_ambiguous`, `id_mask_too_narrow`, `id_mixed_masks`,
+`beta_fit_failed`,
 `unsupported_type`.
 
 ### Summary blocks

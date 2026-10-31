@@ -64,7 +64,7 @@ real data.
 
 ### Prototypes (VERIFY items from research.md; each ends by recording the result in research.md)
 
-- [ ] T014 Extend `scripts/make-fixtures.mjs` with `--100k` and `--large` that write `.fixtures/zoo_100k.csv` and the ~500 MB, ~120-column `.fixtures/zoo_500mb.csv` (zoo columns repeated with suffixes; deterministic, never committed)
+- [X] T014 Extend `scripts/make-fixtures.mjs` with `--100k` and `--large` that write `.fixtures/zoo_100k.csv` and the ~500 MB, ~120-column `.fixtures/zoo_500mb.csv` (zoo columns repeated with suffixes; deterministic, never committed)
 - [ ] T121 [P] Create `scripts/fetch-corpus.mjs` that downloads, at a pinned tag, the selected CSV edge-case files from `duckdb/duckdb` `data/csv` (encodings, dates, decimal separators, leading zeros, quoted newlines, null padding, bad dates) and `csv-spectrum`, plus the smoke datasets (NHTS 2017 `trippub.csv`, a 1M-row Chicago Crimes slice), into `.fixtures/corpus/` (gitignored, never committed); tests that need them skip with a clear message when the folder is absent
 - [ ] T015 Spike R9: instantiate DuckDB-WASM under the page CSP from T007 in `tests/e2e/spikes/csp.spec.ts`; record the outcome and any narrowest-needed CSP change in `research.md`
 - [ ] T016 Spike R1: in `tests/e2e/spikes/memory.spec.ts`, register the 500 MB fixture with `registerFileHandle`, load it as an all-text table, and record memory and time in `research.md`; if it does not fit, T091 (profile in column batches from the file handle) becomes required
@@ -73,15 +73,15 @@ real data.
 
 ### Pure core (unit tests included)
 
-- [ ] T019 [P] Implement sfc32 and per-column sub-seed derivation in `src/lib/rng/sfc32.ts` and `src/lib/rng/subseed.ts`, with tests in `tests/unit/rng.test.ts`
-- [ ] T020 [P] Implement the keyed Feistel bijection with cycle-walking (BigInt only when the domain exceeds 2^53) in `src/lib/rng/permute.ts`, with exhaustive small-domain bijection tests in `tests/unit/permute.test.ts`
-- [ ] T021 [P] Implement counter-based per-row draws in `src/lib/rng/counter.ts`, with tests in `tests/unit/counter.test.ts`
-- [ ] T022 [P] Define spec types and valibot validators in `src/lib/spec/types.ts` and `src/lib/spec/validate.ts` matching `contracts/spec-file.schema.json` (errors named by column; includes the per-column `quoted` flag), with tests in `tests/unit/spec-validate.test.ts`
-- [ ] T023 [P] Implement the shared date directive table, TypeScript formatter and DuckDB `strptime` translation in `src/lib/datefmt/directives.ts`, with tests in `tests/unit/datefmt.test.ts`
-- [ ] T024 [P] Implement BOM and encoding detection (UTF-8, UTF-16 LE/BE, Windows-1252) in `src/lib/encoding/detect.ts`, with tests in `tests/unit/encoding-detect.test.ts`
-- [ ] T025 [P] Implement UTF-8, UTF-16 and Windows-1252 encoders in `src/lib/csv/encoders.ts`, with tests in `tests/unit/encoders.test.ts`
-- [ ] T026 [P] Implement the CSV writer (delimiter, quote style including `per_column` driven by each column's `quoted` flag, line endings, BOM, trailing newline) in `src/lib/csv/writer.ts`, with tests in `tests/unit/csv-writer.test.ts`
-- [ ] T027 Define the typed worker messages from `contracts/worker-protocol.md` in `src/workers/protocol.ts`, and the error type that forbids cell values in messages in `src/lib/errors.ts`, with a test in `tests/unit/errors.test.ts`
+- [X] T019 [P] Implement sfc32 and per-column sub-seed derivation in `src/lib/rng/sfc32.ts` and `src/lib/rng/subseed.ts`, with tests in `tests/unit/rng.test.ts`
+- [X] T020 [P] Implement the keyed Feistel bijection with cycle-walking (BigInt only when the domain exceeds 2^53) in `src/lib/rng/permute.ts`, with exhaustive small-domain bijection tests in `tests/unit/permute.test.ts`
+- [X] T021 [P] Implement counter-based per-row draws in `src/lib/rng/counter.ts`, with tests in `tests/unit/counter.test.ts`
+- [X] T022 [P] Define spec types and valibot validators in `src/lib/spec/types.ts` and `src/lib/spec/validate.ts` matching `contracts/spec-file.schema.json` (errors named by column; includes the per-column `quoted` flag), with tests in `tests/unit/spec-validate.test.ts`
+- [X] T023 [P] Implement the shared date directive table, TypeScript formatter and DuckDB `strptime` translation in `src/lib/datefmt/directives.ts`, with tests in `tests/unit/datefmt.test.ts`
+- [X] T024 [P] Implement BOM and encoding detection (UTF-8, UTF-16 LE/BE, Windows-1252) in `src/lib/encoding/detect.ts`, with tests in `tests/unit/encoding-detect.test.ts`
+- [X] T025 [P] Implement UTF-8, UTF-16 and Windows-1252 encoders in `src/lib/csv/encoders.ts`, with tests in `tests/unit/encoders.test.ts`
+- [X] T026 [P] Implement the CSV writer (delimiter, quote style including `per_column` driven by each column's `quoted` flag, line endings, BOM, trailing newline) in `src/lib/csv/writer.ts`, with tests in `tests/unit/csv-writer.test.ts`
+- [X] T027 Define the typed worker messages from `contracts/worker-protocol.md` in `src/workers/protocol.ts`, and the error type that forbids cell values in messages in `src/lib/errors.ts`, with a test in `tests/unit/errors.test.ts`
 
 **Checkpoint**: Shell renders, prototype results are recorded, pure core is tested. Stories can begin.
 
@@ -221,7 +221,7 @@ with unsupported columns safely excluded.
 - [ ] T080 [US4] Build the spec serializer from app state in `src/features/spec/saveSpec.ts` and the Save and Export spec buttons (review and generate screens)
 - [ ] T081 [US4] Build the spec loader (file picker, validation, error list by column, jump to Review) in `src/features/spec/loadSpec.ts` and `SpecErrors.tsx`, with "Load existing spec" on the ingest screen; loading a spec replaces any open file and goes straight to Review, so a spec and a real file are never combined (FR-004)
 - [ ] T082 [US4] Make Generate work from a loaded spec with no source file (generate worker only) and show the spec-only banner in `src/features/generate/GenerateScreen.tsx`
-- [ ] T083 [US4] Add the `spec_version` check and clear messages for newer or older versions in `src/lib/spec/validate.ts`
+- [X] T083 [US4] Add the `spec_version` check and clear messages for newer or older versions in `src/lib/spec/validate.ts`
 
 **Checkpoint**: Specs round trip and reproduce exactly.
 
