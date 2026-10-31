@@ -50,13 +50,15 @@ export function checkTag(tag, version, { dryRun = false } = {}) {
 /**
  * Text files get the line endings their platform expects, so a Windows and a Linux checkout give the same
  * zip: scripts for Unix and notes in LF, Windows scripts and README.txt in CRLF, and index.html in LF (the
- * hosted build's own bytes; a Windows checkout of the source can leave it with CRLF).
+ * hosted build's own bytes, but ending in exactly one newline: the bundler leaves one or none by machine).
  */
 export function normalizeLineEndings(name, bytes) {
   if (!/\.(sh|cmd|ps1|txt|md|html)$/.test(name)) return bytes;
   const text = new TextDecoder().decode(bytes).replace(/\r\n/g, "\n");
   const crlf = /\.(cmd|ps1|txt)$/.test(name);
-  return new TextEncoder().encode(crlf ? text.replace(/\n/g, "\r\n") : text);
+  // The page ends with exactly one newline (the bundler leaves it with or without one depending on the machine).
+  const body = name.endsWith(".html") ? text.replace(/\s+$/, "") + "\n" : text;
+  return new TextEncoder().encode(crlf ? body.replace(/\n/g, "\r\n") : body);
 }
 
 /** Every file under a folder as a path relative to it, forward slashes, sorted by path. */

@@ -78,6 +78,8 @@ describe("line endings", () => {
     expect(run("start.sh", "a\r\nb\r\n")).toBe("a\nb\n");
     expect(run("LICENSES.md", "a\r\nb")).toBe("a\nb");
     expect(run("index.html", "<html>\r\n</html>\r\n")).toBe("<html>\n</html>\n");
+    expect(run("index.html", "<html>\n</html>")).toBe("<html>\n</html>\n"); // one final newline, with or without
+    expect(run("index.html", "<html>\n</html>\n\n\n")).toBe("<html>\n</html>\n");
   });
 
   it("leaves binary files and bundles alone", () => {
