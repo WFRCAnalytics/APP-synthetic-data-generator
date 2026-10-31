@@ -8,6 +8,16 @@
 
 **Input**: User description: "Build the first vertical slice of the WFRC Synthetic Data Generator (design source: SPEC.md): CSV in, profile and review, save/load spec JSON, generate, CSV out, for categorical, numeric, date/time and survey ID columns, with WFRC-branded app shell, stepper, local-processing notice and network-request counter."
 
+## Clarifications
+
+### Session 2026-10-30
+
+- Q: What should the app do with a column whose type is not built in this slice (emails, free text, many-valued short codes, latitude/longitude)? → A: Label it "unsupported in this version", exclude it from the output by default, flag it under "needs attention", and never write any of its real values. The user may choose "keep as all-NA".
+- Q: What should happen when a date or time column uses an unrecognized format or mixes several formats? → A: Flag it under "needs attention" and let the user type a format pattern (such as `%m/%d/%Y`) with a live count of how many values parse. If the pattern does not parse every non-NA value, the column falls back to "unsupported in this version".
+- Q: Which text encodings must this slice read and write for CSV? → A: UTF-8 (with or without BOM), UTF-16 (LE and BE), and Windows-1252 / Latin-1. Detect on load, let the user change it, and write the export in the same encoding.
+- Q: How long is acceptable for a ~500 MB table to profile, and to generate and export, on an ordinary office laptop? → A: Up to 5 minutes to profile and up to 5 minutes to generate and export, with progress shown throughout.
+- Q: What should happen if an ID pattern cannot produce enough distinct values for the column? → A: Show a clear error in the ID editor (for example "pattern allows 1,000 distinct values, column needs 5,000"), mark the column "needs attention", and block generation until the mask is widened or the column is excluded.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Turn a private CSV into a fake CSV (Priority: P1)
@@ -62,6 +72,10 @@ confirm generation honors the override.
 3. **Given** a table with 100 or more columns, **When** the user types in the search box or
    picks the "needs attention" or a type filter, **Then** the list narrows to matching columns
    and a banner lists the columns the profiler was unsure about.
+6. **Given** a column that looks like an email, free text, a many-valued short code, or a
+   latitude or longitude, **When** profiling completes, **Then** it is labeled "unsupported in
+   this version", excluded by default, listed under "needs attention", and none of its real
+   values appear in the preview, the spec or the export.
 4. **Given** the optional protections, **When** the user first opens Review, **Then**
    category merging, label replacement and column renaming are all off.
 5. **Given** a column the user excludes, **When** the fake table is exported, **Then** it is
@@ -178,9 +192,13 @@ generation and export without a frozen tab.
 - A numeric column with only one non-sentinel value, or none.
 - A coded integer column that sits just above or just below the categorical threshold.
 - A column with leading zeros (such as ZIP codes), thousands separators, or mixed NA tokens.
-- Dates in more than one format within a single column: the column is flagged for review
-  instead of silently guessed.
+- Dates in more than one format within a single column, or in a format the app does not
+  recognize: the column is flagged under "needs attention", the user can type a format pattern
+  and see how many values it parses, and if it does not parse every non-NA value the column
+  becomes "unsupported in this version".
 - An ID column that is unique per row, one that repeats in groups, and one with mixed masks.
+- An ID mask, inferred or edited, that allows fewer distinct values than the column needs:
+  generation is blocked with the shortfall shown until the user fixes it (FR-016a).
 - Rare categories, such as a label that appears once, when merging is off.
 - A spec whose column list no longer matches the loaded file, or a spec from a newer or older
   version.
@@ -197,7 +215,10 @@ generation and export without a frozen tab.
 - **FR-001**: Users MUST be able to choose a CSV file of up to about 500 MB and 100 to 120 or
   more columns.
 - **FR-002**: The system MUST detect the delimiter, encoding, quote character and header
-  presence, show them for confirmation, and let the user change each.
+  presence, show them for confirmation, and let the user change each. Supported encodings
+  are UTF-8 (with or without a byte-order mark), UTF-16 (little and big endian) and
+  Windows-1252 / Latin-1; any other encoding MUST produce a clear "not supported yet" message.
+  The export MUST be written in the same encoding as the input.
 - **FR-003**: The system MUST show row count, column count and column names after load, and
   MUST NOT show any row values anywhere in the app.
 - **FR-004**: Users MUST be able to load an existing spec instead of a data file, and skip
@@ -207,7 +228,15 @@ generation and export without a frozen tab.
 
 - **FR-005**: The system MUST assign each column one type from: boolean, categorical,
   integer, float, date, datetime, time, survey ID, or empty, using the first matching rule in
-  the order set out in SPEC.md, and MUST allow the user to override it.
+  the order set out in SPEC.md, and MUST allow the user to override it. A column that matches
+  no in-scope type (such as a personal identifier, free text, short string, or latitude or
+  longitude) MUST be labeled "unsupported in this version", excluded from the output by
+  default, and flagged under "needs attention". Its real values MUST NOT appear in the
+  preview, the spec or the export; the spec records only its name, the label and the user's
+  choice to drop it or keep it as all-NA.
+- **FR-005a**: For date, datetime and time columns, the system MUST let the user enter a
+  format pattern and show how many non-NA values it parses. A column whose pattern does not
+  parse every non-NA value MUST become "unsupported in this version" (see FR-005).
 - **FR-006**: Integer columns with 50 or fewer distinct values MUST default to categorical, and
   the threshold MUST be adjustable.
 - **FR-007**: The system MUST flag likely sentinel codes for the user to confirm or edit, keep
@@ -234,6 +263,10 @@ generation and export without a frozen tab.
 - **FR-015**: The system MUST NOT store, save or export any list of real ID values.
 - **FR-016**: Users MUST be able to edit the mask in a token editor and see a live sample of
   generated values.
+- **FR-016a**: If a mask cannot produce as many distinct values as the column needs, the
+  system MUST show the shortfall in the editor (values allowed versus values needed), mark the
+  column "needs attention", and block generation until the mask is widened or the column is
+  excluded.
 
 **Spec**
 
@@ -311,8 +344,10 @@ generation and export without a frozen tab.
 
 ### Measurable Outcomes
 
-- **SC-001**: A roughly 500 MB CSV profiles with a visible progress indicator, and the page
-  keeps responding to clicks and scrolling throughout.
+- **SC-001**: A roughly 500 MB CSV profiles in under 5 minutes on an ordinary office laptop
+  with a visible progress indicator, and the page keeps responding to clicks and scrolling
+  throughout. Generating and exporting a table of that size also completes in under
+  5 minutes with progress shown.
 - **SC-002**: For every in-scope column, the check table shows an exact match for category
   counts, NA counts, sentinel counts, min and max (100% of checked items).
 - **SC-003**: Generating twice with the same spec and seed produces identical files; changing

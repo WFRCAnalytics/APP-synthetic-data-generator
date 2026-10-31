@@ -35,6 +35,9 @@
   and branding references, not implementation choices, so they are kept.
 - Every item deferred from this slice appears in "Out of Scope for This Slice" so that
   `/speckit-tasks` can record each as a not-started task.
+- Re-validated after `/speckit-clarify` (2026-10-30): 16/16 items still pass. Five answers
+  were added to the spec's Clarifications section and applied to FR-002, FR-005, FR-005a,
+  FR-016a, SC-001, the edge cases and the Story 2 acceptance scenarios.
 - Three questions had reasonable defaults, so no clarification markers were used: the
   categorical threshold (50, adjustable), excluded column handling (drop by default), and
   export naming ("_fake" suffix by default).
