@@ -4,7 +4,8 @@
 // A package with neither a licence file nor a licence identifier fails the build.
 
 import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 
 const LICENCE_FILE = /^(licen[cs]e|copying)(\.(md|txt))?$/i;
 
@@ -58,4 +59,4 @@ export function buildLicenses(root) {
 }
 
 // `node scripts/licenses.mjs` prints the text, to look at it.
-if (import.meta.url === new URL(process.argv[1] ?? "", "file:").href) process.stdout.write(buildLicenses(process.cwd()));
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) process.stdout.write(buildLicenses(process.cwd()));

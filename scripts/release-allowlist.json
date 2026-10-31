@@ -1,0 +1,18 @@
+{
+  "comment": "Outside web addresses that appear as text in the files of the release, and why none is ever requested. Found by scanning the real build (specs/004 research R8, 2026-10-31). verify-release fails on any host not listed here, so a new one has to be looked at and added with its reason. Binary files are not scanned; the offline end-to-end test, which refuses every request that is not to the launcher, is the proof that nothing is requested.",
+  "hosts": [
+    { "host": "www.w3.org", "source": "XML and SVG namespace strings in React and the workbook writer; names, not addresses to fetch" },
+    { "host": "schemas.openxmlformats.org", "source": "namespace strings the .xlsx writer puts inside the files it makes" },
+    { "host": "github.com", "source": "text in error messages and comments of faker and the DuckDB-WASM workers" },
+    { "host": "reactjs.org", "source": "React's error-decoder link inside an error message string" },
+    { "host": "fakerjs.dev", "source": "a documentation link inside a faker error message" },
+    { "host": "picsum.photos", "source": "faker's image-address generator, which this app never calls" },
+    { "host": "loremflickr.com", "source": "faker's image-address generator, which this app never calls" },
+    { "host": "avatars.githubusercontent.com", "source": "faker's avatar-address generator, which this app never calls" },
+    { "host": "cdn.jsdelivr.net", "source": "faker's portrait-address generator, which this app never calls" },
+    { "host": "www", "source": "faker's domain generator template (https://www.${name}...), which builds invented text and is never fetched" },
+    { "host": "www.google.com", "source": "a user-agent string in faker's data" },
+    { "host": "localhost", "source": "a fallback base for URL parsing in the app when there is no page address" },
+    { "host": "extensions.duckdb.org", "source": "duckdb-ext/VERSION.json, our own note of where the Excel extension was downloaded from at build time; the app loads it from the site" }
+  ]
+}

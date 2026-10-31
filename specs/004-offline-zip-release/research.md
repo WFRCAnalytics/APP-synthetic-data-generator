@@ -35,7 +35,7 @@
   - **macOS and Linux**: `start.sh` runs `python3 -m http.server --bind 127.0.0.1 --directory site`
     (both ship with the OS or developer tools; the README says so).
   - Both pick the first free port from 8731 upward, print one line `URL: http://127.0.0.1:<port>/APP-synthetic-data-generator/`, open the default browser unless `--no-open`, send `Cache-Control: no-store`, and stop on Ctrl+C or when the window closes.
-- **Rationale**: FR-007. Loopback binding means other computers get a refused connection. HttpListener
+- **Rationale**: FR-007. Loopback binding (`start.sh`) means other computers get a refused connection; `start.ps1` also checks the remote address of every request, because Windows' HTTP service matches by host name. HttpListener
   and `http.server` need nothing to be installed. The test reads the printed line, so it works the
   same for both.
 - **Alternatives considered**: a bundled executable (needs code signing to avoid warnings, out of

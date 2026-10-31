@@ -6,10 +6,12 @@
 // Needs the zip: `npm run release` first. Without it the tests skip with that message.
 import { spawn, type ChildProcess } from "node:child_process";
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { get as httpGet } from "node:http";
+import { networkInterfaces, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test, type Page } from "@playwright/test";
+import { collectFiles, parseChecksums, safeJoin, sha256Hex } from "../../scripts/release-lib.mjs";
 import { readEntryText, readZipDirectory } from "../../src/lib/xlsx/zip";
 import { unzipTo } from "../helpers/unzip";
 
@@ -150,6 +152,15 @@ test.describe("offline copy", () => {
     await expect(page.getByTestId("net-outside")).toHaveText("0");
     expect(offline.length).toBeGreaterThan(1000);
 
+    // Nothing is kept in the browser by the offline copy either (FR-016): no cookie, no stored data.
+    expect(await page.context().cookies()).toEqual([]);
+    const stored = await page.evaluate(async () => ({
+      local: localStorage.length,
+      session: sessionStorage.length,
+      databases: "databases" in indexedDB ? (await indexedDB.databases()).length : 0,
+    }));
+    expect(stored).toEqual({ local: 0, session: 0, databases: 0 });
+
     const hosted = await onHostedCopy(page, (second) => csvSession(second, baseURL!));
     expect(offline.equals(hosted)).toBe(true);
   });
@@ -163,5 +174,48 @@ test.describe("offline copy", () => {
 
     const hosted = await onHostedCopy(page, (second) => excelSession(second, baseURL!));
     expect(await sheetXml(offline)).toBe(await sheetXml(hosted));
+  });
+});
+
+test.describe("the launcher", () => {
+  test("leaves every file of the folder as released, so the checksum list still holds after use", async () => {
+    const folder = launcher.folder;
+    const listed = parseChecksums(readFileSync(join(folder, "CHECKSUMS.sha256"), "utf8"));
+    const onDisk = (await collectFiles(folder)).filter((f) => f !== "CHECKSUMS.sha256");
+    expect(onDisk).toEqual(listed.map((e) => e.path).sort());
+    for (const entry of listed) {
+      // start.cmd and start.ps1 are checked as released; line endings were fixed when the zip was built.
+      expect(sha256Hex(readFileSync(safeJoin(folder, entry.path))), entry.path).toBe(entry.sha256);
+    }
+  });
+
+  test("never serves a file to another address of this machine or to another computer", async () => {
+    const port = new URL(launcher.origin).port;
+    const external = Object.values(networkInterfaces()).flat().find((i) => i && i.family === "IPv4" && !i.internal);
+    test.skip(!external, "this machine has no non-loopback address to try");
+    const outcome = await new Promise<{ status?: number; body?: string; error?: string }>((resolve) => {
+      const request = httpGet({ host: external!.address, port: Number(port), path: APP_PATH, timeout: 5000 }, (response) => {
+        let body = "";
+        response.on("data", (d) => (body += String(d)));
+        response.on("end", () => resolve({ status: response.statusCode, body }));
+      });
+      request.on("timeout", () => {
+        request.destroy();
+        resolve({ error: "timeout" });
+      });
+      request.on("error", (e) => resolve({ error: (e as NodeJS.ErrnoException).code ?? e.message }));
+    });
+    // Either the connection is refused or nothing answers, or the answer is an error that holds no page.
+    if (outcome.status !== undefined) {
+      expect(outcome.status).not.toBe(200);
+      expect(outcome.body ?? "").not.toContain('id="root"');
+    }
+  });
+
+  test("answers on the loopback address", async () => {
+    const response = await fetch(launcher.origin + APP_PATH);
+    expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(await response.text()).toContain('id="root"');
   });
 });
