@@ -5,6 +5,11 @@ import type { Encoding } from "../../lib/encoding/detect";
 export const LARGE_FILE_BYTES = 100 * 1024 * 1024;
 export const HUGE_FILE_BYTES = 500 * 1024 * 1024;
 
+/** Above this expanded size a sheet is refused: reading it needs about 2.5 times as much memory, past what a tab can hold. */
+export const WORKBOOK_STOP_BYTES = 1024 * 1024 * 1024;
+
+export const workbookTooLarge = (expandedBytes: number): boolean => expandedBytes > WORKBOOK_STOP_BYTES;
+
 const mb = (bytes: number) => Math.round(bytes / 1048576).toLocaleString("en-US");
 
 /**
@@ -13,6 +18,9 @@ const mb = (bytes: number) => Math.round(bytes / 1048576).toLocaleString("en-US"
  */
 export function workbookSizeWarnings(expandedBytes: number): string[] {
   if (expandedBytes < LARGE_FILE_BYTES) return [];
+  if (workbookTooLarge(expandedBytes)) {
+    return [`This sheet holds about ${mb(expandedBytes)} MB of data once opened, more than a browser tab can read (the limit is ${mb(WORKBOOK_STOP_BYTES)} MB). Save the table as a CSV file, or split the sheet, and open that instead.`];
+  }
   const need = mb(expandedBytes * 2.5);
   return [`This sheet holds about ${mb(expandedBytes)} MB of data once opened, and needs roughly ${need} MB of memory to read and profile. Close other heavy tabs first; progress is shown, and you can cancel.`];
 }

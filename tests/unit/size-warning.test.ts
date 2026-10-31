@@ -1,7 +1,7 @@
 // FR-034: a heads-up before a large file is profiled, including the extra memory some encodings need.
 
 import { describe, expect, it } from "vitest";
-import { HUGE_FILE_BYTES, LARGE_FILE_BYTES, sizeWarnings } from "../../src/features/ingest/sizeWarnings";
+import { HUGE_FILE_BYTES, LARGE_FILE_BYTES, sizeWarnings, workbookSizeWarnings, workbookTooLarge } from "../../src/features/ingest/sizeWarnings";
 
 const MB = 1024 * 1024;
 
@@ -35,5 +35,16 @@ describe("sizeWarnings", () => {
   it("adds no memory note for encodings read as they are", () => {
     expect(sizeWarnings(300 * MB, "utf-8")).toHaveLength(1);
     expect(sizeWarnings(300 * MB, "utf-16le")).toHaveLength(1);
+  });
+});
+
+describe("a workbook sheet", () => {
+  const GB = 1024 * MB;
+  it("has no warning when small, a memory estimate when large, and a stop above the limit", () => {
+    expect(workbookSizeWarnings(50 * MB)).toEqual([]);
+    expect(workbookSizeWarnings(100 * MB)[0]).toMatch(/100 MB of data once opened.*250 MB of memory/);
+    expect(workbookTooLarge(1 * GB)).toBe(false);
+    expect(workbookTooLarge(1 * GB + 1)).toBe(true);
+    expect(workbookSizeWarnings(2 * GB)[0]).toMatch(/more than a browser tab can read.*CSV/);
   });
 });

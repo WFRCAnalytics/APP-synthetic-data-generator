@@ -6,7 +6,7 @@
 import { useEffect, useId, useMemo, useState } from "react";
 import type { WorkbookChoice, WorkbookState } from "../../app/session";
 import { formatRange, parseRange, columnLetters } from "../../lib/xlsx/names";
-import { workbookSizeWarnings } from "./sizeWarnings";
+import { workbookSizeWarnings, workbookTooLarge } from "./sizeWarnings";
 
 export interface WorkbookDialogProps {
   workbook: WorkbookState;
@@ -51,7 +51,8 @@ export function WorkbookDialog({ workbook, fileName, onInspect, onConfirm }: Wor
 
   const selected = info.sheets.find((s) => s.name === sheet);
   const warnings = selected ? workbookSizeWarnings(selected.expandedBytes) : [];
-  const canConfirm = Boolean(hints) && skipValid && !rangeError;
+  const tooLarge = selected ? workbookTooLarge(selected.expandedBytes) : false;
+  const canConfirm = Boolean(hints) && skipValid && !rangeError && !tooLarge;
 
   return (
     <div className="card workbook-dialog" role="group" aria-labelledby={`${id}-title`}>

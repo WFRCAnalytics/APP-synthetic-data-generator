@@ -172,6 +172,12 @@ describe("notes and warnings", () => {
     expect(screen.getByTestId("size-warning")).toHaveTextContent("1,000 MB of memory");
   });
 
+  it("refuses a sheet above the limit, with a way forward", () => {
+    setup(state({ info: { sheets: [{ name: "Huge", hidden: false, veryHidden: false, expandedBytes: 3 * 1024 * 1024 * 1024 }], date1904: false, defaultSheet: "Huge" }, hints: { Huge: hints() } }));
+    expect(screen.getByTestId("size-warning")).toHaveTextContent("more than a browser tab can read");
+    expect(screen.getByRole("button", { name: "Use this sheet" })).toBeDisabled();
+  });
+
   it("has no warning for a small sheet, and shows no cell value anywhere", () => {
     setup();
     expect(screen.queryByTestId("size-warning")).not.toBeInTheDocument();

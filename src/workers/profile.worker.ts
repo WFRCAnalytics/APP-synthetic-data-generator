@@ -9,6 +9,7 @@ import { NET_CHANNEL } from "../lib/netChannel";
 import { installNetPatch } from "./netpatch";
 import type { ColumnOverrides, ColumnProfile, FileSettings } from "../lib/profile/types";
 import { createEngine, duckdb, loadExcelExtension, type Engine } from "../lib/duckdb/engine";
+import { workbookTooLarge } from "../features/ingest/sizeWarnings";
 import { inspectSheet, inspectWorkbook, type SheetHints } from "../lib/xlsx/metadata";
 import { parseRange } from "../lib/xlsx/names";
 import { loadSheet } from "./profile/xlsx";
@@ -187,6 +188,9 @@ async function loadWorkbookSheet(m: { sheet: string; range?: string; skipRows: n
   }
   const range = m.range ? parseRange(m.range) : null;
   if (m.range && !range) throw new AppError("xlsx_range_invalid");
+  const chosenSheet = (await inspectWorkbook(file)).sheets.find((s) => s.name === m.sheet);
+  if (!chosenSheet) throw new AppError("xlsx_sheet_missing");
+  if (workbookTooLarge(chosenSheet.expandedBytes)) throw new AppError("xlsx_too_large");
 
   // The format code of each column, from the cell styles of the first data cells (never a value). Read
   // first, because a sheet that has to be read as text needs the formats to turn date serials into dates.

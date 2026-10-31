@@ -125,14 +125,14 @@
 
 ### Tests for User Story 3
 
-- [ ] T042 [P] [US3] Unit tests for the size estimate and thresholds (warning at 100 MB expanded, stop at the recorded limit, text with the estimated memory) in `tests/unit/size-warning.test.ts`
-- [ ] T043 [P] [US3] Component tests: the warning appears in the dialog before profiling and a too large sheet cannot be loaded; loading an xlsx spec without a workbook shows the spec-only banner and generates an `.xlsx`, in `tests/component/workbook-dialog.test.tsx` and `tests/component/spec-load.test.tsx`
-- [ ] T044 [P] [US3] Spec tests: an xlsx spec for a profiled sheet holds the sheet, range, rows skipped, header, date system and format codes and no cell value, stays under 1 MB, and round trips (unit, from a synthetic profile) in `tests/unit/spec-roundtrip.test.ts`, and the saved spec of `quirks.xlsx` in a browser in `tests/e2e/excel-flow.spec.ts`
+- [x] T042 [P] [US3] Unit tests for the size estimate and thresholds (warning at 100 MB expanded, stop at the recorded limit, text with the estimated memory) in `tests/unit/size-warning.test.ts`
+- [x] T043 [P] [US3] Component tests: the warning appears in the dialog before profiling and a too large sheet cannot be loaded; loading an xlsx spec without a workbook shows the spec-only banner and generates an `.xlsx`, in `tests/component/workbook-dialog.test.tsx` and `tests/component/spec-load.test.tsx`
+- [x] T044 [P] [US3] Spec tests: an xlsx spec for a profiled sheet holds the sheet, range, rows skipped, header, date system and format codes and no cell value, stays under 1 MB, and round trips (unit, from a synthetic profile) in `tests/unit/spec-roundtrip.test.ts`, and the saved spec of `quirks.xlsx` in a browser in `tests/e2e/excel-flow.spec.ts`
 
 ### Implementation for User Story 3
 
-- [ ] T045 [US3] Extend `src/features/ingest/sizeWarnings.ts` and `SizeWarning.tsx` for workbooks (expanded size from the zip directory, memory estimate) and add the stop in `src/workers/profile/xlsx.ts`
-- [ ] T046 [US3] Loading an xlsx spec without a workbook: `Session.loadSpecFile` accepts version 3, the output format follows `source.format`, and a CSV spec still produces a CSV (FR-020) with tests in `tests/component/spec-load.test.tsx`
+- [x] T045 [US3] Extend `src/features/ingest/sizeWarnings.ts` and `SizeWarning.tsx` for workbooks (expanded size from the zip directory, memory estimate) and add the stop in `src/workers/profile/xlsx.ts`
+- [x] T046 [US3] Loading an xlsx spec without a workbook: `Session.loadSpecFile` accepts version 3, the output format follows `source.format`, and a CSV spec still produces a CSV (FR-020) with tests in `tests/component/spec-load.test.tsx`
 
 **Checkpoint**: large workbooks are warned about or stopped; saved settings read the same sheet again.
 

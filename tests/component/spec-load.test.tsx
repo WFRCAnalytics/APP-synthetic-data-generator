@@ -57,6 +57,37 @@ afterEach(() => {
 const chooseSpec = (user: User, file: File) => user.upload(screen.getByLabelText("Load existing spec"), file);
 const card = (name: string) => document.querySelector(`[data-column="${name}"]`) as HTMLElement;
 
+const xlsxSpec = {
+  ...goodSpec,
+  spec_version: 3,
+  source: { format: "xlsx", file_name: "survey.xlsx", sheet: "Survey Data", range: "A3:C1003", skip_rows: 2, header: true, date1904: false },
+  columns: goodSpec.columns.map((c) => (c.name === "fee" ? { ...c, cell_format: "#,##0.00" } : c)),
+};
+
+describe("a workbook spec", () => {
+  it("goes to Review without the workbook, names the output as a workbook, and offers cell formats", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await chooseSpec(user, specFile(xlsxSpec, "survey_spec.json"));
+    await screen.findByRole("heading", { name: "Review columns" });
+    expect(screen.getByText(/Loaded from a saved spec/)).toBeInTheDocument();
+    expect(sent.profile).toHaveLength(0);
+    await user.click(within(card("fee")).getByText("Settings"));
+    expect(await within(card("fee")).findByLabelText("Format in the Excel file")).toHaveValue("#,##0.00");
+    await user.click(screen.getByRole("button", { name: "Continue to Generate" }));
+    expect(await screen.findByText(/survey_fake\.xlsx/)).toBeInTheDocument();
+  });
+
+  it("leaves a CSV spec producing a CSV", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await chooseSpec(user, specFile(goodSpec));
+    await screen.findByRole("heading", { name: "Review columns" });
+    await user.click(screen.getByRole("button", { name: "Continue to Generate" }));
+    expect(await screen.findByText(/trips_fake\.csv/)).toBeInTheDocument();
+  });
+});
+
 describe("a good spec", () => {
   it("goes straight to Review, with a card per column and no file profiled", async () => {
     const user = userEvent.setup();
