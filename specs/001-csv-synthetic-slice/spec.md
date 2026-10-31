@@ -17,6 +17,7 @@
 - Q: Which text encodings must this slice read and write for CSV? → A: UTF-8 (with or without BOM), UTF-16 (LE and BE), and Windows-1252 / Latin-1. Detect on load, let the user change it, and write the export in the same encoding.
 - Q: How long is acceptable for a ~500 MB table to profile, and to generate and export, on an ordinary office laptop? → A: Up to 5 minutes to profile and up to 5 minutes to generate and export, with progress shown throughout.
 - Q: What should happen if an ID pattern cannot produce enough distinct values for the column? → A: Show a clear error in the ID editor (for example "pattern allows 1,000 distinct values, column needs 5,000"), mark the column "needs attention", and block generation until the mask is widened or the column is excluded.
+- Q: Can a spec be loaded while a data file is already open? → A: No. Loading a spec replaces any open file and goes straight to Review, so a spec and a real file are never combined.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -200,8 +201,7 @@ generation and export without a frozen tab.
 - An ID mask, inferred or edited, that allows fewer distinct values than the column needs:
   generation is blocked with the shortfall shown until the user fixes it (FR-016a).
 - Rare categories, such as a label that appears once, when merging is off.
-- A spec whose column list no longer matches the loaded file, or a spec from a newer or older
-  version.
+- A spec from a newer or older version than the app supports.
 - A seed left blank, or a seed outside the allowed range.
 - Rounding that moves a generated mean or standard deviation away from its target.
 - A browser tab closed in the middle of profiling or generation.
@@ -220,9 +220,12 @@ generation and export without a frozen tab.
   Windows-1252 / Latin-1; any other encoding MUST produce a clear "not supported yet" message.
   The export MUST be written in the same encoding as the input.
 - **FR-003**: The system MUST show row count, column count and column names after load, and
-  MUST NOT show any row values anywhere in the app.
+  MUST NOT show any row values anywhere in the app. If the file cannot be parsed (for example
+  ragged rows), the system MUST show a clear message that names the problem and a row number
+  but never a cell value.
 - **FR-004**: Users MUST be able to load an existing spec instead of a data file, and skip
-  profiling.
+  profiling. Loading a spec replaces any open data file and goes straight to Review; a spec and
+  a data file are never combined.
 
 **Profile and review**
 
@@ -254,6 +257,9 @@ generation and export without a frozen tab.
 - **FR-013**: The system MUST offer three optional protections, all off by default: merge
   categories with fewer than k rows into "Other", replace category labels with neutral codes,
   and rename columns.
+- **FR-038**: The Review screen MUST show a persistent notice that the saved spec will contain
+  real category labels, exact min and max values and sentinel codes, and nothing else derived
+  from the data.
 
 **Survey IDs**
 
@@ -279,8 +285,9 @@ generation and export without a frozen tab.
 
 **Generate**
 
-- **FR-020**: Users MUST be able to set a seed. The same spec and seed MUST always produce the
-  same output.
+- **FR-020**: Users MUST be able to set a seed, a whole number from 0 to 4,294,967,295. A blank
+  or out-of-range seed MUST be rejected with a clear message. The same spec and seed MUST always
+  produce the same output.
 - **FR-021**: Each column MUST use its own sub-seed derived from the seed and the column name,
   so changing one column's settings never changes another column's output.
 - **FR-022**: For every column, NA and sentinel rows MUST be placed at random positions with
@@ -288,7 +295,7 @@ generation and export without a frozen tab.
 - **FR-023**: Categorical and boolean columns MUST keep the exact count per label, shuffled
   across rows.
 - **FR-024**: Numeric columns MUST include the exact real min and max, and follow the chosen
-  mode. Date, datetime and time columns MUST be generated as numbers and written back in the
+  mode. The exact min and max MUST also hold when the optional rescale step is on. Date, datetime and time columns MUST be generated as numbers and written back in the
   original string format and granularity.
 - **FR-025**: ID columns MUST be generated to fit the mask, the min and max for numeric IDs,
   and the repeat structure.
@@ -344,7 +351,8 @@ generation and export without a frozen tab.
 
 ### Measurable Outcomes
 
-- **SC-001**: A roughly 500 MB CSV profiles in under 5 minutes on an ordinary office laptop
+- **SC-001**: A roughly 500 MB CSV profiles in under 5 minutes on a reference office laptop
+  (4 or more CPU cores, 16 GB of memory, current Chrome or Edge)
   with a visible progress indicator, and the page keeps responding to clicks and scrolling
   throughout. Generating and exporting a table of that size also completes in under
   5 minutes with progress shown.

@@ -16,6 +16,9 @@ core, and the success criteria (exact summaries, determinism, zero cross-origin 
 verified on its own. The "Deferred Backlog" at the end is the single record of everything the spec
 puts out of scope; those tasks stay unchecked until their own feature starts (Principle X).
 
+> **Numbering note**: T119 and T120 were added after `/speckit-analyze`. They keep their IDs so existing
+> references stay valid, and sit in the phase where they are executed.
+
 ## Format: `[ID] [P?] [Story] Description`
 
 - **[P]**: Can run in parallel (different files, no dependency on an unfinished task)
@@ -34,13 +37,13 @@ real data.
 
 **Purpose**: Project initialization and tooling, mirroring the Scoresheet reference app
 
-- [ ] T001 Create `package.json` (React 18.3, Vite 5.4, TypeScript 5.x, Vitest 2, ESLint 8, Prettier 3, `@duckdb/duckdb-wasm` pinned to an exact version, `@tanstack/react-virtual`, `valibot`, `@playwright/test`, React Testing Library) with scripts `dev`, `build`, `preview`, `lint`, `typecheck`, `test`, `test:e2e`, `fixtures`, `format`
+- [ ] T001 Create `package.json` (React 18.3, Vite 5.4, TypeScript 5.x, Vitest 2, ESLint 8, Prettier 3, `@duckdb/duckdb-wasm` pinned to an exact version, `@tanstack/react-virtual`, `valibot`, `@playwright/test`, React Testing Library) with scripts `dev`, `build`, `preview`, `lint`, `typecheck`, `test`, `test:e2e`, `fixtures`, `verify:roundtrip`, `format`
 - [ ] T002 [P] Create `tsconfig.json` and `vite.config.ts` (base `/APP-synthetic-data-generator/`, ES-module workers, `.wasm` asset handling, Vitest config with jsdom and `tests/setup.ts`)
 - [ ] T003 [P] Copy and adapt `.eslintrc.cjs`, `.eslintignore`, `.prettierrc.json`, `.prettierignore` from `WFRCAnalytics/APP-Project-Scoresheet`
 - [ ] T004 [P] Create `scripts/copy-duckdb.mjs` that copies the DuckDB-WASM binaries and workers from `node_modules` into `public/duckdb/` with no network access, and wire it into `predev` and `prebuild` in `package.json`
 - [ ] T005 [P] Create `tests/setup.ts` and add `.fixtures/` to `.gitignore`
 - [ ] T006 [P] Create `scripts/make-fixtures.mjs` that writes the small fixtures `tests/fixtures/trips_small.csv`, `tests/fixtures/coded.csv` (coded integers, sentinels, unsupported columns), `tests/fixtures/ids_50k.csv`, plus UTF-16, Windows-1252, BOM, semicolon and no-header variants
-- [ ] T007 Create `index.html` with the Content-Security-Policy meta tag from `contracts/worker-protocol.md` section 4 and the app mount point
+- [ ] T007 Create `index.html` with the Content-Security-Policy meta tag from `contracts/worker-protocol.md` section 4 and the app mount point. Apply the strict policy in build and preview only and use a dev-safe variant through `transformIndexHtml` (Vite's React plugin injects an inline script in dev; see research.md R9). Browser tests run against `vite preview`
 - [ ] T008 [P] Create `README.md` with the privacy statement, dev commands, and a link to `specs/001-csv-synthetic-slice/quickstart.md`
 
 ---
@@ -56,16 +59,16 @@ real data.
 - [ ] T009 [P] Copy `src/theme/tokens.css`, `fonts.ts` and `useTheme.ts` from the Scoresheet reference app into `src/theme/`
 - [ ] T010 [P] Copy and adapt `app.css` into `src/styles/app.css`, and the `Modal`, `Badge`, `EmptyState`, `SelectField` and `ConfirmDialog` components into `src/components/`
 - [ ] T011 [P] Copy the WFRC logo into `src/assets/logo/` and adapt `AppHeader.tsx` into `src/app/AppHeader.tsx` (logo and header match the reference)
-- [ ] T012 Create `src/main.tsx`, `src/App.tsx`, the app state reducer in `src/app/state.ts` (steps `ingest`, `review`, `generate`; transitions from data-model.md) and `src/app/Stepper.tsx` that allows going back
+- [ ] T012 Create `src/main.tsx`, `src/App.tsx`, the app state reducer in `src/app/state.ts` (steps `ingest`, `review`, `generate`; transitions from data-model.md; going back keeps overrides for columns whose name and type are unchanged) with a reducer test in `tests/unit/state.test.ts`, and `src/app/Stepper.tsx` that allows going back
 - [ ] T013 [P] Create `src/app/LocalNotice.tsx` (persistent "processed locally; reload clears data" notice) and mount it in `src/App.tsx`
 
 ### Prototypes (VERIFY items from research.md; each ends by recording the result in research.md)
 
 - [ ] T014 Create `scripts/make-fixtures.mjs --large` that writes the ~500 MB, ~120-column `.fixtures/trips_500mb.csv` (deterministic, never committed)
 - [ ] T015 Spike R9: instantiate DuckDB-WASM under the page CSP from T007 in `tests/e2e/spikes/csp.spec.ts`; record the outcome and any narrowest-needed CSP change in `research.md`
-- [ ] T016 Spike R1: in `tests/e2e/spikes/memory.spec.ts`, register the 500 MB fixture with `registerFileHandle`, load it as an all-text table, and record memory and time in `research.md`; if it does not fit, create the fallback task "profile in column batches from the file handle" as a new task in Phase 8
-- [ ] T017 [P] Spike R2: in `tests/e2e/spikes/encoding.spec.ts`, check `read_csv` with `utf-16` and `latin-1` on the encoding fixtures; record the result and, if needed, add the `TextDecoderStream` fallback task to Phase 3
-- [ ] T018 [P] Spike R14: in `tests/e2e/spikes/download.spec.ts`, assemble a 500 MB Blob from chunks and download it in Chrome and Edge; record the result and, if it fails, add the streamed-save fallback to Phase 8
+- [ ] T016 Spike R1: in `tests/e2e/spikes/memory.spec.ts`, register the 500 MB fixture with `registerFileHandle`, load it as an all-text table, and record memory and time in `research.md`; if it does not fit, T091 (profile in column batches from the file handle) becomes required
+- [ ] T017 [P] Spike R2: in `tests/e2e/spikes/encoding.spec.ts`, check `read_csv` with `utf-16` and `latin-1` on the encoding fixtures; record the result and, if it fails, T120 (the `TextDecoderStream` fallback) becomes required
+- [ ] T018 [P] Spike R14: in `tests/e2e/spikes/download.spec.ts`, assemble a 500 MB Blob from chunks and download it in Chrome and Edge; record the result and, if it fails, T092 (streamed save) becomes required
 
 ### Pure core (unit tests included)
 
@@ -93,7 +96,7 @@ with unsupported columns safely excluded.
 ### Tests for User Story 1
 
 - [ ] T028 [P] [US1] Integration test for profiling SQL on small fixtures (counts, NA, min, max, mean, sd, quantiles) using DuckDB's Node bindings in `tests/integration/profile.test.ts`
-- [ ] T029 [P] [US1] Unit tests for type detection rules in SPEC.md order, coded integers defaulting to categorical, and the "unsupported" rule (emails, free text, many-valued short codes, latitude and longitude) in `tests/unit/classify.test.ts`
+- [ ] T029 [P] [US1] Unit tests for type detection rules in SPEC.md order, coded integers defaulting to categorical, the "unsupported" rule (emails, free text, many-valued short codes, latitude and longitude), and survey ID detection taking precedence over categorical (an ID column with 50 or fewer distinct values is never typed categorical) in `tests/unit/classify.test.ts`
 - [ ] T030 [P] [US1] Unit tests that generated columns hit exact label counts, NA counts, sentinel counts, min and max in `tests/unit/generate-columns.test.ts`
 - [ ] T031 [P] [US1] Integration test for the CSV round trip (fake file parses with the same code as the real one, SC-004) in `tests/integration/roundtrip.test.ts`
 - [ ] T032 [P] [US1] Component test for the ingest, review and generate flow with mocked workers in `tests/component/flow.test.tsx`
@@ -102,16 +105,17 @@ with unsupported columns safely excluded.
 
 - [ ] T033 [P] [US1] Implement beta-by-gamma, uniform and quantile-interpolation samplers in `src/lib/sampling/` with moment tests in `tests/unit/sampling.test.ts`
 - [ ] T034 [P] [US1] Implement NA token and sentinel candidate detection in `src/lib/classify/na.ts` and `src/lib/classify/sentinels.ts`, with tests in `tests/unit/na-sentinels.test.ts`
-- [ ] T035 [US1] Implement the type classifier and the "unsupported" rule in `src/lib/classify/classify.ts` (uses T034; never reads values, only summaries)
-- [ ] T036 [US1] Implement `profile.worker.ts` messages `open`, `settingsDetected`, `load`, `loaded` (sniff the file, register the handle, create the all-text table) in `src/workers/profile.worker.ts`
+- [ ] T035 [US1] Implement the type classifier, the "unsupported" rule, and survey ID detection (name ends in `id` or `_num`; unique or grouped integers and codes; checked before categorical, per SPEC.md order) in `src/lib/classify/classify.ts` (uses T034; never reads values, only summaries). Until T065 lands, `survey_id` columns are marked `needs_attention` and excluded by default so no ID value can reach the spec as a category label
+- [ ] T036 [US1] Implement `profile.worker.ts` messages `open`, `settingsDetected`, `load`, `loaded` (sniff the file, register the handle, create the all-text table) in `src/workers/profile.worker.ts`; a file that cannot be parsed returns an `error` that names the problem and a row number, never a cell value (FR-003), with a test in `tests/unit/errors.test.ts`
+- [ ] T120 [US1] Conditional, only if the T017 spike shows `read_csv` cannot read UTF-16 or Latin-1: stream-transcode with `TextDecoderStream` into a virtual UTF-8 file registered with DuckDB, in `src/workers/profile/transcode.ts`; otherwise mark done with "not needed" and the spike result
 - [ ] T037 [US1] Implement batched column statistics SQL in `src/workers/profile/stats.ts` and the `profile` and `columnProfile` messages, reporting progress per batch
-- [ ] T038 [US1] Build the ingest screen in `src/features/ingest/IngestScreen.tsx` (file picker, detected delimiter, encoding, quote and header with editing, row count, column count, names only)
+- [ ] T038 [US1] Build the ingest screen in `src/features/ingest/IngestScreen.tsx` (file picker, detected delimiter, encoding, quote and header with editing, row count, column count, names only; shows the parse error message from T036)
 - [ ] T039 [US1] Build the basic review screen in `src/features/review/ReviewScreen.tsx` and `ColumnCard.tsx` with a hand-drawn SVG chart in `src/features/review/Sparkline.tsx`; show unsupported and excluded labels
 - [ ] T040 [P] [US1] Implement the per-column generator (rank placement of NA and sentinels, categorical by cumulative counts, numeric by mode with exact min and max) in `src/lib/generate/column.ts`, `categorical.ts` and `numeric.ts`
 - [ ] T041 [P] [US1] Implement date, datetime and time generation (number to string using the original pattern and granularity) in `src/lib/generate/datetime.ts`
 - [ ] T042 [US1] Implement the generate worker (chunked rows, preview of 50 rows, CSV encoding with the original settings, excluded columns dropped or kept as all-NA) in `src/workers/generate.worker.ts`
 - [ ] T043 [US1] Implement the check table computation (target versus achieved for counts, NA, sentinels, min, max, mean, sd) in `src/lib/generate/checks.ts`
-- [ ] T044 [US1] Build the generate screen in `src/features/generate/GenerateScreen.tsx` (seed field, Generate, preview table, check table) and `ExportButton.tsx` (Blob download, `_fake` suffix with a keep-original-name toggle)
+- [ ] T044 [US1] Build the generate screen in `src/features/generate/GenerateScreen.tsx` (seed field that rejects a blank or out-of-range value, 0 to 4,294,967,295, with a message and a component test in `tests/component/seed-field.test.tsx`; Generate, preview table, check table) and `ExportButton.tsx` (Blob download, `_fake` suffix with a keep-original-name toggle)
 - [ ] T045 [P] [US1] Create `scripts/verify-roundtrip.mjs` that parses real and fake files with the same code and compares names, order and types (SC-004)
 - [ ] T046 [US1] Wire the three screens through the app state in `src/App.tsx` and verify quickstart scenarios A and G
 
@@ -136,12 +140,13 @@ with unsupported columns safely excluded.
 
 - [ ] T051 [US2] Add type override and categorical threshold controls to `ColumnCard.tsx` and `src/features/review/ColumnEditors.tsx`, calling `reprofile` on the profile worker
 - [ ] T052 [P] [US2] Build the sentinel and NA token editors in `src/features/review/SentinelEditor.tsx` and `NaTokenEditor.tsx` (confirmed sentinels leave min, max, mean and sd)
-- [ ] T053 [P] [US2] Build numeric controls (uniform, match mean and sd, match shape, decimals or integer, optional rescale) in `src/features/review/NumericControls.tsx`, and implement the two-pass rescale in `src/lib/sampling/rescale.ts`
+- [ ] T053 [P] [US2] Build numeric controls (uniform, match mean and sd, match shape, decimals or integer, optional rescale) in `src/features/review/NumericControls.tsx`, and implement the two-pass rescale in `src/lib/sampling/rescale.ts`, leaving the two reserved min and max rows out of the fit and re-pinning them to the exact values afterward, with a unit test in `tests/unit/rescale.test.ts` that exact min and max survive rescale and rounding (FR-024, SC-002)
 - [ ] T054 [P] [US2] Implement exclusion (drop by default, keep as all-NA) in `src/features/review/ExcludeControl.tsx`
 - [ ] T055 [P] [US2] Implement protections (merge under k into "Other", neutral label codes, rename columns), all off by default, in `src/lib/protections.ts` and `src/features/review/ProtectionsPanel.tsx`
 - [ ] T056 [US2] Implement the date pattern box in `src/features/review/DatePatternBox.tsx` with the `datePattern` worker message and `datePatternResult` reply
 - [ ] T057 [US2] Build the column list search, "needs attention" and type filters, and the uncertain-columns banner in `src/features/review/ColumnFilters.tsx` and `AttentionBanner.tsx`
 - [ ] T058 [US2] Handle `beta_fit_failed` (fall back to uniform and flag) in `src/lib/sampling/beta.ts` and show it on the card
+- [ ] T119 [US2] Add the persistent Review notice that the saved spec will contain real category labels, exact min and max and sentinel codes, and nothing else derived from the data (FR-038), in `src/features/review/SpecContentsNotice.tsx`, with a component test in `tests/component/spec-contents-notice.test.tsx`
 
 **Checkpoint**: Every automatic decision can be reviewed and changed.
 
@@ -167,7 +172,7 @@ with unsupported columns safely excluded.
 - [ ] T065 [US3] Implement ID generation (group assignment from the repeat structure, keyed bijection to mask values) in `src/lib/generate/survey-id.ts`
 - [ ] T066 [US3] Build the ID mask token editor with a live sample in `src/features/review/IdMaskEditor.tsx`
 - [ ] T067 [US3] Implement the FR-016a block (capacity versus needed, `needs_attention`, disabled Generate) in `src/features/review/idCapacity.ts` and the generate screen
-- [ ] T068 [US3] Add ID type detection (name ends in `id` or `_num`, unique or grouped integers and codes) to `src/lib/classify/classify.ts` and its tests in `tests/unit/classify.test.ts`
+- [ ] T068 [US3] Remove the temporary exclusion of `survey_id` columns added in T035 (depends on T065 and T067) so detected IDs generate through the mask, and extend `tests/unit/classify.test.ts` for mixed-mask and unique-per-row ID columns
 
 **Checkpoint**: ID columns generate to the pattern, and the privacy test proves nothing leaks.
 
@@ -188,7 +193,7 @@ with unsupported columns safely excluded.
 
 ### Implementation for User Story 5
 
-- [ ] T073 [US5] Implement `src/workers/netpatch.ts` (patch `fetch` and `XMLHttpRequest`, post `net` messages) and wrap both worker constructors with it
+- [ ] T073 [US5] Implement `src/workers/netpatch.ts` (patch `fetch` and `XMLHttpRequest`, post `net` messages) and wrap both worker constructors with it (the constructors are created in T036 and T042, so build T073 to T075 before showing the MVP to the maintainer with real data)
 - [ ] T074 [US5] Implement the counter store in `src/app/netCounter.ts` (main-thread `PerformanceObserver`, wrapped `fetch`, worker reports, `securitypolicyviolation`)
 - [ ] T075 [US5] Build `src/app/NetworkCounter.tsx` showing same-origin, cross-origin and blocked counts, visible on every screen
 - [ ] T076 [US5] Terminate workers and drop all state on "start over"; confirm nothing is written to browser storage (audit in `src/app/state.ts`)
@@ -212,7 +217,7 @@ with unsupported columns safely excluded.
 ### Implementation for User Story 4
 
 - [ ] T080 [US4] Build the spec serializer from app state in `src/features/spec/saveSpec.ts` and the Save and Export spec buttons (review and generate screens)
-- [ ] T081 [US4] Build the spec loader (file picker, validation, error list by column, jump to Review) in `src/features/spec/loadSpec.ts` and `SpecErrors.tsx`, with "Load existing spec" on the ingest screen
+- [ ] T081 [US4] Build the spec loader (file picker, validation, error list by column, jump to Review) in `src/features/spec/loadSpec.ts` and `SpecErrors.tsx`, with "Load existing spec" on the ingest screen; loading a spec replaces any open file and goes straight to Review, so a spec and a real file are never combined (FR-004)
 - [ ] T082 [US4] Make Generate work from a loaded spec with no source file (generate worker only) and show the spec-only banner in `src/features/generate/GenerateScreen.tsx`
 - [ ] T083 [US4] Add the `spec_version` check and clear messages for newer or older versions in `src/lib/spec/validate.ts`
 
@@ -228,8 +233,8 @@ with unsupported columns safely excluded.
 
 ### Tests for User Story 6
 
-- [ ] T084 [P] [US6] Component test that the column list virtualizes 120+ cards and search finds any column in under 15 seconds in `tests/component/virtual-list.test.tsx`
-- [ ] T085 [P] [US6] Playwright test on the 500 MB fixture: profile under 5 minutes and generate plus export under 5 minutes with progress and a responsive page, in `tests/e2e/scale.spec.ts`
+- [ ] T084 [P] [US6] Component test that the column list virtualizes 120+ cards and search returns matching columns within a few hundred milliseconds in `tests/component/virtual-list.test.tsx` (the 15-second human timing in SC-008 is a manual check in T096)
+- [ ] T085 [P] [US6] Playwright test on the 500 MB fixture: profile under 5 minutes and generate plus export under 5 minutes with progress and a responsive page, in `tests/e2e/scale.spec.ts`. Run manually on the reference laptop (4 or more cores, 16 GB, current Chrome or Edge); CI runs only the small-fixture variant
 - [ ] T086 [P] [US6] Playwright test that Firefox and WebKit download a single file, in `tests/e2e/download-fallback.spec.ts`
 
 ### Implementation for User Story 6
@@ -250,7 +255,7 @@ with unsupported columns safely excluded.
 - [ ] T093 [P] Accessibility pass: keyboard operation of every control, visible focus ring, contrast check with a unit test in `tests/unit/contrast.test.ts` (Principle VII, FR-037)
 - [ ] T094 [P] Add a help guide modal (what is stored, what is not, known limits from SPEC.md) in `src/app/HelpGuideModal.tsx`
 - [ ] T095 [P] Review `package.json` for any dependency that can make network requests or send telemetry and record the audit in `research.md`
-- [ ] T096 Run all quickstart scenarios A to G in Chrome and Edge, and A and G in Firefox and Safari, and record the results in `specs/001-csv-synthetic-slice/quickstart.md`
+- [ ] T096 Run all quickstart scenarios A to G in Chrome and Edge, and A and G in Firefox and Safari, plus the manual checks for SC-007 (typical table to fake CSV in under 10 minutes) and SC-008 (find any column in a 120-column table in under 15 seconds), and record the results in `specs/001-csv-synthetic-slice/quickstart.md`
 - [ ] T097 Run `/speckit-converge` to re-sync this file with the code, then mark the slice complete
 
 ---
@@ -301,8 +306,7 @@ Slice 1 is complete when Phases 1 to 9 are done, regardless of this section.
 
 - **Setup (Phase 1)**: no dependencies
 - **Foundational (Phase 2)**: needs Setup; blocks every story. The prototypes (T015 to T018) must
-  finish before the tasks they gate: T016 gates T091, T017 gates the encoding work in US1, T018
-  gates T092
+  finish before the tasks they gate: T016 gates T091, T017 gates T120, T018 gates T092
 - **US1 (Phase 3)**: needs Foundational; this is the MVP
 - **US2 (Phase 4)**: needs US1 (it extends the review screen and profile messages)
 - **US3 (Phase 5)**: needs US1; independent of US2 except for shared review-card files

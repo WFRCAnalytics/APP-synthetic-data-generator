@@ -36,14 +36,16 @@ single-file download
 **Project Type**: Single-page web application (static, client-only)
 
 **Performance Goals**: A ~500 MB, ~120-column CSV profiles in under 5 minutes and generates plus
-exports in under 5 minutes, with progress shown and a responsive page (SC-001)
+exports in under 5 minutes, with progress shown and a responsive page (SC-001), measured on a
+reference laptop (4 or more CPU cores, 16 GB of memory, current Chrome or Edge); CI runs only the
+small-fixture version, and the 500 MB run is a manual check on the reference machine
 
 **Constraints**: Zero cross-origin requests after load; no real value in the UI, spec or errors;
 spec under 1 MB for a table with 50,000 IDs; WASM memory limit (32-bit, at most 4 GB); no `eval`
 (the CSP forbids it)
 
 **Scale/Scope**: One table per session; up to ~500 MB, 100 to 120+ columns, about 1 million rows;
-3 screens, 10 column types (4 in-scope families plus empty and unsupported)
+3 screens, 10 column types (8 generated types, plus `empty` and `unsupported` handled specially)
 
 ## Constitution Check
 
@@ -100,7 +102,7 @@ public/
 src/
 ├── main.tsx
 ├── App.tsx
-├── app/                       # AppHeader, Stepper, LocalNotice, NetworkCounter, state reducer
+├── app/                       # AppHeader, Stepper, LocalNotice, NetworkCounter, netCounter store, state reducer
 ├── components/                # Modal, Badge, EmptyState, SelectField, ConfirmDialog (copied from the reference)
 ├── features/
 │   ├── ingest/                # file picker, settings confirmation, spec loader
@@ -115,9 +117,13 @@ src/
 │   ├── datefmt/               # supported directives, format and SQL translation
 │   ├── csv/                   # writer, quoting, encoders (UTF-8, UTF-16, Windows-1252)
 │   ├── encoding/              # BOM and encoding detection
+│   ├── generate/              # per-column generators, check table computation
+│   ├── protections.ts         # rare-category merge, label codes, rename
+│   ├── errors.ts              # error type that forbids cell values in messages
 │   └── spec/                  # types and valibot validators
 ├── workers/
 │   ├── profile.worker.ts      # DuckDB: open, sniff, load, profile
+│   ├── profile/               # stats.ts, ids.ts, batchFromHandle.ts (only if the memory spike fails)
 │   ├── generate.worker.ts     # spec-only generation and CSV encoding
 │   └── netpatch.ts            # fetch and XHR patch that reports to the UI
 ├── theme/                     # tokens.css, fonts, useTheme (copied from the reference)

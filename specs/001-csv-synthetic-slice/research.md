@@ -79,7 +79,9 @@ dependent work starts; each has a named fallback.
 
 - **Decision**: Two deterministic passes. Pass 1 regenerates the column and accumulates sum and
   sum of squares; pass 2 applies an affine rescale, rounds, then clips to the real min and max.
-  Residual error after rounding is reported in the check table rather than hidden.
+  The two rows reserved for the exact min and max are left out of the fit and re-pinned to the exact
+  values after rescaling, so SC-002 still holds. Residual mean and sd error after rounding is
+  reported in the check table rather than hidden.
 - **Why**: Regeneration is free because generation is a pure function (R5).
 - **Alternatives**: Store the column (memory cost); skip the step (the spec makes it optional but
   required to exist).
@@ -115,6 +117,9 @@ dependent work starts; each has a named fallback.
   The counter shows same-origin, cross-origin, and blocked (from `securitypolicyviolation`).
 - **Why**: GitHub Pages cannot set headers, but a meta CSP still enforces `connect-src`. The
   counter then shows an enforced fact, not a hope.
+- **Dev server**: Vite's React plugin injects an inline refresh script in development, which the strict
+  `script-src 'self'` would block. Apply the strict policy in build and preview only, use a
+  dev-safe variant through `transformIndexHtml`, and run the browser tests against `vite preview`.
 - **VERIFY**: DuckDB-WASM instantiates under this CSP. **Fallback**: add the narrowest extra source
   that works and document it in this file.
 
