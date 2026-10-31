@@ -53,14 +53,14 @@
 
 ### Tests for User Story 1
 
-- [ ] T018 [P] [US1] Integration test: load `plain.xlsx` and `quirks.xlsx` sheets into the all-text table through the extension (Node cannot fetch the extension, so the test serves it from a local file through the same engine code path) and check the text of dates, whole numbers, decimals, booleans, blank cells and empty text, in `tests/integration/xlsx-load.test.ts`
+- [ ] T018 [P] [US1] Node integration test of the conversion to text: build a synthetic typed table (DATE, TIMESTAMP, TIME, whole and fractional DOUBLE, BOOLEAN, VARCHAR with empty text, NULL) and check the text `buildConversionSql` produces (ISO dates, no ".0", `TRUE`/`FALSE`, `EMPTY_TEXT_TOKEN`, NULL stays NULL), and that the load issues no statement that returns rows (a recording runner), in `tests/integration/xlsx-load.test.ts`; the real `read_xlsx` path is covered by the browser tests T020 and T035 (Node cannot load the extension)
 - [ ] T019 [P] [US1] Unit tests for the streaming writer: the parts of the package, one style per format code, inline strings, number, date and text cells, rows above the header, column letters past Z, sheet name escaping, and that Python's `zipfile` and Node's own unzip can open it, in `tests/unit/xlsx-writer.test.ts`
-- [ ] T020 [P] [US1] Integration test of the round trip: profile a fixture, generate the fake workbook, read it back through the extension and compare sheet name, header row, names, order and types (and, when Python with openpyxl is available, read both with the same openpyxl and pandas calls), in `tests/integration/xlsx-roundtrip.test.ts`
+- [ ] T020 [P] [US1] Round trip in a browser: through the app profile `quirks.xlsx`, generate and download the fake workbook, load that download again through the app and compare sheet name, header row, column names, order, types and formats of the two profiles (and, when Python with openpyxl is available, read both files with the same openpyxl and pandas calls), in `tests/e2e/excel-flow.spec.ts`; a Node unit test checks the written package with the metadata reader in `tests/unit/xlsx-writer.test.ts`
 - [ ] T021 [P] [US1] Component tests for the workbook dialog (sheet dropdown with hidden marked, no cell value, rows to skip suggestion, header toggle, range field with errors, confirm) in `tests/component/workbook-dialog.test.tsx`
 
 ### Implementation for User Story 1
 
-- [ ] T022 [US1] Implement `src/workers/profile/xlsx.ts`: `loadSheet` creates the all-text `src` table from `read_xlsx` with the range or rows to skip, converts each column to text as in R3 (dates, whole numbers, booleans) and maps empty-text cells to `EMPTY_TEXT_TOKEN`; `inspect` wraps `metadata.ts`
+- [ ] T022 [US1] Implement `src/workers/profile/xlsx.ts`: pure builders `buildReadSql` (the `read_xlsx` call with sheet, range or rows to skip, header) and `buildConversionSql` (R3: dates, whole numbers, booleans, empty-text to `EMPTY_TEXT_TOKEN`), and `loadSheet` that creates the all-text `src` table with them; `inspect` wraps `metadata.ts`
 - [ ] T023 [US1] Add `inspectWorkbook`, `workbookInfo`, `inspectSheet`, `sheetHints` and `loadSheet` to `src/workers/protocol.ts` and `src/workers/profile.worker.ts`, reusing `loaded`, `progress`, `columnProfile`, `profiled` and `error`; make `profileAll` and `collectBasic` treat `EMPTY_TEXT_TOKEN` as an NA token for workbooks
 - [ ] T024 [US1] Session support in `src/app/session.ts`: `openFile` recognizes a workbook by its content, shows the dialog state (`workbook` phase) and sends `loadSheet`; settings state becomes the `SourceSettings` union; `exportName` keeps the `.xlsx` extension; update `tests/helpers/fakeWorkers.ts` for the new messages
 - [ ] T025 [US1] Build `src/features/ingest/WorkbookDialog.tsx` (sheet dropdown, rows to skip with the suggestion, header toggle, optional range, hidden marking, merged-cells note) and let `IngestScreen.tsx` accept `.xlsx` and show the workbook source summary instead of the CSV settings
@@ -80,7 +80,7 @@
 
 ### Tests for User Story 4
 
-- [ ] T029 [P] [US4] Spy integration test: record every row the engine returns while a workbook is inspected, loaded and profiled and fail if any marker from other sheets, the title row, comments or any real cell value comes back, in `tests/integration/xlsx-privacy.test.ts`
+- [ ] T029 [P] [US4] Spy tests: (a) in Node, record every statement and row of the workbook load and of profiling a table made from a synthetic typed sheet and fail if any marker or cell value comes back; (b) in a browser, load `titles.xlsx` through the app and fail if any marker from other sheets, the title row or comments appears in the page, spec, preview, download or an error, in `tests/integration/xlsx-privacy.test.ts` and `tests/e2e/excel-flow.spec.ts`
 - [ ] T030 [P] [US4] Metadata test: the reader returns only names, flags, sizes and format codes (serialize its output and search it for every cell value and marker in `titles.xlsx`), added to `tests/unit/xlsx-metadata.test.ts`
 - [ ] T031 [P] [US4] Browser leak test: extend `tests/e2e/privacy.spec.ts` with `titles.xlsx` so no marker or cell value appears in the page, spec, preview, download, errors or browser storage, and no request leaves the site while the extension loads and the workbook is read
 - [ ] T032 [P] [US4] Refusal tests: a damaged workbook, `legacy.xls`, `encrypted.xlsx`, a text file renamed `.xlsx` and a zip that is not a workbook each give their own clear message with no cell content, in `tests/unit/xlsx-metadata.test.ts` and `tests/e2e/excel-flow.spec.ts`
@@ -102,7 +102,7 @@
 
 ### Tests for User Story 2
 
-- [ ] T035 [P] [US2] Integration tests per quirk against `quirks.xlsx`, `formats.xlsx` and `dates1904.xlsx`: zip text keeps zeros, amounts keep `#,##0.00` and 2 decimals, percent and currency formats, dates round trip in both date systems, blank and empty-text counts equal, formulas read as values with no formula text in the spec or file, in `tests/integration/xlsx-quirks.test.ts`
+- [ ] T035 [P] [US2] Browser tests per quirk through the app against `quirks.xlsx`, `formats.xlsx` and `dates1904.xlsx`: zip text keeps zeros, amounts keep `#,##0.00` and 2 decimals, percent and currency formats, dates round trip in both date systems, blank and empty-text counts equal, formulas read as values with no formula text in the spec or file, in `tests/e2e/excel-quirks.spec.ts`; the writer's cell types for each quirk are unit tested in `tests/unit/xlsx-writer.test.ts`
 - [ ] T036 [P] [US2] Unit tests for format detection from a column: the first cells' style decides, mixed formats raise `format_mismatch`, a number column displayed as text stays text, in `tests/unit/xlsx-metadata.test.ts`
 - [ ] T037 [P] [US2] Component tests for the quirk notes (merged cells found, mixed formats, hidden sheet chosen) in `tests/component/workbook-dialog.test.tsx` and `tests/component/review-xlsx.test.tsx`
 
@@ -127,7 +127,7 @@
 
 - [ ] T042 [P] [US3] Unit tests for the size estimate and thresholds (warning at 100 MB expanded, stop at the recorded limit, text with the estimated memory) in `tests/unit/size-warning.test.ts`
 - [ ] T043 [P] [US3] Component tests: the warning appears in the dialog before profiling and a too large sheet cannot be loaded; loading an xlsx spec without a workbook shows the spec-only banner and generates an `.xlsx`, in `tests/component/workbook-dialog.test.tsx` and `tests/component/spec-load.test.tsx`
-- [ ] T044 [P] [US3] Spec tests: an xlsx spec for a profiled sheet holds the sheet, range, rows skipped, header, date system and format codes and no cell value, stays under 1 MB, and round trips, in `tests/integration/xlsx-roundtrip.test.ts`
+- [ ] T044 [P] [US3] Spec tests: an xlsx spec for a profiled sheet holds the sheet, range, rows skipped, header, date system and format codes and no cell value, stays under 1 MB, and round trips (unit, from a synthetic profile) in `tests/unit/spec-roundtrip.test.ts`, and the saved spec of `quirks.xlsx` in a browser in `tests/e2e/excel-flow.spec.ts`
 
 ### Implementation for User Story 3
 

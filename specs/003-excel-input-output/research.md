@@ -21,6 +21,7 @@ cached values, and merged cells.
 | `all_varchar = true` | Dates come back as serial numbers ("45292") and numbers as "1000", "2000.0": loses the date type and adds ".0" |
 | Without a range, `header = false` | Reads one column ("A1"): the width comes from the first row, so rows above the table need a range |
 | DuckDB's xlsx writer (`COPY ... TO 'x.xlsx' (FORMAT xlsx)`) | Writes a valid file (3.7 KB), but has no option for number formats or for blank versus empty text |
+| Can the Node test engine load the extension? | No. `LOAD` fails there ("The object does not support the operation or argument"), because WebAssembly extensions need the browser build. Everything that calls `read_xlsx` is therefore tested in a real browser; the SQL that builds it and the conversion to text are tested in Node on synthetic typed tables |
 | What DuckDB does not give | Sheet names and visibility, the date system, the number format of a column, merged cells, a suggested number of rows to skip |
 
 ## R1: Reading approach
