@@ -27,9 +27,13 @@ name and format) and run the code locally.
 
 ## Status
 
-Early development. Slice 1 (CSV in, profile and review, spec, generate, CSV out) is in progress.
-Everything still to do is tracked in
+The core flow works end to end for CSV files: choose a file, confirm the detected settings, review
+the profiled columns, generate, check the summaries, and download the fake file. Review is
+read-only for now; the controls to override each decision, ID patterns, saving and loading a spec,
+and the network counter are next. Everything still to do is tracked in
 [`specs/001-csv-synthetic-slice/tasks.md`](specs/001-csv-synthetic-slice/tasks.md).
+
+On a 525 MB, 117-column file it profiles in about 80 seconds and generates in about 50.
 
 ## Documents
 
@@ -51,6 +55,7 @@ npm run lint         # ESLint
 npm run typecheck    # TypeScript
 npm run build        # production build -> dist/
 npm run fixtures     # generate test fixtures (see contracts/fixture-matrix.md)
+node scripts/fetch-corpus.mjs   # download other people's CSV edge cases for the robustness test
 ```
 
 `npm run dev` and `npm run build` first copy the DuckDB-WASM binaries from `node_modules` into
