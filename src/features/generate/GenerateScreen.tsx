@@ -5,6 +5,7 @@
 import { CircleCheck, CircleX, Download } from "lucide-react";
 import { parseSeed, type SessionState } from "../../app/session";
 import type { CheckRow } from "../../lib/generate/checks";
+import { idFit, narrowIdColumns, shortfallText } from "../../lib/profile/idCapacity";
 
 export interface GenerateScreenProps {
   session: SessionState;
@@ -68,6 +69,7 @@ export function GenerateScreen(props: GenerateScreenProps) {
   const { gen } = session;
   const seedOk = parseSeed(session.seedText) !== null;
   const running = gen.status === "running";
+  const narrow = narrowIdColumns(session.profiles);
   const percent = gen.progress && gen.progress.total > 0 ? Math.round((gen.progress.done / gen.progress.total) * 100) : 0;
 
   return (
@@ -92,7 +94,7 @@ export function GenerateScreen(props: GenerateScreenProps) {
       </div>
 
       <div className="actions-row">
-        <button type="button" className="button button-primary" onClick={props.onGenerate} disabled={running || !seedOk}>
+        <button type="button" className="button button-primary" onClick={props.onGenerate} disabled={running || !seedOk || narrow.length > 0} aria-describedby={narrow.length > 0 ? "narrow-ids" : undefined}>
           {gen.status === "done" ? "Generate again" : "Generate"}
         </button>
         {running && (
@@ -101,6 +103,18 @@ export function GenerateScreen(props: GenerateScreenProps) {
           </button>
         )}
       </div>
+      {narrow.length > 0 && (
+        <div id="narrow-ids" className="banner banner-error" role="alert">
+          {narrow.map((p) => {
+            const fit = idFit(p);
+            return (
+              <p key={p.name}>
+                {p.outputName}: {fit ? shortfallText(fit) : ""} Widen its ID pattern on Review, or leave the column out.
+              </p>
+            );
+          })}
+        </div>
+      )}
       {!seedOk && (
         <div className="banner banner-error" role="alert">
           Enter a whole number from 0 to 4,294,967,295 as the seed.

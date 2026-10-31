@@ -3,9 +3,20 @@
 // apart from the engine-side overrides and applied on top of a profile, so changing one never
 // touches the database and a re-profile never loses them.
 
-import type { ColumnProfile, ExcludeMode, NumericMode } from "./types";
+import { idFit } from "./idCapacity";
+import type { ColumnProfile, ExcludeMode, MaskToken, NumericMode, ReasonCode } from "./types";
+
+/** An ID pattern chosen in the token editor, replacing the detected one. */
+export interface IdPattern {
+  mask: MaskToken[];
+  min?: number;
+  max?: number;
+  pad?: number;
+}
 
 export interface LocalEdits {
+  /** A pattern for a survey ID column; undefined means the detected one. */
+  idPattern?: IdPattern;
   exclude?: ExcludeMode;
   mode?: NumericMode;
   /** Decimal places for a decimal column. */
@@ -50,6 +61,16 @@ export function applyEdits(p: ColumnProfile, e: LocalEdits | undefined): ColumnP
   if (isCategorical(p)) {
     if (e.mergeUnderK !== undefined) out.mergeUnderK = e.mergeUnderK;
     if (e.labelCodes !== undefined) out.labelCodes = e.labelCodes;
+  }
+
+  if (p.summary.kind === "survey_id" && e.idPattern !== undefined) {
+    const { mask, min, max, pad } = e.idPattern;
+    out.summary = { ...p.summary, mask, min, max, padWidth: pad ?? 0 };
+    // The edited pattern may be too narrow for the column; say so, and clear the note once it fits.
+    const reasons: ReasonCode[] = p.attentionReasons.filter((r) => r !== "id_mask_too_narrow" && r !== "id_mixed_masks");
+    if (idFit(out)?.short) reasons.push("id_mask_too_narrow");
+    out.attentionReasons = reasons;
+    out.status = reasons.length > 0 ? "needs_attention" : "ok";
   }
 
   return out;

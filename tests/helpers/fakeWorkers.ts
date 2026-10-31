@@ -43,6 +43,18 @@ export const numeric = (name: string, over: Partial<ColumnProfile> = {}): Column
   ...over,
 });
 
+/** A whole-number ID column of five digits whose repeat structure needs `groups` distinct IDs. */
+export const idColumn = (name: string, over: Partial<ColumnProfile> = {}, groups = 500): ColumnProfile => ({
+  ...base,
+  name,
+  outputName: name,
+  detectedType: "survey_id",
+  type: "survey_id",
+  status: "ok",
+  summary: { kind: "survey_id", mask: ["digit", "digit", "digit", "digit", "digit"], min: 10000, max: 10000 + groups - 1, padWidth: 0, repeatStructure: { "1": groups / 2, "2": groups / 4, "4": groups / 4 }, distinct: groups },
+  ...over,
+});
+
 export const unsupportedColumn = (name: string): ColumnProfile => ({
   ...base,
   name,

@@ -8,6 +8,7 @@ import type { LocalEdits } from "../../lib/profile/edits";
 import type { ColumnOverrides, ColumnProfile, ColumnType } from "../../lib/profile/types";
 import { DatePatternBox } from "./DatePatternBox";
 import { ExcludeControl } from "./ExcludeControl";
+import { IdMaskEditor } from "./IdMaskEditor";
 import { NaTokenEditor } from "./NaTokenEditor";
 import { NumericControls } from "./NumericControls";
 import { ProtectionsPanel } from "./ProtectionsPanel";
@@ -92,6 +93,8 @@ export function ColumnEditors({ profile, otherNames, busy, dateCheck, onEdit, on
           }}
         />
       )}
+
+      {kind === "survey_id" && <IdMaskEditor profile={profile} onChange={(idPattern) => onEdit({ idPattern })} />}
 
       <ExcludeControl profile={profile} onChange={(exclude) => onEdit({ exclude })} />
 
