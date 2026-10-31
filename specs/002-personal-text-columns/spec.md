@@ -8,6 +8,12 @@
 
 **Input**: User description: "Slice 2: personal identifier columns, free text and short strings. Today these columns are detected as unsupported and left out of the fake file. Make them generate, without ever keeping a real value (SPEC.md privacy model, constitution Principle II)."
 
+## Clarifications
+
+### Session 2026-10-31
+
+- Q: Should social-security-style numbers be generated as invented numbers, or stay unsupported? → A: Generate them only after the user turns on an explicit acknowledgement on the card; until then they stay unsupported and left out.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Keep name, email, phone and address columns in the fake table (Priority: P1)
@@ -141,6 +147,9 @@ the preview, the downloaded file or any error message.
   mix is shown for confirmation.
 - A personal column the user changes to a numeric or categorical type: this works as in slice 1,
   but the card warns that real labels would then be kept in the spec.
+- A social-security-style column the user has not acknowledged: it stays left out, the card says
+  why, and the user can still keep it as all-missing. Turning the acknowledgement off again
+  returns it to left out.
 - Sentinel-like values (for example "refused") in a name column: they are kept as sentinels with
   exact counts, as in slice 1.
 
@@ -151,6 +160,9 @@ the preview, the downloaded file or any error message.
 - **FR-001**: The system MUST propose a kind for each column that holds personal data: full name,
   first name, last name, email, US phone number, street address, URL, IP address, or a
   social-security-style number. The user MUST be able to confirm, change or exclude it.
+  A social-security-style column MUST stay unsupported and left out until the user turns on an
+  explicit acknowledgement on its card; only then is it generated, as invented numbers in the
+  same shape from ranges that real numbers never use.
 - **FR-002**: Personal identifier columns MUST be generated with invented, realistic US English
   values of the chosen kind. No real value MUST appear in the output.
 - **FR-003**: The fake column MUST keep the real column's repeat structure (how many distinct
