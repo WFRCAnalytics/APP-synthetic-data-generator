@@ -76,6 +76,12 @@ export function GenerateScreen(props: GenerateScreenProps) {
     <section aria-labelledby="generate-heading">
       <h2 id="generate-heading">Generate the fake table</h2>
 
+      {session.specOnly && (
+        <div className="banner banner-info" role="status" data-testid="spec-only-banner">
+          Generating from a saved spec. No source file is open, so the fake table is built from the spec alone.
+        </div>
+      )}
+
       <div className="settings-grid">
         <div className="field">
           <label htmlFor="seed">Seed</label>

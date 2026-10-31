@@ -19,6 +19,7 @@ export function App() {
   useEffect(() => {
     const unsubscribe = session.subscribe(setData);
     session.onProfiled = (columns) => dispatch({ type: "columnsProfiled", columns });
+    session.onSpecLoaded = (columns) => dispatch({ type: "specLoaded", columns });
     // Leaving the page drops the workers, and with them every byte of real data.
     return () => {
       unsubscribe();
@@ -46,6 +47,7 @@ export function App() {
           <IngestScreen
             session={data}
             onChooseFile={(file) => session.openFile(file)}
+            onChooseSpec={(file) => void session.loadSpecFile(file)}
             onEditSettings={(patch) => session.editSettings(patch)}
             onConfirm={() => session.confirmAndProfile()}
             onCancel={() => session.cancel()}
@@ -61,6 +63,10 @@ export function App() {
               checkDatePattern: (name, pattern) => session.checkDatePattern(name, pattern),
               setThreshold: (n) => session.setThreshold(n),
               onContinue: () => dispatch({ type: "goTo", step: "generate" }),
+              onSaveSpec: () => {
+                const blob = session.specBlob();
+                if (blob) downloadBlob(blob, session.specFileName());
+              },
             }}
           />
         )}

@@ -6,7 +6,10 @@ import type { CheckRow } from "../lib/generate/checks";
 import { applyAllEdits, type LocalEdits } from "../lib/profile/edits";
 import type { ColumnOverrides, ColumnProfile, FileSettings } from "../lib/profile/types";
 import { buildSpec } from "../lib/spec/build";
-import type { SpecFile } from "../lib/spec/types";
+import { profilesFromSpec, settingsFromSource } from "../lib/spec/toProfiles";
+import type { SpecFile, SpecProblem } from "../lib/spec/types";
+import { readSpecFile } from "../features/spec/loadSpec";
+import { specBlobOf, specFileNameFor } from "../features/spec/saveSpec";
 import type { GenerateRequest, GenerateResponse, ProfileJob, ProfileRequest, ProfileResponse } from "../workers/protocol";
 
 export type Phase = "idle" | "opening" | "opened" | "loading" | "profiling" | "profiled" | "error";
@@ -58,6 +61,10 @@ export interface SessionState {
   seedText: string;
   keepOriginalName: boolean;
   gen: GenState;
+  /** Columns came from a saved spec: there is no source file, so nothing can be profiled again. */
+  specOnly: boolean;
+  /** Problems found in the last spec file the user tried to load, by column. */
+  specProblems: SpecProblem[] | null;
 }
 
 const emptyGen: GenState = { status: "idle", progress: null, header: [], preview: [], checks: [], error: null, totalBytes: 0, replaced: 0 };
@@ -80,6 +87,8 @@ export const initialSession: SessionState = {
   seedText: "42",
   keepOriginalName: false,
   gen: emptyGen,
+  specOnly: false,
+  specProblems: null,
 };
 
 export const MAX_SEED = 4294967295;
@@ -115,6 +124,7 @@ export class Session {
   /** Settings the worker applies when it profiles a column (sentinels, NA tokens, type, date pattern). */
   private engine: Record<string, ColumnOverrides> = {};
   onProfiled: (columns: { name: string; type: string }[]) => void = () => {};
+  onSpecLoaded: (columns: { name: string; type: string }[]) => void = () => {};
 
   subscribe(listener: Listener): () => void {
     this.listeners.add(listener);
@@ -159,6 +169,36 @@ export class Session {
   cancel(): void {
     this.send({ type: "cancel" });
     this.generateWorker?.postMessage({ type: "cancel" } satisfies GenerateRequest);
+  }
+
+  /**
+   * Loads a saved spec in place of a file (FR-004): a good one replaces whatever is open and goes to
+   * Review; a bad one leaves the session as it was and lists its problems by column.
+   */
+  async loadSpecFile(file: File): Promise<void> {
+    const result = await readSpecFile(file);
+    if (!result.ok) {
+      this.set({ specProblems: result.problems });
+      return;
+    }
+    const spec = result.spec;
+    this.reset();
+    const profiles = profilesFromSpec(spec.columns);
+    this.base = profiles;
+    this.set({
+      phase: "profiled",
+      specOnly: true,
+      specProblems: null,
+      fileName: spec.source.file_name,
+      settings: settingsFromSource(spec.source),
+      columnNames: spec.columns.map((c) => c.name),
+      rowCount: spec.n_rows,
+      threshold: spec.categorical_threshold ?? initialSession.threshold,
+      seedText: String(spec.seed),
+      keepOriginalName: spec.keep_original_name ?? false,
+      profiles,
+    });
+    this.onSpecLoaded(profiles.map((p) => ({ name: p.name, type: p.type })));
   }
 
   private makeProfileWorker(): Worker {
@@ -221,6 +261,10 @@ export class Session {
     this.set({ profiles: applyAllEdits(this.base, this.edits), busy: this.state.busy.filter((n) => n !== profile.name), reviewError: null });
   }
 
+  private needSourceFile(): void {
+    this.set({ reviewError: "This table was loaded from a saved spec, so there is no file to read. Open the original file to change this setting." });
+  }
+
   /** A change that needs no data: applied at once, and kept across any later re-profile. */
   editColumn(name: string, patch: LocalEdits): void {
     this.edits = { ...this.edits, [name]: { ...this.edits[name], ...patch } };
@@ -229,6 +273,7 @@ export class Session {
 
   /** A change the worker must apply by profiling the column again. A key set to undefined is removed. */
   overrideColumn(name: string, patch: Partial<ColumnOverrides>): void {
+    if (this.state.specOnly) return this.needSourceFile();
     const next: ColumnOverrides = { ...this.engine[name], ...patch };
     for (const key of Object.keys(patch) as (keyof ColumnOverrides)[]) if (patch[key] === undefined) delete next[key];
     this.engine = { ...this.engine, [name]: next };
@@ -238,6 +283,7 @@ export class Session {
 
   /** Changes the distinct-value limit for categorical columns and profiles every column again. */
   setThreshold(threshold: number): void {
+    if (this.state.specOnly) return this.needSourceFile();
     if (!Number.isInteger(threshold) || threshold < 2 || threshold > 2000) return;
     this.pending.clear();
     this.set({ threshold, phase: "profiling", progress: null, reviewError: null });
@@ -246,6 +292,7 @@ export class Session {
 
   /** Asks the worker how many values a typed date pattern parses (FR-005a). */
   checkDatePattern(name: string, pattern: string): void {
+    if (this.state.specOnly) return this.needSourceFile();
     this.set({ datePatternChecks: { ...this.state.datePatternChecks, [name]: { pattern, parsed: null, total: null } } });
     this.send({ type: "datePattern", column: name, pattern });
   }
@@ -332,12 +379,11 @@ export class Session {
 
   specBlob(): Blob | null {
     const spec = this.buildSpec();
-    return spec ? new Blob([JSON.stringify(spec, null, 2)], { type: "application/json" }) : null;
+    return spec ? specBlobOf(spec) : null;
   }
 
   specFileName(): string {
-    const base = this.state.fileName.replace(/\.[^.]*$/, "") || "table";
-    return `${base}_spec.json`;
+    return specFileNameFor(this.state.fileName);
   }
 
   // ---- Reset --------------------------------------------------------------------------------

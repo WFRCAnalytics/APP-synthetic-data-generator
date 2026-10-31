@@ -6,10 +6,12 @@ import { useRef } from "react";
 import { EmptyState } from "../../components/EmptyState";
 import type { FileSettings } from "../../lib/profile/types";
 import type { Progress, SessionState } from "../../app/session";
+import { SpecErrors } from "../spec/SpecErrors";
 
 export interface IngestScreenProps {
   session: SessionState;
   onChooseFile: (file: File) => void;
+  onChooseSpec: (file: File) => void;
   onEditSettings: (patch: Partial<FileSettings>) => void;
   onConfirm: () => void;
   onCancel: () => void;
@@ -44,7 +46,7 @@ function ProgressBar({ progress, label }: { progress: Progress | null; label: st
   );
 }
 
-export function IngestScreen({ session, onChooseFile, onEditSettings, onConfirm, onCancel }: IngestScreenProps) {
+export function IngestScreen({ session, onChooseFile, onChooseSpec, onEditSettings, onConfirm, onCancel }: IngestScreenProps) {
   const input = useRef<HTMLInputElement>(null);
   const { phase, settings } = session;
   const busy = phase === "opening" || phase === "loading" || phase === "profiling";
@@ -70,17 +72,41 @@ export function IngestScreen({ session, onChooseFile, onEditSettings, onConfirm,
         <span className="field-hint">Up to about 500 MB. The file stays on this device.</span>
       </div>
 
+      <div className="field">
+        <label htmlFor="spec-input">Load existing spec</label>
+        <input
+          id="spec-input"
+          type="file"
+          accept=".json,application/json"
+          disabled={busy}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = ""; // choosing the same spec again must still fire
+            if (file) onChooseSpec(file);
+          }}
+        />
+        <span className="field-hint">A spec saved earlier skips profiling. It replaces any file that is open.</span>
+      </div>
+
+      {session.specProblems && <SpecErrors problems={session.specProblems} />}
+
+      {session.specOnly && (
+        <div className="banner banner-info" role="status">
+          A saved spec is loaded ({session.fileName}: {session.rowCount.toLocaleString("en-US")} rows, {session.columnNames.length} columns). Go to Review to check it, or choose a file to start over.
+        </div>
+      )}
+
       {session.error && (
         <div className="banner banner-error" role="alert">
           {session.error}
         </div>
       )}
 
-      {phase === "idle" && <EmptyState icon={FileUp} message="Choose a CSV file to begin." hint="Nothing is uploaded; everything happens in this tab." />}
+      {phase === "idle" && !session.specProblems && <EmptyState icon={FileUp} message="Choose a CSV file to begin." hint="Nothing is uploaded; everything happens in this tab." />}
 
       {phase === "opening" && <ProgressBar progress={null} label="Reading the start of the file" />}
 
-      {settings && phase !== "idle" && phase !== "opening" && (
+      {settings && !session.specOnly && phase !== "idle" && phase !== "opening" && (
         <div className="card">
           <h3>Detected settings</h3>
           <p className="field-hint">

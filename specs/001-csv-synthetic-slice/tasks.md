@@ -212,15 +212,15 @@ with unsupported columns safely excluded.
 
 ### Tests for User Story 4
 
-- [ ] T077 [P] [US4] Unit test that the same spec and seed give byte-identical output across different chunk sizes, and that changing one column changes no other, in `tests/unit/determinism.test.ts`
-- [ ] T078 [P] [US4] Component tests for loading a good spec (jumps to Review) and a bad spec (errors by column) in `tests/component/spec-load.test.tsx`
-- [ ] T079 [P] [US4] Unit test for spec save then load restoring every setting in `tests/unit/spec-roundtrip.test.ts`
+- [x] T077 [P] [US4] Unit test that the same spec and seed give byte-identical output across different chunk sizes, and that changing one column changes no other, in `tests/unit/determinism.test.ts`
+- [x] T078 [P] [US4] Component tests for loading a good spec (jumps to Review) and a bad spec (errors by column) in `tests/component/spec-load.test.tsx`
+- [x] T079 [P] [US4] Unit test for spec save then load restoring every setting in `tests/unit/spec-roundtrip.test.ts`
 
 ### Implementation for User Story 4
 
-- [ ] T080 [US4] Build the spec serializer from app state in `src/features/spec/saveSpec.ts` and the Save and Export spec buttons (review and generate screens)
-- [ ] T081 [US4] Build the spec loader (file picker, validation, error list by column, jump to Review) in `src/features/spec/loadSpec.ts` and `SpecErrors.tsx`, with "Load existing spec" on the ingest screen; loading a spec replaces any open file and goes straight to Review, so a spec and a real file are never combined (FR-004)
-- [ ] T082 [US4] Make Generate work from a loaded spec with no source file (generate worker only) and show the spec-only banner in `src/features/generate/GenerateScreen.tsx`
+- [x] T080 [US4] Build the spec serializer from app state in `src/features/spec/saveSpec.ts` and the Save and Export spec buttons (review and generate screens)
+- [x] T081 [US4] Build the spec loader (file picker, validation, error list by column, jump to Review) in `src/features/spec/loadSpec.ts` and `SpecErrors.tsx`, with "Load existing spec" on the ingest screen; loading a spec replaces any open file and goes straight to Review, so a spec and a real file are never combined (FR-004)
+- [x] T082 [US4] Make Generate work from a loaded spec with no source file (generate worker only) and show the spec-only banner in `src/features/generate/GenerateScreen.tsx`
 - [X] T083 [US4] Add the `spec_version` check and clear messages for newer or older versions in `src/lib/spec/validate.ts`
 
 **Checkpoint**: Specs round trip and reproduce exactly.

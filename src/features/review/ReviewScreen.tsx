@@ -20,6 +20,7 @@ export interface ReviewActions {
   checkDatePattern: (name: string, pattern: string) => void;
   setThreshold: (threshold: number) => void;
   onContinue: () => void;
+  onSaveSpec: () => void;
 }
 
 export interface ReviewScreenProps {
@@ -38,6 +39,7 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
   const shown = useMemo(() => filterProfiles(profiles, filters), [profiles, filters]);
   const typeCounts = useMemo(() => countByType(profiles), [profiles]);
   const reprofiling = phase === "profiling";
+  const specOnly = session.specOnly;
 
   const typedThreshold = Number(thresholdText);
   const thresholdError =
@@ -54,13 +56,19 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
 
       <SpecContentsNotice />
 
+      {specOnly && (
+        <div className="banner banner-info" role="status">
+          Loaded from a saved spec: there is no source file open. You can still change settings that need no data, and generate.
+        </div>
+      )}
+
       <div className="review-toolbar">
         <ColumnFilters filters={filters} onChange={setFilters} typeCounts={typeCounts} total={profiles.length} shown={shown.length} />
         <TextApply
           label="Treat columns with up to this many distinct values as categories"
           value={String(threshold)}
           error={thresholdError}
-          disabled={reprofiling}
+          disabled={reprofiling || specOnly}
           applyLabel="Profile again"
           hint="Raising it turns more whole-number columns into coded values; lowering it does the opposite."
           onChange={setThresholdText}
@@ -108,6 +116,9 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
       <div className="actions-row">
         <button type="button" className="button button-primary" onClick={actions.onContinue} disabled={reprofiling}>
           Continue to Generate
+        </button>
+        <button type="button" className="button button-secondary" onClick={actions.onSaveSpec}>
+          Save spec (JSON)
         </button>
       </div>
     </section>
