@@ -14,7 +14,8 @@ const GAP = 1;
 
 export function Sparkline({ bars, label }: SparklineProps) {
   if (bars.length === 0) return null;
-  const barWidth = Math.max(1, WIDTH / bars.length - GAP);
+  // Cap the width so a two-bar chart (yes/no) does not draw as two big blocks.
+  const barWidth = Math.min(14, Math.max(1, WIDTH / bars.length - GAP));
   return (
     <svg className="sparkline" width={WIDTH} height={HEIGHT} viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label={label}>
       {bars.map((value, i) => {
