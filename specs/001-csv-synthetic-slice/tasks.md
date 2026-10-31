@@ -65,7 +65,7 @@ real data.
 ### Prototypes (VERIFY items from research.md; each ends by recording the result in research.md)
 
 - [X] T014 Extend `scripts/make-fixtures.mjs` with `--100k` and `--large` that write `.fixtures/zoo_100k.csv` and the ~500 MB, ~120-column `.fixtures/zoo_500mb.csv` (zoo columns repeated with suffixes; deterministic, never committed)
-- [ ] T121 [P] Create `scripts/fetch-corpus.mjs` that downloads, at a pinned tag, the selected CSV edge-case files from `duckdb/duckdb` `data/csv` (encodings, dates, decimal separators, leading zeros, quoted newlines, null padding, bad dates) and `csv-spectrum`, plus the smoke datasets (NHTS 2017 `trippub.csv`, a 1M-row Chicago Crimes slice), into `.fixtures/corpus/` (gitignored, never committed); tests that need them skip with a clear message when the folder is absent
+- [X] T121 [P] Create `scripts/fetch-corpus.mjs` that downloads, at a pinned tag, the selected CSV edge-case files from `duckdb/duckdb` `data/csv` (encodings, dates, decimal separators, leading zeros, quoted newlines, null padding, bad dates) and `csv-spectrum`, plus the smoke datasets (NHTS 2017 `trippub.csv`, a 1M-row Chicago Crimes slice), into `.fixtures/corpus/` (gitignored, never committed); tests that need them skip with a clear message when the folder is absent
 - [X] T015 Spike R9: instantiate DuckDB-WASM under the page CSP from T007 in `tests/e2e/spikes/csp.spec.ts`; record the outcome and any narrowest-needed CSP change in `research.md`
 - [X] T016 Spike R1: in `tests/e2e/spikes/memory.spec.ts`, register the 500 MB fixture with `registerFileHandle`, load it as an all-text table, and record memory and time in `research.md`; if it does not fit, T091 (profile in column batches from the file handle) becomes required
 - [X] T017 [P] Spike R2: in `tests/e2e/spikes/encoding.spec.ts`, check `read_csv` with `utf-16` and `latin-1` on the encoding fixtures; record the result and, if it fails, T120 (the `TextDecoderStream` fallback) becomes required
@@ -101,7 +101,7 @@ with unsupported columns safely excluded.
 - [X] T030 [P] [US1] Unit tests that generated columns hit exact label counts, NA counts, sentinel counts, min and max in `tests/unit/generate-columns.test.ts`
 - [X] T031 [P] [US1] Integration test for the CSV round trip (fake file parses with the same code as the real one, SC-004) in `tests/integration/roundtrip.test.ts`
 - [X] T032 [P] [US1] Component test for the ingest, review and generate flow with mocked workers in `tests/component/flow.test.tsx`
-- [ ] T122 [P] [US1] Corpus robustness test: every file in `.fixtures/corpus/` either profiles without a crash or fails with a clear message that holds no cell value, and files that parse round-trip through generate and export, in `tests/integration/corpus.test.ts`
+- [X] T122 [P] [US1] Corpus robustness test: every file in `.fixtures/corpus/` either profiles without a crash or fails with a clear message that holds no cell value, and files that parse round-trip through generate and export, in `tests/integration/corpus.test.ts`
 
 ### Implementation for User Story 1
 

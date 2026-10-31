@@ -69,6 +69,10 @@ export function formatField(value: string, dialect: CsvDialect, quoted = false):
 
 /** Formats one row including its line ending. */
 export function formatRow(values: readonly string[], dialect: CsvDialect, quotedFlags?: readonly boolean[]): string {
+  // A one-column row with an empty value would be a blank line, which readers skip; write "" so
+  // the row survives.
+  if (values.length === 1 && values[0] === "" && dialect.quote !== null) return dialect.quote + dialect.quote + eol(dialect);
+
   let out = "";
   for (let c = 0; c < values.length; c++) {
     if (c > 0) out += dialect.delimiter;

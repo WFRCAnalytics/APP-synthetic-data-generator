@@ -29,6 +29,14 @@ const finite = (col: string) => `coalesce(isfinite(try_cast(${col} AS DOUBLE)), 
 
 /** Creates the sample table used for type detection (the whole table when it is already small). */
 export async function createSample(sql: SqlRunner, rowCount: number): Promise<void> {
+  // A previous file in this session may have left it behind, as a table or as a view.
+  for (const drop of [`DROP VIEW IF EXISTS ${SMP}`, `DROP TABLE IF EXISTS ${SMP}`]) {
+    try {
+      await sql.run(drop);
+    } catch {
+      // dropping the other kind raises a catalog error; the right one succeeds
+    }
+  }
   if (rowCount <= SAMPLE_ROWS) {
     await sql.run(`CREATE OR REPLACE VIEW ${SMP} AS SELECT * FROM ${SRC}`);
   } else {

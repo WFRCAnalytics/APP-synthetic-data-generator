@@ -113,7 +113,8 @@ async function numericSummary(
     const [d] = await sql.all(
       `SELECT coalesce(max(length(regexp_extract(${decimalsFrom}, ${pattern}, 1))), 0) AS d FROM ${SRC} WHERE ${where}`,
     );
-    decimals = toNumber(d.d);
+    // Fifteen digits is the most a double holds reliably, and the spec's limit.
+    decimals = Math.min(15, toNumber(d.d));
   }
 
   // Floating-point error can put the mean or a percentile a hair outside [min, max], or make the

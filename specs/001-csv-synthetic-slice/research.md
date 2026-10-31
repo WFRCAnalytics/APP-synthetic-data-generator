@@ -223,3 +223,57 @@ Run in Chromium against the strict-CSP production build (`npm run test:e2e`). Pi
   memory. The size warning (T090) must say so for such files.
 - **Why not always read Windows-1252 as Latin-1**: it only works when no byte falls in 0x80-0x9F,
   which cannot be known without scanning the whole file first.
+
+## Slice 1 build notes (2026-10-31)
+
+Decisions that changed or were refined while building, with the numbers behind them.
+
+### Measured performance (Chromium, strict CSP, the 525 MB zoo file: 470,000 rows, 117 columns)
+
+| Step | Time | Target (SC-001) |
+|---|---|---|
+| Profile all 117 columns | 84 s | under 5 minutes |
+| Generate, measure and check the output (245 MB file; unsupported columns are dropped) | 50 s | under 5 minutes |
+| Check table | all 256 checks passed | |
+
+### R3 refined: one query set per column, type from a sample
+
+- Profiling runs a fixed set of queries **per column** instead of batches of 20, which gives progress
+  after every column and was already fast enough (84 s for 117 columns).
+- The **type** is decided on a random 50,000-row sample (character shapes, top values), then
+  **exact** numbers (counts, min, max, mean, sd, percentiles, decimals) come from the full table.
+  A date pattern is verified against every value before it is accepted.
+
+### R1/R2 refined: DuckDB's sniffer is not used
+
+- Our TypeScript sniffer finds the delimiter, quote style (including per-column quoting), header,
+  line ending and column names, and DuckDB gets **explicit options with auto-detect off**.
+- Reason: with auto-detect on, DuckDB silently misread `ragged.csv` (0 rows, no error). With it off,
+  a ragged file fails loudly.
+- `read_csv`'s `new_line` option rejects every spelling tried; none is needed, because LF, CRLF and
+  CR-only files all read correctly with auto-detect off.
+
+### Bugs the corpus robustness test found (75 files from DuckDB and csv-spectrum), now fixed and pinned
+
+| File | Bug | Fix |
+|---|---|---|
+| `decimal.csv` | A column with 16 decimal places made a spec the validator rejects (limit 15) | Decimals are capped at 15 |
+| `all_utf16.csv` (run after a large file) | A leftover sample table broke loading a second file in the same session | The sample table or view is dropped first |
+| `empty_first_line.csv` | A one-column row with a missing value was written as a blank line, which readers skip | Written as `""` |
+| `small_bad.csv` | None in the app: re-detecting a headerless file can mistake a text row for a header | Test re-reads with the source's header setting; the user can set the header box on Ingest |
+
+The end-to-end zoo test found four more before that: scientific notation (`1.2e-5`) was written as
+fixed decimals, constant columns drifted outside `[min, max]` by floating-point error, the mean
+check was judged against 5% of a mean near zero, and a test compared quoting flags for columns that
+are not written.
+
+### Known limitations (documented, not bugs)
+
+- Scientific notation is written as `1.2e-5` (JavaScript style), not `1.2e-05` (Python style).
+- A date column whose days are all 12 or less is flagged ambiguous (day-month or month-day). The
+  generated dates then use days up to 31 in the same pattern, so the fake column is no longer
+  ambiguous; this is inherent to generating each column independently.
+- A numeric column with a heavy tail (log-normal) can only be matched approximately by a beta fit;
+  "match shape" keeps the shape, and the optional rescale (User Story 2) restores mean and sd.
+- Header detection is a heuristic. For a file whose first row is text and whose other rows are text,
+  the user confirms or corrects the "first row is a header" box on the Ingest screen.
