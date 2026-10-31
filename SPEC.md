@@ -51,13 +51,13 @@ The table below lists what leaves the real data, and in what form.
 | --- | --- | --- |
 | Categorical (including coded integers) | Exact label set and count per label | Yes, labels only, in shuffled rows |
 | Numeric, date, time | Exact min and max; optionally mean/sd or quantile shape | Only min and max, in random rows |
-| Survey-assigned ID (shuffle mode) | Exact set of ID values and how often each repeats | Yes, in shuffled rows |
-| Personal identifier (fake mode): name, email, phone, address | Format and uniqueness | No |
+| Survey-assigned ID | Min and max, a per-position pattern mask, and how often each ID repeats | Only min and max (numeric IDs); no value list is stored |
+| Personal identifier: name, email, phone, address | Format and uniqueness | No |
 | Free text | Length distribution | No |
 | Latitude/longitude | Bounding box and precision | No |
 | NA and sentinel codes | Exact counts | Codes only, in shuffled rows |
 
-The user chooses the ID mode per column in the review step. Shuffle mode is for IDs that mean nothing outside the dataset (household 10234, person 1023402); it keeps joins between separately generated tables working. Fake mode is required for real-world identifiers, because a shuffled list of real emails or phone numbers is still a leak. The profiler proposes a mode, and the user confirms it; columns can also simply be excluded.
+IDs are never stored as value lists. A survey-assigned ID (household 10234, person 1023402, "UT-102-884") is described by a pattern mask and its repeat structure; the generator invents new values that fit the mask. The profiler infers the mask from the real values, treating each character position as a digit, a letter or a fixed literal, plus the length. The user can edit it in a token editor with a live sample. Real-world identifiers (email, phone, name, address) use faker.js instead, because even a pattern-matched list of them must not resemble real people. The profiler proposes a kind, and the user confirms it; columns can also simply be excluded.
 
 Optional protections, off by default:
 
@@ -140,7 +140,7 @@ Every column starts the same way: its NA and sentinel rows are placed at random 
 | Date, datetime, time | Converted to a number (days, seconds since epoch, seconds since midnight), generated with a numeric mode, converted back | Mode; granularity (day, minute, second) |
 | Latitude, longitude (separate) | Each column independently, uniform within its own min and max by default | Mode; decimal places |
 | Coordinate pair (combined) | Lat and lon generated as above, written back in the column's original format and axis order | Decimal places |
-| Survey ID | Shuffle: the exact multiset of real IDs in random rows. Fake: new IDs with the same pattern and the same repeat structure | Shuffle or fake |
+| Survey ID | New IDs that fit the pattern mask (numeric IDs also stay within min and max), with the same repeat structure | Edit the mask; zero padding; prefix |
 | Personal identifier | Fake values from faker.js (names, emails, phones, addresses), with the same repeat structure | Locale; exclude column |
 | Free text | Lorem ipsum with character lengths drawn from the real length distribution | None |
 | Short string | Fake strings that keep each character's class (letter, digit, separator) and the length distribution | Shuffle real values instead |
@@ -193,7 +193,7 @@ A trimmed example:
   "n_rows": 48213,
   "seed": 42,
   "columns": [
-    {"name": "hh_id", "type": "survey_id", "mode": "shuffle", "values_ref": "hh_id.values"},
+    {"name": "hh_id", "type": "survey_id", "mask": "[0-9]{5}", "min": 10001, "max": 59874, "repeat_structure": {"1": 9120, "2": 11004, "3": 4200}},
     {"name": "mode", "type": "categorical", "storage": "integer",
      "counts": {"1": 20811, "2": 9450, "3": 7120, "5": 5302, "8": 4997, "97": 391}, "na": {"token": "", "count": 142}},
     {"name": "trip_dist_mi", "type": "float", "mode": "match_mean_sd", "decimals": 2,
@@ -209,8 +209,8 @@ A trimmed example:
 
 Design rules for the spec:
 
-- Real values appear only where the privacy model allows: category labels, min and max, sentinel codes, and shuffled survey IDs.
-- Shuffled survey ID values are large, so they are stored in a separate values file next to the spec rather than inline. Keep it to regenerate later; without it, those columns fall back to fake mode.
+- Real values appear only where the privacy model allows: category labels, min and max, and sentinel codes.
+- The spec never holds a list of IDs, so it stays small and readable. Survey IDs are stored as a pattern mask, optional min and max, and a repeat structure.
 - Every field is editable by hand. The app validates an edited spec on load and reports problems by column.
 - The spec carries a version number so later versions of the app can read older specs.
 
@@ -233,7 +233,7 @@ A persistent notice states that data is processed locally and that reloading the
 The main tradeoff of independent columns is that code runs on fake data but some intermediate results look odd; these oddities disappear when real data is swapped in.
 
 - **No cross-column logic.** Arrival can precede departure, a child can hold a driver's license, and a walk trip can be 80 miles long. Filters on combined conditions return plausible row counts, but not realistic ones.
-- **Joins across tables are approximate.** Shuffled IDs keep join keys valid, but the number of persons per household in one table won't match the household size column in another.
+- **Joins across tables do not work in v1.** IDs are invented per table, so keys in separately generated tables won't match. Multi-table support is the highest-value next step.
 - **Spatial joins return some NAs.** Coordinates are uniform within a rectangle, so some points fall in water or outside every zone, and origin–destination distances run longer than real trips.
 - **Mean and sd can be off slightly after rounding.** The optional rescale step restores them, at the cost of a few values moving.
 - **Labels are real.** Category labels, sentinel codes and min/max values come from the real data. Rare categories are visible unless the user turns on merging.
