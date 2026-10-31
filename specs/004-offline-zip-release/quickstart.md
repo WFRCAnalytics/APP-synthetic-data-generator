@@ -41,3 +41,18 @@ Node 24, `npm ci`, a built `dist/` (`npm run build`). Playwright browsers for th
 ## Done when
 
 Scenarios A to D pass locally, E passes on a real tag, and `tasks.md` has no unchecked task. A person other than the author follows `README.txt` alone on a clean Windows machine (SC-008).
+
+## Results (recorded 2026-10-31)
+
+| Scenario | Result | Evidence |
+|----------|--------|----------|
+| A: build and verify | pass | `npm run release`, `verify-release` (48 files); two builds equal (`release-reproducible.test`); local and workflow builds have identical checksums (research R14) |
+| B: run offline | pass in Chromium, Edge, Firefox, WebKit (Windows launcher); Linux and macOS in CI (Chromium) | `offline-zip.spec`: full CSV and Excel sessions with every non-launcher request refused, zero cross-origin requests, no cookie or storage, output equal to the hosted build's |
+| C: opened the wrong way | pass in Chromium, Edge, Firefox, WebKit, light and dark, no axe violation | `offline-guard.spec` |
+| D: loopback only | pass | `offline-zip.spec` (other address gets no page), launcher edge cases (ports, traversal, methods, missing `site/`, exit codes) |
+| E: the release | dry run passes (research R14); first real tag is the maintainer's | `release.yml` |
+
+**Still for a person** (an automated run cannot stand in): SC-008, someone other than the author follows
+`README.txt` alone on a clean Windows machine and reaches a working app, and SC-001 (under 5 minutes). The
+first real release is made by pushing the tag `v0.2.0`.
+

@@ -80,6 +80,7 @@ describe("line endings", () => {
     expect(run("index.html", "<html>\r\n</html>\r\n")).toBe("<html>\n</html>\n");
     expect(run("index.html", "<html>\n</html>")).toBe("<html>\n</html>\n"); // one final newline, with or without
     expect(run("index.html", "<html>\n</html>\n\n\n")).toBe("<html>\n</html>\n");
+    expect(run("index.html", "<html>\r\r\n</html>\r\n")).toBe("<html>\n</html>\n"); // a doubled CR is not left behind
   });
 
   it("leaves binary files and bundles alone", () => {

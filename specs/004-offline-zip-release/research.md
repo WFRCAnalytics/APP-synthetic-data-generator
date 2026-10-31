@@ -138,6 +138,16 @@ Reference laptop (Windows 11, 2026-10-31), release 0.2.0:
 - **Offline test**: the full CSV and Excel sessions and the launcher cases pass in Chromium, Edge, Firefox and WebKit through `start.ps1` on Windows; `start.sh`'s server code was probed directly (types, `no-store`, traversal, methods, ports) and runs in CI on Linux and macOS.
 - **Findings from the work**: Windows' HTTP service registers a prefix by host name and may accept connections on other addresses, so `start.ps1` also refuses any request whose remote address is not loopback (contract updated). A client that stops reading a response blocks the single-threaded launcher until it disconnects; browsers always read, so this only matters to a hand-made client.
 
+## R14: Dry runs of the release workflow (T030)
+
+`workflow_dispatch` with tag `v0.2.0-rc1` (nothing published), 2026-10-31:
+
+- **Run 1** (41228841522): build, Linux and Windows passed; **macOS failed** in one launcher test: a second launcher started while the first was running printed no URL in 30 seconds.
+- **Cause and fix**: Python's `HTTPServer` looks up the host name of the address it binds (a reverse DNS query), which can stall when there is no internet, the situation this release exists for. `start.sh` now skips the lookup. The same run showed the Windows and Linux zips differing in one file.
+- **Run 2 and 3** (41229604128, 41230277983): build, offline on Linux, macOS and Windows all passed.
+- **Cross-machine reproducibility**: the checksum list from the workflow (Linux, Node 24) equals a local build (Windows, Node 26) for all 48 files once `index.html` is normalized: the bundler left a doubled carriage return (`
+`) and a different final newline on Windows. `normalizeLineEndings` now handles both and is unit tested; the zip bytes themselves are not compared across machines because the commit time is the only other input and it is the same, so only the files matter.
+
 ## Open items
 
 None.

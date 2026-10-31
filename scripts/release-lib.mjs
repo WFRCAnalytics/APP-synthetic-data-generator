@@ -54,7 +54,7 @@ export function checkTag(tag, version, { dryRun = false } = {}) {
  */
 export function normalizeLineEndings(name, bytes) {
   if (!/\.(sh|cmd|ps1|txt|md|html)$/.test(name)) return bytes;
-  const text = new TextDecoder().decode(bytes).replace(/\r\n/g, "\n");
+  const text = new TextDecoder().decode(bytes).replace(/\r+\n/g, "\n"); // also a doubled CR, which a bundler can leave
   const crlf = /\.(cmd|ps1|txt)$/.test(name);
   // The page ends with exactly one newline (the bundler leaves it with or without one depending on the machine).
   const body = name.endsWith(".html") ? text.replace(/\s+$/, "") + "\n" : text;
