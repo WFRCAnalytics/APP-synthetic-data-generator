@@ -4,6 +4,8 @@
 // cannot send the headers threads need.
 
 import * as duckdb from "@duckdb/duckdb-wasm";
+import { NET_CHANNEL } from "../netChannel";
+import { patchedWorkerSource } from "../../workers/netpatch";
 
 export interface Engine {
   db: duckdb.AsyncDuckDB;
@@ -26,14 +28,45 @@ export function duckdbBundles(baseUrl: string): duckdb.DuckDBBundles {
   };
 }
 
+const START_TIMEOUT_MS = 60_000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number, worker: Worker): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      worker.terminate();
+      reject(new Error("The data engine did not start in time."));
+    }, ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
 /** Creates an in-memory DuckDB instance. `baseUrl` is where the self-hosted binaries live. */
 export async function createEngine(baseUrl: string): Promise<Engine> {
   const bundle = await duckdb.selectBundle(duckdbBundles(baseUrl));
   if (!bundle.mainWorker) throw new Error("no DuckDB worker bundle is available");
 
-  const worker = new Worker(bundle.mainWorker);
+  // DuckDB downloads its WebAssembly module from inside its own worker, so that worker is started
+  // through a small wrapper that reports its requests to the page's counter.
+  const absolute = new URL(bundle.mainWorker, self.location.href).href;
+  const source = patchedWorkerSource(absolute, NET_CHANNEL, self.location.origin);
+  const wrapperUrl = URL.createObjectURL(new Blob([source], { type: "text/javascript" }));
+  const worker = new Worker(wrapperUrl);
   const db = new duckdb.AsyncDuckDB(new duckdb.ConsoleLogger(duckdb.LogLevel.WARNING), worker);
-  await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
+  // The module is fetched from inside a blob worker, which has no base to resolve a relative path
+  // against, so it needs an absolute URL.
+  const moduleUrl = new URL(bundle.mainModule, self.location.href).href;
+  // A worker that fails to start can leave instantiate waiting forever; fail loudly instead.
+  await withTimeout(db.instantiate(moduleUrl, bundle.pthreadWorker), START_TIMEOUT_MS, worker);
+  URL.revokeObjectURL(wrapperUrl); // the worker has started; the wrapper is no longer needed
 
   return {
     db,

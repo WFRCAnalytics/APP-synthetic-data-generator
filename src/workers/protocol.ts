@@ -34,7 +34,6 @@ export type ProfileResponse =
   | { type: "columnProfile"; profile: ColumnProfile }
   | { type: "profiled"; count: number }
   | { type: "datePatternResult"; column: string; parsed: number; total: number }
-  | { type: "net"; url: string; sameOrigin: boolean }
   | { type: "error"; error: WireError };
 
 // ---- Generate worker (spec only, no DuckDB) -------------------------------------------------
@@ -51,5 +50,4 @@ export type GenerateResponse =
   | { type: "progress"; rowsDone: number; rowsTotal: number }
   | { type: "checks"; checks: CheckRow[] }
   | { type: "done"; totalBytes: number; replaced: number }
-  | { type: "net"; url: string; sameOrigin: boolean }
   | { type: "error"; error: WireError };

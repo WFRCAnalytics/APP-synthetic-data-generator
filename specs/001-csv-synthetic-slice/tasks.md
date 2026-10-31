@@ -188,17 +188,17 @@ with unsupported columns safely excluded.
 
 ### Tests for User Story 5
 
-- [ ] T069 [P] [US5] Unit tests for the counter store (same-origin, cross-origin, blocked) in `tests/unit/net-counter.test.ts`
-- [ ] T070 [P] [US5] Playwright test that a full flow shows 0 cross-origin and 0 blocked, and that only same-origin requests occur, in `tests/e2e/privacy.spec.ts`
-- [ ] T071 [P] [US5] Playwright test that reload clears all data and returns to the start, and that no browser storage holds data, in `tests/e2e/reload.spec.ts`
-- [ ] T072 [P] [US5] Playwright test that no fixture cell value appears in the DOM before the fake preview, and that error messages contain none, in `tests/e2e/no-real-rows.spec.ts`
+- [X] T069 [P] [US5] Unit tests for the counter store (same-origin, cross-origin, blocked) in `tests/unit/net-counter.test.ts`
+- [X] T070 [P] [US5] Playwright test that a full flow shows 0 cross-origin and 0 blocked, and that only same-origin requests occur, in `tests/e2e/privacy.spec.ts`
+- [X] T071 [P] [US5] Playwright test that reload clears all data and returns to the start, and that no browser storage holds data, in `tests/e2e/reload.spec.ts`
+- [X] T072 [P] [US5] Playwright test that no fixture cell value appears in the DOM before the fake preview, and that error messages contain none, in `tests/e2e/no-real-rows.spec.ts`
 
 ### Implementation for User Story 5
 
-- [ ] T073 [US5] Implement `src/workers/netpatch.ts` (patch `fetch` and `XMLHttpRequest`, post `net` messages) and wrap both worker constructors with it (the constructors are created in T036 and T042, so build T073 to T075 before showing the MVP to the maintainer with real data)
-- [ ] T074 [US5] Implement the counter store in `src/app/netCounter.ts` (main-thread `PerformanceObserver`, wrapped `fetch`, worker reports, `securitypolicyviolation`)
-- [ ] T075 [US5] Build `src/app/NetworkCounter.tsx` showing same-origin, cross-origin and blocked counts, visible on every screen
-- [ ] T076 [US5] Terminate workers and drop all state on "start over"; confirm nothing is written to browser storage (audit in `src/app/state.ts`)
+- [X] T073 [US5] Implement `src/workers/netpatch.ts` (patch `fetch` and `XMLHttpRequest`, post `net` messages) and wrap both worker constructors with it (the constructors are created in T036 and T042, so build T073 to T075 before showing the MVP to the maintainer with real data)
+- [X] T074 [US5] Implement the counter store in `src/app/netCounter.ts` (main-thread `PerformanceObserver`, wrapped `fetch`, worker reports, `securitypolicyviolation`)
+- [X] T075 [US5] Build `src/app/NetworkCounter.tsx` showing same-origin, cross-origin and blocked counts, visible on every screen
+- [X] T076 [US5] Terminate workers and drop all state on "start over"; confirm nothing is written to browser storage (audit in `src/app/state.ts`)
 
 **Checkpoint**: The privacy claim is visible and checked by tests.
 

@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useReducer, useState } from "react";
 import { AppHeader } from "./app/AppHeader";
+import { NetworkCounter } from "./app/NetworkCounter";
+import { netCounter } from "./app/netMonitor";
 import { downloadBlob } from "./app/download";
 import { LocalNotice } from "./app/LocalNotice";
 import { Session } from "./app/session";
@@ -31,7 +33,9 @@ export function App() {
 
   return (
     <>
-      <AppHeader />
+      <AppHeader>
+        <NetworkCounter counter={netCounter} />
+      </AppHeader>
       <main className="app-shell">
         <h1>Synthetic Data Generator</h1>
         <p className="page-subtitle">Turn one private table into a fake one, so AI coding agents never see real data.</p>

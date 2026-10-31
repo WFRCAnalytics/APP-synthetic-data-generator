@@ -59,17 +59,22 @@ reused without the data.
 
 Chunk size does not affect output bytes (see research.md R5).
 
-## 3. Network monitor (both workers)
+## 3. Network monitor (all workers)
 
-Each worker is created from a wrapper that patches `fetch` and `XMLHttpRequest` before the worker's
-own code runs, and posts `{ type: 'net', url, sameOrigin }` per request. The UI adds these to the
-main-thread `PerformanceObserver` and `securitypolicyviolation` counts.
+Worker requests are invisible to the page's own resource timeline, and DuckDB downloads its WebAssembly
+module from inside its own nested worker. So each worker runs `installNetPatch` (src/workers/netpatch.ts)
+before anything else, and DuckDB's worker is started through a small blob wrapper that installs the same
+patch and then loads DuckDB's script. The patch wraps `fetch` and `XMLHttpRequest` and posts each URL
+to a `BroadcastChannel` (`synthetic-data-generator:net`). The channel keeps these reports out of the
+workers' own message protocols, including DuckDB's.
 
 | Counter | Source |
 |---|---|
-| same-origin | Observer and worker reports whose origin equals the page origin |
+| same-origin | The page's `PerformanceObserver` (resource entries) and worker reports whose origin equals the page's |
 | cross-origin | Any other origin; expected to stay 0 |
 | blocked | `securitypolicyviolation` events from the page's CSP |
+
+`blob:`, `data:` and `about:` URLs point at memory and are not counted.
 
 ## 4. Page security policy
 

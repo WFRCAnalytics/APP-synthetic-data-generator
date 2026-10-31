@@ -1,0 +1,28 @@
+.net-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+  color: var(--color-foreground);
+}
+
+.net-counter--clean {
+  border-color: var(--color-wfrc-secondary-blue);
+}
+
+.net-counter--alert {
+  border-color: var(--color-danger);
+  background: var(--banner-error-background);
+}
+
+/* On narrow screens only the icon and the outside count remain, so the header does not crowd. */
+@media (max-width: 640px) {
+  .net-counter-text {
+    max-width: 8ch;
+    overflow: hidden;
+  }
+}

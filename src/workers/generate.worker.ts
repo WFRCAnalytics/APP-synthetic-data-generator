@@ -4,11 +4,15 @@
 // is never held here; the check table is measured while the rows are produced.
 
 import { AppError, sanitizeError, toWireError } from "../lib/errors";
+import { NET_CHANNEL } from "../lib/netChannel";
+import { installNetPatch } from "./netpatch";
 import { CheckAccumulator } from "../lib/generate/checks";
 import { renderChunks } from "../lib/generate/render";
 import { planTable, rowValues } from "../lib/generate/table";
 import { validateSpec } from "../lib/spec/validate";
 import type { GenerateRequest, GenerateResponse } from "./protocol";
+
+installNetPatch(NET_CHANNEL, self.location.origin);
 
 const PREVIEW_ROWS = 50;
 

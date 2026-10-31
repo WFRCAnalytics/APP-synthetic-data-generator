@@ -5,6 +5,8 @@
 // cell value. Messages are described in contracts/worker-protocol.md.
 
 import { AppError, sanitizeError, toWireError } from "../lib/errors";
+import { NET_CHANNEL } from "../lib/netChannel";
+import { installNetPatch } from "./netpatch";
 import type { ColumnProfile, FileSettings } from "../lib/profile/types";
 import { createEngine, duckdb, type Engine } from "../lib/duckdb/engine";
 import type { ProfileRequest, ProfileResponse } from "./protocol";
@@ -21,6 +23,8 @@ import { profileAll, profileColumn } from "./profile/profiler";
 import { runnerFor } from "./profile/runner";
 import type { SqlRunner } from "./profile/sql";
 import { readModeFor, transcodeToUtf8 } from "./profile/transcode";
+
+installNetPatch(NET_CHANNEL, self.location.origin);
 
 const BASE = `${import.meta.env.BASE_URL}duckdb/`;
 

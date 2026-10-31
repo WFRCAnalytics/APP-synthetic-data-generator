@@ -178,7 +178,6 @@ export class Session {
         this.set({ phase: "error", error: msg.error.message, progress: null });
         break;
       case "datePatternResult":
-      case "net":
         break;
     }
   }
@@ -248,8 +247,6 @@ export class Session {
       case "error":
         this.parts = [];
         this.setGen({ status: msg.error.code === "cancelled" ? "cancelled" : "error", error: msg.error.message });
-        break;
-      case "net":
         break;
     }
   }
