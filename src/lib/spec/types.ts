@@ -21,8 +21,11 @@ export type NumericMode = "uniform" | "match_mean_sd" | "match_shape";
 export type ExcludeMode = "drop" | "keep_as_na" | "include";
 export type Granularity = "day" | "minute" | "second";
 
-/** One position of an ID pattern: a class of characters, or one fixed literal character. */
-export type MaskToken = "digit" | "letter" | "alnum" | { literal: string };
+/**
+ * One position of an ID pattern: a class of characters, or one fixed literal character.
+ * digit 0-9; upper A-Z; lower a-z; letter A-Z or a-z; alnum digits and both cases of letters.
+ */
+export type MaskToken = "digit" | "upper" | "lower" | "letter" | "alnum" | { literal: string };
 
 export interface SourceSpec {
   format: "csv";

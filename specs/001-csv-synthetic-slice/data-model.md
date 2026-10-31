@@ -68,7 +68,7 @@ only inside the in-memory database and are never copied into these objects.
 
 ### IdMask
 
-An ordered list of tokens: `digit`, `letter`, `alnum`, or `literal(char)`. Derived values:
+An ordered list of tokens: `digit`, `upper`, `lower`, `letter` (either case), `alnum`, or `literal(char)`. Derived values:
 `capacity` (distinct values the mask allows, restricted to `[min, max]` for numeric IDs) and
 `needed` (distinct groups the repeat structure requires). Valid only when `capacity >= needed`
 (FR-016a).

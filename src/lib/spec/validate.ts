@@ -48,7 +48,7 @@ const numeric = {
 };
 
 const MaskTokenSchema = v.union([
-  v.picklist(["digit", "letter", "alnum"]),
+  v.picklist(["digit", "upper", "lower", "letter", "alnum"]),
   v.strictObject({ literal: v.pipe(v.string(), v.length(1)) }),
 ]);
 

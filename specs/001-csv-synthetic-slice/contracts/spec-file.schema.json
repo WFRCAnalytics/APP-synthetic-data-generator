@@ -148,7 +148,7 @@
                 "minItems": 1,
                 "items": {
                   "oneOf": [
-                    { "enum": ["digit", "letter", "alnum"] },
+                    { "enum": ["digit", "upper", "lower", "letter", "alnum"] },
                     {
                       "type": "object",
                       "required": ["literal"],
