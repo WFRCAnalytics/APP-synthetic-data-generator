@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# DuckDB-WASM binaries and extensions are fetched at build time by scripts/fetch-duckdb.mjs
+public/duckdb/
+
+# Offline bundle produced by the release workflow
+*.zip
+
+# Test and coverage output
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor and OS files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Claude Code local settings
+.claude/settings.local.json
