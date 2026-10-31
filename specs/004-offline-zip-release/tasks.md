@@ -106,7 +106,7 @@
 - [x] T029 [P] Measure and record in `research.md`: zip size against `dist/`, unzip and open time on the reference laptop (SC-007), and the launcher's start time
 - [x] T030 Run a dry-run of `release.yml` with `workflow_dispatch` on `main`, fix what it finds, record the run in `research.md`; the first real release is the maintainer's tag
 - [x] T031 Run quickstart scenarios A to D locally, and record the results and the person sign-off line (SC-008: someone other than the author follows `README.txt` alone on a clean Windows machine) in `quickstart.md`
-- [ ] T032 Run `/speckit-converge` and mark the slice complete
+- [x] T032 Run `/speckit-converge` and mark the slice complete
 
 ---
 
@@ -128,3 +128,8 @@
 
 MVP first: Phases 1 to 3 give an analyst a working offline zip. Then US2 makes the privacy claim
 checkable, US3 automates publishing, US4 hardens opening. Commit after each task group.
+
+## Phase 8: Convergence
+
+- [x] T033 [P] Test that `release/README.template.txt` states what FR-006 requires (how to open it for Windows and for macOS or Linux, browsers, what the launcher does, if it does not start, checking that nothing leaves the computer, checking the files, version, licences), fits one page (at most 75 lines of at most 100 characters), and has only the known placeholders, in `tests/unit/release-readme.test.ts`, per FR-006 (partial)
+- [x] T034 [P] Run the offline end-to-end test from a folder whose name has non-ASCII characters as well as a space (Windows PowerShell 5.1 is the risk), in `tests/e2e/offline-zip.spec.ts`, per the spec's edge case on folder paths (partial)

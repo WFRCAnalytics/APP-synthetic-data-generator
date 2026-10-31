@@ -3,8 +3,8 @@ Version {{APP_VERSION}} (writes spec file version {{SPEC_VERSION}}), built {{DAT
 Wasatch Front Regional Council
 
 WHAT THIS IS
-  The same app as the web page, in a folder. It runs on your computer with no internet. Your files are
-  read and the fake files are made inside your browser; nothing is sent anywhere.
+  The same app as the web page, in a folder. It runs on your computer with no internet. Your
+  files are read and the fake files are made inside your browser; nothing is sent anywhere.
 
 HOW TO OPEN IT (about 2 minutes)
   Browsers will not run this app straight from a file, so a small launcher is part of the folder. It
@@ -33,8 +33,8 @@ WHAT THE LAUNCHER DOES
   and start.sh (macOS and Linux); both are plain text you can read.
 
 IF IT DOES NOT START
-  - Windows says the script is blocked: your organization's policy prevents running scripts. Ask your
-    IT team to allow start.ps1 from this folder, or use the web page instead.
+  - Windows says the script is blocked: your organization's policy prevents running scripts.
+    Ask your IT team to allow start.ps1 from this folder, or use the web page instead.
   - "No free port": another copy is already running. Close it and try again.
   - You double-clicked site\APP-synthetic-data-generator\index.html: the page will tell you to use
     start.cmd (or start.sh) instead.
@@ -42,8 +42,8 @@ IF IT DOES NOT START
 CHECK THAT NOTHING LEAVES YOUR COMPUTER
   - The page header shows a counter of network requests. During a whole session it should show
     0 outside this site.
-  - Open the browser's developer tools (F12), the Network tab, and work as usual: every request goes to
-    127.0.0.1, which is this computer.
+  - Open the browser's developer tools (F12), the Network tab, and work as usual: every request
+    goes to 127.0.0.1, which is this computer.
   - Disconnect from the network before you start, if you like. The app works the same.
 
 CHECK THAT THE FILES ARE THE ONES RELEASED

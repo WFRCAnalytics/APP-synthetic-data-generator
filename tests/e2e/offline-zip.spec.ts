@@ -72,7 +72,7 @@ let launcher: Launcher;
 let top = "";
 
 test.beforeAll(async () => {
-  work = mkdtempSync(join(tmpdir(), "offline zip test "));
+  work = mkdtempSync(join(tmpdir(), "offline zip tëst é "));
   const names = await unzipTo(ZIP, work);
   top = names[0].split("/")[0];
   launcher = await startLauncher(join(work, top));
