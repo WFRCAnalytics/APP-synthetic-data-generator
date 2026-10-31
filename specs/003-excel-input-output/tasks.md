@@ -102,7 +102,7 @@
 
 ### Tests for User Story 2
 
-- [ ] T035 [P] [US2] Browser tests per quirk through the app against `quirks.xlsx`, `formats.xlsx` and `dates1904.xlsx`: zip text keeps zeros, amounts keep `#,##0.00` and 2 decimals, percent and currency formats, dates round trip in both date systems, blank and empty-text counts equal, formulas read as values with no formula text in the spec or file, in `tests/e2e/excel-quirks.spec.ts`; the writer's cell types for each quirk are unit tested in `tests/unit/xlsx-writer.test.ts`
+- [x] T035 [P] [US2] Browser tests per quirk through the app against `quirks.xlsx`, `formats.xlsx` and `dates1904.xlsx`: zip text keeps zeros, amounts keep `#,##0.00` and 2 decimals, percent and currency formats, dates round trip in both date systems, blank and empty-text counts equal, formulas read as values with no formula text in the spec or file, in `tests/e2e/excel-quirks.spec.ts`; the writer's cell types for each quirk are unit tested in `tests/unit/xlsx-writer.test.ts`
 - [ ] T036 [P] [US2] Unit tests for format detection from a column: the first cells' style decides, mixed formats raise `format_mismatch`, a number column displayed as text stays text, in `tests/unit/xlsx-metadata.test.ts`
 - [ ] T037 [P] [US2] Component tests for the quirk notes (merged cells found, mixed formats, hidden sheet chosen) in `tests/component/workbook-dialog.test.tsx` and `tests/component/review-xlsx.test.tsx`
 
