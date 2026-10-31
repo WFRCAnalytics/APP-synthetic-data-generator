@@ -33,6 +33,7 @@ export interface XlsxLayout {
 
 /** The kind of cell a generated column is written as. */
 export function cellKindOf(col: ColumnSpec): CellKind {
+  if (col.stored_as_text) return "text"; // the real cells held text, so the fake cells do too
   switch (col.type) {
     case "integer":
     case "float":

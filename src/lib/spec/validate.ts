@@ -38,6 +38,7 @@ const base = {
   quoted: v.optional(v.boolean()),
   na: v.optional(NaSchema),
   sentinels: v.optional(SentinelsSchema),
+  stored_as_text: v.optional(v.boolean()),
   cell_format: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(255), v.check((text) => ![...text].some((ch) => ch.charCodeAt(0) < 32), "A cell format may not hold control characters."))),
 };
 
@@ -199,6 +200,8 @@ function sum(values: number[]): number {
 function checkCellFormat(col: ColumnSpec, problem: (path: string, message: string) => void): void {
   const kind = describeFormat(col.cell_format as string).kind;
   const temporal = kind === "date" || kind === "time" || kind === "datetime";
+  // Cells that hold text may carry any format (a text format, or the format the values would have had).
+  if (col.stored_as_text) return;
   switch (col.type) {
     case "date":
     case "datetime":

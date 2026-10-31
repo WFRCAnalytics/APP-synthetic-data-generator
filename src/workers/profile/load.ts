@@ -11,6 +11,8 @@ import { ident, lit, SRC, toNumber, type SqlRunner } from "./sql";
 export interface LoadResult {
   rowCount: number;
   columnNames: string[];
+  /** For a workbook: the engine's type of each column as read (VARCHAR for text cells, DOUBLE for numbers). Never a value. */
+  columnTypes?: string[];
 }
 
 

@@ -152,5 +152,7 @@ export interface ColumnProfile {
   acknowledged?: boolean;
   /** The number format code of the column's cells in a workbook (a format, never a value). */
   cellFormat?: string;
+  /** The real cells held text although the values read as numbers or dates. */
+  storedAsText?: boolean;
   summary: ColumnSummary;
 }

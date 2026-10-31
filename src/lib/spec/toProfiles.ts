@@ -63,6 +63,7 @@ export function profileFromSpec(c: ColumnSpec): ColumnProfile {
     sentinels: { ...(c.sentinels ?? {}) },
     quoted: c.quoted ?? false,
     ...(c.cell_format ? { cellFormat: c.cell_format } : {}),
+    ...(c.stored_as_text ? { storedAsText: true } : {}),
     attentionReasons: [] as ReasonCode[],
   };
 

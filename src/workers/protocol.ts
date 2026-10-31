@@ -4,7 +4,8 @@
 
 import type { SampleDescription } from "../lib/textgen/sample";
 import type { WireError } from "../lib/errors";
-import type { ColumnOverrides, ColumnProfile, FileSettings } from "../lib/profile/types";
+import type { ColumnOverrides, ColumnProfile, FileSettings, SourceSettings } from "../lib/profile/types";
+import type { SheetHints, WorkbookInfo } from "../lib/xlsx/metadata";
 import type { CheckRow } from "../lib/generate/checks";
 import type { SpecFile } from "../lib/spec/types";
 
@@ -13,6 +14,9 @@ import type { SpecFile } from "../lib/spec/types";
 export type ProfileRequest =
   | { type: "open"; file: File }
   | { type: "load"; settings: FileSettings }
+  /** Inspect a workbook's packaging: sheet names, visibility, date system. No cell value is read. */
+  | { type: "inspectSheet"; sheet: string }
+  | { type: "loadSheet"; sheet: string; range?: string; skipRows: number; header: boolean; date1904: boolean }
   | { type: "profile"; threshold: number; overrides?: Record<string, ColumnOverrides> }
   | { type: "reprofile"; column: string; overrides: ColumnOverrides }
   | { type: "datePattern"; column: string; pattern: string }
@@ -30,7 +34,10 @@ export type ProfileResponse =
       fileName: string;
       fileSize: number;
     }
-  | { type: "loaded"; rowCount: number; columnNames: string[]; settings: FileSettings }
+  /** The chosen file is a workbook: its sheets, never a cell value (specs/003). */
+  | { type: "workbookInfo"; info: WorkbookInfo; fileName: string; fileSize: number }
+  | { type: "sheetHints"; sheet: string; hints: SheetHints }
+  | { type: "loaded"; rowCount: number; columnNames: string[]; settings: SourceSettings }
   | { type: "progress"; job: ProfileJob; done: number; total: number }
   | { type: "columnProfile"; profile: ColumnProfile }
   | { type: "profiled"; count: number }

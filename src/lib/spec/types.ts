@@ -88,6 +88,8 @@ export interface ColumnBase {
   quoted?: boolean;
   /** The number format code of the column's cells in a workbook, such as #,##0.00 or mm/dd/yyyy. Never a value. */
   cell_format?: string;
+  /** The real cells held text even though the values read as numbers or dates (a zip code stored as text). The fake cells are text too. */
+  stored_as_text?: boolean;
   na?: NaSpec;
   /** Sentinel code to exact count. */
   sentinels?: Record<string, number>;

@@ -9,11 +9,12 @@ import { buildSpec } from "../lib/spec/build";
 import { profilesFromSpec, settingsFromSource } from "../lib/spec/toProfiles";
 import type { SpecFile, SpecProblem } from "../lib/spec/types";
 import type { SampleDescription } from "../lib/textgen/sample";
+import type { SheetHints, WorkbookInfo } from "../lib/xlsx/metadata";
 import { readSpecFile } from "../features/spec/loadSpec";
 import { specBlobOf, specFileNameFor } from "../features/spec/saveSpec";
 import type { GenerateRequest, GenerateResponse, ProfileJob, ProfileRequest, ProfileResponse } from "../workers/protocol";
 
-export type Phase = "idle" | "opening" | "opened" | "loading" | "profiling" | "profiled" | "error";
+export type Phase = "idle" | "opening" | "opened" | "workbook" | "loading" | "profiling" | "profiled" | "error";
 
 export interface Progress {
   job: ProfileJob | "generate";
@@ -41,8 +42,24 @@ export interface DatePatternCheck {
   total: number | null;
 }
 
+/** What the load dialog knows about a chosen workbook: sheet names and flags, and hints per sheet. No cell value. */
+export interface WorkbookState {
+  info: WorkbookInfo;
+  hints: Record<string, SheetHints>;
+}
+
+/** What the user confirmed in the load dialog. */
+export interface WorkbookChoice {
+  sheet: string;
+  range?: string;
+  skipRows: number;
+  header: boolean;
+}
+
 export interface SessionState {
   phase: Phase;
+  /** Set when the chosen file is a workbook, until it has been loaded. */
+  workbook: WorkbookState | null;
   error: string | null;
   fileName: string;
   fileSize: number;
@@ -74,6 +91,7 @@ const emptyGen: GenState = { status: "idle", progress: null, header: [], preview
 
 export const initialSession: SessionState = {
   phase: "idle",
+  workbook: null,
   error: null,
   fileName: "",
   fileSize: 0,
@@ -96,6 +114,7 @@ export const initialSession: SessionState = {
 };
 
 export const MAX_SEED = 4294967295;
+export const XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
 /** A valid seed (0 to 4,294,967,295), or null for blank, fractional or out-of-range text. */
 export function parseSeed(text: string): number | null {
@@ -177,6 +196,24 @@ export class Session {
     this.send({ type: "load", settings });
   }
 
+  /** Asks for the hints of a sheet (rows to skip, width, formats) while the load dialog is open. */
+  inspectSheet(sheet: string): void {
+    if (this.state.workbook?.hints[sheet]) return;
+    this.send({ type: "inspectSheet", sheet });
+  }
+
+  /** Loads the sheet the user confirmed in the load dialog, then profiles it. */
+  confirmWorkbook(choice: WorkbookChoice): void {
+    const workbook = this.state.workbook;
+    if (!workbook) return;
+    this.pending.clear();
+    this.base = [];
+    this.edits = {};
+    this.engine = {};
+    this.set({ phase: "loading", error: null, progress: null, profiles: [], busy: [], reviewError: null, datePatternChecks: {} });
+    this.send({ type: "loadSheet", ...choice, date1904: workbook.info.date1904 });
+  }
+
   cancel(): void {
     this.send({ type: "cancel" });
     this.generateWorker?.postMessage({ type: "cancel" } satisfies GenerateRequest);
@@ -234,6 +271,12 @@ export class Session {
           fileName: msg.fileName,
           fileSize: msg.fileSize,
         });
+        break;
+      case "workbookInfo":
+        this.set({ phase: "workbook", workbook: { info: msg.info, hints: {} }, fileName: msg.fileName, fileSize: msg.fileSize });
+        break;
+      case "sheetHints":
+        if (this.state.workbook) this.set({ workbook: { ...this.state.workbook, hints: { ...this.state.workbook.hints, [msg.sheet]: msg.hints } } });
         break;
       case "loaded":
         this.set({ phase: "profiling", rowCount: msg.rowCount, columnNames: msg.columnNames, settings: msg.settings, progress: null });
@@ -403,7 +446,9 @@ export class Session {
 
   /** The fake CSV as a Blob, or null before a run has finished. */
   fakeBlob(): Blob | null {
-    return this.state.gen.status === "done" ? new Blob(this.parts as BlobPart[], { type: "text/csv" }) : null;
+    const settings = this.state.settings;
+    const type = settings && isExcelSettings(settings) ? XLSX_MIME : "text/csv";
+    return this.state.gen.status === "done" ? new Blob(this.parts as BlobPart[], { type }) : null;
   }
 
   fakeFileName(): string {

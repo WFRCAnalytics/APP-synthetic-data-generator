@@ -118,6 +118,7 @@
           ]
         },
         "exclude": { "enum": ["drop", "keep_as_na", "include"], "default": "include" },
+        "stored_as_text": { "type": "boolean", "description": "The real cells held text although the values read as numbers or dates; the fake cells are text too." },
         "cell_format": { "type": "string", "minLength": 1, "maxLength": 255, "description": "Number format code of the column's cells in a workbook, such as #,##0.00 or mm/dd/yyyy. Never a value." },
         "quoted": { "type": "boolean", "description": "Source wrote this column's non-empty fields in quotes; used when source.quote_style is per_column." },
         "na": { "$ref": "#/$defs/na" },

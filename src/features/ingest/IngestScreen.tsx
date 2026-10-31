@@ -5,7 +5,8 @@ import { FileUp } from "lucide-react";
 import { useRef } from "react";
 import { EmptyState } from "../../components/EmptyState";
 import { isExcelSettings, type FileSettings } from "../../lib/profile/types";
-import type { SessionState } from "../../app/session";
+import type { SessionState, WorkbookChoice } from "../../app/session";
+import { WorkbookDialog } from "./WorkbookDialog";
 import { ProfileProgress } from "./ProfileProgress";
 import { SizeWarning } from "./SizeWarning";
 import { SpecErrors } from "../spec/SpecErrors";
@@ -14,6 +15,8 @@ export interface IngestScreenProps {
   session: SessionState;
   onChooseFile: (file: File) => void;
   onChooseSpec: (file: File) => void;
+  onInspectSheet: (sheet: string) => void;
+  onConfirmWorkbook: (choice: WorkbookChoice) => void;
   onEditSettings: (patch: Partial<FileSettings>) => void;
   onConfirm: () => void;
   onCancel: () => void;
@@ -35,7 +38,7 @@ const ENCODINGS: [FileSettings["encoding"], string][] = [
 
 const MAX_NAMES_SHOWN = 40;
 
-export function IngestScreen({ session, onChooseFile, onChooseSpec, onEditSettings, onConfirm, onCancel }: IngestScreenProps) {
+export function IngestScreen({ session, onChooseFile, onChooseSpec, onInspectSheet, onConfirmWorkbook, onEditSettings, onConfirm, onCancel }: IngestScreenProps) {
   const input = useRef<HTMLInputElement>(null);
   const { phase } = session;
   // The CSV panel is for CSV files; a workbook has its own dialog.
@@ -53,14 +56,14 @@ export function IngestScreen({ session, onChooseFile, onChooseSpec, onEditSettin
           id="file-input"
           ref={input}
           type="file"
-          accept=".csv,.tsv,.txt,text/csv,text/plain"
+          accept=".csv,.tsv,.txt,.xlsx,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           disabled={busy}
           onChange={(e) => {
             const file = e.target.files?.[0];
             if (file) onChooseFile(file);
           }}
         />
-        <span className="field-hint">Up to about 500 MB. The file stays on this device.</span>
+        <span className="field-hint">Up to about 500 MB. The file stays on this device. You can also choose an Excel workbook (.xlsx); you then pick the sheet.</span>
       </div>
 
       <div className="field">
@@ -174,6 +177,34 @@ export function IngestScreen({ session, onChooseFile, onChooseSpec, onEditSettin
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {phase === "workbook" && session.workbook && <WorkbookDialog workbook={session.workbook} fileName={session.fileName} onInspect={onInspectSheet} onConfirm={onConfirmWorkbook} />}
+
+      {session.settings && isExcelSettings(session.settings) && !session.specOnly && phase !== "workbook" && (
+        <div className="card" data-testid="workbook-summary">
+          <h3>Workbook</h3>
+          <p className="field-hint">
+            {session.fileName}: sheet &ldquo;{session.settings.sheet}&rdquo;, {session.settings.skipRows === 0 ? "header on the first row" : `${session.settings.skipRows} rows skipped above the header`}
+            {session.settings.range ? `, range ${session.settings.range}` : ""}. Only this sheet is read.
+          </p>
+          {session.rowCount > 0 && (
+            <p>
+              <strong>{session.rowCount.toLocaleString("en-US")}</strong> rows and <strong>{names.length}</strong> columns.
+            </p>
+          )}
+          <details open={names.length <= 12}>
+            <summary>
+              {names.length} column {names.length === 1 ? "name" : "names"}
+            </summary>
+            <ul className="name-list">
+              {names.slice(0, MAX_NAMES_SHOWN).map((n) => (
+                <li key={n}>{n}</li>
+              ))}
+              {names.length > MAX_NAMES_SHOWN && <li>and {names.length - MAX_NAMES_SHOWN} more</li>}
+            </ul>
+          </details>
         </div>
       )}
 

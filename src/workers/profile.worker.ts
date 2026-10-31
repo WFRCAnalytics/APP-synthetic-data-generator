@@ -8,7 +8,10 @@ import { AppError, sanitizeError, toWireError } from "../lib/errors";
 import { NET_CHANNEL } from "../lib/netChannel";
 import { installNetPatch } from "./netpatch";
 import type { ColumnOverrides, ColumnProfile, FileSettings } from "../lib/profile/types";
-import { createEngine, duckdb, type Engine } from "../lib/duckdb/engine";
+import { createEngine, duckdb, loadExcelExtension, type Engine } from "../lib/duckdb/engine";
+import { inspectSheet, inspectWorkbook, type SheetHints } from "../lib/xlsx/metadata";
+import { parseRange } from "../lib/xlsx/names";
+import { loadSheet } from "./profile/xlsx";
 import type { ProfileRequest, ProfileResponse } from "./protocol";
 import { loadCsv } from "./profile/load";
 import {
@@ -29,6 +32,8 @@ import { readModeFor, transcodeToUtf8 } from "./profile/transcode";
 installNetPatch(NET_CHANNEL, self.location.origin);
 
 const BASE = `${import.meta.env.BASE_URL}duckdb/`;
+// Where the self-hosted extension files are (public/duckdb-ext/), as an absolute address.
+const EXTENSIONS = new URL(`${import.meta.env.BASE_URL}duckdb-ext`, self.location.href).href;
 
 const post = (message: ProfileResponse) => self.postMessage(message);
 
@@ -39,6 +44,11 @@ let head = new Uint8Array(0);
 let settings: FileSettings | null = null;
 let columnNames: string[] = [];
 let quoted: boolean[] = [];
+/** The number format code of each column of the loaded sheet (workbooks only). */
+let cellFormats: string[] = [];
+/** Whether each column of the loaded sheet held text cells (the engine read it as VARCHAR). */
+let textCells: boolean[] = [];
+let excelLoaded = false;
 let rowCount = 0;
 let threshold = 50;
 let cancelled = false;
@@ -60,10 +70,33 @@ async function ensureEngine(): Promise<SqlRunner> {
   return sql as SqlRunner;
 }
 
+/** Notes how the real cells of a workbook column were stored: its number format, and whether they held text. */
+function markCells(p: ColumnProfile, index: number): void {
+  const format = cellFormats[index];
+  if (format && !/^general$/i.test(format)) p.cellFormat = format;
+  // Text cells that read as numbers or dates are written back as text cells, not numbers.
+  const reads = p.type === "integer" || p.type === "float" || p.type === "date" || p.type === "datetime" || p.type === "time" || (p.type === "categorical" && p.summary.kind === "categorical" && p.summary.storage === "integer");
+  if (textCells[index] && reads) p.storedAsText = true;
+}
+
+/** Whether the file is a workbook by its content (a zip, or the old OLE container), whatever it is called. */
+async function looksLikeWorkbook(chosen: File): Promise<boolean> {
+  const first = new Uint8Array(await chosen.slice(0, 8).arrayBuffer());
+  const zip = first[0] === 0x50 && first[1] === 0x4b;
+  const ole = first.length >= 8 && first[0] === 0xd0 && first[1] === 0xcf && first[2] === 0x11 && first[3] === 0xe0;
+  return zip || ole;
+}
+
 async function open(chosen: File): Promise<void> {
   file = chosen;
   const size = chosen.size;
   if (size === 0) throw new AppError("file_empty");
+
+  if (await looksLikeWorkbook(chosen)) {
+    const info = await inspectWorkbook(chosen); // refuses damaged, old, encrypted and non-workbook files
+    post({ type: "workbookInfo", info, fileName: chosen.name, fileSize: size });
+    return;
+  }
 
   head = new Uint8Array(await chosen.slice(0, HEAD_BYTES).arrayBuffer());
   const tail = new Uint8Array(await chosen.slice(Math.max(0, size - TAIL_BYTES)).arrayBuffer());
@@ -75,6 +108,8 @@ async function open(chosen: File): Promise<void> {
 
   settings = result.settings;
   columnNames = result.columnNames;
+  cellFormats = [];
+  textCells = [];
   quoted = detectQuotedColumns(head, size);
   post({
     type: "settingsDetected",
@@ -119,6 +154,41 @@ async function load(confirmed: FileSettings): Promise<void> {
   post({ type: "loaded", rowCount, columnNames, settings });
 }
 
+/** Hints for the dialog: rows to skip, the table's width, formats, merged cells. */
+async function sheetHints(sheet: string): Promise<void> {
+  if (!file) throw new AppError("file_unreadable");
+  const hints: SheetHints = await inspectSheet(file, sheet);
+  post({ type: "sheetHints", sheet, hints });
+}
+
+/** Loads the chosen sheet into the all-text table, with the settings the user confirmed. */
+async function loadWorkbookSheet(m: { sheet: string; range?: string; skipRows: number; header: boolean; date1904: boolean }): Promise<void> {
+  if (!file) throw new AppError("file_unreadable");
+  const runner = await ensureEngine();
+  if (!excelLoaded) {
+    await loadExcelExtension((q) => runner.run(q), EXTENSIONS);
+    excelLoaded = true;
+  }
+  const range = m.range ? parseRange(m.range) : null;
+  if (m.range && !range) throw new AppError("xlsx_range_invalid");
+
+  const virtual = `book_${Date.now()}.xlsx`;
+  await (engine as Engine).db.registerFileHandle(virtual, file, duckdb.DuckDBDataProtocol.BROWSER_FILEREADER, true);
+  post({ type: "progress", job: "load", done: 0, total: 1 });
+  const loaded = await loadSheet(runner, virtual, { sheet: m.sheet, range: m.range, header: m.header });
+  rowCount = loaded.rowCount;
+  columnNames = loaded.columnNames;
+  quoted = loaded.columnNames.map(() => false);
+
+  // The format code of each column, from the cell styles of the first data cells (never a value).
+  const hints = await inspectSheet(file, m.sheet, { skipRows: m.skipRows, firstCol: range?.firstCol, lastCol: range?.lastCol });
+  cellFormats = loaded.columnNames.map((_, i) => hints.formats[i] ?? "General");
+  textCells = (loaded.columnTypes ?? []).map((t) => t === "VARCHAR");
+  settings = null;
+  post({ type: "progress", job: "load", done: 1, total: 1 });
+  post({ type: "loaded", rowCount, columnNames, settings: { sheet: m.sheet, ...(m.range ? { range: m.range } : {}), skipRows: m.skipRows, header: m.header, date1904: m.date1904 } });
+}
+
 async function profile(limit: number, overrides: Record<string, ColumnOverrides> = {}): Promise<void> {
   const runner = await ensureEngine();
   threshold = limit;
@@ -135,7 +205,8 @@ async function profile(limit: number, overrides: Record<string, ColumnOverrides>
   );
   if (cancelled) throw new AppError("cancelled");
   latest.clear();
-  for (const p of profiles) {
+  for (const [i, p] of profiles.entries()) {
+    markCells(p, i);
     latest.set(p.name, p);
     post({ type: "columnProfile", profile: p });
   }
@@ -148,6 +219,7 @@ async function reprofile(column: string, overrides: ColumnOverrides): Promise<vo
   overridesInUse = { ...overridesInUse, [column]: overrides };
   const p = await profileColumn(runner, column, rowCount, { threshold, quoted }, overrides);
   p.quoted = quoted[index] ?? false;
+  markCells(p, index);
   latest.set(column, p);
   post({ type: "columnProfile", profile: p });
 }
@@ -174,6 +246,12 @@ self.onmessage = async (event: MessageEvent<ProfileRequest>) => {
         break;
       case "load":
         await load(msg.settings);
+        break;
+      case "inspectSheet":
+        await sheetHints(msg.sheet);
+        break;
+      case "loadSheet":
+        await loadWorkbookSheet(msg);
         break;
       case "profile":
         await profile(msg.threshold, msg.overrides);

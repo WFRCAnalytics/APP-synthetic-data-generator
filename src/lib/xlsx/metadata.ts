@@ -31,6 +31,11 @@ export interface InspectOptions {
   mergeCheckLimit?: number;
   /** How much of the head of a sheet to read for hints (default 3 MB expanded). */
   headBytes?: number;
+  /** Take the header row as given (zero-based skipped rows) instead of looking for it. */
+  skipRows?: number;
+  /** Take the table's columns as given (zero-based) instead of the run found in the header row. */
+  firstCol?: number;
+  lastCol?: number;
 }
 
 export interface SheetInfo {
@@ -292,7 +297,7 @@ export async function inspectSheet(blob: Blob, sheetName: string, options: Inspe
     throw e;
   }
   const { rows, lastRow } = parseHead(new TextDecoder("utf-8").decode(head));
-  const header = findHeader(rows);
+  const header = options.skipRows !== undefined ? (rows.find((r) => r.r === options.skipRows! + 1) ?? { r: options.skipRows + 1, cells: [] }) : findHeader(rows);
 
   let firstCol = 0;
   let lastCol = 0;
@@ -303,12 +308,14 @@ export async function inspectSheet(blob: Blob, sheetName: string, options: Inspe
   if (header) {
     suggestedSkipRows = header.r - 1;
     const cols = header.cells.filter((c) => c.populated).map((c) => c.col).sort((a, b) => a - b);
-    firstCol = cols[0];
+    firstCol = cols[0] ?? 0;
     lastCol = firstCol;
     for (const c of cols) {
       if (c === lastCol + 1) lastCol = c;
       else if (c > lastCol + 1) break;
     }
+    if (options.firstCol !== undefined) firstCol = options.firstCol;
+    if (options.lastCol !== undefined) lastCol = options.lastCol;
 
     const data = rows.filter((r) => r.r > header.r).slice(0, 20);
     for (let col = firstCol; col <= lastCol; col++) {

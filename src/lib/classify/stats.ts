@@ -3,6 +3,8 @@
 // (constitution Principle I). The SQL that fills this in lives in workers/profile/stats.ts; the
 // rules that read it live in the other files of this folder and need no database.
 
+import { EMPTY_TEXT_TOKEN } from "../spec/types";
+
 export interface ValueCount {
   value: string;
   count: number;
@@ -68,6 +70,7 @@ export interface BasicStats {
 
 /** NA tokens recognized in the data. Empty fields are always treated as NA too. */
 export const KNOWN_NA_TOKENS: readonly string[] = [
+  EMPTY_TEXT_TOKEN, // a workbook cell holding empty text (never present in a CSV)
   "NA",
   "N/A",
   "n/a",

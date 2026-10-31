@@ -55,6 +55,7 @@ export function columnSpecOf(p: ColumnProfile): ColumnSpec {
   const common = {
     name: p.name,
     ...(p.cellFormat ? { cell_format: p.cellFormat } : {}),
+    ...(p.storedAsText ? { stored_as_text: true } : {}),
     ...(p.outputName !== p.name ? { output_name: p.outputName } : {}),
     ...(p.exclude !== "include" ? { exclude: p.exclude } : {}),
   };
