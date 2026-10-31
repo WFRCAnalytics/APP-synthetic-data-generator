@@ -176,6 +176,17 @@ No NEEDS CLARIFICATION items remained after the spec. The decisions below settle
 
 Budget: the generate worker grows by less than 1.5 MB; the main bundle and the profile worker do not change.
 
+## Bundle size after the feature (T051)
+
+| Bundle | Before | After | Change |
+|---|---|---|---|
+| Main (`index-*.js`) | 269,755 | 284,990 | +15 KB (the editors) |
+| Profile worker | 224,952 | 232,110 | +7 KB (the profiling queries; no word lists) |
+| Generate worker | 36,386 | 465,580 | +429 KB (the word lists and composers) |
+
+The generate worker grew by 0.43 MB against a 1.5 MB budget, so lazy loading by kind is not needed.
+`@faker-js/faker` tree-shakes to the en and en_US data that `wordlists.ts` reads. `bundle-wordlists.test.ts` fails the build if the profile worker or the page carry any word list.
+
 ## Open items
 
 None.

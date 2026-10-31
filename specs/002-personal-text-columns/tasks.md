@@ -86,12 +86,12 @@
 - [x] T028 [P] [US4] Spy integration test: record every row the engine returns while profiling the personal, free text and short string fixture columns and fail if any real value appears; confirm no frequent-value query runs for them, in `tests/integration/personal-inference.test.ts`
 - [x] T029 [P] [US4] Spec privacy test: the spec for `text_50k.csv` holds none of the real values, is under 100 KB, and a hand-edited spec with a `values` list on a new column type is rejected, in `tests/integration/text-privacy.test.ts`
 - [ ] T030 [P] [US4] Browser leak test: extend `tests/e2e/privacy.spec.ts` so the new fixture columns (real names, emails, phones, addresses, comment words, codes) never appear in the page text, the spec download, the preview, the fake file or error messages
-- [ ] T031 [P] [US4] Bundle test `tests/unit/bundle-wordlists.test.ts` (run after `npm run build`, skipped when `dist` is absent): the profile worker bundle and the main bundle contain none of a list of faker word-list marker strings, and the generate worker bundle does
+- [x] T031 [P] [US4] Bundle test `tests/unit/bundle-wordlists.test.ts` (run after `npm run build`, skipped when `dist` is absent): the profile worker bundle and the main bundle contain none of a list of faker word-list marker strings, and the generate worker bundle does
 
 ### Implementation for User Story 4
 
 - [x] T032 [US4] Make the validator in `src/lib/spec/validate.ts` report a clear, per-column message for a value-bearing key on the new types, and ensure error messages never quote a value (extend `tests/unit/errors.test.ts`)
-- [ ] T033 [US4] Add CI wiring: run the bundle test after the build step in `.github/workflows/deploy.yml`
+- [x] T033 [US4] Add CI wiring: run the bundle test after the build step in `.github/workflows/deploy.yml`
 
 **Checkpoint**: every guarantee has a failing-if-broken test.
 
@@ -152,7 +152,7 @@
 - [ ] T048 [P] Extend `tests/e2e/a11y.spec.ts` to open the new editors in light and dark themes and fix any violation
 - [ ] T049 [P] Browser tests for the whole slice 2 flow and spec save, reload, load in `tests/e2e/quickstart.spec.ts` (scenarios A, D, E, F) in Chromium, then run `npm run test:e2e:browsers`
 - [ ] T050 [P] Update `src/app/HelpGuideModal.tsx`, `src/features/review/SpecContentsNotice.tsx` and `README.md` for the new column kinds and the "not in this version" list
-- [ ] T051 Measure the generate worker bundle growth against the 1.5 MB budget and record it in `research.md` (R11); lazy-load by kind if exceeded
+- [x] T051 Measure the generate worker bundle growth against the 1.5 MB budget and record it in `research.md` (R11); lazy-load by kind if exceeded
 - [ ] T052 Run the 500 MB fixture with text columns (`SCALE_500MB=1 npx playwright test scale.spec`), extend `scripts/make-fixtures.mjs --large` with text columns if absent, and record the timings in `quickstart.md`
 - [ ] T053 Dependency audit update in slice 1 `research.md` (faker is now a runtime dependency; confirm it makes no requests) and deploy to Pages by pushing to main
 - [ ] T054 Run quickstart scenarios A to F in Chrome, Edge, Firefox and WebKit and record results in this feature's `quickstart.md`

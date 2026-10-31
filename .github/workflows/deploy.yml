@@ -29,6 +29,8 @@ jobs:
       - run: npm test
       # prebuild copies the pinned DuckDB-WASM binaries into public/duckdb/
       - run: npm run build
+      # The word lists must be in the generate worker only (specs/002 FR-015); needs the build above
+      - run: npx vitest run tests/unit/bundle-wordlists.test.ts
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
