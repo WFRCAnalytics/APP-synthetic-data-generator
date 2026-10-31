@@ -39,7 +39,7 @@ export const DEFAULT_THRESHOLD = 50;
 // "hh_id", "HH_ID", "hhId", "HOUSEID", "case_num", "id". Words that merely end in id (paid, valid)
 // do not match, so each pattern carries its own case rule.
 const ID_NAME_PATTERNS = [/(^|[^A-Za-z])id$/i, /[a-z]Id$/, /^[A-Z0-9]{4,}ID$/, /_num$/i];
-const isIdName = (name: string) => ID_NAME_PATTERNS.some((r) => r.test(name));
+export const isIdName = (name: string) => ID_NAME_PATTERNS.some((r) => r.test(name));
 const TIME_NAME = /time|hhmm|hour|depart|arriv|start|end|(^|_)tm$/i;
 const PERSONAL_NAME = /(^|[^a-z])(e_?mail|phone|tel|telephone|mobile|ssn|name|address|street)([^a-z]|$)/i;
 const LAT_LON_NAME = /(^|[^a-z])(lat|latitude|lon|lng|long|longitude)([^a-z]|$)/i;
@@ -163,7 +163,8 @@ export function classifyColumn(
   // 6. Survey IDs: the name says ID, and the values are whole numbers or short codes.
   if (isIdName(stats.name)) {
     const codeLike = stats.maxLength <= 24 && stats.floatCount === stats.intCount;
-    const wholeOrCode = stats.intCount === stats.valueCount || stats.topValues.every((v) => !/\s/.test(v.value));
+    // For an ID column the frequent values are never fetched, so whitespace is judged from the shapes.
+    const wholeOrCode = stats.intCount === stats.valueCount || !stats.shapes.some((s) => s.shape.includes(" "));
     if (codeLike && wholeOrCode) {
       const top = stats.shapes[0];
       const dominant = top && stats.shapeSample > 0 ? top.count / stats.shapeSample : 1;

@@ -10,6 +10,7 @@ import { makeLabelLookup } from "./categorical";
 import { makeDateFormatter } from "./datetime";
 import { formatNumber, makeNumericSource, withRescale, type NumericPlan } from "./numeric";
 import { makePlacer } from "./placement";
+import { IdPatternError, makeIdGenerator, rowsCovered } from "./survey-id";
 
 export interface ColumnContext {
   seed: number;
@@ -95,7 +96,22 @@ export function createColumnGen(col: ColumnSpec, ctx: ColumnContext): ColumnGen 
       });
     }
 
-    case "survey_id":
-      throw new GenerationError(`Column "${col.name}": survey ID generation is not available yet.`);
+    case "survey_id": {
+      const placer = makePlacer(ctx.nRows, key, col.na, col.sentinels);
+      if (rowsCovered(col.repeat_structure) !== placer.valueTotal) {
+        throw new GenerationError(`Column "${col.name}": the repeat structure covers ${rowsCovered(col.repeat_structure)} rows, but ${placer.valueTotal} rows are left after NA and sentinels.`);
+      }
+      let ids;
+      try {
+        ids = makeIdGenerator({ mask: col.mask, min: col.min, max: col.max, pad_width: col.pad_width, repeat_structure: col.repeat_structure }, key);
+      } catch (err) {
+        if (err instanceof IdPatternError) throw new GenerationError(`Column "${col.name}": ${err.message}`);
+        throw err;
+      }
+      return gen((row) => {
+        const p = placer(row);
+        return p.kind === "value" ? ids(p.index) : p.token;
+      });
+    }
   }
 }

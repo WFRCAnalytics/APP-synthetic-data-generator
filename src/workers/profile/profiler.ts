@@ -16,11 +16,9 @@ import type {
   NumericSummary,
   ReasonCode,
 } from "../../lib/profile/types";
+import { profileIds } from "./ids";
 import { collectBasic, createSample, isValue } from "./stats";
 import { ident, lit, litList, QUANTILE_LIST, SRC, toNumber, toNumberArray, type SqlRunner } from "./sql";
-
-/** Until ID masks land (task T065/T068) survey IDs are detected but left out of the output. */
-const SURVEY_ID_GENERATION_READY = false;
 
 export interface ProfileOptions {
   /** Distinct-value limit for categorical. */
@@ -307,15 +305,14 @@ export async function profileColumn(
       break;
     }
 
-    case "survey_id":
-      // Real masks arrive with the ID work; until then only the shape of the column is kept.
-      summary = {
-        kind: "survey_id",
-        mask: [],
-        repeatStructure: {},
-        distinct: Math.max(0, basic.distinct - Object.keys(basic.tokenCounts).length - sentinelKeys.length),
-      };
+    case "survey_id": {
+      // A pattern, a min and max for whole numbers, and the repeat structure: no ID value is kept.
+      const ids = await profileIds(sql, name, where);
+      const { mixedLengths, ...idSummary } = ids;
+      summary = { kind: "survey_id", ...idSummary };
+      if (mixedLengths) reasons.push("id_mixed_masks");
       break;
+    }
 
     default:
       summary = { kind: "unsupported" };
@@ -331,14 +328,12 @@ export async function profileColumn(
     }
   }
 
-  if (type === "survey_id" && !SURVEY_ID_GENERATION_READY) {
-    reasons.push("id_not_yet_supported");
-    status = "needs_attention";
-  }
+  // An ID with no readable pattern cannot be generated, so it is left out like any unsupported column.
+  const noPattern = summary.kind === "survey_id" && summary.mask.length === 0;
+  if (noPattern) reasons.push("id_mixed_masks");
   if (reasons.length > 0 && status === "ok") status = "needs_attention";
 
-  const exclude: ColumnProfile["exclude"] =
-    type === "unsupported" || (type === "survey_id" && !SURVEY_ID_GENERATION_READY) ? "drop" : "include";
+  const exclude: ColumnProfile["exclude"] = type === "unsupported" || noPattern ? "drop" : "include";
 
   return {
     name,

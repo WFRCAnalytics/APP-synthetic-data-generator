@@ -2,6 +2,7 @@
 // count or a handful of frequent values; no query returns rows of data. Type is decided on a
 // random sample (cheap), then exact numbers come from the full table.
 
+import { isIdName } from "../../lib/classify/classify";
 import { KNOWN_NA_TOKENS, type BasicStats } from "../../lib/classify/stats";
 import { ident, litList, shapeOf, SMP, SRC, toNumber, toNumberOrNull, type SqlRunner } from "./sql";
 
@@ -60,6 +61,8 @@ export async function collectBasic(
 ): Promise<BasicStats> {
   const c = ident(name);
   const value = isValue(c, naTokens);
+  // Real ID values must never reach memory (research.md R4), so an ID-named column loads aggregates only.
+  const idLike = isIdName(name);
 
   const [agg] = await sql.all(`
     SELECT
@@ -83,9 +86,9 @@ export async function collectBasic(
     FROM ${SRC}
   `);
 
-  const top = await sql.all(
-    `SELECT ${c} AS v, count(*) AS n FROM ${SRC} WHERE ${value} GROUP BY ${c} ORDER BY n DESC, v LIMIT ${TOP_VALUES}`,
-  );
+  const top = idLike
+    ? []
+    : await sql.all(`SELECT ${c} AS v, count(*) AS n FROM ${SRC} WHERE ${value} GROUP BY ${c} ORDER BY n DESC, v LIMIT ${TOP_VALUES}`);
 
   const tokenRows = await sql.all(
     `SELECT ${c} AS v, count(*) AS n FROM ${SRC} WHERE ${c} IN (${litList(naTokens)}) GROUP BY ${c}`,
@@ -99,7 +102,7 @@ export async function collectBasic(
   const [sample] = await sql.all(`SELECT count(*) AS n FROM ${SMP} WHERE ${value}`);
 
   const unparsedTop =
-    toNumber(agg.unparsed_count) > 0
+    toNumber(agg.unparsed_count) > 0 && !idLike
       ? await sql.all(
           `SELECT ${c} AS v, count(*) AS n FROM ${SRC}
            WHERE ${value} AND NOT (${finite(c)} OR regexp_matches(${c}, ${RE.thousands}))

@@ -163,13 +163,13 @@ with unsupported columns safely excluded.
 ### Tests for User Story 3
 
 - [X] T059 [P] [US3] Unit tests for mask inference results, capacity (including numeric `[min, max]` and zero padding) and generation that fits the mask and repeat structure in `tests/unit/mask.test.ts`
-- [ ] T060 [P] [US3] Integration test that ID inference SQL returns only patterns and aggregates (no ID value) in `tests/integration/id-inference.test.ts`
-- [ ] T061 [P] [US3] Privacy test that a saved spec for `tests/fixtures/zoo/ids_50k.csv` contains none of the fixture IDs and stays under 1 MB in `tests/integration/spec-privacy.test.ts`
+- [x] T060 [P] [US3] Integration test that ID inference SQL returns only patterns and aggregates (no ID value) in `tests/integration/id-inference.test.ts`
+- [x] T061 [P] [US3] Privacy test that a saved spec for `tests/fixtures/zoo/ids_50k.csv` contains none of the fixture IDs and stays under 1 MB in `tests/integration/spec-privacy.test.ts`
 - [ ] T062 [P] [US3] Component tests for the mask editor, live sample and the "allows X, needs Y" block in `tests/component/id-mask-editor.test.tsx`
 
 ### Implementation for User Story 3
 
-- [ ] T063 [US3] Implement the ID pattern SQL (class pattern, per-position literals, numeric min, max and padding, repeat structure) in `src/workers/profile/ids.ts`
+- [x] T063 [US3] Implement the ID pattern SQL (class pattern, per-position literals, numeric min, max and padding, repeat structure) in `src/workers/profile/ids.ts`
 - [X] T064 [P] [US3] Implement the mask model, capacity and mixed-radix mapping in `src/lib/mask/mask.ts`
 - [X] T065 [US3] Implement ID generation (group assignment from the repeat structure, keyed bijection to mask values) in `src/lib/generate/survey-id.ts`
 - [ ] T066 [US3] Build the ID mask token editor with a live sample in `src/features/review/IdMaskEditor.tsx`

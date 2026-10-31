@@ -6,6 +6,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { maskToRegexString } from "../../src/lib/mask/mask";
 import type { ColumnProfile } from "../../src/lib/profile/types";
 import { loadCsv } from "../../src/workers/profile/load";
 import { profileAll } from "../../src/workers/profile/profiler";
@@ -16,7 +17,7 @@ const ZOO = join(__dirname, "../fixtures/zoo");
 const zooPath = join(ZOO, "zoo_small.csv");
 const expected = JSON.parse(readFileSync(join(ZOO, "expected.json"), "utf8")) as {
   n_rows: number;
-  columns: Record<string, { type: string; status: string; reasons: string[]; assert?: string[]; na_tokens?: string[]; decimals?: number; storage?: string; format?: string }>;
+  columns: Record<string, { type: string; status: string; reasons: string[]; assert?: string[]; na_tokens?: string[]; decimals?: number; storage?: string; format?: string; mask?: string }>;
 };
 const raw = parseCsv(readFileSync(zooPath, "utf8"));
 const header = raw.rows[0];
@@ -47,12 +48,11 @@ describe("detection matches the expected result for every zoo column", () => {
 
       if (asserted.includes("type")) expect(got!.type).toBe(want.type);
 
-      // Survey IDs are detected but held back until ID masks land (task T068), so their status is
-      // deliberately "needs_attention / id_not_yet_supported" for now.
-      const idPending = want.type === "survey_id";
-      if (asserted.includes("status") && !idPending) expect(got!.status).toBe(want.status);
-      if (asserted.includes("reasons") && !idPending) expect([...got!.attentionReasons].sort()).toEqual([...want.reasons].sort());
-      if (idPending) expect(got!.attentionReasons).toContain("id_not_yet_supported");
+      if (asserted.includes("status")) expect(got!.status).toBe(want.status);
+      if (asserted.includes("reasons")) expect([...got!.attentionReasons].sort()).toEqual([...want.reasons].sort());
+
+      // The inferred ID pattern, written readably, matches the one the fixture was built from.
+      if (want.mask && got!.summary.kind === "survey_id") expect(maskToRegexString(got!.summary.mask)).toBe(want.mask);
 
       if (want.na_tokens && asserted.includes("type")) expect(new Set(got!.naTokens)).toEqual(new Set(want.na_tokens));
       if (want.format && asserted.includes("type") && got!.summary.kind === "datetime") expect(got!.summary.format).toBe(want.format);

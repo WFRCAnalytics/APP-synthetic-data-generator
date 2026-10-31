@@ -106,8 +106,8 @@ export class CheckAccumulator {
         bump(a.sentinelByKey, text);
         continue;
       }
-      if (isCategorical(a.col)) {
-        bump(a.labels, text);
+      if (isCategorical(a.col) || a.col.type === "survey_id") {
+        bump(a.labels, text); // for an ID column this tallies how often each (invented) ID appears
       } else if (a.parse) {
         const x = a.parse(text);
         if (x === null) continue;
@@ -149,6 +149,12 @@ export class CheckAccumulator {
         const want = sortedObject(effectiveCounts(col.counts, col));
         const got = toObject(a.labels);
         add("label_counts", show(want), show(got), sameCounts(want, got));
+      } else if (col.type === "survey_id") {
+        // How many IDs appear once, twice, three times: the repeat structure must be reproduced exactly.
+        const sizes: Record<string, number> = {};
+        for (const n of a.labels.values()) sizes[n] = (sizes[n] ?? 0) + 1;
+        const want = sortedObject(col.repeat_structure);
+        add("repeat_structure", show(want), show(sortedObject(sizes)), sameCounts(want, sortedObject(sizes)));
       } else if (isNumericLike(col)) {
         add("min", String(col.min), a.n > 0 ? String(a.min) : "n/a", a.n > 0 && a.min === col.min);
         add("max", String(col.max), a.n > 0 ? String(a.max) : "n/a", a.n > 0 && a.max === col.max);

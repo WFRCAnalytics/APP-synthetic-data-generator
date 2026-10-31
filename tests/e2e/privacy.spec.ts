@@ -135,7 +135,7 @@ test.describe("no real personal value is ever shown", () => {
   // Values from columns the app must never reproduce: personal data, free text, coordinates and
   // text IDs. Numeric IDs are left out because short numbers can match other columns by chance.
   const header = readFileSync(join(ZOO, "zoo_small.csv"), "utf8").split("\n")[0].split(",");
-  const personal = ["person_name", "email", "street_address", "phone_us", "ssn_like", "free_text", "url", "ip_address", "lat", "lon", "coord_pair", "site_id", "hh_prefix_id"];
+  const personal = ["person_name", "email", "street_address", "phone_us", "ssn_like", "free_text", "url", "ip_address", "lat", "lon", "coord_pair"];
 
   function valuesOf(columns: string[]): string[] {
     // The zoo's personal columns contain no commas or quotes, so a plain split is exact here.

@@ -153,10 +153,10 @@ describe("dialect variants", () => {
   it("quote_percolumn.csv: the same columns stay quoted", async () => {
     const source = await profilePath(db, join(ZOO, "quote_percolumn.csv"));
     const fake = await profileBytes(db, renderSpec(source.spec), "fake_percolumn.csv");
-    // The id and note columns are not written (survey ID pending, free text unsupported).
+    // The note column is not written (free text is unsupported); the ID column is.
     const written = source.profiles.filter((p) => p.exclude !== "drop");
     expect(fake.profiles.map((p) => p.quoted)).toEqual(written.map((p) => p.quoted));
     expect(source.profiles.map((p) => p.quoted)).toEqual([false, true, false, true, true, true]);
-    expect(written.map((p) => p.name)).toEqual(["label", "amount", "when", "flag"]);
+    expect(written.map((p) => p.name)).toEqual(["id", "label", "amount", "when", "flag"]);
   });
 });
