@@ -48,6 +48,8 @@ let quoted: boolean[] = [];
 let cellFormats: string[] = [];
 /** Whether each column of the loaded sheet held text cells (the engine read it as VARCHAR). */
 let textCells: boolean[] = [];
+/** Columns of the loaded sheet that mix numbers, dates and text (the sheet was read as text). */
+let mixedColumns = new Set<string>();
 let excelLoaded = false;
 let rowCount = 0;
 let threshold = 50;
@@ -77,6 +79,10 @@ function markCells(p: ColumnProfile, index: number): void {
   // Text cells that read as numbers or dates are written back as text cells, not numbers.
   const reads = p.type === "integer" || p.type === "float" || p.type === "date" || p.type === "datetime" || p.type === "time" || (p.type === "categorical" && p.summary.kind === "categorical" && p.summary.storage === "integer");
   if (textCells[index] && reads) p.storedAsText = true;
+  if (mixedColumns.has(p.name) && !p.attentionReasons.includes("mixed_cells")) {
+    p.attentionReasons = [...p.attentionReasons, "mixed_cells"];
+    if (p.status === "ok") p.status = "needs_attention";
+  }
 }
 
 /** Whether the file is a workbook by its content (a zip, or the old OLE container), whatever it is called. */
@@ -110,6 +116,7 @@ async function open(chosen: File): Promise<void> {
   columnNames = result.columnNames;
   cellFormats = [];
   textCells = [];
+  mixedColumns = new Set();
   quoted = detectQuotedColumns(head, size);
   post({
     type: "settingsDetected",
@@ -172,18 +179,22 @@ async function loadWorkbookSheet(m: { sheet: string; range?: string; skipRows: n
   const range = m.range ? parseRange(m.range) : null;
   if (m.range && !range) throw new AppError("xlsx_range_invalid");
 
+  // The format code of each column, from the cell styles of the first data cells (never a value). Read
+  // first, because a sheet that has to be read as text needs the formats to turn date serials into dates.
+  const hints = await inspectSheet(file, m.sheet, { skipRows: m.skipRows, firstCol: range?.firstCol, lastCol: range?.lastCol });
+
   const virtual = `book_${Date.now()}.xlsx`;
   await (engine as Engine).db.registerFileHandle(virtual, file, duckdb.DuckDBDataProtocol.BROWSER_FILEREADER, true);
   post({ type: "progress", job: "load", done: 0, total: 1 });
-  const loaded = await loadSheet(runner, virtual, { sheet: m.sheet, range: m.range, header: m.header });
+  const loaded = await loadSheet(runner, virtual, { sheet: m.sheet, range: m.range, header: m.header, formats: hints.formats, date1904: m.date1904 });
   rowCount = loaded.rowCount;
   columnNames = loaded.columnNames;
   quoted = loaded.columnNames.map(() => false);
 
-  // The format code of each column, from the cell styles of the first data cells (never a value).
-  const hints = await inspectSheet(file, m.sheet, { skipRows: m.skipRows, firstCol: range?.firstCol, lastCol: range?.lastCol });
   cellFormats = loaded.columnNames.map((_, i) => hints.formats[i] ?? "General");
-  textCells = (loaded.columnTypes ?? []).map((t) => t === "VARCHAR");
+  mixedColumns = new Set(loaded.mixedColumns ?? []);
+  // A column the engine read as text, or that mixes kinds, held text cells.
+  textCells = (loaded.columnTypes ?? []).map((t, i) => t === "VARCHAR" || mixedColumns.has(loaded.columnNames[i]));
   settings = null;
   post({ type: "progress", job: "load", done: 1, total: 1 });
   post({ type: "loaded", rowCount, columnNames, settings: { sheet: m.sheet, ...(m.range ? { range: m.range } : {}), skipRows: m.skipRows, header: m.header, date1904: m.date1904 } });

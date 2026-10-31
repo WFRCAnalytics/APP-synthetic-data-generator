@@ -109,12 +109,12 @@ describe("the fake workbook", () => {
   });
 
   it("measures the table with the same check rows as a CSV", async () => {
-    const acc: { plan?: ReturnType<typeof writeWorkbook>["plan"] } = {};
-    let checks: CheckAccumulator | undefined;
-    const run = writeWorkbook(spec(), 9, 100, (values) => checks?.observeRow(values));
-    acc.plan = run.plan;
-    checks = new CheckAccumulator(run.plan);
+    // The plan exists only once writing starts, so the accumulator is made from a plan of the same spec.
+    const probe = writeWorkbook(spec(), 9, 100);
+    const checks = new CheckAccumulator(probe.plan);
+    const run = writeWorkbook(spec(), 9, 100, (values) => checks.observeRow(values));
     for await (const chunk of run.chunks) void chunk;
+    for await (const chunk of probe.chunks) void chunk;
     const rows = checks.finish();
     expect(rows.filter((r) => !r.pass)).toEqual([]);
     expect(rows.some((r) => r.column === "flag" && r.metric === "na_count")).toBe(true);

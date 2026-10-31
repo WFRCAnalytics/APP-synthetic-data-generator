@@ -50,6 +50,7 @@ export type ReasonCode =
   | "id_not_yet_supported"
   | "override_not_possible"
   | "beta_fit_failed"
+  | "mixed_cells"
   | "merged_cells"
   | "format_mismatch"
   | "sheet_hidden"

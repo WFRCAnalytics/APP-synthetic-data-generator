@@ -49,6 +49,7 @@ const REASON_TEXT: Record<ReasonCode, string> = {
   override_not_possible: "The type you chose does not fit this column's values, so the detected type was kept.",
   id_not_yet_supported: "Survey ID patterns are not available yet, so this column is left out of the fake file.",
   unsupported_type: "This kind of column is not supported in this version, so it is left out of the fake file.",
+  mixed_cells: "This column mixes numbers, dates and text, so every value was read as text. Check how it is typed.",
   merged_cells: "This sheet has merged cells. A merged value is read once, in its top-left cell, and the other cells of the merge are blank.",
   format_mismatch: "The cells of this column carry different kinds of number format, so the format of the first cells was used.",
   sheet_hidden: "This sheet is hidden in the workbook.",

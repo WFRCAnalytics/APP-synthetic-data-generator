@@ -60,7 +60,7 @@ export async function createEngine(baseUrl: string): Promise<Engine> {
   const source = patchedWorkerSource(absolute, NET_CHANNEL, self.location.origin);
   const wrapperUrl = URL.createObjectURL(new Blob([source], { type: "text/javascript" }));
   const worker = new Worker(wrapperUrl);
-  const db = new duckdb.AsyncDuckDB(new duckdb.ConsoleLogger(duckdb.LogLevel.WARNING), worker);
+  const db = new duckdb.AsyncDuckDB(new duckdb.VoidLogger() /* the engine's own messages quote cell values; none may reach the console */, worker);
   // The module is fetched from inside a blob worker, which has no base to resolve a relative path
   // against, so it needs an absolute URL.
   const moduleUrl = new URL(bundle.mainModule, self.location.href).href;

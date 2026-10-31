@@ -13,6 +13,8 @@ export interface LoadResult {
   columnNames: string[];
   /** For a workbook: the engine's type of each column as read (VARCHAR for text cells, DOUBLE for numbers). Never a value. */
   columnTypes?: string[];
+  /** For a workbook read as text because a column mixes kinds: the names of the columns that do. */
+  mixedColumns?: string[];
 }
 
 

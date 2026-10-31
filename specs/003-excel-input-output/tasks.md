@@ -66,7 +66,7 @@
 - [x] T025 [US1] Build `src/features/ingest/WorkbookDialog.tsx` (sheet dropdown, rows to skip with the suggestion, header toggle, optional range, hidden marking, merged-cells note) and let `IngestScreen.tsx` accept `.xlsx` and show the workbook source summary instead of the CSV settings
 - [x] T026 [US1] Implement the writer in `src/lib/xlsx/writer.ts` (`createXlsxStream(plan)` yielding zip chunks, styles from `cell_format`, cells from text values per column kind, empty rows above the header, EMPTY_TEXT_TOKEN as an empty inline string)
 - [x] T027 [US1] Output path: `src/lib/generate/table.ts` and `render.ts` choose CSV or xlsx from `spec.source.format` (the xlsx path yields the zip chunks), `src/workers/generate.worker.ts` streams them with progress, and `GenerateScreen` and the download use the `.xlsx` name and type
-- [ ] T028 [US1] Mark slice 1 deferred tasks T101, T104 and T106 superseded in `specs/001-csv-synthetic-slice/tasks.md`, T105 decided (SheetJS not needed, research R1)
+- [x] T028 [US1] Mark slice 1 deferred tasks T101, T104 and T106 superseded in `specs/001-csv-synthetic-slice/tasks.md`, T105 decided (SheetJS not needed, research R1)
 
 **Checkpoint**: a typical workbook goes in and a fake workbook comes out. MVP.
 
@@ -80,15 +80,15 @@
 
 ### Tests for User Story 4
 
-- [ ] T029 [P] [US4] Spy tests: (a) in Node, record every statement and row of the workbook load and of profiling a table made from a synthetic typed sheet and fail if any marker or cell value comes back; (b) in a browser, load `titles.xlsx` through the app and fail if any marker from other sheets, the title row or comments appears in the page, spec, preview, download or an error, in `tests/integration/xlsx-privacy.test.ts` and `tests/e2e/excel-flow.spec.ts`
-- [ ] T030 [P] [US4] Metadata test: the reader returns only names, flags, sizes and format codes (serialize its output and search it for every cell value and marker in `titles.xlsx`), added to `tests/unit/xlsx-metadata.test.ts`
-- [ ] T031 [P] [US4] Browser leak test: extend `tests/e2e/privacy.spec.ts` with `titles.xlsx` so no marker or cell value appears in the page, spec, preview, download, errors or browser storage, and no request leaves the site while the extension loads and the workbook is read
-- [ ] T032 [P] [US4] Refusal tests: a damaged workbook, `legacy.xls`, `encrypted.xlsx`, a text file renamed `.xlsx` and a zip that is not a workbook each give their own clear message with no cell content, in `tests/unit/xlsx-metadata.test.ts` and `tests/e2e/excel-flow.spec.ts`
+- [x] T029 [P] [US4] Spy tests: (a) in Node, record every statement and row of the workbook load and of profiling a table made from a synthetic typed sheet and fail if any marker or cell value comes back; (b) in a browser, load `titles.xlsx` through the app and fail if any marker from other sheets, the title row or comments appears in the page, spec, preview, download or an error, in `tests/integration/xlsx-privacy.test.ts` and `tests/e2e/excel-flow.spec.ts`
+- [x] T030 [P] [US4] Metadata test: the reader returns only names, flags, sizes and format codes (serialize its output and search it for every cell value and marker in `titles.xlsx`), added to `tests/unit/xlsx-metadata.test.ts`
+- [x] T031 [P] [US4] Browser leak test: extend `tests/e2e/privacy.spec.ts` with `titles.xlsx` so no marker or cell value appears in the page, spec, preview, download, errors or browser storage, and no request leaves the site while the extension loads and the workbook is read
+- [x] T032 [P] [US4] Refusal tests: a damaged workbook, `legacy.xls`, `encrypted.xlsx`, a text file renamed `.xlsx` and a zip that is not a workbook each give their own clear message with no cell content, in `tests/unit/xlsx-metadata.test.ts` and `tests/e2e/excel-flow.spec.ts`
 
 ### Implementation for User Story 4
 
-- [ ] T033 [US4] Make the worker and `sanitizeError` map every xlsx failure to a fixed message code (`xlsx_damaged`, `xlsx_legacy`, `xlsx_encrypted`, `xlsx_not_workbook`, `xlsx_sheet_missing`, `xlsx_range_invalid`, `xlsx_too_large`) in `src/lib/errors.ts`, and show them on the ingest screen
-- [ ] T034 [US4] Ensure only the chosen sheet is requested from the extension and that no other package part is opened by our code (a test with a spy on `zip.ts` entry reads in `tests/unit/xlsx-metadata.test.ts`)
+- [x] T033 [US4] Make the worker and `sanitizeError` map every xlsx failure to a fixed message code (`xlsx_damaged`, `xlsx_legacy`, `xlsx_encrypted`, `xlsx_not_workbook`, `xlsx_sheet_missing`, `xlsx_range_invalid`, `xlsx_too_large`) in `src/lib/errors.ts`, and show them on the ingest screen
+- [x] T034 [US4] Ensure only the chosen sheet is requested from the extension and that no other package part is opened by our code (a test with a spy on `zip.ts` entry reads in `tests/unit/xlsx-metadata.test.ts`)
 
 **Checkpoint**: every guarantee has a failing-if-broken test.
 

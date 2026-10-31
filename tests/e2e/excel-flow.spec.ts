@@ -162,3 +162,62 @@ test("loading that spec without the workbook generates a workbook again", async 
   const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: /Download .*_fake\.xlsx/ }).click()]);
   expect(download.suggestedFilename()).toBe("quirks_fake.xlsx");
 });
+
+// ---- Nothing real is kept, nothing leaves the device (specs/003 FR-016, FR-018, FR-019) --------------
+
+test("no marker from other sheets, titles, comments or cells is in the page, spec, preview, download or storage", async ({ page }, testInfo) => {
+  const requests: string[] = [];
+  page.on("request", (r) => requests.push(r.url()));
+  const MARK = "PRIVATE-MARKER";
+
+  await chooseWorkbook(page, "titles.xlsx", "Responses");
+  const leaks = async (stage: string) => {
+    const html = await page.content();
+    expect(html, `visible at ${stage}`).not.toContain(MARK);
+  };
+  await leaks("the load dialog");
+  await review(page);
+  await leaks("review");
+
+  const download = await generateAndDownload(page);
+  await leaks("generate and preview");
+  const fakePath = testInfo.outputPath("fake.xlsx");
+  await download.saveAs(fakePath);
+  // The workbook is a zip, so look inside it for the markers.
+  const { spawnSync: run } = await import("node:child_process");
+  const hasPython = run("python", ["-c", "import zipfile"]).status === 0;
+  if (hasPython) {
+    const code = "import zipfile,sys\nz=zipfile.ZipFile(sys.argv[1])\nprint(b''.join(z.read(n) for n in z.namelist()).decode('utf8','ignore'))";
+    const inside = run("python", ["-c", code, fakePath], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 }).stdout;
+    expect(inside).not.toContain(MARK);
+  }
+
+  const [specDownload] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: /Download spec/ }).click()]);
+  const specPath = testInfo.outputPath("spec.json");
+  await specDownload.saveAs(specPath);
+  expect(readFileSync(specPath, "utf8")).not.toContain(MARK);
+
+  const storage = await page.evaluate(() => ({ local: Object.keys(localStorage).length, session: Object.keys(sessionStorage).length }));
+  expect(storage).toEqual({ local: 0, session: 0 });
+  const origin = new URL(page.url()).origin;
+  expect(requests.filter((u) => !u.startsWith(origin) && !u.startsWith("blob:") && !u.startsWith("data:"))).toEqual([]);
+});
+
+test.describe("files that cannot be read get a clear message with no file content", () => {
+  const cases: [string, RegExp][] = [
+    ["damaged.xlsx", /damaged/i],
+    ["legacy.xls", /old Excel file \(\.xls\)/],
+    ["encrypted.xlsx", /password/i],
+  ];
+  for (const [file, message] of cases) {
+    test(file, async ({ page }) => {
+      await page.goto(APP);
+      await page.locator("#file-input").setInputFiles(join(FIX, file));
+      const alert = page.getByRole("alert");
+      await expect(alert).toContainText(message, { timeout: 60_000 });
+      const text = await alert.innerText();
+      for (const leaked of ["PK", "D0CF", "Jane", "quirks"]) expect(text).not.toContain(leaked);
+      await expect(page.getByRole("heading", { name: "Choose a sheet" })).toHaveCount(0);
+    });
+  }
+});

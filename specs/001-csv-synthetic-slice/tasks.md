@@ -278,15 +278,19 @@ Slice 1 is complete when Phases 1 to 9 are done, regardless of this section.
 - [ ] T098 GitHub Actions workflow that runs lint, typecheck and tests, builds, and deploys to GitHub Pages without committing build output, in `.github/workflows/deploy.yml`
 - [ ] T099 Release workflow that attaches an offline zip (app, DuckDB-WASM binaries and extension files) in `.github/workflows/release.yml`
 - [ ] T100 Extension fetch script that derives the matching DuckDB engine version and downloads extension files into `public/duckdb/`, in `scripts/fetch-extensions.mjs`
-- [ ] T101 CI smoke test that the bundled Excel extension loads a tiny xlsx file in `tests/e2e/excel-extension.spec.ts`
+- [x] T101 CI smoke test that the bundled Excel extension loads a tiny xlsx file in `tests/e2e/excel-extension.spec.ts`
+  - Superseded by `specs/003-excel-input-output` (done there).
 - [ ] T102 Folder output through the File System Access API in Chrome and Edge, with single-file download fallback, in `src/features/generate/folderOutput.ts`
 - [ ] T103 Chore: move the whole stack to current majors together (React, Vite, Vitest, TypeScript, ESLint) and update the constitution's technology section
 
 ### Excel feature
 
-- [ ] T104 Excel input through DuckDB's Excel reader, with the load dialog (worksheet names as a dropdown only; range, rows to skip and header-row toggle; no cell data shown), in `src/features/ingest/ExcelDialog.tsx`
-- [ ] T105 SheetJS fallback, used only if T104 proves insufficient, and the decision recorded in `research.md`
-- [ ] T106 Excel export preserving sheet name, header row offset and cell types in `src/lib/excel/writer.ts`
+- [x] T104 Excel input through DuckDB's Excel reader, with the load dialog (worksheet names as a dropdown only; range, rows to skip and header-row toggle; no cell data shown), in `src/features/ingest/ExcelDialog.tsx`
+  - Superseded by `specs/003-excel-input-output` (done there).
+- [x] T105 SheetJS fallback, used only if T104 proves insufficient, and the decision recorded in `research.md`
+  - Decided: SheetJS is not needed (spike evidence in `specs/003-excel-input-output/research.md`).
+- [x] T106 Excel export preserving sheet name, header row offset and cell types in `src/lib/excel/writer.ts`
+  - Superseded by `specs/003-excel-input-output` (done there).
 
 ### Column types and formats
 
