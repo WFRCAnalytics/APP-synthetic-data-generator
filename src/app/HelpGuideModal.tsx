@@ -18,7 +18,7 @@ export function HelpGuideModal({ open, onClose }: HelpGuideModalProps) {
         <h3>How it works</h3>
         <ol>
           <li>
-            <strong>Ingest.</strong> Choose a CSV file. The app shows its delimiter, encoding, row count and column names, never its rows.
+            <strong>Ingest.</strong> Choose a CSV or Excel (.xlsx) file. For a CSV the app shows its delimiter, encoding, row count and column names; for a workbook it lists the sheet names, and you choose one sheet and where its table starts. Rows and cell values are never shown. Old .xls files and macro workbooks (.xlsm) are not read: save them as .xlsx or CSV first.
           </li>
           <li>
             <strong>Review.</strong> Each column gets a card. Check the detected type, missing-value markers and codes such as 999 for &ldquo;refused&rdquo;, and change anything that is wrong.

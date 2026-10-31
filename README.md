@@ -16,8 +16,10 @@ lengths and patterns), never rows, ID lists, free text, personal identifiers or 
 
 ## How it works
 
-1. **Ingest**: pick a CSV. The app detects delimiter, encoding, quoting and header, and shows the
-   row count, column count and column names. It never shows row values.
+1. **Ingest**: pick a CSV or an Excel workbook (.xlsx). For a CSV the app detects delimiter, encoding,
+   quoting and header; for a workbook it lists the sheet names and you choose a sheet, the rows to
+   skip above the header and, if you like, a cell range. It shows the row count, column count and
+   column names, never row values.
 2. **Review**: one card per column. Override types, sentinels, NA tokens, numeric modes, ID
    patterns and exclusions, then save the spec.
 3. **Generate**: set a seed, preview 50 fake rows, check every summary was met, and export the
@@ -28,7 +30,7 @@ name and format) and run the code locally.
 
 ## Status
 
-The first two slices work end to end for CSV files: choose a file, confirm the detected settings,
+The first three slices work end to end for CSV and Excel (.xlsx) files: choose a file, confirm the detected settings,
 review and change how each column is understood, generate, check that every summary was met, and
 download the fake file and the spec.
 
@@ -39,12 +41,20 @@ download the fake file and the spec.
   (a character pattern). Personal values are always invented from word lists; none is copied.
 - **Review**: search, filters, per-column overrides, optional protections, and a virtualized list for
   very wide tables.
-- **Spec files**: save, load (version 1 and 2), and generate from a spec alone.
+- **Excel**: the chosen sheet is read in the browser with DuckDB's Excel reader (served from this site,
+  nothing fetched from elsewhere). The fake workbook holds that one sheet, with the same sheet name,
+  header position, column names and order, text, number and date cells, and number formats (leading
+  zeros stay text; blank cells and empty text stay apart; dates in either date system). Formulas are
+  read as their values. Merged cells, hidden sheets and columns of mixed kinds are flagged. Not read:
+  old `.xls`, macro workbooks (`.xlsm`), and charts or other formatting. Sheets over about 1 GB once
+  opened are refused; over 100 MB gets a warning.
+- **Spec files**: save, load (version 1 to 3), and generate from a spec alone. A workbook spec makes a
+  workbook.
 - **Privacy**: a live request counter and a strict Content-Security-Policy. Tests prove that no
   real value of any column reaches the page, the spec, the preview, the file or an error message.
 - **Browsers**: tested in Chrome, Edge, Firefox and WebKit.
 
-Not yet: Excel and Parquet files, coordinates, other languages for invented values, several tables,
+Not yet: Parquet files, coordinates, other languages for invented values, several tables,
 the offline zip release. The backlog is in
 [`specs/001-csv-synthetic-slice/tasks.md`](specs/001-csv-synthetic-slice/tasks.md) and the slice 2
 list in [`specs/002-personal-text-columns/tasks.md`](specs/002-personal-text-columns/tasks.md).

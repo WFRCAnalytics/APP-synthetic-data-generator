@@ -85,3 +85,25 @@ test("the whole flow can be done from the keyboard, and focus is always visible"
   await page.keyboard.press("Space");
   await expect(page.getByText(/checks passed\./)).toBeVisible({ timeout: 180_000 });
 });
+
+for (const scheme of ["light", "dark"] as const) {
+  test.describe(`${scheme} theme, workbook`, () => {
+    test.use({ colorScheme: scheme });
+
+    test("the sheet dialog and the cell format editor have no detectable violations", async ({ page }) => {
+      await page.goto(APP);
+      await page.locator("#file-input").setInputFiles(join(HERE, "../fixtures/xlsx/quirks.xlsx"));
+      await expect(page.getByRole("heading", { name: "Choose a sheet" })).toBeVisible({ timeout: 60_000 });
+      await page.getByLabel("Sheet", { exact: true }).selectOption({ label: "Survey Data" });
+      await expect(page.getByTestId("merged-note")).toBeVisible({ timeout: 60_000 });
+      expect(await violations(page), "Workbook dialog").toEqual([]);
+
+      await page.getByRole("button", { name: "Use this sheet" }).click();
+      await expect(page.getByRole("heading", { name: "Review columns" })).toBeVisible({ timeout: 180_000 });
+      await page.locator('[data-column="amount"]').getByText("Settings", { exact: true }).click();
+      await page.getByLabel("Format in the Excel file").first().selectOption({ label: "Custom code…" });
+      await expect(page.getByLabel("Custom format code")).toBeVisible();
+      expect(await violations(page), "Cell format editor").toEqual([]);
+    });
+  });
+}
