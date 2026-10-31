@@ -25,11 +25,11 @@
 
 ## Phase 2: Foundational (blocks all stories)
 
-- [ ] T003 [P] Unit tests for the release library in `tests/unit/release-lib.test.ts`: file stem from versions, checksum lines (format, sort order, LF), parsing them back, tag-to-version check, file collection sorted by path with forward slashes, refusal of paths outside the folder
-- [ ] T004 [P] Unit tests for the reproducible zip writer in `tests/unit/release-zip.test.ts`: same inputs give equal bytes, entries sorted, fixed timestamps (`SOURCE_DATE_EPOCH`), readable by the app's own `readZipDirectory` and by Python's `zipfile` when available, deflate and stored entries, names with spaces and non-ASCII
-- [ ] T005 Write `scripts/release-lib.mjs` (stem, checksums, tag check, collect) to pass T003
-- [ ] T006 Write `scripts/zip-writer.mjs` (sorted, fixed time, `node:zlib` deflate level 9, UTF-8 names, CRC-32) to pass T004
-- [ ] T007 [P] Write `scripts/licenses.mjs` and `release/LICENSES.md`: the app's MIT licence, the licence text of each bundled component found in `node_modules` (DuckDB-WASM, React, word lists, fonts, icons) and the Excel extension's notice; fail if a bundled component has none; unit test in `tests/unit/release-licenses.test.ts` (R11)
+- [x] T003 [P] Unit tests for the release library in `tests/unit/release-lib.test.ts`: file stem from versions, checksum lines (format, sort order, LF), parsing them back, tag-to-version check, file collection sorted by path with forward slashes, refusal of paths outside the folder
+- [x] T004 [P] Unit tests for the reproducible zip writer in `tests/unit/release-zip.test.ts`: same inputs give equal bytes, entries sorted, fixed timestamps (`SOURCE_DATE_EPOCH`), readable by the app's own `readZipDirectory` and by Python's `zipfile` when available, deflate and stored entries, names with spaces and non-ASCII
+- [x] T005 Write `scripts/release-lib.mjs` (stem, checksums, tag check, collect) to pass T003
+- [x] T006 Write `scripts/zip-writer.mjs` (sorted, fixed time, `node:zlib` deflate level 9, UTF-8 names, CRC-32) to pass T004
+- [x] T007 [P] Write `scripts/licenses.mjs` (generated into the zip at build time, not committed, so it cannot drift): the app's MIT licence, the licence text of each bundled component found in `node_modules` (DuckDB-WASM, React, word lists, fonts, icons) and the Excel extension's notice; fail if a bundled component has none; unit test in `tests/unit/release-licenses.test.ts` (R11)
 
 **Checkpoint**: the pieces that build a zip exist and are tested.
 
