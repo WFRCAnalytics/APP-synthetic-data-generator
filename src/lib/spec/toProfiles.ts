@@ -23,6 +23,7 @@ export function histogramFromQuantiles(q: readonly number[], min: number, max: n
 const linearQuantiles = (min: number, max: number): number[] => Array.from({ length: 101 }, (_, i) => min + ((max - min) * i) / 100);
 
 export function settingsFromSource(s: SourceSpec): SourceSettings {
+  if (s.format === "parquet") return { parquet: true, rowGroups: s.row_groups };
   if (s.format === "xlsx") return { sheet: s.sheet, ...(s.range ? { range: s.range } : {}), skipRows: s.skip_rows, header: s.header, date1904: s.date1904 };
   return {
     encoding: s.encoding,
@@ -64,6 +65,7 @@ export function profileFromSpec(c: ColumnSpec): ColumnProfile {
     quoted: c.quoted ?? false,
     ...(c.cell_format ? { cellFormat: c.cell_format } : {}),
     ...(c.stored_as_text ? { storedAsText: true } : {}),
+    ...(c.parquet_type ? { parquetType: c.parquet_type } : {}),
     attentionReasons: [] as ReasonCode[],
   };
 

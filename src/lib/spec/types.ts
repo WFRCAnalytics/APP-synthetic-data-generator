@@ -3,6 +3,8 @@
 // ID pattern masks and repeat structures, and format settings. Never rows, ID lists, free text,
 // personal identifiers or coordinates (constitution Principle II).
 
+import type { ParquetType } from "../parquet/types";
+
 /** The version this app writes. Version 2 added the personal, free_text and short_string types; version 3 the xlsx source; version 4 the parquet source. */
 export const SPEC_VERSION = 4;
 /** The versions this app reads. */
@@ -70,7 +72,15 @@ export interface XlsxSourceSpec {
   date1904: boolean;
 }
 
-export type SourceSpec = CsvSourceSpec | XlsxSourceSpec;
+/** A Parquet file (specs/005). Structure only: nothing here is a value, statistic or piece of file metadata. */
+export interface ParquetSourceSpec {
+  format: "parquet";
+  file_name: string;
+  /** How many row groups the real file has. */
+  row_groups: number;
+}
+
+export type SourceSpec = CsvSourceSpec | XlsxSourceSpec | ParquetSourceSpec;
 
 export interface NaSpec {
   tokens: string[];
@@ -90,6 +100,8 @@ export interface ColumnBase {
   cell_format?: string;
   /** The real cells held text even though the values read as numbers or dates (a zip code stored as text). The fake cells are text too. */
   stored_as_text?: boolean;
+  /** The column's logical type in a Parquet file, enough to write the same schema back. Never a value. */
+  parquet_type?: ParquetType;
   na?: NaSpec;
   /** Sentinel code to exact count. */
   sentinels?: Record<string, number>;

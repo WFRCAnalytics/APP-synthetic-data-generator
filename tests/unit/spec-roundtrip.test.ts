@@ -205,3 +205,34 @@ describe("the xlsx source and cell formats (specs/003 FR-010)", () => {
     expect(csv.source.format).toBe("csv");
   });
 });
+
+describe("the parquet source and Parquet types (specs/005 FR-005, FR-009)", () => {
+  const parquetSpec: SpecFile = {
+    spec_version: SPEC_VERSION,
+    source: { format: "parquet", file_name: "survey.parquet", row_groups: 3 },
+    n_rows: 200,
+    seed: 5,
+    columns: [
+      { name: "amount", type: "float", quoted: false, mode: "uniform", min: 10, max: 110, mean: 60, sd: 29, decimals: 2, quantiles: Array.from({ length: 101 }, (_, i) => 10 + i), parquet_type: { kind: "decimal", precision: 10, scale: 2, nullable: true } },
+      { name: "when", type: "date", quoted: false, mode: "uniform", min: 19000, max: 19100, mean: 19050, sd: 29, decimals: 0, quantiles: Array.from({ length: 101 }, (_, i) => 19000 + i), format: "%Y-%m-%d", granularity: "day", parquet_type: { kind: "date", nullable: false } },
+      { name: "flag", type: "categorical", quoted: false, storage: "string", counts: { N: 90, Y: 86 }, na: { tokens: ["", "\u0001"], count: 24, by_token: { "": 10, "\u0001": 14 } }, parquet_type: { kind: "string", nullable: true } },
+    ],
+  };
+
+  it("round trips the source and the column types", () => {
+    const loaded = parseSpecText(specToJson(parquetSpec));
+    if (!loaded.ok) throw new Error(JSON.stringify(loaded.problems));
+    const settings = settingsFromSource(loaded.spec.source);
+    expect(settings).toEqual({ parquet: true, rowGroups: 3 });
+    const profiles = profilesFromSpec(loaded.spec.columns);
+    expect(profiles.map((p) => p.parquetType?.kind)).toEqual(["decimal", "date", "string"]);
+    const again = buildSpec({ fileName: "survey.parquet", settings, rowCount: 200, seed: 5, keepOriginalName: false, threshold: 50, profiles });
+    expect(again.source).toEqual(parquetSpec.source);
+    expect(again.columns.map((c) => c.parquet_type)).toEqual(parquetSpec.columns.map((c) => c.parquet_type));
+  });
+
+  it("holds no value, statistic or file metadata text in what it saves", () => {
+    const text = specToJson(parquetSpec);
+    for (const word of ["created_by", "key_value", "statistics", "compression", "min_value", "max_value", "bloom"]) expect(text).not.toContain(word);
+  });
+});

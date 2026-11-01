@@ -3,7 +3,7 @@
 // masks and repeat structures, and format settings. An unsupported column keeps only its name and
 // the user's choice, so none of its values can leak (constitution Principle II).
 
-import { isExcelSettings, type ColumnProfile, type SourceSettings } from "../profile/types";
+import { isExcelSettings, isParquetSettings, type ColumnProfile, type SourceSettings } from "../profile/types";
 import { SPEC_VERSION, type ColumnSpec, type NumericFields, type SourceSpec, type SpecFile } from "./types";
 
 export interface BuildInput {
@@ -17,6 +17,7 @@ export interface BuildInput {
 }
 
 export function buildSource(fileName: string, s: SourceSettings): SourceSpec {
+  if (isParquetSettings(s)) return { format: "parquet", file_name: fileName, row_groups: s.rowGroups };
   if (isExcelSettings(s)) {
     return { format: "xlsx", file_name: fileName, sheet: s.sheet, ...(s.range ? { range: s.range } : {}), skip_rows: s.skipRows, header: s.header, date1904: s.date1904 };
   }
@@ -56,6 +57,7 @@ export function columnSpecOf(p: ColumnProfile): ColumnSpec {
     name: p.name,
     ...(p.cellFormat ? { cell_format: p.cellFormat } : {}),
     ...(p.storedAsText ? { stored_as_text: true } : {}),
+    ...(p.parquetType ? { parquet_type: p.parquetType } : {}),
     ...(p.outputName !== p.name ? { output_name: p.outputName } : {}),
     ...(p.exclude !== "include" ? { exclude: p.exclude } : {}),
   };

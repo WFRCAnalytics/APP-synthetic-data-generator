@@ -6,6 +6,7 @@
 import * as v from "valibot";
 import { isSupportedPattern, patternGranularity, patternKind } from "../datefmt/directives";
 import { maskCapacity } from "../mask/mask";
+import { validateParquetType, type ParquetType } from "../parquet/types";
 import { describeFormat } from "../xlsx/formats";
 import { isValidSheetName, parseRange } from "../xlsx/names";
 import {
@@ -39,6 +40,7 @@ const base = {
   na: v.optional(NaSchema),
   sentinels: v.optional(SentinelsSchema),
   stored_as_text: v.optional(v.boolean()),
+  parquet_type: v.optional(v.unknown()),
   cell_format: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(255), v.check((text) => ![...text].some((ch) => ch.charCodeAt(0) < 32), "A cell format may not hold control characters."))),
 };
 
@@ -174,7 +176,13 @@ const CsvSourceSchema = v.strictObject({
   header_quoted: v.optional(v.boolean()),
 });
 
-const SourceSchema = v.variant("format", [CsvSourceSchema, XlsxSourceSchema]);
+const ParquetSourceSchema = v.strictObject({
+  format: v.literal("parquet"),
+  file_name: v.pipe(v.string(), v.minLength(1)),
+  row_groups: v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(10_000_000)),
+});
+
+const SourceSchema = v.variant("format", [CsvSourceSchema, XlsxSourceSchema, ParquetSourceSchema]);
 
 const SpecSchema = v.strictObject({
   spec_version: v.picklist(READABLE_SPEC_VERSIONS as [number, ...number[]]),
@@ -220,6 +228,32 @@ function checkCellFormat(col: ColumnSpec, problem: (path: string, message: strin
   }
 }
 
+/** A Parquet type must be well formed and suit its column: dates for date columns, numbers for number columns. */
+function checkParquetType(col: ColumnSpec, problem: (path: string, message: string) => void): void {
+  const bad = validateParquetType(col.parquet_type);
+  if (bad) {
+    problem("parquet_type", bad);
+    return;
+  }
+  const kind = (col.parquet_type as ParquetType).kind;
+  switch (col.type) {
+    case "date":
+    case "datetime":
+    case "time":
+      if (kind !== "date" && kind !== "time" && kind !== "timestamp" && kind !== "string") problem("parquet_type", "A date column needs a date, time, timestamp or string Parquet type.");
+      break;
+    case "integer":
+    case "float":
+      if (kind !== "int" && kind !== "float" && kind !== "decimal" && kind !== "string") problem("parquet_type", "A number column needs an int, float, decimal or string Parquet type.");
+      break;
+    case "boolean":
+      if (kind !== "bool" && kind !== "string" && kind !== "int") problem("parquet_type", "A yes/no column needs a bool, int or string Parquet type.");
+      break;
+    default:
+      break;
+  }
+}
+
 /** Checks a repeat structure and returns the distinct count, or null after reporting a problem. */
 function checkRepeat(structure: Record<string, number>, remaining: number, problem: (path: string, message: string) => void): number | null {
   const keys = Object.keys(structure);
@@ -256,6 +290,7 @@ function checkColumn(col: ColumnSpec, rows: number, out: SpecProblem[]): void {
   }
 
   if (col.cell_format !== undefined) checkCellFormat(col, problem);
+  if (col.parquet_type !== undefined) checkParquetType(col, problem);
 
   switch (col.type) {
     case "categorical":
@@ -396,6 +431,17 @@ export function validateSpec(input: unknown): SpecResult {
       const range = parseRange(src.range);
       if (!range) problems.push({ column: null, path: "source.range", message: "The cell range is not valid. Use a range such as A3:I203." });
       else if (range.firstRow !== src.skip_rows) problems.push({ column: null, path: "source.skip_rows", message: `The range starts at row ${range.firstRow + 1}, so the rows skipped must be ${range.firstRow}, not ${src.skip_rows}.` });
+    }
+  }
+
+  if (spec.source.format === "parquet") {
+    for (const col of spec.columns) {
+      const written = (col.exclude ?? "include") !== "drop" && col.type !== "unsupported" && col.type !== "empty";
+      if (col.parquet_type === undefined && written) problems.push({ column: col.name, path: "parquet_type", message: "A column of a Parquet spec needs its Parquet type (parquet_type)." });
+    }
+  } else {
+    for (const col of spec.columns) {
+      if (col.parquet_type !== undefined) problems.push({ column: col.name, path: "parquet_type", message: "Only a spec for a Parquet file may give a Parquet type." });
     }
   }
 

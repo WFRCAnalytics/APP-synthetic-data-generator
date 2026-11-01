@@ -35,8 +35,8 @@
 - [x] T009 Implement `src/lib/parquet/types.ts` and `src/lib/parquet/schema.ts` to pass T004 and T005
 - [x] T010 Implement `src/lib/parquet/thrift.ts` and `src/lib/parquet/encode.ts` to pass T006 and T007
 - [x] T011 Implement `src/lib/parquet/convert.ts` (exact `BigInt` for 64-bit and wide decimals) to pass T008
-- [ ] T012 [P] Add the `parquet_*` error codes with fixed messages in `src/lib/errors.ts` (`parquet_not_parquet`, `parquet_damaged`, `parquet_empty`, `parquet_encrypted`, `parquet_too_large`, `parquet_unavailable`) and make `sanitizeError` map the engine's "No magic bytes" and "Invalid Input" messages for a Parquet read to them; test in `tests/unit/errors.test.ts`
-- [ ] T013 [P] Spec version 4 in `src/lib/spec/types.ts`, `validate.ts`, `build.ts`, `toProfiles.ts` and `specs/001-csv-synthetic-slice/contracts/spec-file.schema.json`: the `parquet` source variant, `parquet_type` on columns, validation per `data-model.md`, readers accept 1 to 4; tests in `tests/unit/spec-validate-parquet.test.ts` and `tests/unit/spec-roundtrip.test.ts`
+- [x] T012 [P] Add the `parquet_*` error codes with fixed messages in `src/lib/errors.ts` (`parquet_not_parquet`, `parquet_damaged`, `parquet_empty`, `parquet_encrypted`, `parquet_too_large`, `parquet_unavailable`) and make `sanitizeError` map the engine's "No magic bytes" and "Invalid Input" messages for a Parquet read to them; test in `tests/unit/errors.test.ts`
+- [x] T013 [P] Spec version 4 in `src/lib/spec/types.ts`, `validate.ts`, `build.ts`, `toProfiles.ts` and `specs/001-csv-synthetic-slice/contracts/spec-file.schema.json`: the `parquet` source variant, `parquet_type` on columns, validation per `data-model.md`, readers accept 1 to 4; tests in `tests/unit/spec-validate-parquet.test.ts` and `tests/unit/spec-roundtrip.test.ts`
 
 **Checkpoint**: types, encoding, conversion and the spec format exist and are tested.
 

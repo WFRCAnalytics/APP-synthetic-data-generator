@@ -4,7 +4,7 @@
 import { FileUp } from "lucide-react";
 import { useRef } from "react";
 import { EmptyState } from "../../components/EmptyState";
-import { isExcelSettings, type FileSettings } from "../../lib/profile/types";
+import { isExcelSettings, isParquetSettings, type FileSettings } from "../../lib/profile/types";
 import type { SessionState, WorkbookChoice } from "../../app/session";
 import { WorkbookDialog } from "./WorkbookDialog";
 import { ProfileProgress } from "./ProfileProgress";
@@ -41,8 +41,8 @@ const MAX_NAMES_SHOWN = 40;
 export function IngestScreen({ session, onChooseFile, onChooseSpec, onInspectSheet, onConfirmWorkbook, onEditSettings, onConfirm, onCancel }: IngestScreenProps) {
   const input = useRef<HTMLInputElement>(null);
   const { phase } = session;
-  // The CSV panel is for CSV files; a workbook has its own dialog.
-  const settings = session.settings && !isExcelSettings(session.settings) ? session.settings : null;
+  // The CSV panel is for CSV files; a workbook has its own dialog, and a Parquet file its own summary.
+  const settings = session.settings && !isExcelSettings(session.settings) && !isParquetSettings(session.settings) ? session.settings : null;
   const busy = phase === "opening" || phase === "loading" || phase === "profiling";
   const names = session.columnNames;
 

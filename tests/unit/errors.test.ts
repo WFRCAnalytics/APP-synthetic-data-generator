@@ -19,6 +19,12 @@ describe("AppError messages", () => {
     "spec_invalid",
     "generation_error",
     "engine_error",
+    "extension_unavailable",
+    "parquet_not_parquet",
+    "parquet_damaged",
+    "parquet_empty",
+    "parquet_encrypted",
+    "parquet_too_large",
     "internal_error",
   ];
 
@@ -44,6 +50,31 @@ describe("AppError messages", () => {
   it("converts to a plain wire form", () => {
     const wire = toWireError(new AppError("file_empty"));
     expect(wire).toEqual({ code: "file_empty", message: "The file is empty." });
+  });
+});
+
+describe("Parquet errors", () => {
+  it("says what is wrong in fixed words, none of them from the file", () => {
+    expect(describeError("parquet_not_parquet")).toBe("This file is not a Parquet file.");
+    expect(describeError("parquet_damaged")).toMatch(/damaged or incomplete/);
+    expect(describeError("parquet_empty")).toMatch(/no rows or no columns/);
+    expect(describeError("parquet_encrypted")).toMatch(/encrypted/);
+    expect(describeError("parquet_too_large")).toMatch(/too large/);
+  });
+
+  it("keeps the code of an error that already has one", () => {
+    expect(sanitizeError({ code: "parquet_empty" }).code).toBe("parquet_empty");
+    expect(sanitizeError({ code: "parquet_encrypted", message: "PRIVATE-MARKER" }).message).not.toContain("PRIVATE-MARKER");
+  });
+
+  it("turns the engine's reply to a cut-short file into the fixed message, without the file name", () => {
+    const err = sanitizeError(new Error("Invalid Input Error: No magic bytes found at end of file 'Jane Doe survey.parquet'\n\nLINE 1: SELECT"));
+    expect(err.code).toBe("parquet_damaged");
+    expect(err.message).not.toMatch(/Jane|survey|LINE/);
+  });
+
+  it("names the reader generically when an extension cannot load", () => {
+    expect(describeError("extension_unavailable")).toBe("The reader for this kind of file could not be loaded. Reload the page and try again.");
   });
 });
 

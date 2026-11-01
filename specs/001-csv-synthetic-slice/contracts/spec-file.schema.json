@@ -7,7 +7,7 @@
   "required": ["spec_version", "source", "n_rows", "seed", "columns"],
   "additionalProperties": false,
   "properties": {
-    "spec_version": { "enum": [1, 2, 3], "description": "2 adds personal, free_text and short_string columns; 3 adds the xlsx source and cell_format; older files still load." },
+    "spec_version": { "enum": [1, 2, 3, 4], "description": "2 adds personal, free_text and short_string columns; 3 adds the xlsx source and cell_format; 4 adds the parquet source and parquet_type; older files still load." },
     "source": {
       "oneOf": [
         {
@@ -40,6 +40,16 @@
                 "skip_rows": { "type": "integer", "minimum": 0, "description": "Rows above the header, written empty in the fake sheet." },
                 "header": { "type": "boolean" },
                 "date1904": { "type": "boolean" }
+              }
+            },
+        {
+              "type": "object",
+              "required": ["format", "file_name", "row_groups"],
+              "additionalProperties": false,
+              "properties": {
+                "format": { "const": "parquet" },
+                "file_name": { "type": "string", "minLength": 1 },
+                "row_groups": { "type": "integer", "minimum": 0, "description": "How many row groups the real file has. Structure only." }
               }
             }
       ]
@@ -119,6 +129,22 @@
         },
         "exclude": { "enum": ["drop", "keep_as_na", "include"], "default": "include" },
         "stored_as_text": { "type": "boolean", "description": "The real cells held text although the values read as numbers or dates; the fake cells are text too." },
+        "parquet_type": {
+          "type": "object",
+          "required": ["kind", "nullable"],
+          "additionalProperties": false,
+          "description": "The column's logical type in a Parquet file, enough to write the same schema back. Never a value, a range or a statistic.",
+          "properties": {
+            "kind": { "enum": ["int", "float", "decimal", "bool", "string", "date", "time", "timestamp"] },
+            "bits": { "enum": [8, 16, 32, 64] },
+            "signed": { "type": "boolean" },
+            "precision": { "type": "integer", "minimum": 1, "maximum": 38 },
+            "scale": { "type": "integer", "minimum": 0, "maximum": 38 },
+            "unit": { "enum": ["ms", "us", "ns"] },
+            "utc": { "type": "boolean" },
+            "nullable": { "type": "boolean" }
+          }
+        },
         "cell_format": { "type": "string", "minLength": 1, "maxLength": 255, "description": "Number format code of the column's cells in a workbook, such as #,##0.00 or mm/dd/yyyy. Never a value." },
         "quoted": { "type": "boolean", "description": "Source wrote this column's non-empty fields in quotes; used when source.quote_style is per_column." },
         "na": { "$ref": "#/$defs/na" },

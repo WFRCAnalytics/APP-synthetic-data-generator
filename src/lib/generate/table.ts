@@ -23,6 +23,7 @@ export function dialectOf(source: SourceSpec): CsvDialect {
   // A workbook has no CSV dialect; the plan still needs one for the shared row code, and only
   // `header` is read from it (the workbook writer decides everything else).
   if (source.format === "xlsx") return { ...DEFAULT_DIALECT, header: source.header };
+  if (source.format === "parquet") return { ...DEFAULT_DIALECT, header: true }; // a Parquet file always names its columns
   return {
     delimiter: source.delimiter,
     quote: source.quote === undefined ? DEFAULT_DIALECT.quote : source.quote,

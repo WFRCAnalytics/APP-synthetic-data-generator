@@ -24,6 +24,11 @@ export type ErrorCode =
   | "xlsx_sheet_missing"
   | "xlsx_range_invalid"
   | "xlsx_too_large"
+  | "parquet_not_parquet"
+  | "parquet_damaged"
+  | "parquet_empty"
+  | "parquet_encrypted"
+  | "parquet_too_large"
   | "internal_error";
 
 export interface ErrorContext {
@@ -59,7 +64,7 @@ export function describeError(code: ErrorCode, ctx: ErrorContext = {}): string {
     case "engine_error":
       return "Something went wrong while processing the file.";
     case "extension_unavailable":
-      return "The Excel reader could not be loaded. Reload the page and try again.";
+      return "The reader for this kind of file could not be loaded. Reload the page and try again.";
     case "xlsx_damaged":
       return "This workbook is damaged and cannot be read. Open it in Excel and save it again, then retry.";
     case "xlsx_legacy":
@@ -74,6 +79,16 @@ export function describeError(code: ErrorCode, ctx: ErrorContext = {}): string {
       return "The cell range is not valid. Use a range such as A3:I203.";
     case "xlsx_too_large":
       return "This workbook is too large to open in the browser.";
+    case "parquet_not_parquet":
+      return "This file is not a Parquet file.";
+    case "parquet_damaged":
+      return "This Parquet file is damaged or incomplete and cannot be read.";
+    case "parquet_empty":
+      return "This Parquet file has no rows or no columns.";
+    case "parquet_encrypted":
+      return "This Parquet file is encrypted. Save an unencrypted copy, then retry.";
+    case "parquet_too_large":
+      return "This Parquet file is too large to open in the browser.";
     case "internal_error":
       return "An unexpected error occurred.";
   }
@@ -117,9 +132,11 @@ export function sanitizeError(err: unknown): AppError {
   if (err instanceof AppError) return err;
   // A workbook problem already carries one of the fixed codes (see src/lib/xlsx/metadata.ts).
   const code = typeof err === "object" && err !== null ? (err as { code?: unknown }).code : undefined;
-  if (typeof code === "string" && code.startsWith("xlsx_")) return new AppError(code as ErrorCode);
+  if (typeof code === "string" && (code.startsWith("xlsx_") || code.startsWith("parquet_"))) return new AppError(code as ErrorCode);
   const raw = err instanceof Error ? err.message : typeof err === "string" ? err : "";
 
+  // The engine's reply to a file that is cut short or not Parquet at all; it names the file, so only the code is kept.
+  if (/no magic bytes/i.test(raw)) return new AppError("parquet_damaged");
   if (/out of memory|memory limit|allocation failed|RangeError: Array buffer/i.test(raw)) {
     return new AppError("out_of_memory");
   }

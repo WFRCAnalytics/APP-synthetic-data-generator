@@ -4,7 +4,7 @@
 
 import type { CheckRow } from "../lib/generate/checks";
 import { applyAllEdits, type LocalEdits } from "../lib/profile/edits";
-import { isExcelSettings, type ColumnOverrides, type ColumnProfile, type FileSettings, type SourceSettings } from "../lib/profile/types";
+import { isExcelSettings, isParquetSettings, type ColumnOverrides, type ColumnProfile, type FileSettings, type SourceSettings } from "../lib/profile/types";
 import { buildSpec } from "../lib/spec/build";
 import { profilesFromSpec, settingsFromSource } from "../lib/spec/toProfiles";
 import type { SpecFile, SpecProblem } from "../lib/spec/types";
@@ -187,7 +187,7 @@ export class Session {
   /** Loads the file with the confirmed settings, then profiles it. */
   confirmAndProfile(): void {
     const settings = this.state.settings;
-    if (!settings || isExcelSettings(settings)) return;
+    if (!settings || isExcelSettings(settings) || isParquetSettings(settings)) return;
     this.pending.clear();
     this.base = [];
     this.edits = {};

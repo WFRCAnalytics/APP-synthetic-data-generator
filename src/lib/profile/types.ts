@@ -3,6 +3,7 @@
 
 import type { ColumnType, ExcludeMode, Granularity, MaskToken, NumericMode, PersonalFormat, PersonalKind } from "../spec/types";
 import type { Encoding } from "../encoding/detect";
+import type { ParquetType, UnsupportedReason } from "../parquet/types";
 import type { QuoteStyle, LineEnding } from "../csv/writer";
 
 export type { ColumnType, ExcludeMode, Granularity, MaskToken, NumericMode, PersonalFormat, PersonalKind };
@@ -31,9 +32,16 @@ export interface ExcelSettings {
   date1904: boolean;
 }
 
-/** What a file is read with: CSV settings or the settings of one worksheet. */
-export type SourceSettings = FileSettings | ExcelSettings;
+/** A Parquet file (specs/005): its settings are structure only. */
+export interface ParquetSettings {
+  parquet: true;
+  rowGroups: number;
+}
+
+/** What a file is read with: CSV settings, the settings of one worksheet, or those of a Parquet file. */
+export type SourceSettings = FileSettings | ExcelSettings | ParquetSettings;
 export const isExcelSettings = (s: SourceSettings): s is ExcelSettings => "sheet" in s;
+export const isParquetSettings = (s: SourceSettings): s is ParquetSettings => "parquet" in s;
 
 export type ColumnStatus = "ok" | "needs_attention" | "unsupported";
 
@@ -155,5 +163,9 @@ export interface ColumnProfile {
   cellFormat?: string;
   /** The real cells held text although the values read as numbers or dates. */
   storedAsText?: boolean;
+  /** The column's logical type in a Parquet file. */
+  parquetType?: ParquetType;
+  /** Why a Parquet column cannot be faked (list, struct, map and so on). */
+  unsupportedReason?: UnsupportedReason;
   summary: ColumnSummary;
 }
