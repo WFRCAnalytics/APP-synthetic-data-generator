@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
+import { shownCard } from "../helpers/review";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ZOO = join(HERE, "../fixtures/zoo");
@@ -27,11 +28,11 @@ test("a CSV goes in and a fake CSV comes out, entirely on this device", async ({
 
   // Review: one card per column.
   await expect(page.getByRole("heading", { name: "Review columns" })).toBeVisible({ timeout: 120_000 });
-  await expect(page.locator(".column-card")).toHaveCount(88);
-  await expect(page.locator('[data-column="cat_str_5"]')).toContainText("Categorical");
-  await expect(page.locator('[data-column="email"]')).toContainText("Personal identifier");
-  await expect(page.locator('[data-column="lat"]')).toContainText("Left out"); // coordinates are not supported yet
-  await expect(page.locator('[data-column="int_sentinels"]')).toContainText("Needs attention");
+  await expect(page.getByTestId("filter-count")).toHaveText("Showing 88 of 88 columns");
+  await expect(await shownCard(page, "cat_str_5")).toContainText("Categorical");
+  await expect(await shownCard(page, "email")).toContainText("Personal identifier");
+  await expect(await shownCard(page, "lat")).toContainText("Left out"); // coordinates are not supported yet
+  await expect(await shownCard(page, "int_sentinels")).toContainText("Needs attention");
 
   // No real personal value is anywhere on the page.
   const text = await page.locator("body").innerText();

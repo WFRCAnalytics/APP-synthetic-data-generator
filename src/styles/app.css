@@ -54,27 +54,54 @@ summary:focus-visible,
   border-radius: var(--radius-sm);
 }
 
-.app-shell {
-  max-width: 72rem;
-  margin: 0 auto;
-  padding: var(--space-5) var(--space-5) var(--space-8);
+/* The window is the app: header on top, the rail and the working area under it, a status strip at the
+   bottom. Only the working area scrolls, so the header and the rail never leave the screen. */
+html,
+body {
+  overflow-x: clip;
 }
 
-/* The bar under the header: where you are on the left, the privacy promise on the right. */
-.subbar {
-  background: color-mix(in srgb, var(--color-foreground) 3%, var(--color-background));
-  border-bottom: 1px solid var(--color-border);
+.shell {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100dvh;
+  min-height: 0;
 }
 
-.subbar-inner {
+.shell-body {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  min-height: 0;
+}
+
+.shell-main {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--space-5) var(--space-6) var(--space-6);
+}
+
+.screen-head {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: var(--space-1) var(--space-6);
-  max-width: 72rem;
-  margin: 0 auto;
-  padding: 0 var(--space-5);
+  gap: var(--space-3) var(--space-5);
+  margin-bottom: var(--space-4);
+}
+
+.screen-head h2 {
+  margin: 0;
+}
+
+.screen-head .page-subtitle {
+  margin: var(--space-1) 0 0;
+}
+
+.screen-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
 
 .field {

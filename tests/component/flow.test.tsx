@@ -159,15 +159,17 @@ describe("ingest", () => {
 });
 
 describe("review", () => {
-  it("shows a card per column with type, status and facts", async () => {
+  it("lists every column in the sidebar and shows the picked one with type, status and facts", async () => {
     const user = userEvent.setup();
     render(<App />);
     await toReview(user);
-    const cards = document.querySelectorAll(".column-card");
-    expect(cards).toHaveLength(3);
+    expect(document.querySelectorAll("[data-nav-column]")).toHaveLength(3);
+    expect(document.querySelector(".column-card")).toBeNull(); // nothing is picked yet: the overview shows
+    await user.click(document.querySelector('[data-nav-column="mode"]') as HTMLElement);
     const modeCard = document.querySelector('[data-column="mode"]') as HTMLElement;
     expect(within(modeCard).getByText("Categorical")).toBeInTheDocument();
     expect(within(modeCard).getByText(/1: 60/)).toBeInTheDocument();
+    await user.click(document.querySelector('[data-nav-column="dist"]') as HTMLElement);
     const dist = document.querySelector('[data-column="dist"]') as HTMLElement;
     expect(within(dist).getByText("Needs attention")).toBeInTheDocument();
     expect(within(dist).getByText(/Codes kept: -9 \(5\)/)).toBeInTheDocument();
@@ -177,17 +179,20 @@ describe("review", () => {
     const user = userEvent.setup();
     render(<App />);
     await toReview(user);
+    expect(screen.getByRole("status")).toHaveTextContent(/2 columns need a look; 1 will be left out/);
+    await user.click(document.querySelector('[data-nav-column="email"]') as HTMLElement);
     const email = document.querySelector('[data-column="email"]') as HTMLElement;
     expect(within(email).getByText("Left out")).toBeInTheDocument();
     expect(within(email).getByText(/personal data/)).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent(/2 columns need a look; 1 will be left out/);
   });
 
   it("draws a chart for columns that have a distribution", async () => {
     const user = userEvent.setup();
     render(<App />);
     await toReview(user);
+    await user.click(document.querySelector('[data-nav-column="dist"]') as HTMLElement);
     expect(screen.getByRole("img", { name: "Distribution of dist" })).toBeInTheDocument();
+    await user.click(document.querySelector('[data-nav-column="email"]') as HTMLElement);
     expect(screen.queryByRole("img", { name: "Distribution of email" })).not.toBeInTheDocument();
   });
 });
@@ -298,7 +303,7 @@ describe("navigation", () => {
     await user.click(screen.getByRole("button", { name: /Ingest/ }));
     expect(screen.getByRole("heading", { name: "Choose a file" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /Review/ }));
-    expect(document.querySelectorAll(".column-card")).toHaveLength(3);
+    expect(document.querySelectorAll("[data-nav-column]")).toHaveLength(3);
   });
 
   it("starts over, clearing the data and returning to the first step", async () => {

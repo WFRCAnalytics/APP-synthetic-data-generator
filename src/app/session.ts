@@ -86,6 +86,8 @@ export interface SessionState {
   gen: GenState;
   /** Columns came from a saved spec: there is no source file, so nothing can be profiled again. */
   specOnly: boolean;
+  /** The table was designed in this app (Start from scratch), so there never was a source file. */
+  designed: boolean;
   /** Problems found in the last spec file the user tried to load, by column. */
   specProblems: SpecProblem[] | null;
   /** Invented sample values for the cards that show them, by column name. */
@@ -115,6 +117,7 @@ export const initialSession: SessionState = {
   keepOriginalName: false,
   gen: emptyGen,
   specOnly: false,
+  designed: false,
   specProblems: null,
   samples: {},
 };
@@ -160,7 +163,7 @@ export class Session {
   /** Settings the worker applies when it profiles a column (sentinels, NA tokens, type, date pattern). */
   private engine: Record<string, ColumnOverrides> = {};
   onProfiled: (columns: { name: string; type: string }[]) => void = () => {};
-  onSpecLoaded: (columns: { name: string; type: string }[]) => void = () => {};
+  onSpecLoaded: (columns: { name: string; type: string }[], designed: boolean) => void = () => {};
 
   subscribe(listener: Listener): () => void {
     this.listeners.add(listener);
@@ -247,13 +250,18 @@ export class Session {
       this.set({ specProblems: result.problems });
       return;
     }
-    const spec = result.spec;
+    this.loadSpec(result.spec, false);
+  }
+
+  /** Takes a spec as the table to review: one the person loaded, or one built from a design. */
+  loadSpec(spec: SpecFile, designed: boolean): void {
     this.reset();
     const profiles = profilesFromSpec(spec.columns);
     this.base = profiles;
     this.set({
       phase: "profiled",
       specOnly: true,
+      designed,
       specProblems: null,
       fileName: spec.source.file_name,
       settings: settingsFromSource(spec.source),
@@ -264,7 +272,7 @@ export class Session {
       keepOriginalName: spec.keep_original_name ?? false,
       profiles,
     });
-    this.onSpecLoaded(profiles.map((p) => ({ name: p.name, type: p.type })));
+    this.onSpecLoaded(profiles.map((p) => ({ name: p.name, type: p.type })), designed);
   }
 
   private makeProfileWorker(): Worker {
@@ -337,7 +345,11 @@ export class Session {
   }
 
   private needSourceFile(): void {
-    this.set({ reviewError: "This table was loaded from a saved spec, so there is no file to read. Open the original file to change this setting." });
+    this.set({
+      reviewError: this.state.designed
+        ? "This table was designed in this app, so there is no file to read. Change this setting in Design."
+        : "This table was loaded from a saved spec, so there is no file to read. Open the original file to change this setting.",
+    });
   }
 
   /** A change that needs no data: applied at once, and kept across any later re-profile. */

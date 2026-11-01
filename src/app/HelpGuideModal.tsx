@@ -28,7 +28,10 @@ export function HelpGuideModal({ open, onClose }: HelpGuideModalProps) {
             <strong>Ingest.</strong> Choose a CSV, Excel (.xlsx) or Parquet (.parquet) file. For a Parquet file the app shows its row count, row groups, and each column's name and type, never a value or any of the file's own notes; list, struct, map and binary columns are not read and are left out. For a CSV the app shows its delimiter, encoding, row count and column names; for a workbook it lists the sheet names, and you choose one sheet and where its table starts. Rows and cell values are never shown. Old .xls files are not read: save them as .xlsx or CSV first. The fake workbook holds only the sheet you chose and no macros.
           </li>
           <li>
-            <strong>Review.</strong> Each column gets a card. Check the detected type, missing-value markers and codes such as 999 for &ldquo;refused&rdquo;, and change anything that is wrong.
+            <strong>Start from scratch.</strong> No real file? Choose &ldquo;Design a table&rdquo;, name it, say how many rows, and add columns one at a time: a number between two limits, a category with weights, a date range, an ID, a person&rsquo;s name. Nothing is read from anywhere; the columns are described by you.
+          </li>
+          <li>
+            <strong>Review.</strong> The columns are listed on the left; search them, filter by type (each type has its own icon) or show only those that need attention. Pick one to see how it will be faked and to change what the app decided: its type, missing-value markers, codes such as 999 for &ldquo;refused&rdquo;, and more.
           </li>
           <li>
             <strong>Generate.</strong> Choose a seed, generate, read the check table, then download the fake file and the spec.

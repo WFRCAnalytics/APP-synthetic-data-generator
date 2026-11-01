@@ -8,6 +8,8 @@ import { LocalNotice } from "./app/LocalNotice";
 import { Session } from "./app/session";
 import { Stepper } from "./app/Stepper";
 import { initialState, reducer } from "./app/state";
+import { emptyDesign } from "./lib/design/defaults";
+import { DesignScreen } from "./features/design/DesignScreen";
 import { GenerateScreen } from "./features/generate/GenerateScreen";
 import { IngestScreen } from "./features/ingest/IngestScreen";
 import { ReviewScreen } from "./features/review/ReviewScreen";
@@ -17,11 +19,12 @@ export function App() {
   const session = useMemo(() => new Session(), []);
   const [data, setData] = useState(session.state);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [design, setDesign] = useState(emptyDesign);
 
   useEffect(() => {
     const unsubscribe = session.subscribe(setData);
     session.onProfiled = (columns) => dispatch({ type: "columnsProfiled", columns });
-    session.onSpecLoaded = (columns) => dispatch({ type: "specLoaded", columns });
+    session.onSpecLoaded = (columns, designed) => dispatch({ type: designed ? "designBuilt" : "specLoaded", columns });
     // Leaving the page drops the workers, and with them every byte of real data.
     return () => {
       unsubscribe();
@@ -31,24 +34,24 @@ export function App() {
 
   const startOver = () => {
     session.reset();
+    setDesign(emptyDesign());
     dispatch({ type: "reset" });
   };
 
   return (
-    <>
+    <div className="shell">
       <AppHeader onOpenHelp={() => setHelpOpen(true)}>
         <NetworkCounter counter={netCounter} />
       </AppHeader>
-      <div className="subbar no-print">
-        <div className="subbar-inner">
-          <Stepper state={state} onGoTo={(step) => dispatch({ type: "goTo", step })} />
-          <LocalNotice />
-        </div>
-      </div>
-      <main className="app-shell">
+      <div className="shell-body">
+        <Stepper state={state} onGoTo={(step) => dispatch({ type: "goTo", step })} onStartOver={state.columnsReady ? startOver : undefined} />
+      <main className="shell-main">
 
-        {state.step === "ingest" && (
+        {state.step === "ingest" && state.designing && <DesignScreen design={design} onChange={setDesign} onBuild={(spec) => session.loadSpec(spec, true)} />}
+
+        {state.step === "ingest" && !state.designing && (
           <IngestScreen
+            onStartDesign={() => dispatch({ type: "startDesign" })}
             session={data}
             onChooseFile={(file) => session.openFile(file)}
             onChooseSpec={(file) => void session.loadSpecFile(file)}
@@ -98,15 +101,10 @@ export function App() {
           />
         )}
 
-        {state.columnsReady && (
-          <div className="actions-row">
-            <button type="button" className="button button-secondary" onClick={startOver}>
-              Start over
-            </button>
-          </div>
-        )}
       </main>
+      </div>
+      <LocalNotice />
       <HelpGuideModal open={helpOpen} onClose={() => setHelpOpen(false)} />
-    </>
+    </div>
   );
 }

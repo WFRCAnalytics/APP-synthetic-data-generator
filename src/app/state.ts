@@ -23,6 +23,8 @@ export interface AppState {
   source: SessionSource;
   /** True once columns are profiled (from a file) or loaded (from a spec). */
   columnsReady: boolean;
+  /** The person is designing a table from scratch: step 1 is Design, not Ingest. */
+  designing: boolean;
   overrides: Record<string, ColumnOverride>;
 }
 
@@ -30,6 +32,7 @@ export const initialState: AppState = {
   step: "ingest",
   source: "none",
   columnsReady: false,
+  designing: false,
   overrides: {},
 };
 
@@ -37,6 +40,8 @@ export type AppAction =
   | { type: "goTo"; step: StepId }
   | { type: "columnsProfiled"; columns: { name: string; type: string }[] }
   | { type: "specLoaded"; columns: { name: string; type: string }[] }
+  | { type: "startDesign" }
+  | { type: "designBuilt"; columns: { name: string; type: string }[] }
   | { type: "setOverride"; name: string; baseType: string; settings: Record<string, unknown> }
   | { type: "reset" };
 
@@ -63,9 +68,17 @@ export function reducer(state: AppState, action: AppAction): AppState {
     case "goTo":
       return isReachable(state, action.step) ? { ...state, step: action.step } : state;
 
+    case "startDesign":
+      return { ...state, step: "ingest", designing: true };
+
+    // A designed table is reviewed like a loaded spec; Design stays reachable as step 1.
+    case "designBuilt":
+      return { ...state, source: "spec", columnsReady: true, designing: true, step: "review", overrides: {} };
+
     case "columnsProfiled":
       return {
         ...state,
+        designing: false,
         source: "file",
         columnsReady: true,
         step: "review",
@@ -74,7 +87,7 @@ export function reducer(state: AppState, action: AppAction): AppState {
 
     // A spec replaces any open file and goes straight to Review; the two are never combined.
     case "specLoaded":
-      return { ...state, source: "spec", columnsReady: true, step: "review", overrides: {} };
+      return { ...state, source: "spec", columnsReady: true, designing: false, step: "review", overrides: {} };
 
     case "setOverride":
       return {

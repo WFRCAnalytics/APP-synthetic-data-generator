@@ -16,7 +16,7 @@ lengths and patterns), never rows, ID lists, free text, personal identifiers or 
 
 ## How it works
 
-1. **Ingest**: pick a CSV, an Excel workbook (.xlsx) or a Parquet file (.parquet). For a CSV the app detects delimiter, encoding,
+1. **Ingest** (or **Design**): pick a CSV, an Excel workbook (.xlsx) or a Parquet file (.parquet), or start from scratch and describe the columns of a table yourself (numbers between limits, categories with weights, dates, IDs, invented personal details). For a CSV the app detects delimiter, encoding,
    quoting and header; for a workbook it lists the sheet names and you choose a sheet, the rows to
    skip above the header and, if you like, a cell range. It shows the row count, column count and
    column names, never row values.

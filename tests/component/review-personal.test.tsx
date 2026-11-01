@@ -2,7 +2,7 @@
 // FR-017). The kind editor with live samples, the SSN-style acknowledgement, the notes and warnings,
 // the short string pattern, and switching a slice 1 unsupported column to a kind.
 
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "../../src/App";
@@ -52,7 +52,12 @@ async function toReview(user: User) {
   await screen.findByRole("heading", { name: "Review columns" });
 }
 
-const card = (name: string) => document.querySelector(`[data-column="${name}"]`) as HTMLElement;
+/** The detail of a column: picks it in the sidebar first when it is not the one showing. */
+const card = (name: string) => {
+  const showing = () => document.querySelector(`[data-column="${name}"]`) as HTMLElement | null;
+  if (!showing()) fireEvent.click(document.querySelector(`[data-nav-column="${name}"]`) as HTMLElement);
+  return showing() as HTMLElement;
+};
 const open = async (user: User, name: string) => {
   await user.click(within(card(name)).getByText("Settings"));
   return card(name);

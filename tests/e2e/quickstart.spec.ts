@@ -5,6 +5,7 @@ import { readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test, type Page } from "@playwright/test";
+import { pick } from "../helpers/review";
 import { parseCsv } from "../helpers/csvParse";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -42,7 +43,7 @@ test("scenario C: ID patterns - a live sample, a narrow pattern blocks Generate,
   );
 
   const card = page.locator('[data-column="hh_id"]');
-  await card.getByText("Settings", { exact: true }).click();
+  await pick(page, "hh_id");
   const editor = card.getByRole("group", { name: "ID pattern" });
   await expect(editor.getByTestId("id-sample-hh_id")).toContainText("Examples (invented):");
   await expect(editor.getByTestId("id-fit-hh_id")).toContainText("allows");
@@ -56,7 +57,7 @@ test("scenario C: ID patterns - a live sample, a narrow pattern blocks Generate,
 
   // Back to the detected pattern: Generate works again, and the saved spec holds no ID.
   await page.getByRole("button", { name: /Review/ }).first().click();
-  await card.getByText("Settings", { exact: true }).click(); // the card is built again, closed
+  await pick(page, "hh_id");
   await card.getByRole("button", { name: "Reset to detected" }).click();
   await page.getByRole("button", { name: "Continue to Generate" }).click();
   await generate(page);
@@ -99,7 +100,7 @@ test("scenario D: reproducibility - same seed, byte-identical; one change affect
   // Change one column's numeric mode, and generate again.
   await page.getByRole("button", { name: /Review/ }).first().click();
   const card = page.locator('[data-column="float_2dp"]');
-  await card.getByText("Settings", { exact: true }).click();
+  await pick(page, "float_2dp");
   await card.getByLabel(/Numeric mode|Mode/).selectOption("uniform");
   await page.getByRole("button", { name: "Continue to Generate" }).click();
   await generate(page);
@@ -123,13 +124,16 @@ test("slice 2 scenario A: names, emails, phones and addresses keep their counts 
   const realHeader = real[0];
   const col = (rows: string[][], header: string[], name: string) => rows.slice(1).map((r) => r[header.indexOf(name)]);
 
+  await pick(page, "respondent_name");
   await expect(page.locator('[data-column="respondent_name"]')).toContainText("Personal identifier");
+  await pick(page, "email");
   await expect(page.locator('[data-column="email"]')).toContainText("Invented email addresses");
+  await pick(page, "plate");
   await expect(page.locator('[data-column="plate"]')).toContainText("Short string");
 
   // A live sample of invented values, and a change of kind updates it.
   const card = page.locator('[data-column="respondent_name"]');
-  await card.getByText("Settings", { exact: true }).click();
+  await pick(page, "respondent_name");
   await expect(card.getByTestId("sample-respondent_name")).toContainText("Examples (invented)", { timeout: 30_000 });
   const before = await card.getByTestId("sample-respondent_name").innerText();
   await card.getByLabel("Kind").selectOption("last_name");
@@ -157,8 +161,8 @@ test("slice 2 scenario A: names, emails, phones and addresses keep their counts 
 test("slice 2 scenario E: an SSN-style column is left out until it is acknowledged, then generated in the 900 range", async ({ page }) => {
   await profile(page, "zoo_small.csv");
   const ssn = page.locator('[data-column="ssn_like"]');
+  await pick(page, "ssn_like");
   await expect(ssn).toContainText("Left out");
-  await ssn.getByText("Settings", { exact: true }).click();
   await ssn.getByLabel(/I understand that invented social-security-style numbers/).check();
   await expect(ssn).not.toContainText("Left out");
 
@@ -173,7 +177,7 @@ test("slice 2 scenario E: an SSN-style column is left out until it is acknowledg
 
   // Cleared again, the column goes back to being left out.
   await page.getByRole("button", { name: /Review/ }).first().click();
-  await ssn.getByText("Settings", { exact: true }).click();
+  await pick(page, "ssn_like");
   await ssn.getByLabel(/I understand that invented social-security-style numbers/).uncheck();
   await expect(ssn).toContainText("Left out");
 });
@@ -183,8 +187,8 @@ test("slice 2 scenario F: a slice 1 spec loads, and its unsupported column needs
   await page.getByLabel("Load existing spec").setInputFiles(join(HERE, "../fixtures/spec-v1.json"));
   await expect(page.getByRole("heading", { name: "Review columns" })).toBeVisible();
   const email = page.locator('[data-column="respondent_email"]');
+  await pick(page, "respondent_email");
   await expect(email).toContainText("Left out");
-  await email.getByText("Settings", { exact: true }).click();
   await expect(email.getByLabel("Type")).toBeDisabled();
   await expect(email.getByTestId("needs-source-file")).toContainText("Open the original file");
 

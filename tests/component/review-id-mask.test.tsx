@@ -1,7 +1,7 @@
 // Review: the ID pattern editor (FR-016, FR-017). Every pattern change shows invented examples and
 // what the pattern allows against what the column needs; a pattern that is too narrow blocks Generate.
 
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "../../src/App";
@@ -25,7 +25,12 @@ async function toReview(user: User) {
   await screen.findByRole("heading", { name: "Review columns" });
 }
 
-const card = (name: string) => document.querySelector(`[data-column="${name}"]`) as HTMLElement;
+/** The detail of a column: picks it in the sidebar first when it is not the one showing. */
+const card = (name: string) => {
+  const showing = () => document.querySelector(`[data-column="${name}"]`) as HTMLElement | null;
+  if (!showing()) fireEvent.click(document.querySelector(`[data-nav-column="${name}"]`) as HTMLElement);
+  return showing() as HTMLElement;
+};
 
 async function editor(user: User) {
   await user.click(within(card("hh_id")).getByText("Settings"));

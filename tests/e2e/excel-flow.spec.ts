@@ -26,11 +26,15 @@ async function review(page: Page) {
   await expect(page.getByRole("heading", { name: "Review columns" })).toBeVisible({ timeout: 180_000 });
 }
 
-/** The type shown on every card, by column name. */
+/** The type of every column, by name: the badge of its card, picked in turn. */
 async function types(page: Page): Promise<Record<string, string>> {
-  return page.locator(".column-card").evaluateAll((cards) =>
-    Object.fromEntries(cards.map((c) => [c.getAttribute("data-column") as string, (c.querySelector(".badge")?.textContent ?? "").trim()])),
-  );
+  const names = await page.locator("[data-nav-column]").evaluateAll((items) => items.map((i) => i.getAttribute("data-nav-column") as string));
+  const out: Record<string, string> = {};
+  for (const name of names) {
+    await page.locator(`[data-nav-column="${name}"]`).click();
+    out[name] = ((await page.locator(`[data-column="${name}"] .badge`).first().textContent()) ?? "").trim();
+  }
+  return out;
 }
 
 async function generateAndDownload(page: Page) {

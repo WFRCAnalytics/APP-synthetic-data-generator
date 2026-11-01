@@ -30,7 +30,7 @@ async function toReview(user: User) {
   await screen.findByRole("heading", { name: "Review columns" });
 }
 
-const inPage = () => document.querySelectorAll(".column-card").length;
+const inPage = () => document.querySelectorAll("[data-nav-column]").length;
 
 describe("a table with 150 columns", () => {
   it("puts only the cards near the screen in the page, as a labelled list", async () => {
@@ -49,12 +49,12 @@ describe("a table with 150 columns", () => {
     const user = userEvent.setup();
     render(<App />);
     await toReview(user);
-    expect(document.querySelector('[data-column="q149"]')).toBeNull(); // not built yet
+    expect(document.querySelector('[data-nav-column="q149"]')).toBeNull(); // not built yet
     const box = screen.getByRole("searchbox");
     const start = performance.now();
     await user.type(box, "q149");
     await screen.findByText("Showing 1 of 150 columns");
-    expect(document.querySelector('[data-column="q149"]')).not.toBeNull();
+    expect(document.querySelector('[data-nav-column="q149"]')).not.toBeNull();
     // typing four characters, filtering 150 columns and drawing the result
     expect(performance.now() - start).toBeLessThan(1500);
   });
@@ -67,7 +67,6 @@ describe("a table with 150 columns", () => {
     await screen.findByText(`Showing ${COLUMNS / 10} of ${COLUMNS} columns`);
     // 15 columns: few enough to be drawn whole
     expect(inPage()).toBe(COLUMNS / 10);
-    expect(document.querySelector('[data-virtual="true"]')).toBeNull();
   });
 
   it("draws a short list whole, without the window", async () => {
@@ -76,6 +75,5 @@ describe("a table with 150 columns", () => {
     render(<App />);
     await toReview(user);
     expect(inPage()).toBe(12);
-    expect(document.querySelector('[data-virtual="true"]')).toBeNull();
   });
 });

@@ -1,7 +1,7 @@
 // Loading a saved spec in place of a file (FR-004, FR-017, FR-018): a good spec goes straight to
 // Review with no worker reading a file; a bad one lists its problems by column and changes nothing.
 
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -55,7 +55,12 @@ afterEach(() => {
 });
 
 const chooseSpec = (user: User, file: File) => user.upload(screen.getByLabelText("Load existing spec"), file);
-const card = (name: string) => document.querySelector(`[data-column="${name}"]`) as HTMLElement;
+/** The detail of a column: picks it in the sidebar first when it is not the one showing. */
+const card = (name: string) => {
+  const showing = () => document.querySelector(`[data-column="${name}"]`) as HTMLElement | null;
+  if (!showing()) fireEvent.click(document.querySelector(`[data-nav-column="${name}"]`) as HTMLElement);
+  return showing() as HTMLElement;
+};
 
 const xlsxSpec = {
   ...goodSpec,

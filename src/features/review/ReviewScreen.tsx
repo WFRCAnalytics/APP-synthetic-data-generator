@@ -1,9 +1,9 @@
-// Review: one card per column, with search and filters, the banner of columns that need a look, and
-// the controls to override every decision before generating (FR-005 to FR-013, FR-038).
+// Review: a sidebar of columns (search, filters by type, needs attention) beside the detail of the
+// selected one, with the controls to override every decision before generating (FR-005 to FR-013,
+// FR-038). With nothing selected the right-hand pane is an overview of the whole table.
 
 import { useMemo, useState } from "react";
-import { FileUp } from "lucide-react";
-import { EmptyState } from "../../components/EmptyState";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { SessionState } from "../../app/session";
 import type { LocalEdits } from "../../lib/profile/edits";
 import { isExcelSettings, type ColumnOverrides } from "../../lib/profile/types";
@@ -11,10 +11,10 @@ import type { SampleDescription } from "../../lib/textgen/sample";
 import { AttentionBanner } from "./AttentionBanner";
 import { ProfileProgress } from "../ingest/ProfileProgress";
 import { ColumnCard } from "./ColumnCard";
-import { ColumnList } from "./ColumnList";
-import { ColumnFilters } from "./ColumnFilters";
+import { ColumnNav } from "./ColumnNav";
 import { countByType, filterProfiles, NO_FILTERS, type Filters } from "./filter";
-import { parquetConflict } from "./summary";
+import { parquetConflict, typeLabel } from "./summary";
+import { typeLook } from "./typeIcons";
 import { SpecContentsNotice } from "./SpecContentsNotice";
 import { TextApply } from "./TextApply";
 
@@ -40,6 +40,7 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
   const { profiles, rowCount, fileName, phase, progress, busy, reviewError, threshold, datePatternChecks } = session;
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   const [thresholdText, setThresholdText] = useState(String(threshold));
+  const [selected, setSelected] = useState<string | null>(null);
 
   const shown = useMemo(() => filterProfiles(profiles, filters), [profiles, filters]);
   const typeCounts = useMemo(() => countByType(profiles), [profiles]);
@@ -47,6 +48,11 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
   const conflicts = profiles.filter((p) => parquetConflict(p)).length;
   const specOnly = session.specOnly;
   const workbook = session.settings !== null && isExcelSettings(session.settings);
+  const leftOut = profiles.filter((p) => p.exclude === "drop").length;
+  const attention = profiles.filter((p) => p.status !== "ok").length;
+
+  const current = selected === null ? undefined : profiles.find((p) => p.name === selected);
+  const index = current ? shown.findIndex((p) => p.name === current.name) : -1;
 
   const typedThreshold = Number(thresholdText);
   const thresholdError =
@@ -55,33 +61,31 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
       : null;
 
   return (
-    <section aria-labelledby="review-heading">
-      <h2 id="review-heading">Review columns</h2>
-      <p className="page-subtitle">
-        {fileName}: {rowCount.toLocaleString("en-US")} rows, {profiles.length} columns.
-      </p>
-
-      <SpecContentsNotice />
+    <section className="review" aria-labelledby="review-heading">
+      <header className="screen-head">
+        <div>
+          <h2 id="review-heading">Review columns</h2>
+          <p className="page-subtitle">
+            {fileName}: {rowCount.toLocaleString("en-US")} rows, {profiles.length} columns.
+          </p>
+        </div>
+        <div className="screen-actions">
+          <button type="button" className="button button-secondary" onClick={actions.onSaveSpec}>
+            Save spec (JSON)
+          </button>
+          <button type="button" className="button button-primary" onClick={actions.onContinue} disabled={reprofiling || conflicts > 0}>
+            Continue to Generate
+          </button>
+        </div>
+      </header>
 
       {specOnly && (
         <div className="banner banner-info" role="status">
-          Loaded from a saved spec: there is no source file open. You can still change settings that need no data, and generate.
+          {session.designed
+            ? "Designed in this app: there is no source file. You can change settings that need no data here, and the columns themselves in Design."
+            : "Loaded from a saved spec: there is no source file open. You can still change settings that need no data, and generate."}
         </div>
       )}
-
-      <div className="review-toolbar">
-        <ColumnFilters filters={filters} onChange={setFilters} typeCounts={typeCounts} total={profiles.length} shown={shown.length} />
-        <TextApply
-          label="Treat columns with up to this many distinct values as categories"
-          value={String(threshold)}
-          error={thresholdError}
-          disabled={reprofiling || specOnly}
-          applyLabel="Profile again"
-          hint="Raising it turns more whole-number columns into coded values; lowering it does the opposite."
-          onChange={setThresholdText}
-          onApply={(text) => actions.setThreshold(Number(text))}
-        />
-      </div>
 
       {reprofiling && <ProfileProgress progress={progress} label="Profiling the columns again" />}
 
@@ -91,45 +95,101 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
         </div>
       )}
 
-      <AttentionBanner profiles={profiles} onlyAttention={filters.attentionOnly} onToggle={() => setFilters({ ...filters, attentionOnly: !filters.attentionOnly })} />
-
-      {shown.length === 0 ? (
-        <EmptyState icon={FileUp} message="No columns match these filters." hint="Clear the filters to see every column." />
-      ) : (
-        <ColumnList
-          profiles={shown}
-          renderCard={(p) => (
-            <ColumnCard
-              key={p.name}
-              profile={p}
-              otherNames={profiles.filter((q) => q.name !== p.name).map((q) => q.outputName)}
-              busy={busy.includes(p.name)}
-              dateCheck={datePatternChecks[p.name]}
-              onEdit={(patch) => actions.editColumn(p.name, patch)}
-              onOverride={(patch) => actions.overrideColumn(p.name, patch)}
-              onCheckDate={(pattern) => actions.checkDatePattern(p.name, pattern)}
-              samples={session.samples[p.name]}
-              onRequestSamples={(description) => actions.requestSamples(p.name, description)}
-              specOnly={specOnly}
-              workbook={workbook}
-            />
-          )}
-        />
-      )}
-
       {conflicts > 0 && (
         <div className="banner banner-error" role="alert" data-testid="parquet-conflicts">
-          {conflicts} {conflicts === 1 ? "column has" : "columns have"} a type that its Parquet column cannot hold. Fix {conflicts === 1 ? "it" : "them"} above before generating.
+          {conflicts} {conflicts === 1 ? "column has" : "columns have"} a type that its Parquet column cannot hold. Fix {conflicts === 1 ? "it" : "them"} before generating.
         </div>
       )}
 
-      <div className="actions-row">
-        <button type="button" className="button button-primary" onClick={actions.onContinue} disabled={reprofiling || conflicts > 0}>
-          Continue to Generate
-        </button>
-        <button type="button" className="button button-secondary" onClick={actions.onSaveSpec}>
-          Save spec (JSON)
-        </button>
+      <div className="review-panes">
+        <ColumnNav shown={shown} total={profiles.length} filters={filters} onFilters={setFilters} typeCounts={typeCounts} selected={current ? current.name : null} onSelect={setSelected} />
+
+        <div className="review-detail">
+          {current ? (
+            <>
+              <div className="detail-nav">
+                <button type="button" className="button button-secondary" disabled={index <= 0} onClick={() => setSelected(shown[index - 1].name)}>
+                  <ChevronLeft size={16} strokeWidth={1.75} aria-hidden="true" /> Previous column
+                </button>
+                <button type="button" className="button button-secondary" disabled={index < 0 || index >= shown.length - 1} onClick={() => setSelected(shown[index + 1].name)}>
+                  Next column <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" />
+                </button>
+                {index < 0 && <span className="field-hint">This column is hidden by the filters.</span>}
+              </div>
+              <ColumnCard
+                key={current.name}
+                profile={current}
+                otherNames={profiles.filter((q) => q.name !== current.name).map((q) => q.outputName)}
+                busy={busy.includes(current.name)}
+                dateCheck={datePatternChecks[current.name]}
+                onEdit={(patch) => actions.editColumn(current.name, patch)}
+                onOverride={(patch) => actions.overrideColumn(current.name, patch)}
+                onCheckDate={(pattern) => actions.checkDatePattern(current.name, pattern)}
+                samples={session.samples[current.name]}
+                onRequestSamples={(description) => actions.requestSamples(current.name, description)}
+                specOnly={specOnly}
+                workbook={workbook}
+              />
+            </>
+          ) : (
+            <div className="overview">
+              <h3>Overview</h3>
+              <p className="overview-lead">Pick a column on the left to see how it will be faked and to change what the app decided. Columns with a warning sign need a look first.</p>
+              <dl className="overview-stats">
+                <div>
+                  <dt>Columns</dt>
+                  <dd>{profiles.length}</dd>
+                </div>
+                <div>
+                  <dt>Need a look</dt>
+                  <dd>{attention}</dd>
+                </div>
+                <div>
+                  <dt>Left out</dt>
+                  <dd>{leftOut}</dd>
+                </div>
+                <div>
+                  <dt>Rows</dt>
+                  <dd>{rowCount.toLocaleString("en-US")}</dd>
+                </div>
+              </dl>
+
+              <h4 className="overview-subhead">Column types</h4>
+              <ul className="type-legend">
+                {Object.keys(typeCounts)
+                  .sort((a, b) => typeLabel(a).localeCompare(typeLabel(b)))
+                  .map((t) => {
+                    const look = typeLook(t);
+                    const Icon = look.icon;
+                    return (
+                      <li key={t}>
+                        <button type="button" onClick={() => setFilters({ ...filters, type: t })}>
+                          <Icon size={16} strokeWidth={1.75} style={{ color: look.color }} aria-hidden="true" />
+                          <span>{typeLabel(t)}</span>
+                          <span className="type-legend-count">{typeCounts[t]}</span>
+                        </button>
+                      </li>
+                    );
+                  })}
+              </ul>
+
+              <AttentionBanner profiles={profiles} onlyAttention={filters.attentionOnly} onToggle={() => setFilters({ ...filters, attentionOnly: !filters.attentionOnly })} />
+
+              <TextApply
+                label="Treat columns with up to this many distinct values as categories"
+                value={String(threshold)}
+                error={thresholdError}
+                disabled={reprofiling || specOnly}
+                applyLabel="Profile again"
+                hint="Raising it turns more whole-number columns into coded values; lowering it does the opposite."
+                onChange={setThresholdText}
+                onApply={(text) => actions.setThreshold(Number(text))}
+              />
+
+              <SpecContentsNotice />
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );

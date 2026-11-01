@@ -35,13 +35,19 @@ async function toReview(user: User) {
   await screen.findByRole("heading", { name: "Review columns" });
 }
 
-const card = (name: string) => document.querySelector(`[data-column="${name}"]`) as HTMLElement;
+/** The detail of a column: picks it in the sidebar first when it is not the one showing. */
+const card = (name: string) => {
+  const showing = () => document.querySelector(`[data-column="${name}"]`) as HTMLElement | null;
+  if (!showing()) fireEvent.click(document.querySelector(`[data-nav-column="${name}"]`) as HTMLElement);
+  return showing() as HTMLElement;
+};
 
 /** The type badges on a card (the select's options also say the type, so text alone is ambiguous). */
 const badges = (name: string) => Array.from(card(name).querySelectorAll(".badge")).map((b) => b.textContent);
 
+/** Picks the column in the sidebar; its settings fill the right-hand pane. */
 async function openSettings(user: User, name: string) {
-  await user.click(within(card(name)).getByText("Settings"));
+  await user.click(document.querySelector(`[data-nav-column="${name}"]`) as HTMLElement);
   return card(name);
 }
 
@@ -58,23 +64,31 @@ async function generated(user: User) {
 }
 
 describe("the settings of a column", () => {
-  it("stay closed until opened, and are not built until then", async () => {
+  it("fill the right-hand pane for the picked column, and only that one", async () => {
     const user = userEvent.setup();
     render(<App />);
     await toReview(user);
-    expect(within(card("mode")).queryByLabelText("Type")).not.toBeInTheDocument();
+    expect(document.querySelector("[data-column]")).toBeNull(); // nothing picked: the overview shows
     const c = await openSettings(user, "mode");
     expect(within(c).getByLabelText("Type")).toBeInTheDocument();
-    expect(within(c).getByText("Settings")).toHaveAttribute("aria-expanded", "true");
-    await user.click(within(c).getByText("Settings"));
-    expect(within(card("mode")).queryByLabelText("Type")).not.toBeInTheDocument();
+    expect(document.querySelectorAll("[data-column]")).toHaveLength(1);
+    await user.click(document.querySelector('[data-nav-column="dist"]') as HTMLElement);
+    expect(document.querySelector('[data-column="mode"]')).toBeNull();
+    expect(within(card("dist")).getByLabelText("Type")).toBeInTheDocument();
   });
 
-  it("use a native summary, so Enter and Space open them in a browser", async () => {
+  it("move to the next and the previous column", async () => {
     const user = userEvent.setup();
     render(<App />);
     await toReview(user);
-    expect(within(card("mode")).getByText("Settings").tagName).toBe("SUMMARY");
+    await openSettings(user, "mode");
+    expect(screen.getByRole("button", { name: /Previous column/ })).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: /Next column/ }));
+    expect(document.querySelector('[data-column="dist"]')).not.toBeNull();
+    await openSettings(user, "email"); // the last one
+    expect(screen.getByRole("button", { name: /Next column/ })).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: /Previous column/ }));
+    expect(document.querySelector('[data-column="when"]')).not.toBeNull();
   });
 });
 
@@ -140,7 +154,7 @@ describe("type (FR-005, FR-006)", () => {
     const c = await openSettings(user, "mode");
     await user.selectOptions(within(c).getByLabelText("Type"), "integer");
     expect(await screen.findByRole("alert")).toHaveTextContent(/went wrong/);
-    expect(screen.getAllByRole("article").length).toBe(4);
+    expect(document.querySelectorAll("[data-nav-column]").length).toBe(4);
     expect(card("mode")).toHaveAttribute("aria-busy", "false");
   });
 });
@@ -531,6 +545,7 @@ describe("a change survives profiling again", () => {
     await user.click(applyFor(c, "Sentinel codes"));
     await waitFor(() => expect(within(card("dist")).getByText(/Codes kept: -1/)).toBeInTheDocument());
 
+    await user.click(screen.getByRole("button", { name: "Overview" })); // the limit lives in the overview
     const limit = screen.getByLabelText(/up to this many distinct values/);
     await user.clear(limit);
     await user.type(limit, "80");

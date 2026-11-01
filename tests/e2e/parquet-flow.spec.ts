@@ -5,6 +5,7 @@ import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test, type Page } from "@playwright/test";
+import { shownCard } from "../helpers/review";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FIX = join(HERE, "../fixtures/parquet");
@@ -56,8 +57,8 @@ test("a Parquet file goes in and a fake Parquet file comes out, with the same sc
   page.on("request", (r) => requests.push(r.url()));
   await chooseParquet(page, "types_snappy.parquet");
   await review(page);
-  await expect(page.locator(".column-card")).toHaveCount(14);
-  for (const name of ["tags", "pt", "kv"]) await expect(page.locator(`[data-column="${name}"]`)).toContainText("Left out");
+  await expect(page.getByTestId("filter-count")).toHaveText("Showing 14 of 14 columns");
+  for (const name of ["tags", "pt", "kv"]) await expect(await shownCard(page, name)).toContainText("Left out");
 
   const download = await generateAndDownload(page);
   expect(download.suggestedFilename()).toBe("types_snappy_fake.parquet");

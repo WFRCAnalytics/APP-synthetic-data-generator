@@ -4,6 +4,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { pick } from "../helpers/review";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const APP = "/APP-synthetic-data-generator/";
@@ -33,11 +34,11 @@ for (const scheme of ["light", "dark"] as const) {
 
       await page.getByRole("button", { name: /profile this file/i }).click();
       await expect(page.getByRole("heading", { name: "Review columns" })).toBeVisible({ timeout: 180_000 });
-      await page.locator('[data-column="hh_id"]').getByText("Settings", { exact: true }).click();
-      await page.locator('[data-column="cat_str_5"]').getByText("Settings", { exact: true }).click();
+      await pick(page, "hh_id");
+      await pick(page, "cat_str_5");
       // The editors added with personal, free text and short string columns (specs/002)
-      for (const column of ["person_name", "phone_us", "ssn_like", "comments", "plate"]) {
-        await page.locator(`[data-column="${column}"]`).getByText("Settings", { exact: true }).click();
+      for (const column of ["phone_us", "ssn_like", "comments", "plate", "person_name"]) {
+        await pick(page, column);
       }
       await expect(page.locator('[data-column="person_name"]').getByTestId("sample-person_name")).toContainText("Examples (invented)", { timeout: 30_000 });
       expect(await violations(page), "Review").toEqual([]);
@@ -53,20 +54,19 @@ for (const scheme of ["light", "dark"] as const) {
 test("the whole flow can be done from the keyboard, and focus is always visible", async ({ page }) => {
   await toReview(page);
 
-  // Tab to the first card's Settings and open it with Enter.
-  const summary = page.locator('[data-column="cat_str_5"]').getByText("Settings", { exact: true });
-  await summary.focus();
-  // Move by keyboard so the browser treats focus as keyboard focus (focus-visible).
+  // Tab into the column list and move down it with the arrow keys; the picked column's settings open.
+  const first = page.locator("[data-nav-column]").first();
+  await first.focus();
   await page.keyboard.press("Shift+Tab");
   await page.keyboard.press("Tab");
-  await expect(summary).toBeFocused();
-  const ring = await summary.evaluate((el) => {
+  await expect(first).toBeFocused();
+  const ring = await first.evaluate((el) => {
     const s = getComputedStyle(el);
     return { outline: s.outlineStyle, shadow: s.boxShadow };
   });
   expect(ring.outline !== "none" || ring.shadow !== "none", "a focus indicator is drawn").toBe(true);
-  await page.keyboard.press("Enter");
-  await expect(page.locator('[data-column="cat_str_5"]').getByLabel("Type")).toBeVisible();
+  await page.keyboard.press("ArrowDown");
+  await expect(page.locator(".column-card").getByLabel("Type")).toBeVisible();
 
   // Every focusable control on the page is reachable by Tab and shows a focus indicator.
   const unreachable = await page.evaluate(() => {
@@ -100,7 +100,7 @@ for (const scheme of ["light", "dark"] as const) {
 
       await page.getByRole("button", { name: "Use this sheet" }).click();
       await expect(page.getByRole("heading", { name: "Review columns" })).toBeVisible({ timeout: 180_000 });
-      await page.locator('[data-column="amount"]').getByText("Settings", { exact: true }).click();
+      await pick(page, "amount");
       await page.getByLabel("Format in the Excel file").first().selectOption({ label: "Custom code…" });
       await expect(page.getByLabel("Custom format code")).toBeVisible();
       expect(await violations(page), "Cell format editor").toEqual([]);
@@ -121,8 +121,8 @@ for (const scheme of ["light", "dark"] as const) {
 
       await page.getByRole("button", { name: "Profile this file" }).click();
       await expect(page.getByRole("heading", { name: "Review columns" })).toBeVisible({ timeout: 180_000 });
-      await page.locator('[data-column="tags"]').scrollIntoViewIfNeeded();
-      await page.locator('[data-column="amount"]').getByText("Settings", { exact: true }).click();
+      await pick(page, "tags");
+      await pick(page, "amount");
       await expect(page.locator('[data-column="amount"]')).toContainText("File type: decimal(10,2)");
       expect(await violations(page), "Review of a Parquet file").toEqual([]);
     });

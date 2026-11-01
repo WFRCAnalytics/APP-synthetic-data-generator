@@ -6,6 +6,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test, type Page } from "@playwright/test";
+import { pick } from "../helpers/review";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FILE = join(HERE, "../fixtures/parquet/markers.parquet");
@@ -49,7 +50,7 @@ test("no marker reaches the page, spec, preview, download, console or storage", 
   await page.getByRole("button", { name: "Profile this file" }).click();
   await expect(page.getByRole("heading", { name: "Review columns" })).toBeVisible({ timeout: 180_000 });
   expect(hasMarker(await page.locator("body").innerText()), "review").toEqual([]);
-  for (const column of ["who", "note", "score"]) await page.locator(`[data-column="${column}"]`).getByText("Settings", { exact: true }).click();
+  for (const column of ["who", "note", "score"]) await pick(page, column);
   expect(hasMarker(await page.locator("body").innerText()), "review settings").toEqual([]);
 
   const [specDownload] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Save spec (JSON)" }).click()]);

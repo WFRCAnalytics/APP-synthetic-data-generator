@@ -42,7 +42,7 @@ async function profileAndGenerate(page: Page, file: string, limitMs: number) {
   // Review: finding a column far down the list is quick.
   const t0 = Date.now();
   await page.getByLabel("Search columns").fill("na_");
-  await expect(page.locator(".column-card").first()).toBeVisible();
+  await expect(page.locator("[data-nav-column]").first()).toBeVisible();
   const searchMs = Date.now() - t0;
   await page.getByRole("button", { name: "Clear filters" }).click();
 

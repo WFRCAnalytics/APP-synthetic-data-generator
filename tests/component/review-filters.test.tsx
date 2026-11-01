@@ -45,7 +45,9 @@ async function toReview(user: User) {
   await screen.findByRole("heading", { name: "Review columns" });
 }
 
-const shownNames = () => Array.from(document.querySelectorAll(".column-card")).map((c) => c.getAttribute("data-column"));
+const shownNames = () => Array.from(document.querySelectorAll("[data-nav-column]")).map((c) => c.getAttribute("data-nav-column"));
+/** The type chips of the sidebar: one button per type, named like "Integer, 2". */
+const typeChip = (name: RegExp) => within(screen.getByRole("group", { name: "Filter by type" })).getByRole("button", { name });
 /** 119 columns are listed through a window, so only the cards near the screen are in the page (FR-032). */
 const expectWindowed = () => {
   const n = shownNames().length;
@@ -127,31 +129,30 @@ describe("the type filter", () => {
     const user = userEvent.setup();
     render(<App />);
     await toReview(user);
-    const select = screen.getByRole("search", { name: "Filter columns" }).querySelector("select") as HTMLSelectElement;
-    const labels = Array.from(select.options).map((o) => o.textContent);
-    expect(labels).toContain("All types");
-    expect(labels).toContain("Categorical (113)");
-    expect(labels).toContain("Unsupported in this version (2)");
-    expect(labels).toContain("Date (1)");
+    const labels = within(screen.getByRole("group", { name: "Filter by type" })).getAllByRole("button").map((b) => b.getAttribute("aria-label") ?? b.textContent?.trim());
+    expect(labels).toContain("All 119");
+    expect(labels).toContain("Categorical, 113");
+    expect(labels).toContain("Unsupported in this version, 2");
+    expect(labels).toContain("Date, 1");
   });
 
   it("shows one type", async () => {
     const user = userEvent.setup();
     render(<App />);
     await toReview(user);
-    const search = screen.getByRole("search", { name: "Filter columns" });
-    await user.selectOptions(within(search).getByLabelText("Type"), "unsupported");
+    await user.click(typeChip(/^Unsupported/));
     expect(shownNames()).toEqual(["email", "home_address"]);
-    await user.selectOptions(within(search).getByLabelText("Type"), "integer");
+    await user.click(typeChip(/^Integer/));
     expect(shownNames()).toEqual(["trip_minutes", "income"]);
+    await user.click(typeChip(/^Integer/)); // pressing it again lifts the filter
+    expectWindowed();
   });
 
   it("combines with the other filters", async () => {
     const user = userEvent.setup();
     render(<App />);
     await toReview(user);
-    const search = screen.getByRole("search", { name: "Filter columns" });
-    await user.selectOptions(within(search).getByLabelText("Type"), "integer");
+    await user.click(typeChip(/^Integer/));
     await user.click(screen.getByLabelText("Needs attention only"));
     expect(shownNames()).toEqual(["income"]);
   });
@@ -160,8 +161,7 @@ describe("the type filter", () => {
     const user = userEvent.setup();
     render(<App />);
     await toReview(user);
-    const search = screen.getByRole("search", { name: "Filter columns" });
-    await user.selectOptions(within(search).getByLabelText("Type"), "integer");
+    await user.click(typeChip(/^Integer/));
     await user.type(screen.getByLabelText("Search columns"), "in");
     await user.click(screen.getByLabelText("Needs attention only"));
     await user.click(screen.getByRole("button", { name: "Clear filters" }));

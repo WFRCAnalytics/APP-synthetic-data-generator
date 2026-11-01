@@ -5,12 +5,11 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test, type Page } from "@playwright/test";
 import { parseCsv } from "../helpers/csvParse";
+import { shownCard } from "../helpers/review";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ZOO = join(HERE, "../fixtures/zoo");
 const APP = "/APP-synthetic-data-generator/";
-
-const card = (page: Page, name: string) => page.locator(`[data-column="${name}"]`);
 
 async function toReview(page: Page) {
   await page.goto(APP);
@@ -20,8 +19,7 @@ async function toReview(page: Page) {
 }
 
 async function openSettings(page: Page, name: string) {
-  await card(page, name).getByText("Settings", { exact: true }).click();
-  return card(page, name);
+  return shownCard(page, name);
 }
 
 /** Generates, downloads the fake file and the spec, and returns both. */
@@ -38,25 +36,27 @@ async function generate(page: Page) {
 }
 const specColumn = (spec: { columns: Record<string, unknown>[] }, name: string) => spec.columns.find((c) => c.name === name) as Record<string, unknown>;
 
-test("opens a card's settings with the keyboard", async ({ page }) => {
+test("moves between columns with the arrow keys, and opens one with Enter", async ({ page }) => {
   await toReview(page);
-  await card(page, "cat_str_5").getByText("Settings", { exact: true }).focus();
-  await page.keyboard.press("Enter");
-  await expect(card(page, "cat_str_5").getByLabel("Type")).toBeVisible();
-  await page.keyboard.press("Space");
-  await expect(card(page, "cat_str_5").getByLabel("Type")).toHaveCount(0);
+  const first = page.locator("[data-nav-column]").first();
+  await first.focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(page.locator("[data-nav-column]").nth(1)).toBeFocused();
+  await expect(page.locator("[data-nav-column]").nth(1)).toHaveAttribute("aria-current", "true");
+  await expect(page.locator(".column-card")).toHaveCount(1);
+  await expect(page.locator(".column-card").getByLabel("Type")).toBeVisible();
 });
 
 test("confirming sentinel codes re-profiles the column and changes the spec", async ({ page }) => {
   await toReview(page);
-  await expect(card(page, "int_sentinels")).toContainText("Codes kept: -9");
+  await expect((await shownCard(page, "int_sentinels"))).toContainText("Codes kept: -9");
   const c = await openSettings(page, "int_sentinels");
   const box = c.getByLabel("Sentinel codes");
   await box.fill("-9");
   await c.getByLabel("Sentinel codes").locator("xpath=ancestor::form").getByRole("button", { name: "Apply" }).click();
   // 998, 999 and -1 are now ordinary values, so the range widens and only -9 is a code.
-  await expect(card(page, "int_sentinels")).toContainText("Codes kept: -9 (");
-  await expect(card(page, "int_sentinels")).not.toContainText("998");
+  await expect((await shownCard(page, "int_sentinels"))).toContainText("Codes kept: -9 (");
+  await expect((await shownCard(page, "int_sentinels"))).not.toContainText("998");
   const { spec } = await generate(page);
   expect(Object.keys(specColumn(spec, "int_sentinels").sentinels as object)).toEqual(["-9"]);
 });
@@ -65,8 +65,8 @@ test("choosing a type applies it and the spec reflects it", async ({ page }) => 
   await toReview(page);
   const c = await openSettings(page, "cat_int_codes");
   await c.getByLabel("Type").selectOption("integer");
-  await expect(card(page, "cat_int_codes").locator(".badge").first()).toHaveText("Integer");
-  await expect(card(page, "cat_int_codes")).toContainText("Detected as categorical");
+  await expect((await shownCard(page, "cat_int_codes")).locator(".badge").first()).toHaveText("Integer");
+  await expect((await shownCard(page, "cat_int_codes"))).toContainText("Detected as categorical");
   const { spec } = await generate(page);
   expect(specColumn(spec, "cat_int_codes").type).toBe("integer");
 });
@@ -75,8 +75,8 @@ test("a value type the data cannot be shows a clear note and keeps the detected 
   await toReview(page);
   const c = await openSettings(page, "cat_str_5");
   await c.getByLabel("Type").selectOption("integer");
-  await expect(card(page, "cat_str_5")).toContainText("does not fit this column");
-  await expect(card(page, "cat_str_5").locator(".badge").first()).toHaveText("Categorical");
+  await expect((await shownCard(page, "cat_str_5"))).toContainText("does not fit this column");
+  await expect((await shownCard(page, "cat_str_5")).locator(".badge").first()).toHaveText("Categorical");
 });
 
 test("a date pattern is counted live, and one that misses values leaves the column out", async ({ page }) => {
@@ -93,8 +93,8 @@ test("a date pattern is counted live, and one that misses values leaves the colu
   const d = await openSettings(page, "date_mixed_formats");
   await d.getByLabel("Date or time pattern").fill("%Y-%m-%d");
   await d.getByRole("button", { name: "Use this pattern" }).click();
-  await expect(card(page, "date_mixed_formats").locator(".badge").first()).toHaveText("Unsupported in this version", { timeout: 20_000 });
-  await expect(card(page, "date_mixed_formats")).toContainText("Left out");
+  await expect((await shownCard(page, "date_mixed_formats")).locator(".badge").first()).toHaveText("Unsupported in this version", { timeout: 20_000 });
+  await expect((await shownCard(page, "date_mixed_formats"))).toContainText("Left out");
 });
 
 test("a column left out is not in the fake file, and a renamed one has its new name", async ({ page }) => {
@@ -105,7 +105,7 @@ test("a column left out is not in the fake file, and a renamed one has its new n
   const name = b.getByLabel("New column name");
   await name.fill("region");
   await b.getByRole("button", { name: "Rename" }).click();
-  await expect(card(page, "cat_str_5")).toContainText("Written as region");
+  await expect((await shownCard(page, "cat_str_5"))).toContainText("Written as region");
 
   const { fake } = await generate(page);
   const header = fake.split("\n")[0].split(",");
@@ -142,16 +142,17 @@ test("a new categorical limit profiles again and keeps the user's other changes"
   await toReview(page);
   const a = await openSettings(page, "bool_tf");
   await a.getByLabel("In the fake file").selectOption("drop");
-  await expect(card(page, "cat_int_50").locator(".badge").first()).toHaveText("Categorical");
+  await expect((await shownCard(page, "cat_int_50")).locator(".badge").first()).toHaveText("Categorical");
 
+  await page.getByRole("button", { name: "Overview" }).click(); // the limit lives in the overview
   const region = page.getByRole("region", { name: "Review columns" });
   await region.getByLabel(/up to this many distinct values/).fill("20");
   await region.getByRole("button", { name: "Profile again" }).click();
   await expect(page.getByText("Profiling the columns again")).toBeVisible();
   await expect(page.getByText("Profiling the columns again")).toHaveCount(0, { timeout: 120_000 });
 
-  await expect(card(page, "cat_int_50").locator(".badge").first()).toHaveText("Integer"); // 50 distinct values is now above the limit
-  await expect(card(page, "bool_tf")).toContainText("Left out"); // the earlier change survived
+  await expect((await shownCard(page, "cat_int_50")).locator(".badge").first()).toHaveText("Integer"); // 50 distinct values is now above the limit
+  await expect((await shownCard(page, "bool_tf"))).toContainText("Left out"); // the earlier change survived
 });
 
 test("the spec notice is on the screen and the optional protections start off", async ({ page }) => {
@@ -164,12 +165,12 @@ test("the spec notice is on the screen and the optional protections start off", 
 
 test("search and filters work on the real 88-column table", async ({ page }) => {
   await toReview(page);
-  await expect(page.locator(".column-card")).toHaveCount(88);
+  await expect(page.getByTestId("filter-count")).toHaveText("Showing 88 of 88 columns");
   await page.getByLabel("Search columns").fill("na_");
-  await expect(page.locator(".column-card")).toHaveCount(6);
+  await expect(page.getByTestId("filter-count")).toHaveText("Showing 6 of 88 columns");
   await page.getByRole("button", { name: "Clear filters" }).click();
   await page.getByLabel("Needs attention only").check();
-  const attention = await page.locator(".column-card").count();
+  const attention = Number(/Showing (\d+) of/.exec((await page.getByTestId("filter-count").textContent()) ?? "")?.[1]);
   expect(attention).toBeGreaterThan(10);
   expect(attention).toBeLessThan(88);
   await expect(page.locator(".attention-banner")).toContainText(`${attention} columns need a look`);
@@ -183,7 +184,11 @@ test("no real value appears in the settings panels", async ({ page }) => {
   const secrets = new Set<string>();
   for (const col of personal) for (const row of raw.slice(1, 300)) secrets.add(row.split(",")[header.indexOf(col)] ?? "");
 
-  for (const name of ["email", "person_name", "cat_str_5", "int_sentinels"]) await openSettings(page, name);
-  const html = await page.content();
-  expect([...secrets].filter((v) => v.length >= 8 && html.includes(v))).toEqual([]);
+  const leaks: string[] = [];
+  for (const name of ["email", "person_name", "cat_str_5", "int_sentinels"]) {
+    await openSettings(page, name);
+    const html = await page.content();
+    leaks.push(...[...secrets].filter((v) => v.length >= 8 && html.includes(v)));
+  }
+  expect(leaks).toEqual([]);
 });

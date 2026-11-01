@@ -22,6 +22,8 @@ export interface IngestScreenProps {
   onEditSettings: (patch: Partial<FileSettings>) => void;
   onConfirm: () => void;
   onCancel: () => void;
+  /** Opens the Design screen: a table made from nothing. */
+  onStartDesign?: () => void;
 }
 
 const DELIMITERS: [string, string][] = [
@@ -40,7 +42,7 @@ const ENCODINGS: [FileSettings["encoding"], string][] = [
 
 const MAX_NAMES_SHOWN = 40;
 
-export function IngestScreen({ session, onChooseFile, onChooseSpec, onInspectSheet, onConfirmWorkbook, onConfirmParquet, onEditSettings, onConfirm, onCancel }: IngestScreenProps) {
+export function IngestScreen({ session, onChooseFile, onChooseSpec, onInspectSheet, onConfirmWorkbook, onConfirmParquet, onEditSettings, onConfirm, onCancel, onStartDesign }: IngestScreenProps) {
   const input = useRef<HTMLInputElement>(null);
   const { phase } = session;
   // The CSV panel is for CSV files; a workbook has its own dialog, and a Parquet file its own summary.
@@ -70,6 +72,16 @@ export function IngestScreen({ session, onChooseFile, onChooseSpec, onInspectShe
         <span className="field-hint">Up to about 500 MB. The file stays on this device. You can also choose an Excel workbook (.xlsx), where you then pick the sheet, or a Parquet file (.parquet). One file at a time; a folder of Parquet files is not supported.</span>
       </div>
 
+      <div className="ingest-side">
+      {onStartDesign && (
+        <div className="field--aside design-entry">
+          <h3>Start from scratch</h3>
+          <p className="field-hint">No real file? Describe the columns yourself and get fake data for them.</p>
+          <button type="button" className="button button-secondary" onClick={onStartDesign} disabled={busy}>
+            Design a table
+          </button>
+        </div>
+      )}
       <div className="field field--aside">
         <label htmlFor="spec-input">Load existing spec</label>
         <input
@@ -84,6 +96,7 @@ export function IngestScreen({ session, onChooseFile, onChooseSpec, onInspectShe
           }}
         />
         <span className="field-hint">A spec saved earlier skips profiling. It replaces any file that is open.</span>
+      </div>
       </div>
       </div>
 

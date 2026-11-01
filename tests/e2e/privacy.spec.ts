@@ -118,7 +118,7 @@ test.describe("nothing is kept", () => {
     await page.reload();
     await expect(page.getByRole("heading", { name: "Choose a file" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Detected settings" })).toHaveCount(0);
-    await expect(page.locator(".column-card")).toHaveCount(0);
+    await expect(page.locator("[data-nav-column]")).toHaveCount(0);
     await expect(page.getByRole("button", { name: /Review/ })).toBeDisabled();
   });
 
