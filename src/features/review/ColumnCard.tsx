@@ -7,6 +7,7 @@ import type { DatePatternCheck } from "../../app/session";
 import type { LocalEdits } from "../../lib/profile/edits";
 import type { ColumnOverrides, ColumnProfile } from "../../lib/profile/types";
 import type { SampleDescription } from "../../lib/textgen/sample";
+import { UNSUPPORTED_TEXT } from "../../lib/parquet/types";
 import { ColumnEditors } from "./ColumnEditors";
 import { Sparkline } from "./Sparkline";
 import { reasonText, sparkBars, summaryLines, typeLabel } from "./summary";
@@ -60,7 +61,7 @@ export function ColumnCard({ profile, otherNames, busy = false, dateCheck, onEdi
       {profile.attentionReasons.length > 0 && (
         <ul className="column-card-reasons">
           {profile.attentionReasons.map((code) => (
-            <li key={code}>{reasonText(code)}</li>
+            <li key={code}>{code === "unsupported_type" && profile.unsupportedReason ? UNSUPPORTED_TEXT[profile.unsupportedReason] : reasonText(code)}</li>
           ))}
         </ul>
       )}

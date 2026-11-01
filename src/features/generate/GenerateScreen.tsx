@@ -153,7 +153,12 @@ export function GenerateScreen(props: GenerateScreenProps) {
               <Download size={16} strokeWidth={1.75} aria-hidden="true" /> Download spec (JSON)
             </button>
           </div>
-          <p className="field-hint">{(gen.totalBytes / 1048576).toFixed(2)} MB. Single-file download.</p>
+          <p className="field-hint">
+            {(gen.totalBytes / 1048576).toFixed(2)} MB. Single-file download.
+            {gen.codec && (
+              <span data-testid="parquet-codec"> Parquet pages are {gen.codec === "gzip" ? "compressed with gzip, which every common reader supports" : "not compressed (this browser cannot compress them)"}.</span>
+            )}
+          </p>
 
           <CheckTable checks={gen.checks} />
 

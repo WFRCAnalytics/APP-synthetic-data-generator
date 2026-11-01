@@ -13,16 +13,17 @@ export const workbookTooLarge = (expandedBytes: number): boolean => expandedByte
 const mb = (bytes: number) => Math.round(bytes / 1048576).toLocaleString("en-US");
 
 /**
- * Messages for a sheet of this expanded size (the size of its data once opened, from the workbook's own
- * directory). A workbook expands many times in memory, so the warning counts the expanded data, not the file.
+ * Messages for a sheet or a Parquet file of this expanded size (the size of its data once opened, from the
+ * file's own directory or footer). Both expand many times in memory, so the warning counts the expanded
+ * data, not the file. `noun` is "sheet" for a workbook and "file" for Parquet.
  */
-export function workbookSizeWarnings(expandedBytes: number): string[] {
+export function workbookSizeWarnings(expandedBytes: number, noun: "sheet" | "file" = "sheet"): string[] {
   if (expandedBytes < LARGE_FILE_BYTES) return [];
   if (workbookTooLarge(expandedBytes)) {
-    return [`This sheet holds about ${mb(expandedBytes)} MB of data once opened, more than a browser tab can read (the limit is ${mb(WORKBOOK_STOP_BYTES)} MB). Save the table as a CSV file, or split the sheet, and open that instead.`];
+    return [`This ${noun} holds about ${mb(expandedBytes)} MB of data once opened, more than a browser tab can read (the limit is ${mb(WORKBOOK_STOP_BYTES)} MB). Save the table as a CSV file, or split the ${noun}, and open that instead.`];
   }
   const need = mb(expandedBytes * 2.5);
-  return [`This sheet holds about ${mb(expandedBytes)} MB of data once opened, and needs roughly ${need} MB of memory to read and profile. Close other heavy tabs first; progress is shown, and you can cancel.`];
+  return [`This ${noun} holds about ${mb(expandedBytes)} MB of data once opened, and needs roughly ${need} MB of memory to read and profile. Close other heavy tabs first; progress is shown, and you can cancel.`];
 }
 
 /** Messages to show for a file of this size and encoding; none for a small UTF-8 or UTF-16LE file. */

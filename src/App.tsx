@@ -52,6 +52,7 @@ export function App() {
             onChooseSpec={(file) => void session.loadSpecFile(file)}
             onInspectSheet={(sheet) => session.inspectSheet(sheet)}
             onConfirmWorkbook={(choice) => session.confirmWorkbook(choice)}
+            onConfirmParquet={() => session.confirmParquet()}
             onEditSettings={(patch) => session.editSettings(patch)}
             onConfirm={() => session.confirmAndProfile()}
             onCancel={() => session.cancel()}

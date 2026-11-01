@@ -10,11 +10,12 @@ import { profilesFromSpec, settingsFromSource } from "../lib/spec/toProfiles";
 import type { SpecFile, SpecProblem } from "../lib/spec/types";
 import type { SampleDescription } from "../lib/textgen/sample";
 import type { SheetHints, WorkbookInfo } from "../lib/xlsx/metadata";
+import type { ParquetSummary } from "../workers/protocol";
 import { readSpecFile } from "../features/spec/loadSpec";
 import { specBlobOf, specFileNameFor } from "../features/spec/saveSpec";
 import type { GenerateRequest, GenerateResponse, ProfileJob, ProfileRequest, ProfileResponse } from "../workers/protocol";
 
-export type Phase = "idle" | "opening" | "opened" | "workbook" | "loading" | "profiling" | "profiled" | "error";
+export type Phase = "idle" | "opening" | "opened" | "workbook" | "parquet" | "loading" | "profiling" | "profiled" | "error";
 
 export interface Progress {
   job: ProfileJob | "generate";
@@ -32,6 +33,8 @@ export interface GenState {
   totalBytes: number;
   /** Characters the file's encoding could not write, written as "?". */
   replaced: number;
+  /** For a Parquet file: how its pages were compressed. */
+  codec?: "gzip" | "none";
 }
 
 /** What a typed date pattern parsed, shown beside the pattern box before it is applied. */
@@ -60,6 +63,8 @@ export interface SessionState {
   phase: Phase;
   /** Set when the chosen file is a workbook, until it has been loaded. */
   workbook: WorkbookState | null;
+  /** Set when the chosen file is a Parquet file: its structure, never a value or any of its metadata text. */
+  parquet: ParquetSummary | null;
   error: string | null;
   fileName: string;
   fileSize: number;
@@ -92,6 +97,7 @@ const emptyGen: GenState = { status: "idle", progress: null, header: [], preview
 export const initialSession: SessionState = {
   phase: "idle",
   workbook: null,
+  parquet: null,
   error: null,
   fileName: "",
   fileSize: 0,
@@ -115,6 +121,7 @@ export const initialSession: SessionState = {
 
 export const MAX_SEED = 4294967295;
 export const XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+export const PARQUET_MIME = "application/vnd.apache.parquet";
 
 /** A valid seed (0 to 4,294,967,295), or null for blank, fractional or out-of-range text. */
 export function parseSeed(text: string): number | null {
@@ -196,6 +203,17 @@ export class Session {
     this.send({ type: "load", settings });
   }
 
+  /** Loads the Parquet file that was opened, then profiles it. */
+  confirmParquet(): void {
+    if (!this.state.parquet) return;
+    this.pending.clear();
+    this.base = [];
+    this.edits = {};
+    this.engine = {};
+    this.set({ phase: "loading", error: null, progress: null, profiles: [], busy: [], reviewError: null, datePatternChecks: {} });
+    this.send({ type: "loadParquet" });
+  }
+
   /** Asks for the hints of a sheet (rows to skip, width, formats) while the load dialog is open. */
   inspectSheet(sheet: string): void {
     if (this.state.workbook?.hints[sheet]) return;
@@ -274,6 +292,9 @@ export class Session {
         break;
       case "workbookInfo":
         this.set({ phase: "workbook", workbook: { info: msg.info, hints: {} }, fileName: msg.fileName, fileSize: msg.fileSize });
+        break;
+      case "parquetInfo":
+        this.set({ phase: "parquet", parquet: msg.info, fileName: msg.fileName, fileSize: msg.fileSize, columnNames: msg.info.columns.map((c) => c.name) });
         break;
       case "sheetHints":
         if (this.state.workbook) this.set({ workbook: { ...this.state.workbook, hints: { ...this.state.workbook.hints, [msg.sheet]: msg.hints } } });
@@ -433,7 +454,7 @@ export class Session {
         this.setGen({ checks: msg.checks });
         break;
       case "done":
-        this.setGen({ status: "done", totalBytes: msg.totalBytes, replaced: msg.replaced });
+        this.setGen({ status: "done", totalBytes: msg.totalBytes, replaced: msg.replaced, codec: msg.codec });
         break;
       case "error":
         this.parts = [];
@@ -447,7 +468,7 @@ export class Session {
   /** The fake CSV as a Blob, or null before a run has finished. */
   fakeBlob(): Blob | null {
     const settings = this.state.settings;
-    const type = settings && isExcelSettings(settings) ? XLSX_MIME : "text/csv";
+    const type = settings && isExcelSettings(settings) ? XLSX_MIME : settings && isParquetSettings(settings) ? PARQUET_MIME : "text/csv";
     return this.state.gen.status === "done" ? new Blob(this.parts as BlobPart[], { type }) : null;
   }
 

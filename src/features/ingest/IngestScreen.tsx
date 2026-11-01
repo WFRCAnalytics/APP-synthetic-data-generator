@@ -6,6 +6,7 @@ import { useRef } from "react";
 import { EmptyState } from "../../components/EmptyState";
 import { isExcelSettings, isParquetSettings, type FileSettings } from "../../lib/profile/types";
 import type { SessionState, WorkbookChoice } from "../../app/session";
+import { ParquetSummary } from "./ParquetSummary";
 import { WorkbookDialog } from "./WorkbookDialog";
 import { ProfileProgress } from "./ProfileProgress";
 import { SizeWarning } from "./SizeWarning";
@@ -17,6 +18,7 @@ export interface IngestScreenProps {
   onChooseSpec: (file: File) => void;
   onInspectSheet: (sheet: string) => void;
   onConfirmWorkbook: (choice: WorkbookChoice) => void;
+  onConfirmParquet: () => void;
   onEditSettings: (patch: Partial<FileSettings>) => void;
   onConfirm: () => void;
   onCancel: () => void;
@@ -38,7 +40,7 @@ const ENCODINGS: [FileSettings["encoding"], string][] = [
 
 const MAX_NAMES_SHOWN = 40;
 
-export function IngestScreen({ session, onChooseFile, onChooseSpec, onInspectSheet, onConfirmWorkbook, onEditSettings, onConfirm, onCancel }: IngestScreenProps) {
+export function IngestScreen({ session, onChooseFile, onChooseSpec, onInspectSheet, onConfirmWorkbook, onConfirmParquet, onEditSettings, onConfirm, onCancel }: IngestScreenProps) {
   const input = useRef<HTMLInputElement>(null);
   const { phase } = session;
   // The CSV panel is for CSV files; a workbook has its own dialog, and a Parquet file its own summary.
@@ -56,14 +58,14 @@ export function IngestScreen({ session, onChooseFile, onChooseSpec, onInspectShe
           id="file-input"
           ref={input}
           type="file"
-          accept=".csv,.tsv,.txt,.xlsx,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          accept=".csv,.tsv,.txt,.xlsx,.parquet,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.apache.parquet"
           disabled={busy}
           onChange={(e) => {
             const file = e.target.files?.[0];
             if (file) onChooseFile(file);
           }}
         />
-        <span className="field-hint">Up to about 500 MB. The file stays on this device. You can also choose an Excel workbook (.xlsx); you then pick the sheet.</span>
+        <span className="field-hint">Up to about 500 MB. The file stays on this device. You can also choose an Excel workbook (.xlsx), where you then pick the sheet, or a Parquet file (.parquet).</span>
       </div>
 
       <div className="field">
@@ -96,7 +98,7 @@ export function IngestScreen({ session, onChooseFile, onChooseSpec, onInspectShe
         </div>
       )}
 
-      {phase === "idle" && !session.specProblems && <EmptyState icon={FileUp} message="Choose a CSV file to begin." hint="Nothing is uploaded; everything happens in this tab." />}
+      {phase === "idle" && !session.specProblems && <EmptyState icon={FileUp} message="Choose a CSV, Excel or Parquet file to begin." hint="Nothing is uploaded; everything happens in this tab." />}
 
       {phase === "opening" && <ProfileProgress progress={null} label="Reading the start of the file" />}
 
@@ -179,6 +181,8 @@ export function IngestScreen({ session, onChooseFile, onChooseSpec, onInspectShe
           )}
         </div>
       )}
+
+      {phase === "parquet" && session.parquet && <ParquetSummary fileName={session.fileName} fileSize={session.fileSize} info={session.parquet} onConfirm={onConfirmParquet} busy={busy} />}
 
       {phase === "workbook" && session.workbook && <WorkbookDialog workbook={session.workbook} fileName={session.fileName} onInspect={onInspectSheet} onConfirm={onConfirmWorkbook} />}
 
