@@ -15,12 +15,12 @@ const summary = (over: Partial<Summary> = {}): Summary => ({
   rowGroups: 3,
   expandedBytes: 4_000_000,
   columns: [
-    { name: "id16", type: { kind: "int", bits: 16, signed: true, nullable: true }, unsupported: null },
-    { name: "id64", type: { kind: "int", bits: 64, signed: true, nullable: false }, unsupported: null },
-    { name: "amount", type: { kind: "decimal", precision: 10, scale: 2, nullable: true }, unsupported: null },
-    { name: "tsz", type: { kind: "timestamp", unit: "ms", utc: true, nullable: true }, unsupported: null },
-    { name: "tags", type: null, unsupported: "nested_list" },
-    { name: "pt", type: null, unsupported: "nested_struct" },
+    { name: "id16", type: { kind: "int", bits: 16, signed: true, nullable: true }, unsupported: null, renamed: false },
+    { name: "id64", type: { kind: "int", bits: 64, signed: true, nullable: false }, unsupported: null, renamed: false },
+    { name: "amount", type: { kind: "decimal", precision: 10, scale: 2, nullable: true }, unsupported: null, renamed: false },
+    { name: "tsz", type: { kind: "timestamp", unit: "ms", utc: true, nullable: true }, unsupported: null, renamed: false },
+    { name: "tags", type: null, unsupported: "nested_list", renamed: false },
+    { name: "pt", type: null, unsupported: "nested_struct", renamed: false },
   ],
   ...over,
 });
@@ -70,7 +70,7 @@ describe("the structure card", () => {
   });
 
   it("shows the first 40 columns of a wide file and counts the rest", () => {
-    const columns = Array.from({ length: 300 }, (_, i) => ({ name: `c${String(i).padStart(3, "0")}`, type: { kind: "int" as const, bits: 32, signed: true, nullable: true }, unsupported: null }));
+    const columns = Array.from({ length: 300 }, (_, i) => ({ name: `c${String(i).padStart(3, "0")}`, type: { kind: "int" as const, bits: 32, signed: true, nullable: true }, unsupported: null, renamed: false }));
     setup(summary({ columns }));
     expect(within(screen.getByRole("table")).getAllByRole("row")).toHaveLength(41);
     expect(screen.getByText("and 260 more")).toBeInTheDocument();
@@ -79,6 +79,27 @@ describe("the structure card", () => {
   it("holds no value-like text: only names, types and counts", () => {
     setup();
     expect(document.body.textContent).not.toMatch(/PRIVATE|min|max|created|key.?value|statistic/i);
+  });
+});
+
+describe("renamed columns", () => {
+  const columns = [
+    { name: "a", type: { kind: "int" as const, bits: 32, signed: true, nullable: true }, unsupported: null, renamed: false },
+    { name: "a_1", type: { kind: "int" as const, bits: 32, signed: true, nullable: true }, unsupported: null, renamed: true },
+    { name: "C2", type: { kind: "string" as const, nullable: true }, unsupported: null, renamed: true },
+  ];
+
+  it("says which columns the reader named, and that the fake file uses the new names", () => {
+    setup(summary({ columns }));
+    expect(screen.getByTestId("parquet-renamed-note")).toHaveTextContent("2 columns have an empty or repeated name in the file");
+    expect(screen.getByTestId("parquet-renamed-note")).toHaveTextContent("uses the new names");
+    expect(screen.getAllByText("(renamed by the reader)")).toHaveLength(2);
+  });
+
+  it("says nothing when no name was changed", () => {
+    setup();
+    expect(screen.queryByTestId("parquet-renamed-note")).not.toBeInTheDocument();
+    expect(screen.queryByText("(renamed by the reader)")).not.toBeInTheDocument();
   });
 });
 
@@ -111,5 +132,18 @@ describe("the button", () => {
     cleanup();
     setup(summary(), true);
     expect(screen.getByRole("button", { name: "Profile this file" })).toBeDisabled();
+  });
+});
+
+describe("the file chooser", () => {
+  it("says it takes one file at a time and not a folder of Parquet files", async () => {
+    const { IngestScreen } = await import("../../src/features/ingest/IngestScreen");
+    const { initialSession } = await import("../../src/app/session");
+    render(<IngestScreen session={initialSession} onChooseFile={vi.fn()} onChooseSpec={vi.fn()} onInspectSheet={vi.fn()} onConfirmWorkbook={vi.fn()} onConfirmParquet={vi.fn()} onEditSettings={vi.fn()} onConfirm={vi.fn()} onCancel={vi.fn()} />);
+    expect(screen.getByText(/One file at a time; a folder of Parquet files is not supported/)).toBeInTheDocument();
+    const input = document.getElementById("file-input") as HTMLInputElement;
+    expect(input.multiple).toBe(false);
+    expect(input.hasAttribute("webkitdirectory")).toBe(false);
+    expect(input.accept).toContain(".parquet");
   });
 });

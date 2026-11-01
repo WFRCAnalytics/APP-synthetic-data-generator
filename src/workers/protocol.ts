@@ -16,7 +16,7 @@ export interface ParquetSummary {
   rowGroups: number;
   /** The size of the data once opened, in bytes, from the file's own sizes. */
   expandedBytes: number;
-  columns: { name: string; type: ParquetType | null; unsupported: UnsupportedReason | null }[];
+  columns: { name: string; type: ParquetType | null; unsupported: UnsupportedReason | null; renamed: boolean }[];
 }
 
 // ---- Profile worker (owns DuckDB and the real data) -----------------------------------------

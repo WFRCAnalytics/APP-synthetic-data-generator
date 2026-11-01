@@ -65,7 +65,7 @@ export function IngestScreen({ session, onChooseFile, onChooseSpec, onInspectShe
             if (file) onChooseFile(file);
           }}
         />
-        <span className="field-hint">Up to about 500 MB. The file stays on this device. You can also choose an Excel workbook (.xlsx), where you then pick the sheet, or a Parquet file (.parquet).</span>
+        <span className="field-hint">Up to about 500 MB. The file stays on this device. You can also choose an Excel workbook (.xlsx), where you then pick the sheet, or a Parquet file (.parquet). One file at a time; a folder of Parquet files is not supported.</span>
       </div>
 
       <div className="field">

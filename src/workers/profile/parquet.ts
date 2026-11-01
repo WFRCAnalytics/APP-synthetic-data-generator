@@ -23,6 +23,8 @@ export interface ParquetColumnInfo {
   /** The type to write the column back with, or null when it is unsupported. */
   type: ParquetType | null;
   unsupported: UnsupportedReason | null;
+  /** The file's own name was empty or repeated, so the reader gave the column another one. */
+  renamed: boolean;
 }
 
 export interface ParquetInfo {
@@ -59,11 +61,11 @@ export async function inspectParquet(sql: SqlRunner, virtualName: string): Promi
     const columns: ParquetColumnInfo[] = described.map((r, i) => {
       const duckType = String(r.column_type);
       const row = top[i];
-      if (!row) return { name: String(r.column_name), duckType, type: null, unsupported: "other" };
+      const name = String(r.column_name);
+      if (!row) return { name, duckType, type: null, unsupported: "other", renamed: false };
+      const renamed = row.name !== name;
       const mapped = mapColumn(duckType, row);
-      return mapped.ok
-        ? { name: String(r.column_name), duckType, type: mapped.type, unsupported: null }
-        : { name: String(r.column_name), duckType, type: null, unsupported: mapped.reason };
+      return mapped.ok ? { name, duckType, type: mapped.type, unsupported: null, renamed } : { name, duckType, type: null, unsupported: mapped.reason, renamed };
     });
 
     const info: ParquetInfo = { rowCount: toNumber(counts.num_rows), rowGroups: toNumber(counts.num_row_groups), expandedBytes: toNumber(sizes.bytes), columns };

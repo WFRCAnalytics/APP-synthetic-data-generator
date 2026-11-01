@@ -75,6 +75,13 @@ describe("structure", () => {
     const names = info.columns.map((c) => c.name);
     expect(new Set(names).size).toBe(3);
     expect(names.every((n) => n.length > 0)).toBe(true);
+    // the reader renamed the second "a" and the empty one; the first "a" kept its name
+    expect(info.columns.map((c) => c.renamed)).toEqual([false, true, true]);
+  });
+
+  it("marks no column as renamed when the file's names are fine", async () => {
+    const info = await inspectParquet(db.sql, "types_snappy.parquet");
+    expect(info.columns.some((c) => c.renamed)).toBe(false);
   });
 });
 

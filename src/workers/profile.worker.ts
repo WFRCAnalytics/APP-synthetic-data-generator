@@ -199,7 +199,7 @@ async function openParquet(chosen: File): Promise<void> {
     type: "parquetInfo",
     fileName: chosen.name,
     fileSize: chosen.size,
-    info: { rowCount: info.rowCount, rowGroups: info.rowGroups, expandedBytes: info.expandedBytes, columns: info.columns.map((c) => ({ name: c.name, type: c.type, unsupported: c.unsupported })) },
+    info: { rowCount: info.rowCount, rowGroups: info.rowGroups, expandedBytes: info.expandedBytes, columns: info.columns.map((c) => ({ name: c.name, type: c.type, unsupported: c.unsupported, renamed: c.renamed })) },
   });
 }
 

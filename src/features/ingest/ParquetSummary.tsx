@@ -20,6 +20,7 @@ export function ParquetSummary({ fileName, fileSize, info, onConfirm, busy }: Pa
   const warnings = workbookSizeWarnings(info.expandedBytes, "file");
   const tooLarge = workbookTooLarge(info.expandedBytes);
   const unsupported = info.columns.filter((c) => c.unsupported).length;
+  const renamed = info.columns.filter((c) => c.renamed).length;
   const shown = info.columns.slice(0, MAX_COLUMNS_SHOWN);
 
   return (
@@ -34,6 +35,11 @@ export function ParquetSummary({ fileName, fileSize, info, onConfirm, busy }: Pa
       {unsupported > 0 && (
         <p className="field-hint" role="note" data-testid="parquet-unsupported-note">
           {unsupported} {unsupported === 1 ? "column is" : "columns are"} nested or of a kind that cannot be faked. {unsupported === 1 ? "It is" : "They are"} not read and will be left out of the fake file unless you keep {unsupported === 1 ? "it" : "them"} as missing.
+        </p>
+      )}
+      {renamed > 0 && (
+        <p className="field-hint" role="note" data-testid="parquet-renamed-note">
+          {renamed} {renamed === 1 ? "column has" : "columns have"} an empty or repeated name in the file, so the reader named {renamed === 1 ? "it" : "them"} (marked below). The fake file uses the new {renamed === 1 ? "name" : "names"}; you can rename {renamed === 1 ? "it" : "them"} on Review.
         </p>
       )}
       {warnings.map((w) => (
@@ -55,7 +61,10 @@ export function ParquetSummary({ fileName, fileSize, info, onConfirm, busy }: Pa
           <tbody>
             {shown.map((c) => (
               <tr key={c.name}>
-                <td>{c.name}</td>
+                <td>
+                  {c.name}
+                  {c.renamed && <span className="field-hint"> (renamed by the reader)</span>}
+                </td>
                 <td>{c.type ? `${describeParquetType(c.type)}${c.type.nullable ? "" : ", required"}` : `Not supported: ${UNSUPPORTED_TEXT[c.unsupported ?? "other"]}`}</td>
               </tr>
             ))}

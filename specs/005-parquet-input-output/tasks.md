@@ -116,7 +116,7 @@
 - [x] T039 [P] Docs: Help guide, `SpecContentsNotice.tsx` (a Parquet spec holds the file name, row-group count and type descriptions, no value, statistic or metadata text), and `README.md` (Parquet supported; nested columns not; compression used)
 - [x] T040 Large file: `python scripts/make-parquet-fixtures.py --large` writes a file of about 500 MB of expanded data (not file size) to `.fixtures/`; add `tests/e2e/parquet-scale.spec.ts` gated by `SCALE_PARQUET=1`; record profile time, export time and the stop limit in `research.md`
 - [x] T041 Record in `research.md` the bundle size and audit notes (no new dependency) and the measured results; run quickstart scenarios A to E and record results and the SC-008 person sign-off line in `quickstart.md`; dry-run `release.yml`
-- [ ] T042 Run `/speckit-converge` and mark the slice complete
+- [x] T042 Run `/speckit-converge` and mark the slice complete
 
 ---
 
@@ -137,3 +137,8 @@
 ## Implementation strategy
 
 MVP first: Phases 1 to 3 give a working Parquet round trip. Then US2 hardens the types, US4 proves the privacy claim, US3 handles the unsupported columns. Commit after each task group.
+
+## Phase 8: Convergence
+
+- [x] T043 [P] Say on the structure card when the reader renamed an empty or duplicated column (`renamed` on `ParquetColumnInfo` from the schema name versus the engine's name, shown in `src/features/ingest/ParquetSummary.tsx`), with tests in `tests/integration/parquet-load.test.ts` and `tests/component/parquet-ingest.test.tsx`, per the edge case on empty and duplicated names (partial)
+- [x] T044 [P] Add "One file at a time; a folder of Parquet files is not supported" to the file chooser hint in `src/features/ingest/IngestScreen.tsx`, with a component test, per the edge case on partitioned datasets (partial)
