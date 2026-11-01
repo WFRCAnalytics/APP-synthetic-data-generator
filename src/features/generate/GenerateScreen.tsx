@@ -25,7 +25,7 @@ function CheckTable({ checks }: { checks: CheckRow[] }) {
   // Failures first, so a problem is never buried under a hundred passes.
   const ordered = [...failing, ...checks.filter((c) => c.pass)];
   return (
-    <div className="card">
+    <div className="result-section">
       <h3>Check table</h3>
       <p role="status">
         {failing.length === 0 ? (
@@ -54,8 +54,8 @@ function CheckTable({ checks }: { checks: CheckRow[] }) {
               <tr key={`${c.column}-${c.metric}-${i}`} data-pass={c.pass}>
                 <td>{c.column}</td>
                 <td>{c.metric.replace("_", " ")}</td>
-                <td>{c.target}</td>
-                <td>{c.achieved}</td>
+                <td title={c.target}>{c.target}</td>
+                <td title={c.achieved}>{c.achieved}</td>
                 <td>{c.pass ? "Pass" : "Differs"}</td>
               </tr>
             ))}
@@ -83,7 +83,9 @@ export function GenerateScreen(props: GenerateScreenProps) {
         </div>
       )}
 
-      <div className="settings-grid">
+      <div className="generate-layout">
+      <div className="generate-controls">
+      <div className="settings-grid settings-grid--stack">
         <div className="field">
           <label htmlFor="seed">Seed</label>
           <input id="seed" type="text" inputMode="numeric" value={session.seedText} disabled={running} aria-invalid={!seedOk} aria-describedby="seed-hint" onChange={(e) => props.onSeedChange(e.target.value)} />
@@ -160,9 +162,16 @@ export function GenerateScreen(props: GenerateScreenProps) {
             )}
           </p>
 
+        </>
+      )}
+      </div>
+
+      <div className="generate-results">
+      {gen.status === "done" ? (
+        <>
           <CheckTable checks={gen.checks} />
 
-          <div className="card">
+          <div className="result-section">
             <h3>Preview of the first {gen.preview.length} fake rows</h3>
             <div className="table-wrap table-wrap--scroll" tabIndex={0} role="region" aria-label="Preview rows">
               <table className="data-table preview-table">
@@ -186,7 +195,11 @@ export function GenerateScreen(props: GenerateScreenProps) {
             </div>
           </div>
         </>
+      ) : (
+        <p className="results-placeholder">The check table and a preview of the fake rows appear here once the file is generated.</p>
       )}
+      </div>
+      </div>
     </section>
   );
 }

@@ -51,8 +51,10 @@ export function IngestScreen({ session, onChooseFile, onChooseSpec, onInspectShe
   return (
     <section aria-labelledby="ingest-heading">
       <h2 id="ingest-heading">Choose a file</h2>
+      <p className="lead">Turn one private table into a fake one, so AI coding agents never see real data.</p>
 
-      <div className="field">
+      <div className="ingest-grid">
+      <div className="field field--drop">
         <label htmlFor="file-input">CSV file</label>
         <input
           id="file-input"
@@ -68,7 +70,7 @@ export function IngestScreen({ session, onChooseFile, onChooseSpec, onInspectShe
         <span className="field-hint">Up to about 500 MB. The file stays on this device. You can also choose an Excel workbook (.xlsx), where you then pick the sheet, or a Parquet file (.parquet). One file at a time; a folder of Parquet files is not supported.</span>
       </div>
 
-      <div className="field">
+      <div className="field field--aside">
         <label htmlFor="spec-input">Load existing spec</label>
         <input
           id="spec-input"
@@ -82,6 +84,7 @@ export function IngestScreen({ session, onChooseFile, onChooseSpec, onInspectShe
           }}
         />
         <span className="field-hint">A spec saved earlier skips profiling. It replaces any file that is open.</span>
+      </div>
       </div>
 
       {session.specProblems && <SpecErrors problems={session.specProblems} />}

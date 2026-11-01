@@ -9,7 +9,7 @@ import type { ColumnProfile } from "../../lib/profile/types";
 /** Lists at or below this length are drawn whole. */
 export const VIRTUALIZE_ABOVE = 100;
 const ESTIMATED_CARD_HEIGHT = 300;
-const GAP = 16;
+const GAP = 12;
 
 export interface ColumnListProps {
   profiles: readonly ColumnProfile[];

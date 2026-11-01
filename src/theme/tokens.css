@@ -1,3 +1,8 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: brand (WFRC) · redesign: full
+ * paper: oklch(1 0 0) · accent: oklch(0.83 0.15 80) · display: Inter · body: Poppins
+ * nav: top bar with a step rail under it · signature: the column ledger, one row per column · states: idle, loading, empty, error, done
+ * axes: light/grotesk-sans/warm · posture: workbench · contrast: pass · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E4 S4 R4 V4 · weakest: E, rows with long fact lists still run tall; settings open in place instead of a side panel */
 /*
  * T016/T017: WFRC brand values as CSS custom properties, light + dark mode.
  *

@@ -55,9 +55,26 @@ summary:focus-visible,
 }
 
 .app-shell {
-  max-width: 56rem;
+  max-width: 72rem;
   margin: 0 auto;
-  padding: var(--space-6) var(--space-5) var(--space-8);
+  padding: var(--space-5) var(--space-5) var(--space-8);
+}
+
+/* The bar under the header: where you are on the left, the privacy promise on the right. */
+.subbar {
+  background: color-mix(in srgb, var(--color-foreground) 3%, var(--color-background));
+  border-bottom: 1px solid var(--color-border);
+}
+
+.subbar-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-6);
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0 var(--space-5);
 }
 
 .field {
@@ -96,9 +113,7 @@ summary:focus-visible,
   border-radius: var(--radius-sm);
   background: var(--color-background);
   color: var(--color-foreground);
-  transition:
-    border-color var(--transition-fast),
-    box-shadow var(--transition-fast);
+  transition: border-color var(--transition-fast);
 }
 
 .field input[type="text"]:hover,
@@ -230,8 +245,17 @@ input[type="radio"]:disabled {
   transition:
     background-color var(--transition-fast),
     border-color var(--transition-fast),
-    box-shadow var(--transition-fast),
     transform var(--transition-fast);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 .button:focus-visible {
@@ -385,10 +409,8 @@ table.data-table td {
 
 table.data-table thead th {
   font-family: var(--font-heading);
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   font-weight: var(--font-weight-semibold);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   /* The grey of hints falls just under 4.5:1 on this tinted row, so headers use the text colour. */
   color: var(--color-foreground);
   background: color-mix(in srgb, var(--color-foreground) 4%, transparent);
@@ -494,7 +516,7 @@ table.data-table tbody tr:last-child td {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 64px;
+  height: 56px;
   padding: 0 var(--space-5);
   background: var(--color-background);
   border-bottom: 1px solid var(--color-border);
@@ -508,7 +530,7 @@ table.data-table tbody tr:last-child td {
 }
 
 .app-header-logo {
-  height: 36px;
+  height: 32px;
   width: auto;
   display: block;
   flex-shrink: 0;
@@ -517,7 +539,9 @@ table.data-table tbody tr:last-child td {
 .app-header-title {
   font-family: var(--font-heading);
   font-weight: var(--font-weight-bold);
-  font-size: calc(var(--text-lg) * 1.25);
+  font-size: var(--text-lg);
+  line-height: 1.2;
+  margin: 0;
   color: var(--color-heading);
   white-space: nowrap;
   overflow: hidden;
@@ -585,7 +609,7 @@ table.data-table tbody tr:last-child td {
   }
 
   .app-header-title {
-    font-size: calc(var(--text-base) * 1.25);
+    font-size: var(--text-base);
   }
 }
 

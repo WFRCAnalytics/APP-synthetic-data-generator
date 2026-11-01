@@ -44,7 +44,7 @@ export function AppHeader({ onOpenHelp, children }: AppHeaderProps) {
     <header className="app-header no-print">
       <div className="app-header-brand">
         <img src={logoSrc} alt="WFRC" className="app-header-logo" />
-        <span className="app-header-title">Synthetic Data Generator</span>
+        <h1 className="app-header-title">Synthetic Data Generator</h1>
         <span className="app-header-version" data-testid="app-version">
           {versionLabel()}
         </span>

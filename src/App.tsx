@@ -39,11 +39,13 @@ export function App() {
       <AppHeader onOpenHelp={() => setHelpOpen(true)}>
         <NetworkCounter counter={netCounter} />
       </AppHeader>
+      <div className="subbar no-print">
+        <div className="subbar-inner">
+          <Stepper state={state} onGoTo={(step) => dispatch({ type: "goTo", step })} />
+          <LocalNotice />
+        </div>
+      </div>
       <main className="app-shell">
-        <h1>Synthetic Data Generator</h1>
-        <p className="page-subtitle">Turn one private table into a fake one, so AI coding agents never see real data.</p>
-        <LocalNotice />
-        <Stepper state={state} onGoTo={(step) => dispatch({ type: "goTo", step })} />
 
         {state.step === "ingest" && (
           <IngestScreen
