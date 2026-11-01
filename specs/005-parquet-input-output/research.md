@@ -69,9 +69,8 @@
   plus `nullable` for each. The writer chooses the physical type from the description (decimal:
   INT32 up to precision 9, INT64 up to 18, otherwise fixed-length bytes sized for the precision).
 - **Unsupported** (column kept by name, loaded as all-NULL, reason shown): `list`, `struct`, `map`,
-  `union`, `binary` (raw bytes), `uuid`, `interval`, `int96` legacy timestamps are read as
-  timestamps by the engine and supported as `timestamp` ns/us, `enum` (read as string and supported).
-  Reasons are fixed texts: "A list column", "A struct column", "A map column", "A binary column", and
+  `union`, `binary` (raw bytes), `uuid`, `interval`. Legacy 96-bit timestamps are read by the engine as
+  timestamps and enumerations as strings, so both are supported. Reasons are fixed texts: "A list column", "A struct column", "A map column", "A binary column", and
   so on. Never a value.
 - **Rationale**: FR-005, FR-006, FR-008, SC-001.
 
@@ -98,10 +97,17 @@
 - **Rationale**: FR-006, FR-007, acceptance scenario 2.4. One path for every column type, no change to
   the generators.
 
+## R6b: Large numbers
+
+- **Decision**: Conversion and writing use `BigInt` for 64-bit integers, unsigned 64-bit and decimals above 15
+  digits; the generators keep working in doubles, so values for a column beyond 2^53 are drawn inside a
+  safe range of its type and counted as narrowed in the check table.
+- **Rationale**: exactness of what is written, honesty about what is generated (spec assumption).
+
 ## R7: Size limits
 
 - **Decision**: Expanded size = sum of `total_uncompressed_size` over the row groups (from the footer,
-  sizes only). Warn at 100 MB, stop above 1 GB, the same constants and messages as Excel
+  sizes only). Warn at 100 MB, stop above 1 GB, the same constants and messages as Excel (a file of about 500 MB of expanded data is the scale target, SC-005; the message states the expanded figure so a user is not surprised that a small compressed file is large once opened)
   (`WORKBOOK_STOP_BYTES`), with "Parquet" wording. The all-text table is larger than the file, so the
   estimate for memory is the same 2.5 times.
 - **Rationale**: FR-013. Parquet compresses well, so the file size alone would under-warn.

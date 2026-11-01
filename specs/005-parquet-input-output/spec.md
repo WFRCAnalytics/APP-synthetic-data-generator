@@ -128,8 +128,9 @@ markers and find none.
   or tall CSV, with progress shown.
 - A column whose name is empty, duplicated or not valid text: renamed on the same rules as CSV
   headers, and the rename is shown.
-- A column of an unsupported scalar type (for example a 96-bit legacy timestamp, an interval or a
-  UUID): marked unsupported with a reason, or read as text when that is lossless and says so.
+- A column of an unsupported scalar type (for example raw binary, an interval or a UUID): marked
+  unsupported with a reason. Legacy 96-bit timestamps and enumerations are read as timestamps and
+  text.
 - A timestamp with a time zone: written with the same unit and time-zone flag; instants are fake.
 - Dictionary-encoded columns: read like any column; the dictionary itself is never shown or kept.
 - Compression (snappy, gzip, zstd, uncompressed): all read. The fake file uses a compression that
@@ -212,8 +213,9 @@ markers and find none.
 - **SC-003**: The network counter shows zero outside requests after a full Parquet session, and no
   file other than the app's own is fetched.
 - **SC-004**: Generating twice with the same spec and seed gives files with identical cell values.
-- **SC-005**: A 500 MB Parquet file (about the memory budget of a 500 MB CSV) profiles and exports
-  within the same time targets as an equivalent CSV, with the page staying responsive.
+- **SC-005**: A Parquet file whose data is about 500 MB once opened (the memory budget of a 500 MB CSV;
+  the file itself is usually smaller) profiles and exports within the same time targets as an
+  equivalent CSV, with the page staying responsive.
 - **SC-006**: A saved Parquet spec stays under 1 megabyte and holds only the source structure and
   type descriptions.
 - **SC-007**: Every unsupported or refused case ends in a plain message; none ends in a blank page,
@@ -234,5 +236,8 @@ markers and find none.
   existing column types, and the type description is kept beside them for writing.
 - Time zones and timestamps are handled as the same instants-kind data the date columns already
   support; fake instants do not reproduce real ones.
+- Integers and decimals too large for exact arithmetic in the generators (beyond 2^53) are written
+  exactly when they are converted, but values are generated inside a safe range of the column's
+  type; the check table says when a range was narrowed.
 - Out of scope: writing nested types, partitioned datasets (folders of Parquet files), Arrow and
   Feather, Delta and Iceberg, other locales, coordinates, folder output and multi-table.
