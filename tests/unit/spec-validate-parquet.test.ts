@@ -96,6 +96,12 @@ describe("parquet_type on a column", () => {
     expect(messages(spec(parquetSource, [flag({ parquet_type: { kind: "float", bits: 64, nullable: true } })])).join(" ")).toMatch(/yes\/no column needs/);
   });
 
+  it("is refused on an unsupported column, which holds nothing from the file", () => {
+    const m = messages(spec(parquetSource, [amount(), { name: "tags", type: "unsupported", parquet_type: { kind: "string", nullable: true } }]));
+    expect(m.some((x) => x.includes("tags:parquet_type") && /holds nothing from the file/.test(x))).toBe(true);
+    expect(messages(spec(parquetSource, [amount(), { name: "tags", type: "unsupported" }]))).toEqual([]);
+  });
+
   it("lets text-typed files hold numbers and dates as strings", () => {
     const text = { kind: "string", nullable: true };
     expect(messages(spec(parquetSource, [amount({ parquet_type: text }), when({ parquet_type: text }), flag({ parquet_type: text })]))).toEqual([]);

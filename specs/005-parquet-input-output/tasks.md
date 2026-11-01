@@ -69,10 +69,10 @@
 
 **Independent Test**: `npx vitest run parquet-readback` with the all-types fixture, and `npx playwright test parquet-flow`.
 
-- [ ] T024 [P] [US2] Extend `tests/integration/parquet-readback.test.ts` to compare schema column by column against the real fixture for int8 to int64, uint8 to uint64, float32, float64, decimal(10,2) and (38,10), bool, string, date, time ms/us, timestamp ms/us/ns with and without UTC, required columns, and a column with missing values
-- [ ] T025 [P] [US2] Range tests in `tests/unit/parquet-convert.test.ts` and an end-to-end check in `tests/e2e/parquet-flow.spec.ts`: an int16 column never leaves its range, a decimal never exceeds its precision, a whole-number column stays an integer type, the check table reports how many values were narrowed
-- [ ] T026 [US2] Carry types through profiling and the spec: `src/lib/spec/build.ts` and `toProfiles.ts` write and read `parquet_type`, `src/workers/profile.worker.ts` keeps it through re-profiling and type overrides, and the card shows the file type beside the column type (`src/features/review/ColumnCard.tsx`)
-- [ ] T027 [US2] Make the writer follow the type description when the user changes a column's profiled type (integer to categorical, decimal to text): the description decides the physical type; a change that makes the two inconsistent is refused in Review with a plain message (`src/features/review/ColumnEditors.tsx`, validation rule in `validate.ts`)
+- [x] T024 [P] [US2] Extend `tests/integration/parquet-readback.test.ts` to compare schema column by column against the real fixture for int8 to int64, uint8 to uint64, float32, float64, decimal(10,2) and (38,10), bool, string, date, time ms/us, timestamp ms/us/ns with and without UTC, required columns, and a column with missing values
+- [x] T025 [P] [US2] Range tests in `tests/unit/parquet-convert.test.ts` and an end-to-end check in `tests/e2e/parquet-flow.spec.ts`: an int16 column never leaves its range, a decimal never exceeds its precision, a whole-number column stays an integer type, the check table reports how many values were narrowed
+- [x] T026 [US2] Carry types through profiling and the spec: `src/lib/spec/build.ts` and `toProfiles.ts` write and read `parquet_type`, `src/workers/profile.worker.ts` keeps it through re-profiling and type overrides, and the card shows the file type beside the column type (`src/features/review/ColumnCard.tsx`)
+- [x] T027 [US2] Make the writer follow the type description when the user changes a column's profiled type (integer to categorical, decimal to text): the description decides the physical type; a change that makes the two inconsistent is refused in Review with a plain message (`src/features/review/ColumnEditors.tsx`, validation rule in `validate.ts`)
 
 **Checkpoint**: schemas read back identically.
 
@@ -84,10 +84,10 @@
 
 **Independent Test**: `npx vitest run parquet-privacy` and `npx playwright test parquet-privacy`.
 
-- [ ] T028 [P] [US4] Spy test `tests/integration/parquet-privacy.test.ts`: a runner that records every row the engine returns while `markers.parquet` is inspected, loaded and profiled; fails if any marker (data, key-value text, created-by, statistics values) is returned; also asserts the queries issued never name `created_by`, `stats_*`, `min_value`, `max_value`, `parquet_kv_metadata` or `bloom_filter_*` (R2)
-- [ ] T029 [P] [US4] Footer test in `tests/unit/parquet-writer.test.ts` and `tests/integration/parquet-readback.test.ts`: the fake file read with the engine's metadata functions and pyarrow shows `created_by` equal to this app's fixed string, no key-value metadata, no statistics, no bloom filter, no page index
-- [ ] T030 [P] [US4] End-to-end leak test `tests/e2e/parquet-privacy.spec.ts`: run the whole flow on `markers.parquet` and search page text, spec JSON, preview, the downloaded file's bytes, console messages and local, session and IndexedDB storage for every marker; and the refusals: `not_parquet.parquet`, `truncated.parquet`, `empty.parquet` and an encrypted-footer file each give their fixed message with no content
-- [ ] T031 [US4] Make the tests pass: the fixed error mapping in the worker (`src/workers/profile.worker.ts`), silent engine logging already in place for Excel, size and structure queries restricted per R2, and a guard that the `ParquetType` parser drops the engine's raw logical-type text
+- [x] T028 [P] [US4] Spy test `tests/integration/parquet-privacy.test.ts`: a runner that records every row the engine returns while `markers.parquet` is inspected, loaded and profiled; fails if any marker (data, key-value text, created-by, statistics values) is returned; also asserts the queries issued never name `created_by`, `stats_*`, `min_value`, `max_value`, `parquet_kv_metadata` or `bloom_filter_*` (R2)
+- [x] T029 [P] [US4] Footer test in `tests/unit/parquet-writer.test.ts` and `tests/integration/parquet-readback.test.ts`: the fake file read with the engine's metadata functions and pyarrow shows `created_by` equal to this app's fixed string, no key-value metadata, no statistics, no bloom filter, no page index
+- [x] T030 [P] [US4] End-to-end leak test `tests/e2e/parquet-privacy.spec.ts`: run the whole flow on `markers.parquet` and search page text, spec JSON, preview, the downloaded file's bytes, console messages and local, session and IndexedDB storage for every marker; and the refusals: `not_parquet.parquet`, `truncated.parquet`, `empty.parquet` and an encrypted-footer file each give their fixed message with no content
+- [x] T031 [US4] Make the tests pass: the fixed error mapping in the worker (`src/workers/profile.worker.ts`), silent engine logging already in place for Excel, size and structure queries restricted per R2, and a guard that the `ParquetType` parser drops the engine's raw logical-type text
 
 **Checkpoint**: the privacy claim is tested at the query, the file and the browser levels.
 
@@ -99,9 +99,9 @@
 
 **Independent Test**: `npx vitest run parquet-schema parquet-load` and the nested columns in `parquet-flow`.
 
-- [ ] T032 [P] [US3] Tests: nested and binary columns of the fixture are loaded as all-NULL (`tests/integration/parquet-load.test.ts`), appear as unsupported with the fixed reasons (`tests/component/parquet-ingest.test.tsx`), are left out of the fake file by default and written as an optional string column of nulls when kept, and the saved spec holds only their names and kinds (`tests/e2e/parquet-flow.spec.ts`)
-- [ ] T033 [US3] Reason codes `nested_list`, `nested_struct`, `nested_map`, `nested_union`, `binary`, `uuid`, `interval` in `src/lib/profile/types.ts` with fixed texts in `src/features/review/summary.ts`; the profile worker sets them from the schema mapping
-- [ ] T034 [US3] Writer and spec handling of a kept unsupported column (all-null optional string column under the same name), and validation that a Parquet spec with an unsupported column holds no `parquet_type` for it
+- [x] T032 [P] [US3] Tests: nested and binary columns of the fixture are loaded as all-NULL (`tests/integration/parquet-load.test.ts`), appear as unsupported with the fixed reasons (`tests/component/parquet-ingest.test.tsx`), are left out of the fake file by default and written as an optional string column of nulls when kept, and the saved spec holds only their names and kinds (`tests/e2e/parquet-flow.spec.ts`)
+- [x] T033 [US3] Reason codes `nested_list`, `nested_struct`, `nested_map`, `nested_union`, `binary`, `uuid`, `interval` in `src/lib/profile/types.ts` with fixed texts in `src/features/review/summary.ts`; the profile worker sets them from the schema mapping
+- [x] T034 [US3] Writer and spec handling of a kept unsupported column (all-null optional string column under the same name), and validation that a Parquet spec with an unsupported column holds no `parquet_type` for it
 
 **Checkpoint**: unsupported columns are safe and explained.
 

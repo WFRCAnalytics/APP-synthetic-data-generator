@@ -92,6 +92,27 @@ export function validateParquetType(value: unknown): string | null {
   return null;
 }
 
+/**
+ * Why a column of this profiled type cannot be written with this Parquet type, or null when it can. A column
+ * is written from the text the generators make, so a date column fits a date, time, timestamp or string type,
+ * a number column an int, float, decimal or string type, and a yes/no column a bool, int or string type.
+ */
+export function typeConflict(columnType: string, kind: ParquetKind): string | null {
+  switch (columnType) {
+    case "date":
+    case "datetime":
+    case "time":
+      return kind === "date" || kind === "time" || kind === "timestamp" || kind === "string" ? null : "A date column needs a date, time, timestamp or string Parquet type.";
+    case "integer":
+    case "float":
+      return kind === "int" || kind === "float" || kind === "decimal" || kind === "string" ? null : "A number column needs an int, float, decimal or string Parquet type.";
+    case "boolean":
+      return kind === "bool" || kind === "string" || kind === "int" ? null : "A yes/no column needs a bool, int or string Parquet type.";
+    default:
+      return null;
+  }
+}
+
 /** The smallest number of bytes that holds every decimal of this precision as a two's complement integer. */
 export function decimalBytes(precision: number): number {
   const largest = 10n ** BigInt(precision) - 1n;

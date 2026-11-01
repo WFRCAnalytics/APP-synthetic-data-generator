@@ -35,6 +35,8 @@ const columns: ParquetColumn[] = [
   { name: "tm", type: t({ kind: "time", unit: "us" }) },
   { name: "ts_us", type: t({ kind: "timestamp", unit: "us", utc: false }) },
   { name: "ts_ms_utc", type: t({ kind: "timestamp", unit: "ms", utc: true }) },
+  { name: "tm_ms", type: t({ kind: "time", unit: "ms" }) },
+  { name: "ts_ns", type: t({ kind: "timestamp", unit: "ns", utc: false }) },
 ];
 
 const N = 1200;
@@ -58,6 +60,8 @@ const rows: (string | null)[][] = Array.from({ length: N }, (_, i) => [
   `0${i % 10}:30:15.000123`,
   `2021-05-01 08:30:00.${String(i).padStart(6, "0")}`,
   `2022-05-01 00:00:00.${String(i % 1000).padStart(3, "0")}`,
+  `0${i % 10}:30:15.250`,
+  `2021-05-01 08:30:00.${String(i).padStart(9, "0")}`,
 ]);
 
 let db: NodeDb;
@@ -100,7 +104,7 @@ describe("the engine's reader", () => {
           ["i8", "TINYINT"], ["i16", "SMALLINT"], ["i32", "INTEGER"], ["i64", "BIGINT"],
           ["u8", "UTINYINT"], ["u16", "USMALLINT"], ["u32", "UINTEGER"], ["u64", "UBIGINT"],
           ["f32", "FLOAT"], ["f64", "DOUBLE"], ["d9", "DECIMAL(9,2)"], ["d18", "DECIMAL(18,4)"], ["d38", "DECIMAL(38,10)"],
-          ["flag", "BOOLEAN"], ["name", "VARCHAR"], ["day", "DATE"], ["tm", "TIME"], ["ts_us", "TIMESTAMP"], ["ts_ms_utc", "TIMESTAMP WITH TIME ZONE"],
+          ["flag", "BOOLEAN"], ["name", "VARCHAR"], ["day", "DATE"], ["tm", "TIME"], ["ts_us", "TIMESTAMP"], ["ts_ms_utc", "TIMESTAMP WITH TIME ZONE"], ["tm_ms", "TIME"], ["ts_ns", "TIMESTAMP_NS"],
         ]);
       });
 
@@ -164,6 +168,7 @@ describe.skipIf(!hasPyarrow)("pyarrow, an independent reader", () => {
       ["d9", "decimal128(9, 2)", true], ["d18", "decimal128(18, 4)", true], ["d38", "decimal128(38, 10)", true],
       ["flag", "bool", true], ["name", "string", true], ["day", "date32[day]", true], ["tm", "time64[us]", true],
       ["ts_us", "timestamp[us]", true], ["ts_ms_utc", "timestamp[ms, tz=UTC]", true],
+      ["tm_ms", "time32[ms]", true], ["ts_ns", "timestamp[ns]", true],
     ]);
     expect(seen.num_rows).toBe(N);
     expect(seen.row_groups).toBe(3);

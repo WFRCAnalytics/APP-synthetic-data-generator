@@ -14,6 +14,7 @@ import { ColumnCard } from "./ColumnCard";
 import { ColumnList } from "./ColumnList";
 import { ColumnFilters } from "./ColumnFilters";
 import { countByType, filterProfiles, NO_FILTERS, type Filters } from "./filter";
+import { parquetConflict } from "./summary";
 import { SpecContentsNotice } from "./SpecContentsNotice";
 import { TextApply } from "./TextApply";
 
@@ -43,6 +44,7 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
   const shown = useMemo(() => filterProfiles(profiles, filters), [profiles, filters]);
   const typeCounts = useMemo(() => countByType(profiles), [profiles]);
   const reprofiling = phase === "profiling";
+  const conflicts = profiles.filter((p) => parquetConflict(p)).length;
   const specOnly = session.specOnly;
   const workbook = session.settings !== null && isExcelSettings(session.settings);
 
@@ -115,8 +117,14 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
         />
       )}
 
+      {conflicts > 0 && (
+        <div className="banner banner-error" role="alert" data-testid="parquet-conflicts">
+          {conflicts} {conflicts === 1 ? "column has" : "columns have"} a type that its Parquet column cannot hold. Fix {conflicts === 1 ? "it" : "them"} above before generating.
+        </div>
+      )}
+
       <div className="actions-row">
-        <button type="button" className="button button-primary" onClick={actions.onContinue} disabled={reprofiling}>
+        <button type="button" className="button button-primary" onClick={actions.onContinue} disabled={reprofiling || conflicts > 0}>
           Continue to Generate
         </button>
         <button type="button" className="button button-secondary" onClick={actions.onSaveSpec}>

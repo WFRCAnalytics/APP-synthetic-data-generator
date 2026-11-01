@@ -10,7 +10,7 @@ import type { SampleDescription } from "../../lib/textgen/sample";
 import { UNSUPPORTED_TEXT } from "../../lib/parquet/types";
 import { ColumnEditors } from "./ColumnEditors";
 import { Sparkline } from "./Sparkline";
-import { reasonText, sparkBars, summaryLines, typeLabel } from "./summary";
+import { parquetConflict, reasonText, sparkBars, summaryLines, typeLabel } from "./summary";
 
 export interface ColumnCardProps {
   profile: ColumnProfile;
@@ -57,6 +57,12 @@ export function ColumnCard({ profile, otherNames, busy = false, dateCheck, onEdi
         </ul>
         <Sparkline bars={bars} label={`Distribution of ${profile.name}`} />
       </div>
+
+      {parquetConflict(profile) && (
+        <p className="field-hint field-error" role="alert" data-testid="parquet-conflict">
+          {parquetConflict(profile)} Change the type back, or leave this column out.
+        </p>
+      )}
 
       {profile.attentionReasons.length > 0 && (
         <ul className="column-card-reasons">

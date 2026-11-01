@@ -3,6 +3,7 @@
 
 import { formatDate, fromNumber, patternKind } from "../../lib/datefmt/directives";
 import { maskToRegexString } from "../../lib/mask/mask";
+import { describeParquetType, typeConflict } from "../../lib/parquet/types";
 import type { ColumnProfile, PersonalKind, ReasonCode } from "../../lib/profile/types";
 
 export const PERSONAL_LABELS: Record<PersonalKind, string> = {
@@ -114,7 +115,14 @@ export function summaryLines(p: ColumnProfile): string[] {
   if (p.naCount > 0) lines.push(`Missing: ${p.naCount.toLocaleString("en-US")}`);
   const sentinels = Object.entries(p.sentinels).sort((a, b) => Number(a[0]) - Number(b[0]));
   if (sentinels.length > 0) lines.push(`Codes kept: ${sentinels.map(([v, n]) => `${v} (${n.toLocaleString("en-US")})`).join(", ")}`);
+  if (p.parquetType) lines.push(`File type: ${describeParquetType(p.parquetType)}${p.parquetType.nullable ? "" : ", required"}`);
   return lines;
+}
+
+/** Why the type chosen for a column cannot be written with the type it has in the Parquet file, or null. */
+export function parquetConflict(p: ColumnProfile): string | null {
+  if (!p.parquetType || p.exclude === "drop" || p.type === "unsupported" || p.type === "empty") return null;
+  return typeConflict(p.type, p.parquetType.kind);
 }
 
 /** Bar heights between 0 and 1 for the card chart, drawn from the summary (no values needed). */

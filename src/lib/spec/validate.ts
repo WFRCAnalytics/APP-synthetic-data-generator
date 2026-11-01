@@ -6,7 +6,7 @@
 import * as v from "valibot";
 import { isSupportedPattern, patternGranularity, patternKind } from "../datefmt/directives";
 import { maskCapacity } from "../mask/mask";
-import { validateParquetType, type ParquetType } from "../parquet/types";
+import { typeConflict, validateParquetType, type ParquetType } from "../parquet/types";
 import { describeFormat } from "../xlsx/formats";
 import { isValidSheetName, parseRange } from "../xlsx/names";
 import {
@@ -230,28 +230,17 @@ function checkCellFormat(col: ColumnSpec, problem: (path: string, message: strin
 
 /** A Parquet type must be well formed and suit its column: dates for date columns, numbers for number columns. */
 function checkParquetType(col: ColumnSpec, problem: (path: string, message: string) => void): void {
+  if (col.type === "unsupported") {
+    problem("parquet_type", "A column that is not supported holds nothing from the file, so it has no Parquet type.");
+    return;
+  }
   const bad = validateParquetType(col.parquet_type);
   if (bad) {
     problem("parquet_type", bad);
     return;
   }
-  const kind = (col.parquet_type as ParquetType).kind;
-  switch (col.type) {
-    case "date":
-    case "datetime":
-    case "time":
-      if (kind !== "date" && kind !== "time" && kind !== "timestamp" && kind !== "string") problem("parquet_type", "A date column needs a date, time, timestamp or string Parquet type.");
-      break;
-    case "integer":
-    case "float":
-      if (kind !== "int" && kind !== "float" && kind !== "decimal" && kind !== "string") problem("parquet_type", "A number column needs an int, float, decimal or string Parquet type.");
-      break;
-    case "boolean":
-      if (kind !== "bool" && kind !== "string" && kind !== "int") problem("parquet_type", "A yes/no column needs a bool, int or string Parquet type.");
-      break;
-    default:
-      break;
-  }
+  const conflict = typeConflict(col.type, (col.parquet_type as ParquetType).kind);
+  if (conflict) problem("parquet_type", conflict);
 }
 
 /** Checks a repeat structure and returns the distinct count, or null after reporting a problem. */
