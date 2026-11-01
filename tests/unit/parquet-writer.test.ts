@@ -158,11 +158,11 @@ describe("chunks the caller may transfer", () => {
     // A worker posts each chunk with its buffer transferred, which detaches it. Nothing the writer reuses may be handed out.
     for (let run = 0; run < 2; run++) {
       const converters = cols.map((c) => createConverter(c.type));
-      async function* typed() {
+      const typed = (async function* () {
         for (const row of rowsOf(30)) yield row.map((text, i) => (text === null ? null : converters[i].convert(text)));
-      }
+      })();
       const copies: Uint8Array[] = [];
-      for await (const chunk of parquetChunks(cols, typed(), { createdBy: "x", codec: "gzip", rowGroupRows: 10 })) {
+      for await (const chunk of parquetChunks(cols, typed, { createdBy: "x", codec: "gzip", rowGroupRows: 10 })) {
         copies.push(chunk.slice());
         structuredClone(chunk.buffer, { transfer: [chunk.buffer] }); // detaches it, as postMessage does
       }
