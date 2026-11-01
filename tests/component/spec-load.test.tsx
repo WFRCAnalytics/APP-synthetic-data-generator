@@ -90,6 +90,65 @@ describe("a workbook spec", () => {
   });
 });
 
+const parquetSpec = {
+  ...goodSpec,
+  spec_version: 4,
+  source: { format: "parquet", file_name: "survey.parquet", row_groups: 2 },
+  columns: [
+    { name: "mode", type: "categorical", quoted: false, storage: "integer", counts: { "1": 600, "2": 400 }, parquet_type: { kind: "int", bits: 16, signed: true, nullable: true } },
+    { name: "fee", type: "float", quoted: false, mode: "match_shape", min: 10, max: 100, mean: 55, sd: 26, decimals: 2, quantiles, parquet_type: { kind: "decimal", precision: 10, scale: 2, nullable: false } },
+    { name: "tags", type: "unsupported", exclude: "drop" },
+  ],
+};
+
+describe("a Parquet spec", () => {
+  it("goes to Review without the file, shows the file types, and names the output as a Parquet file", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await chooseSpec(user, specFile(parquetSpec, "survey_spec.json"));
+    await screen.findByRole("heading", { name: "Review columns" });
+    expect(screen.getByText(/Loaded from a saved spec/)).toBeInTheDocument();
+    expect(sent.profile).toHaveLength(0);
+    expect(within(card("fee")).getByText("File type: decimal(10,2), required")).toBeInTheDocument();
+    expect(within(card("mode")).getByText("File type: int16")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Continue to Generate" }));
+    expect(await screen.findByText(/survey_fake\.parquet/)).toBeInTheDocument();
+    expect(screen.queryByTestId("one-sheet-note")).not.toBeInTheDocument();
+  });
+
+  it("saves again as a Parquet spec of the current version, with the same types", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await chooseSpec(user, specFile(parquetSpec, "survey_spec.json"));
+    await screen.findByRole("heading", { name: "Review columns" });
+    await user.click(screen.getByRole("button", { name: "Save spec (JSON)" }));
+    const again = JSON.parse(await readBlob(saved.at(-1)!));
+    expect(again.spec_version).toBe(4);
+    expect(again.source).toEqual({ format: "parquet", file_name: "survey.parquet", row_groups: 2 });
+    expect(again.columns.map((c: { parquet_type?: unknown }) => c.parquet_type)).toEqual(parquetSpec.columns.map((c) => (c as { parquet_type?: unknown }).parquet_type));
+  });
+
+  it("refuses a Parquet spec whose column has no type, listing it by column", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    const broken = { ...parquetSpec, columns: [{ ...parquetSpec.columns[0], parquet_type: undefined }, parquetSpec.columns[1]] };
+    await chooseSpec(user, specFile(broken));
+    const errors = await screen.findByTestId("spec-errors");
+    expect(errors).toHaveTextContent("mode");
+    expect(errors).toHaveTextContent(/needs its Parquet type/);
+  });
+
+  it("leaves a CSV spec producing a CSV", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await chooseSpec(user, specFile(goodSpec));
+    await screen.findByRole("heading", { name: "Review columns" });
+    await user.click(screen.getByRole("button", { name: "Continue to Generate" }));
+    expect(await screen.findByText(/trips_fake\.csv/)).toBeInTheDocument();
+    expect(screen.queryByText(/File type:/)).not.toBeInTheDocument();
+  });
+});
+
 describe("a good spec", () => {
   it("goes straight to Review, with a card per column and no file profiled", async () => {
     const user = userEvent.setup();

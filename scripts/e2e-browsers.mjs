@@ -2,7 +2,7 @@
 // `npx playwright install firefox webkit` once. Sets the variable here so it works on every OS.
 import { spawnSync } from "node:child_process";
 
-const result = spawnSync("npx", ["playwright", "test", "flow.spec", "excel-flow.spec", "excel-quirks.spec", "offline-zip.spec", "offline-guard.spec", "download-fallback", "quickstart.spec"], {
+const result = spawnSync("npx", ["playwright", "test", "flow.spec", "excel-flow.spec", "excel-quirks.spec", "parquet-flow.spec", "parquet-privacy.spec", "offline-zip.spec", "offline-guard.spec", "download-fallback", "quickstart.spec"], {
   stdio: "inherit",
   shell: true,
   env: { ...process.env, PW_ALL_BROWSERS: "1" },

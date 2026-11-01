@@ -127,6 +127,15 @@ async function excelSession(page: Page, base: string): Promise<Buffer> {
   return generateAndDownload(page, "xlsx");
 }
 
+async function parquetSession(page: Page, base: string): Promise<Buffer> {
+  await page.goto(base + APP_PATH);
+  await page.locator("#file-input").setInputFiles(join(ROOT, "tests/fixtures/parquet/types_snappy.parquet"));
+  await expect(page.getByTestId("parquet-summary")).toBeVisible({ timeout: 60_000 });
+  await page.getByRole("button", { name: "Profile this file" }).click();
+  await expect(page.getByRole("heading", { name: "Review columns" })).toBeVisible({ timeout: 180_000 });
+  return generateAndDownload(page, "parquet");
+}
+
 /** Runs a session on the hosted build in its own context, so the guard of the offline page does not apply. */
 async function onHostedCopy(page: Page, run: (hosted: Page) => Promise<Buffer>): Promise<Buffer> {
   const context = await page.context().browser()!.newContext({ acceptDownloads: true });
@@ -174,6 +183,18 @@ test.describe("offline copy", () => {
 
     const hosted = await onHostedCopy(page, (second) => excelSession(second, baseURL!));
     expect(await sheetXml(offline)).toBe(await sheetXml(hosted));
+  });
+
+  test("a full Parquet session works offline, with the reader served by the folder, and writes the same file as the hosted build", async ({ page, baseURL }) => {
+    const { outside, seen } = await guarded(page, launcher.origin);
+    const offline = await parquetSession(page, launcher.origin);
+    expect(outside()).toEqual([]);
+    expect(seen.some((u) => u.includes("/duckdb-ext/") && u.endsWith("parquet.duckdb_extension.wasm"))).toBe(true); // the reader came from the folder
+    await expect(page.getByTestId("net-outside")).toHaveText("0");
+    expect(Buffer.from(offline).subarray(0, 4).toString("latin1")).toBe("PAR1");
+
+    const hosted = await onHostedCopy(page, (second) => parquetSession(second, baseURL!));
+    expect(offline.equals(hosted)).toBe(true);
   });
 });
 

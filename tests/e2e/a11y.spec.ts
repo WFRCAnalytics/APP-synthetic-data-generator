@@ -107,3 +107,24 @@ for (const scheme of ["light", "dark"] as const) {
     });
   });
 }
+
+for (const scheme of ["light", "dark"] as const) {
+  test.describe(`${scheme} theme, Parquet`, () => {
+    test.use({ colorScheme: scheme });
+
+    test("the structure card, the unsupported notes and the file types have no detectable violations", async ({ page }) => {
+      await page.goto(APP);
+      await page.locator("#file-input").setInputFiles(join(HERE, "../fixtures/parquet/types_snappy.parquet"));
+      await expect(page.getByTestId("parquet-summary")).toBeVisible({ timeout: 60_000 });
+      await expect(page.getByTestId("parquet-unsupported-note")).toBeVisible();
+      expect(await violations(page), "Parquet structure card").toEqual([]);
+
+      await page.getByRole("button", { name: "Profile this file" }).click();
+      await expect(page.getByRole("heading", { name: "Review columns" })).toBeVisible({ timeout: 180_000 });
+      await page.locator('[data-column="tags"]').scrollIntoViewIfNeeded();
+      await page.locator('[data-column="amount"]').getByText("Settings", { exact: true }).click();
+      await expect(page.locator('[data-column="amount"]')).toContainText("File type: decimal(10,2)");
+      expect(await violations(page), "Review of a Parquet file").toEqual([]);
+    });
+  });
+}
