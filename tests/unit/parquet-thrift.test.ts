@@ -61,6 +61,15 @@ describe("ThriftWriter", () => {
     expect(hex(w.finish())).toBe("16 ac 02 16 ff ff ff ff ff 3f 00");
   });
 
+  it("writes a one-byte integer as a raw byte", () => {
+    const w = new ThriftWriter();
+    w.structBegin();
+    w.fieldByte(1, 16);
+    w.fieldByte(2, 8);
+    w.structEnd();
+    expect(hex(w.finish())).toBe("13 10 13 08 00");
+  });
+
   it("writes strings and binary with a varint length", () => {
     const w = new ThriftWriter();
     w.structBegin();

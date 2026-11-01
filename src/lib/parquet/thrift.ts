@@ -110,6 +110,12 @@ export class ThriftWriter {
     this.bytes(varint(zigzag(value)));
   }
 
+  /** A one-byte integer (Parquet's `IntType.bitWidth`). */
+  fieldByte(id: number, value: number): void {
+    this.header(id, TType.BYTE);
+    this.byte(value & 0xff);
+  }
+
   fieldBool(id: number, value: boolean): void {
     this.header(id, value ? TType.BOOL_TRUE : TType.BOOL_FALSE);
   }
