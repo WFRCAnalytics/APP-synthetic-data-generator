@@ -8,7 +8,9 @@ import { AppError, sanitizeError, toWireError } from "../lib/errors";
 import { NET_CHANNEL } from "../lib/netChannel";
 import { installNetPatch } from "./netpatch";
 import type { ColumnOverrides, ColumnProfile, FileSettings } from "../lib/profile/types";
-import { createEngine, duckdb, loadExcelExtension, type Engine } from "../lib/duckdb/engine";
+import { createEngine, duckdb, loadExcelExtension, loadParquetExtension, type Engine } from "../lib/duckdb/engine";
+import { classifyParquet } from "../lib/parquet/detect";
+import { inspectParquet, loadParquet, type ParquetInfo } from "./profile/parquet";
 import { workbookTooLarge } from "../features/ingest/sizeWarnings";
 import { inspectSheet, inspectWorkbook, type SheetHints } from "../lib/xlsx/metadata";
 import { parseRange } from "../lib/xlsx/names";
@@ -54,6 +56,10 @@ let mixedColumns = new Set<string>();
 /** Columns (by position) whose cells carry different kinds of number format. */
 let mixedFormatColumns = new Set<number>();
 let excelLoaded = false;
+let parquetLoaded = false;
+/** The registered name and structure of the opened Parquet file (null when the file is not Parquet). */
+let parquetFile: string | null = null;
+let parquetInfo: ParquetInfo | null = null;
 let rowCount = 0;
 let threshold = 50;
 let cancelled = false;
@@ -75,8 +81,28 @@ async function ensureEngine(): Promise<SqlRunner> {
   return sql as SqlRunner;
 }
 
+/** Notes what is known of a column from its file: its Parquet type, and why it cannot be faked if it cannot. */
+function markParquet(p: ColumnProfile, index: number): void {
+  const column = parquetInfo?.columns[index];
+  if (!column) return;
+  if (column.type) p.parquetType = column.type;
+  if (column.unsupported) {
+    p.unsupportedReason = column.unsupported;
+    if (!p.attentionReasons.includes("unsupported_type")) p.attentionReasons = [...p.attentionReasons, "unsupported_type"];
+  }
+}
+
+/** Overrides that make the unsupported columns of a Parquet file stay unsupported, whatever else is asked. */
+function withParquetLocks(overrides: Record<string, ColumnOverrides>): Record<string, ColumnOverrides> {
+  if (!parquetInfo) return overrides;
+  const out = { ...overrides };
+  for (const c of parquetInfo.columns) if (c.unsupported) out[c.name] = { ...out[c.name], type: "unsupported" };
+  return out;
+}
+
 /** Notes how the real cells of a workbook column were stored: its number format, and whether they held text. */
 function markCells(p: ColumnProfile, index: number): void {
+  markParquet(p, index);
   const format = cellFormats[index];
   if (format && !/^general$/i.test(format)) p.cellFormat = format;
   // Text cells that read as numbers or dates are written back as text cells, not numbers.
@@ -107,6 +133,20 @@ async function open(chosen: File): Promise<void> {
   const size = chosen.size;
   if (size === 0) throw new AppError("file_empty");
 
+  // A Parquet file is told by its first and last bytes, not its name (specs/005 FR-001, FR-015).
+  parquetFile = null;
+  parquetInfo = null;
+  const first = new Uint8Array(await chosen.slice(0, 8).arrayBuffer());
+  const last = new Uint8Array(await chosen.slice(Math.max(0, size - 8)).arrayBuffer());
+  const kind = classifyParquet(first, last);
+  if (kind === "encrypted") throw new AppError("parquet_encrypted");
+  if (kind === "damaged") throw new AppError("parquet_damaged");
+  if (kind === "parquet") {
+    await openParquet(chosen);
+    return;
+  }
+  if (/\.parquet$/i.test(chosen.name)) throw new AppError("parquet_not_parquet");
+
   if (await looksLikeWorkbook(chosen)) {
     const info = await inspectWorkbook(chosen); // refuses damaged, old, encrypted and non-workbook files
     post({ type: "workbookInfo", info, fileName: chosen.name, fileSize: size });
@@ -136,6 +176,44 @@ async function open(chosen: File): Promise<void> {
     fileName: chosen.name,
     fileSize: size,
   });
+}
+
+/** Reads the structure of a Parquet file and tells the page; no value is read (specs/005 research R2). */
+async function openParquet(chosen: File): Promise<void> {
+  const runner = await ensureEngine();
+  if (!parquetLoaded) {
+    await loadParquetExtension((q) => runner.run(q), EXTENSIONS);
+    parquetLoaded = true;
+  }
+  const virtual = `source_${Date.now()}.parquet`;
+  await (engine as Engine).db.registerFileHandle(virtual, chosen, duckdb.DuckDBDataProtocol.BROWSER_FILEREADER, true);
+  const info = await inspectParquet(runner, virtual);
+  parquetFile = virtual;
+  parquetInfo = info;
+  settings = null;
+  cellFormats = [];
+  textCells = [];
+  mixedColumns = new Set();
+  mixedFormatColumns = new Set();
+  post({
+    type: "parquetInfo",
+    fileName: chosen.name,
+    fileSize: chosen.size,
+    info: { rowCount: info.rowCount, rowGroups: info.rowGroups, expandedBytes: info.expandedBytes, columns: info.columns.map((c) => ({ name: c.name, type: c.type, unsupported: c.unsupported })) },
+  });
+}
+
+/** Loads the opened Parquet file into the all-text table. */
+async function loadParquetFile(): Promise<void> {
+  if (!parquetFile || !parquetInfo) throw new AppError("file_unreadable");
+  const runner = await ensureEngine();
+  post({ type: "progress", job: "load", done: 0, total: 1 });
+  const loaded = await loadParquet(runner, parquetFile, parquetInfo);
+  rowCount = loaded.rowCount;
+  columnNames = loaded.columnNames;
+  quoted = loaded.columnNames.map(() => false);
+  post({ type: "progress", job: "load", done: 1, total: 1 });
+  post({ type: "loaded", rowCount, columnNames, settings: { parquet: true, rowGroups: parquetInfo.rowGroups } });
 }
 
 async function load(confirmed: FileSettings): Promise<void> {
@@ -218,7 +296,7 @@ async function profile(limit: number, overrides: Record<string, ColumnOverrides>
   const runner = await ensureEngine();
   threshold = limit;
   cancelled = false;
-  overridesInUse = overrides;
+  overridesInUse = withParquetLocks(overrides);
   const profiles: ColumnProfile[] = await profileAll(
     runner,
     columnNames,
@@ -226,7 +304,7 @@ async function profile(limit: number, overrides: Record<string, ColumnOverrides>
     { threshold, quoted },
     (p) => post({ type: "progress", job: "profile", done: p.done, total: p.total }),
     () => cancelled,
-    overrides,
+    overridesInUse,
   );
   if (cancelled) throw new AppError("cancelled");
   latest.clear();
@@ -241,8 +319,8 @@ async function profile(limit: number, overrides: Record<string, ColumnOverrides>
 async function reprofile(column: string, overrides: ColumnOverrides): Promise<void> {
   const runner = await ensureEngine();
   const index = columnNames.indexOf(column);
-  overridesInUse = { ...overridesInUse, [column]: overrides };
-  const p = await profileColumn(runner, column, rowCount, { threshold, quoted }, overrides);
+  overridesInUse = withParquetLocks({ ...overridesInUse, [column]: overrides });
+  const p = await profileColumn(runner, column, rowCount, { threshold, quoted }, overridesInUse[column]);
   p.quoted = quoted[index] ?? false;
   markCells(p, index);
   latest.set(column, p);
@@ -277,6 +355,9 @@ self.onmessage = async (event: MessageEvent<ProfileRequest>) => {
         break;
       case "loadSheet":
         await loadWorkbookSheet(msg);
+        break;
+      case "loadParquet":
+        await loadParquetFile();
         break;
       case "profile":
         await profile(msg.threshold, msg.overrides);

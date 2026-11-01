@@ -11,7 +11,7 @@ import type { TablePlan } from "./table";
 
 export interface CheckRow {
   column: string;
-  metric: "label_counts" | "na_count" | "sentinel_counts" | "min" | "max" | "mean" | "sd" | "repeat_structure" | "distinct_count" | "length_min" | "length_max";
+  metric: "label_counts" | "na_count" | "sentinel_counts" | "min" | "max" | "mean" | "sd" | "repeat_structure" | "distinct_count" | "length_min" | "length_max" | "narrowed" | "unparsed";
   target: string;
   achieved: string;
   /** Exact metrics must be equal; mean and sd are fitted targets and pass within a tolerance. */
