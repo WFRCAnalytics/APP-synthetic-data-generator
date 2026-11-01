@@ -3,7 +3,7 @@
 // building twice from one dist/ gives the same checksum list and the same zip bytes, whatever the clock.
 
 import { spawnSync } from "node:child_process";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -13,7 +13,7 @@ const out = join(root, "release-out");
 function build(env: Record<string, string> = {}) {
   const r = spawnSync(process.execPath, [join(root, "scripts", "build-release.mjs")], { cwd: root, encoding: "utf8", env: { ...process.env, ...env } });
   expect(r.status, r.stderr).toBe(0);
-  const zip = readdirSync(out).find((f) => f.endsWith("-offline.zip"))!;
+  const zip = (JSON.parse(readFileSync(join(out, "release.json"), "utf8")) as { zip: string }).zip; // the one just built, not an older release left in the folder
   return { zip: readFileSync(join(out, zip)), checksums: readFileSync(join(out, "CHECKSUMS.sha256"), "utf8") };
 }
 

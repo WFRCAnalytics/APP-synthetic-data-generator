@@ -6,7 +6,7 @@
 
 **Status**: Draft
 
-**Input**: User description: "Slice 5: Parquet input and output. An analyst chooses a .parquet file, the app reads it in the browser with no download and no network, shows only structural metadata, profiles it like a CSV or an Excel sheet, and exports a fake .parquet with the same column names, order and logical types and a _fake suffix. The spec holds no cell values, no file metadata text and no statistics. Nested columns are marked unsupported. Compressed and dictionary-encoded files must read. Large files get a size warning."
+**Input**: User description: "Slice 5: Parquet input and output. An analyst chooses a .parquet file, the app reads it in the browser with no request outside the site, shows only structural metadata, profiles it like a CSV or an Excel sheet, and exports a fake .parquet with the same column names, order and logical types and a _fake suffix. The spec holds no cell values, no file metadata text and no statistics. Nested columns are marked unsupported. Compressed and dictionary-encoded files must read. Large files get a size warning."
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -149,8 +149,9 @@ markers and find none.
 
 - **FR-001**: Users MUST be able to choose a `.parquet` file; the file kind MUST be decided by its
   content, not its name.
-- **FR-002**: Reading MUST happen in the browser with no download of a reader and no network
-  request, under the same content policy and request counter as CSV and Excel.
+- **FR-002**: Reading MUST happen in the browser with no request outside the site (the files the reader
+  needs are served by the site itself, as for Excel), under the same content policy and request counter
+  as CSV and Excel.
 - **FR-003**: After loading, the app MUST show only structure: row count, column count, column names,
   column types and the number of row groups. It MUST NOT show any cell value, statistic or metadata
   text from the file.
@@ -225,8 +226,10 @@ markers and find none.
 
 ## Assumptions
 
-- The in-browser engine already reads Parquet without an extra download; the plan will confirm this
-  under the strict content policy and the offline release before relying on it.
+- The in-browser engine reads Parquet through a small reader extension that the site serves itself, the
+  way it serves the Excel reader (confirmed in the plan's spike: it is not built into the engine, and
+  the engine's default is to fetch it from the internet, which the content policy blocks). The offline
+  release carries it too.
 - The generation step has no access to the database engine (it works from the spec alone), so the
   plan decides how the Parquet bytes are written there; the result must meet the requirements
   above whichever way it is done.

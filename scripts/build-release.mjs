@@ -4,7 +4,7 @@
 // and the same commit give the same bytes. Run `npm run release` (builds dist/ first).
 
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildLicenses } from "./licenses.mjs";
@@ -72,6 +72,8 @@ const checksums = formatChecksums(files.map((f) => ({ path: f.path.slice(top.len
 add("CHECKSUMS.sha256", new TextEncoder().encode(checksums));
 
 mkdirSync(out, { recursive: true });
+// release-out/ holds the current release only, so tools that look for "the zip" cannot pick an older one.
+for (const old of readdirSync(out)) if (old.endsWith("-offline.zip")) rmSync(join(out, old));
 const zipPath = join(out, zipName(pkg.version, specVersion));
 writeFileSync(zipPath, createZip(files, { mtime }));
 writeFileSync(join(out, "CHECKSUMS.sha256"), checksums);

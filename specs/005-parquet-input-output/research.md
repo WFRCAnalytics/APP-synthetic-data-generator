@@ -1,8 +1,11 @@
 # Research: Parquet input and output
 
-## R1: Can the engine read Parquet with no extension? (spike, 2026-11-01)
+## R1: How does the engine read Parquet? (spikes, 2026-11-01)
 
-- **Decision**: Yes. Use the engine's built-in `read_parquet` on a registered file handle.
+- **Decision**: With DuckDB's `parquet` extension, self-hosted exactly like `excel`: `fetch-extensions.mjs`
+  downloads `parquet` for `wasm_eh` and `wasm_mvp` at build time into `public/duckdb-ext/`, the profile
+  worker runs `LOAD parquet` from the site's repository before reading, and `read_parquet` is used on a
+  registered file handle.
 - **Evidence**: In the Node build of the pinned DuckDB-WASM, a pyarrow file of 5,000 rows and 14 columns
   read with snappy, gzip, zstd and no compression (`scripts/make-parquet-fixtures.py`). `DESCRIBE`
   gave `SMALLINT, BIGINT, UTINYINT, FLOAT, DOUBLE, DECIMAL(10,2), BOOLEAN, VARCHAR, DATE, TIMESTAMP,
@@ -10,10 +13,14 @@
   type, converted type, logical type (with bit width and signedness), type length, scale and
   precision, and repetition per column. A file that is not Parquet and a truncated one both fail with
   "No magic bytes found at end of file '<name>'" (names the file, nothing from inside it).
-- **Not yet shown**: the same read in a browser under the strict content policy and in the offline
-  zip. It is the core wasm module (already allowed by `wasm-unsafe-eval`) and needs no download, so it
-  is expected to work; the first implementation task is a browser smoke test, and the offline test
-  gets a Parquet session (FR-018).
+- **Correction found by the browser spike**: the first plan assumed Parquet was built in, because the Node
+  build reads it (there `LOAD parquet` works offline; it is linked in). In the browser build it is not:
+  with auto-loading off, `read_parquet` is "not in the catalog, but exists in the parquet extension",
+  and with it on, the engine tries `https://extensions.duckdb.org/v1.5.4/wasm_eh/parquet.duckdb_extension.wasm`,
+  which the content policy blocks (good: nothing leaves). The file exists for both builds, so it is
+  self-hosted. Node tests call `LOAD parquet` (offline); the browser tests prove the hosted file loads.
+- **Still to show in implementation**: the extension loading from the site under the strict policy and in
+  the offline zip (T003 and the offline Parquet session), with zero requests outside the site.
 - **Alternatives considered**: a JavaScript Parquet library (a new runtime dependency, a second
   reader to audit for leaks, slower on big files).
 

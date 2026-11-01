@@ -116,6 +116,28 @@ const spike = {
     return { loaded, rows, columns, violations: [...violations] };
   },
 
+  /**
+   * Slice 5 smoke test (specs/005 R1): the engine's built-in Parquet reader works under the strict policy
+   * with no extension and no request outside the site. Used by tests/e2e/parquet-extension.spec.ts.
+   */
+  async parquetSmoke() {
+    const [file] = inputFiles();
+    const engine = await createEngine(BASE);
+    const conn = await engine.db.connect();
+    await conn.query("SET autoinstall_known_extensions = false");
+    await conn.query("SET autoload_known_extensions = false");
+    await conn.query(`SET custom_extension_repository = '${location.origin}${import.meta.env.BASE_URL}duckdb-ext'`);
+    await conn.query("LOAD parquet");
+    const loaded = Number(await scalar(conn, "SELECT count(*) FROM duckdb_extensions() WHERE extension_name = 'parquet' AND loaded"));
+    await engine.db.registerFileHandle(file.name, file, duckdb.DuckDBDataProtocol.BROWSER_FILEREADER, true);
+    const rows = Number(await scalar(conn, `SELECT count(*) FROM read_parquet('${file.name}')`));
+    const columns = (await conn.query(`DESCRIBE SELECT * FROM read_parquet('${file.name}')`)).toArray().map((r) => String(r.toJSON().column_name));
+    const groups = Number(await scalar(conn, `SELECT num_row_groups FROM parquet_file_metadata('${file.name}')`));
+    await conn.close();
+    await engine.dispose();
+    return { loaded, rows, columns, groups, violations: [...violations] };
+  },
+
   /** R14: can a large Blob be assembled from chunks and downloaded? */
   async download(megabytes: number) {
     const chunk = new Uint8Array(1024 * 1024).fill(97);

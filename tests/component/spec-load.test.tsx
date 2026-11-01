@@ -152,7 +152,7 @@ describe("a good spec", () => {
     await user.click(screen.getByRole("button", { name: "Save spec (JSON)" }));
     await waitFor(() => expect(saved).toHaveLength(1));
     const again = JSON.parse(await readBlob(saved[0]));
-    expect(again.spec_version).toBe(3); // saved with the current version, though it was loaded from version 1
+    expect(again.spec_version).toBe(4); // saved with the current version, though it was loaded from version 1
     expect(again.seed).toBe(7);
     expect(again.columns.map((c: { name: string }) => c.name)).toEqual(["mode", "fee", "hh_id"]);
   });
@@ -176,7 +176,7 @@ describe("a bad spec", () => {
   it("explains a newer spec version", async () => {
     const user = userEvent.setup();
     render(<App />);
-    await chooseSpec(user, specFile({ ...goodSpec, spec_version: 4 }));
+    await chooseSpec(user, specFile({ ...goodSpec, spec_version: 5 }));
     expect(await screen.findByTestId("spec-errors")).toHaveTextContent(/newer version of the app/);
   });
 

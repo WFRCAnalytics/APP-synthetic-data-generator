@@ -3,10 +3,10 @@
 // ID pattern masks and repeat structures, and format settings. Never rows, ID lists, free text,
 // personal identifiers or coordinates (constitution Principle II).
 
-/** The version this app writes. Version 2 added the personal, free_text and short_string types; version 3 the xlsx source. */
-export const SPEC_VERSION = 3;
+/** The version this app writes. Version 2 added the personal, free_text and short_string types; version 3 the xlsx source; version 4 the parquet source. */
+export const SPEC_VERSION = 4;
 /** The versions this app reads. */
-export const READABLE_SPEC_VERSIONS: readonly number[] = [1, 2, 3];
+export const READABLE_SPEC_VERSIONS: readonly number[] = [1, 2, 3, 4];
 
 /**
  * In `na.tokens`, the token for a cell that holds empty text (as opposed to "" for a blank cell). It is

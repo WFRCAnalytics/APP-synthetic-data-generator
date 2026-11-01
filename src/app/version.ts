@@ -7,7 +7,7 @@ export const APP_VERSION: string = __APP_VERSION__;
 
 export { SPEC_VERSION };
 
-/** For example `v0.2.0 · writes spec v3`. */
+/** For example `v0.2.0 · writes spec v4`. */
 export function versionLabel(app: string = APP_VERSION, spec: number = SPEC_VERSION): string {
   return `v${app} · writes spec v${spec}`;
 }

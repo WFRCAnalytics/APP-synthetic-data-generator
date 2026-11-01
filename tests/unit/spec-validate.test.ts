@@ -104,7 +104,7 @@ describe("structure problems are named by column", () => {
 
 describe("version check", () => {
   it("explains a newer spec", () => {
-    const result = validateSpec({ ...validSpec(), spec_version: 4 });
+    const result = validateSpec({ ...validSpec(), spec_version: 5 });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.problems[0].message).toMatch(/newer version/);
   });

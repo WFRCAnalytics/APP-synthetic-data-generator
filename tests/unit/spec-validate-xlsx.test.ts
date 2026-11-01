@@ -28,12 +28,12 @@ const messages = (s: unknown) => {
 
 describe("versions", () => {
   it("writes version 3 and reads 1, 2 and 3", () => {
-    expect(SPEC_VERSION).toBe(3);
-    for (const v of [1, 2, 3]) expect(validateSpec(spec(csvSource, [money({ cell_format: undefined })], { spec_version: v })).ok, `version ${v}`).toBe(true);
+    expect(SPEC_VERSION).toBe(4);
+    for (const v of [1, 2, 3, 4]) expect(validateSpec(spec(csvSource, [money({ cell_format: undefined })], { spec_version: v })).ok, `version ${v}`).toBe(true);
   });
 
-  it("refuses version 4 with the newer-version message, and version 0", () => {
-    expect(messages(spec(xlsxSource, [money()], { spec_version: 4 })).join(" ")).toMatch(/newer version of the app/);
+  it("refuses version 5 with the newer-version message, and version 0", () => {
+    expect(messages(spec(xlsxSource, [money()], { spec_version: 5 })).join(" ")).toMatch(/newer version of the app/);
     expect(messages(spec(xlsxSource, [money()], { spec_version: 0 })).join(" ")).toMatch(/older, unsupported format/);
   });
 

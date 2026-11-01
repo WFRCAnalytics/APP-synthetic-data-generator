@@ -33,6 +33,8 @@ function goodFiles(): Files {
     [`${SITE}/duckdb-ext/VERSION.json`]: "{}",
     [`${SITE}/duckdb-ext/v1.5.4/wasm_eh/excel.duckdb_extension.wasm`]: new Uint8Array([0, 97, 115, 109]),
     [`${SITE}/duckdb-ext/v1.5.4/wasm_mvp/excel.duckdb_extension.wasm`]: new Uint8Array([0, 97, 115, 109]),
+    [`${SITE}/duckdb-ext/v1.5.4/wasm_eh/parquet.duckdb_extension.wasm`]: new Uint8Array([0, 97, 115, 109]),
+    [`${SITE}/duckdb-ext/v1.5.4/wasm_mvp/parquet.duckdb_extension.wasm`]: new Uint8Array([0, 97, 115, 109]),
   };
   return files;
 }
@@ -90,6 +92,12 @@ describe("files that are missing", () => {
     const files = goodFiles();
     delete files[path];
     expect(build(files).some((p) => p.includes(path))).toBe(true);
+  });
+
+  it("fails when an engine build has no Parquet extension file", () => {
+    const files = goodFiles();
+    delete files[`${SITE}/duckdb-ext/v1.5.4/wasm_eh/parquet.duckdb_extension.wasm`];
+    expect(build(files).some((p) => p.includes("wasm_eh") && p.includes("parquet"))).toBe(true);
   });
 
   it("fails when an engine build has no Excel extension file", () => {

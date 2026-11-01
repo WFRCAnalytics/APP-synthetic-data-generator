@@ -7,8 +7,9 @@
 ## Summary
 
 A Parquet file becomes a third source beside CSV and Excel. DuckDB-WASM reads Parquet in its core
-(no extension to download; spike: snappy, gzip, zstd and uncompressed all read, and damaged files
-fail with a message that quotes nothing). The profile worker asks the engine only for structure:
+(spike: snappy, gzip, zstd and uncompressed all read, and damaged files fail with a message that
+quotes nothing). In the browser the reader is a loadable extension, not built in, so it is fetched at
+build time by the same script as the Excel one and served by the site (research R1). The profile worker asks the engine only for structure:
 the column types, `parquet_schema` (physical and logical type per top-level column), the row count
 and the row-group count. It never selects `created_by`, key-value metadata or any statistics. The
 typed data is converted into the same all-text `src` table the CSV and Excel paths use (dates and
@@ -27,7 +28,7 @@ version 4 with a Parquet source and one type description per column. No new runt
 
 **Language/Version**: TypeScript 5.9 strict; Node 24 for tooling and CI; Python (pyarrow, pandas) only to build fixtures and to cross-check read-back locally and in CI
 
-**Primary Dependencies**: existing stack plus nothing new at runtime. Parquet reading is built into DuckDB-WASM; writing is our own code (Thrift compact encoding, PLAIN values, RLE levels, `CompressionStream("gzip")`).
+**Primary Dependencies**: existing stack plus nothing new at runtime. Parquet reading is DuckDB's `parquet` extension, self-hosted like `excel`; writing is our own code (Thrift compact encoding, PLAIN values, RLE levels, `CompressionStream("gzip")`).
 
 **Storage**: none (session memory only; the spec JSON is the only artifact)
 
@@ -51,7 +52,7 @@ version 4 with a Parquet source and one type description per column. No new runt
 |-----------|--------|
 | I. Privacy first | Pass. Only structure is queried; footer fields that can hold real values are never selected; a spy test and a planted-marker test prove it; no request is added. |
 | II. Minimal derived artifact | Pass, and central. The spec gains type descriptions only; statistics, key-value text and created-by are excluded by rule and by test. |
-| III. Client-only static deployment | Pass. No extension and no new runtime file; the offline zip carries it unchanged. |
+| III. Client-only static deployment | Pass. The `parquet` extension is fetched at build time into `public/duckdb-ext/` (as `excel` is), served by the site, and carried by the offline zip; a CI smoke test proves it loads. |
 | IV. Format fidelity | Pass. Names, order, logical types and nullability are kept; this is the main reason for the slice. |
 | V. Reproducibility | Pass. Same spec and seed give the same bytes (no timestamps in the file; the footer's created-by is a fixed string). |
 | VI. User control and transparency | Pass. Unsupported columns say why; the compression used is shown on Generate. |
