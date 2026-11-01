@@ -170,6 +170,10 @@ Reference laptop (Windows 11, Chromium, 2026-11-01), `scripts/make-parquet-fixtu
 - `public/duckdb-ext/` grew from 1.2 MB to 7.1 MB (the `parquet` extension, 3.2 MB for each of the two engine builds). Bundles: main 310 kB (97 kB gzip), profile worker 257 kB, generate worker 497 kB (the Parquet writer adds about 17 kB).
 - The offline zip is 19.6 MB (50 files), up from 18.2 MB, because the files compress well.
 
+## R15: Release dry run (T041)
+
+`workflow_dispatch` with `v0.3.0-rc1` (run 41287275370, nothing published), 2026-11-01: build (lint, types, tests, bundle check, Excel and Parquet smoke tests), then the offline test with its Parquet session on Linux, macOS and Windows all passed. The checksum list of the workflow (Linux) equals a local Windows build for all 49 files.
+
 ## Open items
 
 None.
