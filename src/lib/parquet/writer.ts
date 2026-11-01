@@ -268,7 +268,7 @@ export async function* parquetChunks(columns: readonly ParquetColumn[], rows: As
     return out;
   }
 
-  yield MAGIC;
+  yield MAGIC.slice(); // a copy: the caller may transfer (detach) what it is given
   for await (const row of rows) {
     for (let c = 0; c < columns.length; c++) {
       const value = row[c];
@@ -285,9 +285,10 @@ export async function* parquetChunks(columns: readonly ParquetColumn[], rows: As
   for (const part of await flush()) yield part;
 
   const footer = writeFooter(columns, groups, totalRows, options.createdBy, codec);
+  const footerLength = footer.length; // read before yielding: a caller that transfers the chunk empties it
   yield footer;
   const tail = new Uint8Array(8);
-  new DataView(tail.buffer).setUint32(0, footer.length, true);
+  new DataView(tail.buffer).setUint32(0, footerLength, true);
   tail.set(MAGIC, 4);
   yield tail;
 }

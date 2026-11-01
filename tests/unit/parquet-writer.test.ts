@@ -152,3 +152,32 @@ describe("a column of every kind", () => {
     }
   });
 });
+
+describe("chunks the caller may transfer", () => {
+  it("can be detached one by one without breaking the rest of the file or the next file", async () => {
+    // A worker posts each chunk with its buffer transferred, which detaches it. Nothing the writer reuses may be handed out.
+    for (let run = 0; run < 2; run++) {
+      const converters = cols.map((c) => createConverter(c.type));
+      async function* typed() {
+        for (const row of rowsOf(30)) yield row.map((text, i) => (text === null ? null : converters[i].convert(text)));
+      }
+      const copies: Uint8Array[] = [];
+      for await (const chunk of parquetChunks(cols, typed(), { createdBy: "x", codec: "gzip", rowGroupRows: 10 })) {
+        copies.push(chunk.slice());
+        structuredClone(chunk.buffer, { transfer: [chunk.buffer] }); // detaches it, as postMessage does
+      }
+      const file = new Uint8Array(copies.reduce((n, p) => n + p.length, 0));
+      let at = 0;
+      for (const p of copies) {
+        file.set(p, at);
+        at += p.length;
+      }
+      expect(copies[0].length).toBe(4);
+      expect(copies.length).toBeGreaterThan(4);
+      // The closing eight bytes must hold the real footer length, which starts a Thrift struct (version, field 1).
+      const footerLength = new DataView(file.buffer, file.length - 8, 4).getUint32(0, true);
+      expect(footerLength).toBeGreaterThan(20);
+      expect(file[file.length - 8 - footerLength]).toBe(0x15);
+    }
+  });
+});

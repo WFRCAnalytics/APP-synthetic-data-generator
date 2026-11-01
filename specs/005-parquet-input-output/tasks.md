@@ -57,7 +57,7 @@
 - [x] T020 [US1] Generation: `src/lib/generate/parquet.ts` (`parquetLayoutOf(spec)`, `writeParquet(spec, seed, chunkRows, observe, between)` using the CSV path's rendering and `convert.ts`), the Parquet source in `src/lib/generate/table.ts`, and the `generateParquet` path in `src/workers/generate.worker.ts`; narrowed-value counts go to the check table
 - [x] T021 [US1] App: `src/app/session.ts` (file kind, `fakeBlob` mime `application/vnd.apache.parquet`, `.parquet` file name with `_fake`), `src/features/ingest/IngestScreen.tsx` accepts `.parquet` and shows a structure card (`ParquetSummary.tsx`: row count, column count, row groups, column names with their types), the size warning in `sizeWarnings.ts` (reuse the Excel thresholds, "Parquet" wording), `src/App.tsx` wiring
 - [x] T022 [P] [US1] Component test `tests/component/parquet-ingest.test.tsx`: the card shows names, types and counts and no value; the size warning and stop (the message gives the expanded figure); the file name and the compression shown on Generate; choosing several files or a folder gets the one-file-at-a-time message
-- [ ] T023 [P] [US1] End-to-end test `tests/e2e/parquet-flow.spec.ts`: choose a fixture, review, generate, download, then read the download with pyarrow and with the app's own engine and compare schema; same seed gives the same bytes; zero outside requests
+- [x] T023 [P] [US1] End-to-end test `tests/e2e/parquet-flow.spec.ts`: choose a fixture, review, generate, download, then read the download with pyarrow and with the app's own engine and compare schema; same seed gives the same bytes; zero outside requests
 
 **Checkpoint**: a Parquet round trip works through the app.
 
