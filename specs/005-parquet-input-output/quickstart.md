@@ -37,6 +37,21 @@ Node 24, `npm ci`, Python with `pyarrow` (fixtures and read-back), Playwright br
 
 **Expect**: all pass; zero outside requests.
 
+## Results (recorded 2026-11-01)
+
+| Scenario | Result | Evidence |
+|----------|--------|----------|
+| A: a file in, a fake file out | pass in Chromium, Edge, Firefox, WebKit | `parquet-flow.spec` (pyarrow reads the downloaded file; schema equals the real one's, minus the nested columns; this app as creator, no key-value notes, no statistics) |
+| B: types survive | pass | `parquet-readback.test` (the engine and pyarrow: int8 to int64, uint8 to uint64, float32/64, decimal 9/18/38 digits exact, bool, string, date, time ms/us, timestamp ms/us/ns with and without UTC, required and optional) |
+| C: nested columns | pass | `parquet-load.test`, `parquet-ingest.test`, `review-parquet.test`, `parquet-flow.spec` (spec holds only name, type "unsupported", exclude) |
+| D: nothing real is kept | pass in all four browsers | `parquet-privacy.test` (query spy: no marker returned, no footer query for creator, notes, statistics), `parquet-privacy.spec` (page, spec, preview, download decoded by pyarrow, console, storage; control: the real file does decode to its markers) |
+| E: offline and browsers | pass | `offline-zip.spec` Parquet session (reader served by the folder, zero outside requests, file equal to the hosted build's) in Chromium, Edge, Firefox, WebKit |
+| Scale | profile 121 s, export 138 s for 511 MB once opened | `parquet-scale.spec`, research R13 |
+
+Accessibility: `a11y.spec` passes for the structure card, the unsupported notes and the Review file types, in light and dark themes.
+
+**Still for a person**: SC-008, someone who has never seen the tool chooses a Parquet file and reaches Review in under 2 minutes without instructions.
+
 ## Done when
 
 Scenarios A to E pass in Chromium, Edge, Firefox and WebKit (A and D at least), the offline test has a Parquet session, and `tasks.md` has no unchecked task. Person timing sign-off for SC-008 is recorded here.

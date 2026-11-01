@@ -149,6 +149,27 @@
   the writer falls back to uncompressed pages and says so if it does not.
 - **Rationale**: FR-018, Principle IV.
 
+## R12: Findings during the work
+
+- **The reader is an extension in the browser** (R1): the plan assumed it was built in because the Node build links it in. The first browser run showed the engine trying to fetch it from the internet (blocked by the content policy). It is now fetched at build time like `excel`, served by the site and carried by the offline zip; `parquet.duckdb_extension.wasm` is 3.2 MB per engine build.
+- **Timestamps and times load to whole seconds**: the date handling of profiling reads no fractions, so a `timestamp[us]` or `time[ns]` column keeps its recorded unit but its generated values have no fractional part.
+- **Transferred chunks**: the generate worker transfers each chunk to the page, which empties it. The writer first handed out a shared `PAR1` buffer and read the footer length after yielding the footer; both broke the file only in a browser. Both are fixed and a unit test detaches every chunk as `postMessage` does.
+- **Engine names**: the engine already renames empty and duplicated column names (`a`, `a_1`, `C2`), so the file's names are taken as the engine gives them.
+- **The footer really does hold the markers**: in `markers.parquet` the key-value notes, the creator text and the string statistics all contain the marker, and `parquet_kv_metadata`, `created_by` and `stats_min_value` return it. The loader never asks for them, and a control in the browser test shows the real file decodes to its markers while the fake one has none.
+
+## R13: Measured (T040)
+
+Reference laptop (Windows 11, Chromium, 2026-11-01), `scripts/make-parquet-fixtures.py --large`: 3,400,000 rows by 20 columns, 17 row groups, 328 MB on disk (zstd), 511 MB once opened.
+
+- **Profile**: 121 s. **Generate and check**: 138 s. **Worst main-thread frame delay**: 10 ms.
+- Both are inside the slice 1 time targets (under 5 minutes each for 500 MB); the warning shows before profiling because the file is above 100 MB once opened.
+
+## R14: Bundle and dependency audit (T041)
+
+- No new runtime dependency (Parquet reading is an extension file, writing is our own code). `npm audit --omit=dev`: 0 vulnerabilities.
+- `public/duckdb-ext/` grew from 1.2 MB to 7.1 MB (the `parquet` extension, 3.2 MB for each of the two engine builds). Bundles: main 310 kB (97 kB gzip), profile worker 257 kB, generate worker 497 kB (the Parquet writer adds about 17 kB).
+- The offline zip is 19.6 MB (50 files), up from 18.2 MB, because the files compress well.
+
 ## Open items
 
 None.

@@ -113,8 +113,8 @@
 - [x] T036 [P] Offline release: add a Parquet session to `tests/e2e/offline-zip.spec.ts` (output equal to the hosted build's), and confirm `verify-release` needs no change
 - [x] T037 [P] Accessibility: extend `tests/e2e/a11y.spec.ts` to the structure card and the unsupported notes in light and dark themes
 - [x] T038 [P] Browser matrix: add `parquet-flow` and `parquet-privacy` to the Firefox and WebKit `testMatch` in `playwright.config.ts` and to `scripts/e2e-browsers.mjs`; run Chromium, Edge (`PW_EDGE=1`), Firefox and WebKit and fix what differs
-- [ ] T039 [P] Docs: Help guide, `SpecContentsNotice.tsx` (a Parquet spec holds the file name, row-group count and type descriptions, no value, statistic or metadata text), and `README.md` (Parquet supported; nested columns not; compression used)
-- [ ] T040 Large file: `python scripts/make-parquet-fixtures.py --large` writes a file of about 500 MB of expanded data (not file size) to `.fixtures/`; add `tests/e2e/parquet-scale.spec.ts` gated by `SCALE_PARQUET=1`; record profile time, export time and the stop limit in `research.md`
+- [x] T039 [P] Docs: Help guide, `SpecContentsNotice.tsx` (a Parquet spec holds the file name, row-group count and type descriptions, no value, statistic or metadata text), and `README.md` (Parquet supported; nested columns not; compression used)
+- [x] T040 Large file: `python scripts/make-parquet-fixtures.py --large` writes a file of about 500 MB of expanded data (not file size) to `.fixtures/`; add `tests/e2e/parquet-scale.spec.ts` gated by `SCALE_PARQUET=1`; record profile time, export time and the stop limit in `research.md`
 - [ ] T041 Record in `research.md` the bundle size and audit notes (no new dependency) and the measured results; run quickstart scenarios A to E and record results and the SC-008 person sign-off line in `quickstart.md`; dry-run `release.yml`
 - [ ] T042 Run `/speckit-converge` and mark the slice complete
 

@@ -16,7 +16,7 @@ lengths and patterns), never rows, ID lists, free text, personal identifiers or 
 
 ## How it works
 
-1. **Ingest**: pick a CSV or an Excel workbook (.xlsx). For a CSV the app detects delimiter, encoding,
+1. **Ingest**: pick a CSV, an Excel workbook (.xlsx) or a Parquet file (.parquet). For a CSV the app detects delimiter, encoding,
    quoting and header; for a workbook it lists the sheet names and you choose a sheet, the rows to
    skip above the header and, if you like, a cell range. It shows the row count, column count and
    column names, never row values.
@@ -30,7 +30,7 @@ name and format) and run the code locally.
 
 ## Status
 
-The first three slices work end to end for CSV and Excel (.xlsx) files: choose a file, confirm the detected settings,
+The first slices work end to end for CSV, Excel (.xlsx) and Parquet files: choose a file, confirm the detected settings,
 review and change how each column is understood, generate, check that every summary was met, and
 download the fake file and the spec.
 
@@ -48,13 +48,20 @@ download the fake file and the spec.
   read as their values. Merged cells, hidden sheets and columns of mixed kinds are flagged. Not read:
   old `.xls`, macro workbooks (`.xlsm`), and charts or other formatting. Sheets over about 1 GB once
   opened are refused; over 100 MB gets a warning.
-- **Spec files**: save, load (version 1 to 3), and generate from a spec alone. A workbook spec makes a
+- **Parquet**: the file is read in the browser with DuckDB's Parquet reader (a file this site serves itself,
+  nothing fetched from elsewhere), and only its structure is shown: row count, row groups, and each column's
+  name and type. The fake file has the same column names, order and logical types (integer width and sign,
+  decimal precision and scale, float width, date, time, timestamp unit and time zone, boolean, string) and the
+  same nullability, with values kept inside each type's range. Nested columns (list, struct, map) and raw
+  binary are not read or faked. The file's key-value notes, creator text and row-group statistics are never
+  read; the fake file names this app as its creator and carries none of them. Pages are gzip-compressed.
+- **Spec files**: save, load (version 1 to 4), and generate from a spec alone. A workbook spec makes a
   workbook.
 - **Privacy**: a live request counter and a strict Content-Security-Policy. Tests prove that no
   real value of any column reaches the page, the spec, the preview, the file or an error message.
 - **Browsers**: tested in Chrome, Edge, Firefox and WebKit.
 
-Not yet: Parquet files, coordinates, other languages for invented values, several tables,
+Not yet: coordinates, other languages for invented values, several tables,
 the offline zip release. The backlog is in
 [`specs/001-csv-synthetic-slice/tasks.md`](specs/001-csv-synthetic-slice/tasks.md) and the slice 2
 list in [`specs/002-personal-text-columns/tasks.md`](specs/002-personal-text-columns/tasks.md).
@@ -96,6 +103,7 @@ gives the same file checksums (file times come from the commit date, or `SOURCE_
 - [`specs/002-personal-text-columns/`](specs/002-personal-text-columns/): the same for personal
   identifier, free text and short string columns
 - [`specs/003-excel-input-output/`](specs/003-excel-input-output/): Excel workbooks in and out
+- [`specs/005-parquet-input-output/`](specs/005-parquet-input-output/): Parquet files in and out
 - [`specs/004-offline-zip-release/`](specs/004-offline-zip-release/): the offline zip release
 
 ## Development

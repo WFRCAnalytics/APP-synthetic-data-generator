@@ -121,3 +121,45 @@ with open(os.path.join(OUT, "encrypted.parquet"), "wb") as f:
     f.write(b"PARE" + bytes(range(256)) * 4 + b"\x10\x00\x00\x00" + b"PARE")
 
 print("fixtures written to", os.path.abspath(OUT), "with pyarrow", pa.__version__)
+
+
+def large(path, rows=3_400_000, batch=200_000):
+    """About 500 MB of data once opened (the sum of the uncompressed sizes in the footer), written in batches."""
+    import numpy as np
+
+    rng = np.random.default_rng(7)
+    schema = pa.schema(
+        [pa.field(f"i{k}", pa.int32()) for k in range(4)]
+        + [pa.field(f"l{k}", pa.int64()) for k in range(2)]
+        + [pa.field(f"f{k}", pa.float64()) for k in range(4)]
+        + [pa.field("amount", pa.decimal128(12, 2))]
+        + [pa.field("flag", pa.bool_()), pa.field("day", pa.date32()), pa.field("ts", pa.timestamp("us"))]
+        + [pa.field(f"s{k}", pa.string()) for k in range(4)]
+    )
+    words = np.array(["alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf", "hotel"])
+    with pq.ParquetWriter(path, schema, compression="zstd") as writer:
+        for start in range(0, rows, batch):
+            n = min(batch, rows - start)
+            cols = {}
+            for k in range(4):
+                cols[f"i{k}"] = rng.integers(0, 100000, n, dtype=np.int32)
+            for k in range(2):
+                cols[f"l{k}"] = rng.integers(0, 10**12, n, dtype=np.int64)
+            for k in range(4):
+                cols[f"f{k}"] = rng.normal(100, 25, n)
+            cols["amount"] = pa.array([decimal.Decimal(int(v)) / 100 for v in rng.integers(0, 10**9, n)], pa.decimal128(12, 2))
+            cols["flag"] = rng.random(n) < 0.4
+            cols["day"] = pa.array((rng.integers(15000, 20000, n)).astype("int32"), pa.int32()).cast(pa.date32())
+            cols["ts"] = pa.array((rng.integers(1_300_000_000, 1_700_000_000, n) * 1_000_000).astype("int64"), pa.int64()).cast(pa.timestamp("us"))
+            for k in range(4):
+                cols[f"s{k}"] = words[rng.integers(0, len(words), n)].astype(object) + "-" + rng.integers(0, 10**6, n).astype(str)
+            writer.write_table(pa.table(cols, schema=schema))
+    meta = pq.ParquetFile(path).metadata
+    expanded = sum(meta.row_group(g).column(c).total_uncompressed_size for g in range(meta.num_row_groups) for c in range(meta.num_columns))
+    print(f"large fixture: {rows} rows, {meta.num_row_groups} row groups, {os.path.getsize(path) / 1048576:.0f} MB on disk, {expanded / 1048576:.0f} MB once opened")
+
+
+if "--large" in sys.argv:
+    target = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".fixtures")
+    os.makedirs(target, exist_ok=True)
+    large(os.path.join(target, "big.parquet"))
