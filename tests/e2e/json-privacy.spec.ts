@@ -72,7 +72,7 @@ test("no marker reaches the page, spec, preview, download, console, storage or t
   // The saved spec, loaded in a fresh session without the file, gives the same bytes (SC-004).
   const fresh = await (await browser.newContext({ acceptDownloads: true })).newPage();
   await fresh.goto(APP);
-  await fresh.getByLabel("Load existing spec").setInputFiles(specPath);
+  await fresh.getByLabel("Load existing spec").setInputFiles({ name: "markers_spec.json", mimeType: "application/json", buffer: Buffer.from(specText) });
   await expect(fresh.getByRole("heading", { name: "Review columns" })).toBeVisible({ timeout: 30_000 });
   await fresh.getByRole("button", { name: "Continue to Generate" }).click();
   await fresh.getByLabel("Seed").fill("42");

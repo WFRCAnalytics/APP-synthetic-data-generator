@@ -120,7 +120,7 @@ test("a Parquet spec records only structure, and loading it without the file wri
   const { readFileSync } = await import("node:fs");
   const text = readFileSync(specPath, "utf8");
   const spec = JSON.parse(text);
-  expect(spec.spec_version).toBe(4);
+  expect(spec.spec_version).toBe(5);
   expect(spec.source).toEqual({ format: "parquet", file_name: "types_snappy.parquet", row_groups: 3 });
   expect(spec.columns.find((c: { name: string }) => c.name === "amount").parquet_type).toEqual({ kind: "decimal", precision: 10, scale: 2, nullable: true });
   // A nested column is only a name and the fact that it is left out: nothing from inside it, no type.

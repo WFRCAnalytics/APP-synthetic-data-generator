@@ -106,10 +106,10 @@
 
 ## Phase 7: Polish and Cross-Cutting
 
-- [ ] T032 [P] Loading a JSON spec without the file: `Session.loadSpecFile` accepts version 5, the output form follows `source.form`, CSV, Excel and Parquet specs keep their formats; tests in `tests/component/spec-load.test.tsx` and `tests/e2e/json-flow.spec.ts` (SC-004: same spec and seed, same bytes)
+- [x] T032 [P] Loading a JSON spec without the file: `Session.loadSpecFile` accepts version 5, the output form follows `source.form`, CSV, Excel and Parquet specs keep their formats; tests in `tests/component/spec-load.test.tsx` and `tests/e2e/json-flow.spec.ts` (SC-004: same spec and seed, same bytes)
 - [x] T033 [P] Offline release: add a JSON session to `tests/e2e/offline-zip.spec.ts` (output equal to the hosted build's), and confirm `verify-release` lists the `json` extension files in the checksum list
 - [x] T034 [P] Accessibility: extend `tests/e2e/a11y.spec.ts` to the JSON summary card and the mixed and unsupported tooltips in light and dark themes
-- [ ] T035 [P] Browser matrix: add `json-flow` and `json-privacy` to the Firefox and WebKit `testMatch` in `playwright.config.ts` and to `scripts/e2e-browsers.mjs`; run Chromium, Edge (`PW_EDGE=1`), Firefox and WebKit
+- [x] T035 [P] Browser matrix: add `json-flow` and `json-privacy` to the Firefox and WebKit `testMatch` in `playwright.config.ts` and to `scripts/e2e-browsers.mjs`; run Chromium, Edge (`PW_EDGE=1`), Firefox and WebKit
 - [x] T036 [P] Docs: Help guide, `SpecContentsNotice.tsx` (a JSON spec holds the file name, form, layout, key kinds and null and missing counts, no value), `README.md`, and the file-type chips on the start screen
 - [ ] T037 Large file: `python scripts/make-json-fixtures.py --large` writes a file of about 500 MB of expanded data to `.fixtures/`; add `tests/e2e/json-scale.spec.ts` gated by its presence (SC-006)
 - [ ] T038 Record in `research.md` the bundle size, audit notes (no new dependency) and the measured results; run quickstart scenarios 1 to 6 and record results and the SC-009 person sign-off line as open

@@ -137,7 +137,7 @@ test("the saved spec records the sheet, range, rows skipped and formats, and no 
   const text = readFileSync(path, "utf8");
   const spec = JSON.parse(text);
 
-  expect(spec.spec_version).toBe(4);
+  expect(spec.spec_version).toBe(5);
   expect(spec.source).toEqual({ format: "xlsx", file_name: "quirks.xlsx", sheet: "Survey Data", range: "A3:I203", skip_rows: 2, header: true, date1904: false });
   const byName = Object.fromEntries(spec.columns.map((c: { name: string }) => [c.name, c]));
   expect(byName.amount.cell_format).toBe("#,##0.00");
