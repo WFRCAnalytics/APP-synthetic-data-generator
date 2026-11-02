@@ -63,11 +63,15 @@ export function parentColumnsOf(spec: SpecFile, link: IdLink): CategoricalColumn
   const once = id !== undefined && id.link === undefined && Object.keys(id.repeat_structure).length === 1 && id.repeat_structure["1"] === spec.n_rows && !id.na && !id.sentinels;
   if (!once || spec.seed !== link.seed || link.groups !== spec.n_rows) return [];
   const ruled = new Set((spec.rules ?? []).map((r) => r.column));
-  return spec.columns.filter((c): c is CategoricalColumn => (c.type === "categorical" || c.type === "boolean") && (c.exclude ?? "include") === "include" && !c.from_parent && !ruled.has(c.name));
+  return spec.columns.filter((c): c is CategoricalColumn => (c.type === "categorical" || c.type === "boolean") && (c.exclude ?? "include") === "include" && !ruled.has(c.name));
 }
 
-/** What a column needs to take the value another table's column has in the row with the same ID: only that column's labels, counts and seed. */
+/**
+ * What a column needs to take the value another table's column has in the row with the same ID: that column's labels, counts and
+ * seed, and, when it takes its own value from a third table, how it does (the chain goes on as far as it goes).
+ */
 export function parentValueFrom(spec: SpecFile, column: CategoricalColumn, via: string, link: IdLink): ParentValue {
+  const viaColumn = column.from_parent ? spec.columns.find((c): c is SurveyIdColumn => c.type === "survey_id" && c.name === column.from_parent?.via) : undefined;
   return {
     via,
     parent: {
@@ -79,6 +83,7 @@ export function parentValueFrom(spec: SpecFile, column: CategoricalColumn, via: 
       counts: effectiveCounts(column.counts, column),
       ...(column.na ? { na: column.na } : {}),
       ...(column.sentinels ? { sentinels: column.sentinels } : {}),
+      ...(column.from_parent && viaColumn ? { from_parent: column.from_parent, via_column: viaColumn } : {}),
     },
   };
 }

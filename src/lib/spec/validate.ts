@@ -24,6 +24,7 @@ import {
   READABLE_SPEC_VERSIONS,
   SPEC_VERSION,
   type CategoricalColumn,
+  type ParentValue,
   type ColumnSpec,
   type SpecFile,
   type SpecProblem,
@@ -178,7 +179,18 @@ const ShortStringSchema = v.strictObject({
   repeat_structure: RepeatStructureSchema,
 });
 
-const ParentValueSchema = v.strictObject({
+const SurveyIdSchema = v.strictObject({
+    ...base,
+    type: v.literal("survey_id"),
+    mask: v.pipe(v.array(MaskTokenSchema), v.minLength(1)),
+    min: v.optional(v.pipe(v.number(), v.integer())),
+    max: v.optional(v.pipe(v.number(), v.integer())),
+    pad_width: v.optional(v.pipe(v.number(), v.integer(), v.minValue(0))),
+    repeat_structure: v.record(v.string(), positiveCount),
+    link: v.optional(IdLinkSchema),
+  });
+
+const ParentValueSchema: v.GenericSchema<ParentValue> = v.strictObject({
   via: v.pipe(v.string(), v.minLength(1)),
   parent: v.strictObject({
     table: v.optional(v.string()),
@@ -189,8 +201,10 @@ const ParentValueSchema = v.strictObject({
     counts: v.record(v.string(), positiveCount),
     na: v.optional(NaSchema),
     sentinels: v.optional(SentinelsSchema),
+    from_parent: v.optional(v.lazy(() => ParentValueSchema)),
+    via_column: v.optional(SurveyIdSchema),
   }),
-});
+}) as unknown as v.GenericSchema<ParentValue>;
 
 const CategoricalSchema = (type: "categorical" | "boolean") =>
   v.strictObject({
@@ -234,16 +248,7 @@ const ColumnSchema = v.variant("type", [
   DateSchema("date"),
   DateSchema("datetime"),
   DateSchema("time"),
-  v.strictObject({
-    ...base,
-    type: v.literal("survey_id"),
-    mask: v.pipe(v.array(MaskTokenSchema), v.minLength(1)),
-    min: v.optional(v.pipe(v.number(), v.integer())),
-    max: v.optional(v.pipe(v.number(), v.integer())),
-    pad_width: v.optional(v.pipe(v.number(), v.integer(), v.minValue(0))),
-    repeat_structure: v.record(v.string(), positiveCount),
-    link: v.optional(IdLinkSchema),
-  }),
+  SurveyIdSchema,
   PersonalSchema,
   FreeTextSchema,
   ShortStringSchema,
@@ -453,6 +458,24 @@ function checkChildCount(col: ColumnSpec, spec: SpecFile, out: SpecProblem[]): v
   if (needed > spec.n_rows) problem("The other table has more distinct IDs than this table has rows.");
 }
 
+/** Why a value taken from another table does not fit the ID column it goes through, or null when it does. `via` is that ID column. */
+function parentValueProblem(fp: ParentValue, via: ColumnSpec | undefined, depth = 0): string | null {
+  if (depth > 6) return "A value cannot be taken through more than six tables.";
+  if (!via || via.type !== "survey_id" || !via.link) return `"${fp.via}" is not an ID column of this table that uses another table's IDs.`;
+  if (via.na || via.sentinels) return `"${fp.via}" must have no missing values for every row to find the other table's row.`;
+  const { link } = via;
+  const p = fp.parent;
+  if (link.seed !== p.seed || link.column !== p.id_column || link.groups !== p.rows)
+    return `"${fp.via}" uses other IDs than the ID column ${p.id_column} of the table this value comes from.`;
+  const total = Object.values(p.counts).reduce((a, b) => a + b, 0) + (p.na?.count ?? 0) + Object.values(p.sentinels ?? {}).reduce((a, b) => a + b, 0);
+  if (total !== p.rows) return "The labels and counts of the other table's column do not add up to its rows.";
+  if (p.from_parent) {
+    if (!p.via_column || p.via_column.name !== p.from_parent.via) return "The other table's column takes its value from a third table, but the ID column it goes through is missing.";
+    return parentValueProblem(p.from_parent, p.via_column, depth + 1);
+  }
+  return p.via_column ? "An ID column is named for a value the other table's column does not take from a third table." : null;
+}
+
 /** A column that takes the other table's value: it must stand beside an ID column that uses that table's IDs, and fit it. */
 function checkParentValue(col: ColumnSpec, spec: SpecFile, out: SpecProblem[]): void {
   if (col.type !== "categorical" && col.type !== "boolean") return;
@@ -462,14 +485,8 @@ function checkParentValue(col: ColumnSpec, spec: SpecFile, out: SpecProblem[]): 
     out.push({ column: col.name, path: "from_parent", message });
   };
   if (col.na || col.sentinels) return problem("A column that takes the other table's value has no missing values or sentinel codes of its own.");
-  const via = spec.columns.find((c) => c.name === fp.via);
-  if (!via || via.type !== "survey_id" || !via.link) return problem(`"${fp.via}" is not an ID column of this table that uses another table's IDs.`);
-  if (via.na || via.sentinels) return problem(`"${fp.via}" must have no missing values for every row to find the other table's row.`);
-  const link = via.link;
-  if (link.seed !== fp.parent.seed || link.column !== fp.parent.id_column || link.groups !== fp.parent.rows)
-    return problem(`"${fp.via}" uses other IDs than the ID column ${fp.parent.id_column} of the table this value comes from.`);
-  const total = Object.values(fp.parent.counts).reduce((a, b) => a + b, 0) + (fp.parent.na?.count ?? 0) + Object.values(fp.parent.sentinels ?? {}).reduce((a, b) => a + b, 0);
-  if (total !== fp.parent.rows) problem("The labels and counts of the other table's column do not add up to its rows.");
+  const found = parentValueProblem(fp, spec.columns.find((c) => c.name === fp.via));
+  if (found) problem(found);
 }
 
 function checkRule(rule: RuleSpec, index: number, spec: SpecFile, out: SpecProblem[]): void {

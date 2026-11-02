@@ -183,6 +183,12 @@ export interface ParentValue {
     counts: Record<string, number>;
     na?: ColumnBase["na"];
     sentinels?: Record<string, number>;
+    /**
+     * When that column itself takes its value from a third table (a trip's zone through its person to their household): how it
+     * does, and the ID column of the other table it does so through. Nothing but structure.
+     */
+    from_parent?: ParentValue;
+    via_column?: SurveyIdColumn;
   };
 }
 

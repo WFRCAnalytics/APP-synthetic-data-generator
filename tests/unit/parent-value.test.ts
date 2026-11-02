@@ -64,3 +64,35 @@ describe("a column that takes the other table's value", () => {
     expect(parentColumnsOf({ ...households, rules: [{ kind: "blank_with", column: "zone", source: "hh_id" } as never] }, link)).toEqual([]);
   });
 });
+
+describe("a value taken through two tables", () => {
+  // households -> persons (one new person ID per row, each person in a household) -> trips (each trip by a person)
+  const personLink = linkTo(persons2(), persons2().columns[0] as SurveyIdColumn);
+  function persons2(): SpecFile {
+    return specOf("persons.csv", 99, [id("person_id", { "1": 210 }), id("hh_id", repeat, { link }), follower()], 210);
+  }
+  const tripRows = { "1": 60, "2": 50, "3": 20 }; // 60 + 100 + 60 = 220 trips by 130 persons
+  const tripsFollower = (): CategoricalColumn => ({ name: "zone", type: "categorical", counts: { north: 110, south: 110 }, from_parent: parentValueFrom(persons2(), persons2().columns[2] as CategoricalColumn, "person_id", personLink) });
+  const trips = (): SpecFile => specOf("trips.csv", 7, [id("person_id", tripRows, { link: personLink }), tripsFollower()], 220);
+
+  it("offers a column that itself follows another table", () => {
+    expect(parentColumnsOf(persons2(), personLink).map((c) => c.name)).toEqual(["zone"]);
+  });
+
+  it("gives a trip the zone of the household of its person", () => {
+    const zoneOfHousehold = new Map(table(households, 11).map(([hh, z]) => [hh, z]));
+    const personRows = table(persons2(), 99); // person_id, hh_id, zone
+    const householdOfPerson = new Map(personRows.map(([pid, hh]) => [pid, hh]));
+    const tripRowsOut = table(trips(), 7);
+    expect(tripRowsOut.length).toBe(220);
+    for (const [pid, z] of tripRowsOut) expect(z).toBe(zoneOfHousehold.get(householdOfPerson.get(pid) as string));
+    expect(new Set(tripRowsOut.map((r) => r[1])).size).toBeGreaterThan(1);
+  });
+
+  it("is a valid spec, and is refused when the chain is cut", () => {
+    expect(validateSpec(JSON.parse(JSON.stringify(trips()))).ok).toBe(true);
+    const cut = trips();
+    delete (cut.columns[1] as CategoricalColumn).from_parent!.parent.via_column;
+    expect(validateSpec(JSON.parse(JSON.stringify(cut))).ok).toBe(false);
+  });
+});

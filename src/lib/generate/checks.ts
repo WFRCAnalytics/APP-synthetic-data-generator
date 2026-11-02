@@ -155,7 +155,9 @@ export class CheckAccumulator {
       const fp = c.spec.type === "categorical" || c.spec.type === "boolean" ? c.spec.from_parent : undefined;
       if (fp) {
         this.derived.add(i);
-        const allowed = new Set([...Object.keys(fp.parent.counts), ...(fp.parent.na?.tokens ?? []), ...Object.keys(fp.parent.sentinels ?? {})]);
+        let leaf = fp.parent; // through a chain of tables the values are those of the last one
+        while (leaf.from_parent) leaf = leaf.from_parent.parent;
+        const allowed = new Set([...Object.keys(leaf.counts), ...(leaf.na?.tokens ?? []), ...Object.keys(leaf.sentinels ?? {})]);
         this.followers.push({ column: c.outputName, index: i, allowed, table: fp.parent.table, outside: 0 });
       }
       const cc = c.spec.type === "integer" ? c.spec.child_count : undefined;

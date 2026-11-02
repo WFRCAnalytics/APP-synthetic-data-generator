@@ -89,28 +89,43 @@ function childCountColumn(col: NumericColumn, cc: ChildCount, ctx: ColumnContext
  */
 function parentValueColumn(col: CategoricalColumn, fp: ParentValue, ctx: ColumnContext, gen: (valueAt: (row: number) => string) => ColumnGen): ColumnGen {
   const via = ctx.columns?.find((c) => c.name === fp.via);
-  if (!via || via.type !== "survey_id" || !via.link) throw new GenerationError(`Column "${col.name}": "${fp.via}" does not use another table's IDs.`);
-  const { link, parent } = { link: via.link, parent: fp.parent };
-  if (link.groups !== parent.rows) throw new GenerationError(`Column "${col.name}": the other table has ${parent.rows} rows but "${via.name}" draws from ${link.groups} IDs.`);
-  const viaKey = subSeed(ctx.seed, via.name);
-  const placer = makePlacer(ctx.nRows, viaKey, via.na, via.sentinels);
-  if (rowsCovered(via.repeat_structure) !== placer.valueTotal) throw new GenerationError(`Column "${col.name}": the repeat structure of "${via.name}" does not cover its rows.`);
+  if (!via || via.type !== "survey_id") throw new GenerationError(`Column "${col.name}": "${fp.via}" does not use another table's IDs.`);
+  return gen(parentValueFn(col.name, fp, via, ctx.seed, ctx.nRows, 0));
+}
+
+/** The value of each row of a table that takes its value from another table through the ID column `via`; a chain of tables goes one step at a time. */
+function parentValueFn(name: string, fp: ParentValue, via: SurveyIdColumn, seed: number, nRows: number, depth: number): (row: number) => string {
+  if (depth > 6) throw new GenerationError(`Column "${name}": a value cannot be taken through more than six tables.`);
+  const { link } = via;
+  const parent = fp.parent;
+  if (!link) throw new GenerationError(`Column "${name}": "${via.name}" does not use another table's IDs.`);
+  if (link.groups !== parent.rows) throw new GenerationError(`Column "${name}": the other table has ${parent.rows} rows but "${via.name}" draws from ${link.groups} IDs.`);
+  const viaKey = subSeed(seed, via.name);
+  const placer = makePlacer(nRows, viaKey, via.na, via.sentinels);
+  if (rowsCovered(via.repeat_structure) !== placer.valueTotal) throw new GenerationError(`Column "${name}": the repeat structure of "${via.name}" does not cover its rows.`);
   const own = makeGroupMapper(via.repeat_structure);
-  if (own.groups > link.groups) throw new GenerationError(`Column "${col.name}": "${via.name}" has more distinct IDs than the other table makes.`);
+  if (own.groups > link.groups) throw new GenerationError(`Column "${name}": "${via.name}" has more distinct IDs than the other table makes.`);
   const pick = makePermutation(link.groups, mix32((viaKey ^ 0x1ced1ced) >>> 0));
-  // The other table's ID column places its rows by this keyed permutation; the row of a group is found by inverting it.
+  // The other table's ID column places its rows by a keyed permutation; the row of a group is found by inverting it.
   const idPlace = makePermutation(parent.rows, mix32((subSeed(parent.seed, parent.id_column) ^ 0xa5a5a5a5) >>> 0));
   const rowOf = new Int32Array(parent.rows);
   for (let r = 0; r < parent.rows; r++) rowOf[idPlace(r)] = r;
-  const theirPlacer = makePlacer(parent.rows, subSeed(parent.seed, parent.column), parent.na, parent.sentinels);
-  const lookup = makeLabelLookup(parent.counts);
-  if (lookup.total !== theirPlacer.valueTotal) throw new GenerationError(`Column "${col.name}": the other table's counts (${lookup.total}) do not match its ${theirPlacer.valueTotal} rows left after NA and sentinels.`);
-  return gen((row) => {
+  let theirs: (row: number) => string;
+  if (parent.from_parent && parent.via_column) {
+    theirs = parentValueFn(name, parent.from_parent, parent.via_column, parent.seed, parent.rows, depth + 1);
+  } else {
+    const theirPlacer = makePlacer(parent.rows, subSeed(parent.seed, parent.column), parent.na, parent.sentinels);
+    const lookup = makeLabelLookup(parent.counts);
+    if (lookup.total !== theirPlacer.valueTotal) throw new GenerationError(`Column "${name}": the other table's counts (${lookup.total}) do not match its ${theirPlacer.valueTotal} rows left after NA and sentinels.`);
+    theirs = (r) => {
+      const q = theirPlacer(r);
+      return q.kind === "value" ? lookup.at(q.index) : q.token;
+    };
+  }
+  return (row) => {
     const p = placer(row);
-    if (p.kind !== "value") return p.token;
-    const q = theirPlacer(rowOf[pick(own(p.index))]);
-    return q.kind === "value" ? lookup.at(q.index) : q.token;
-  });
+    return p.kind === "value" ? theirs(rowOf[pick(own(p.index))]) : p.token;
+  };
 }
 
 function linkedIdColumn(col: SurveyIdColumn, link: IdLink, ctx: ColumnContext, key: number, gen: (valueAt: (row: number) => string) => ColumnGen): ColumnGen {
