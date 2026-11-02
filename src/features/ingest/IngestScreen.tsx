@@ -120,7 +120,7 @@ export function IngestScreen({
           </div>
           <div className="field field--drop">
             <span className="label-row">
-              <label htmlFor="file-input">CSV file</label>
+              <label htmlFor="file-input">Data file</label>
               <InfoTip label="About the file">
                 Up to about 500 MB. The file stays on this device. An Excel workbook (.xlsx) asks
                 which sheet to read. SPSS (.sav) and Stata (.dta) files are read as tables and

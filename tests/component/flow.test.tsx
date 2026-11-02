@@ -112,7 +112,7 @@ afterEach(() => {
 const file = () => new File(["mode,dist,email\n1,2,a@b.c\n"], "trips.csv", { type: "text/csv" });
 
 async function toReview(user: ReturnType<typeof userEvent.setup>) {
-  await user.upload(screen.getByLabelText("CSV file"), file());
+  await user.upload(screen.getByLabelText("Data file"), file());
   await user.click(await screen.findByRole("button", { name: /profile this file/i }));
   await screen.findByRole("heading", { name: "Review columns" });
 }
@@ -129,7 +129,7 @@ describe("ingest", () => {
   it("shows the detected settings and the column names, never a row", async () => {
     const user = userEvent.setup();
     render(<App />);
-    await user.upload(screen.getByLabelText("CSV file"), file());
+    await user.upload(screen.getByLabelText("Data file"), file());
     expect(await screen.findByRole("heading", { name: "Detected settings" })).toBeInTheDocument();
     expect(screen.getByLabelText("Delimiter")).toHaveValue(",");
     expect(screen.getByLabelText("Encoding")).toHaveValue("utf-8");
@@ -141,7 +141,7 @@ describe("ingest", () => {
   it("sends the settings the user edited", async () => {
     const user = userEvent.setup();
     render(<App />);
-    await user.upload(screen.getByLabelText("CSV file"), file());
+    await user.upload(screen.getByLabelText("Data file"), file());
     await user.selectOptions(await screen.findByLabelText("Delimiter"), ";");
     await user.click(screen.getByRole("button", { name: /profile this file/i }));
     await screen.findByRole("heading", { name: "Review columns" });
@@ -153,7 +153,7 @@ describe("ingest", () => {
     profileMode = "error";
     const user = userEvent.setup();
     render(<App />);
-    await user.upload(screen.getByLabelText("CSV file"), file());
+    await user.upload(screen.getByLabelText("Data file"), file());
     expect(await screen.findByRole("alert")).toHaveTextContent("could not be read as CSV");
   });
 });
