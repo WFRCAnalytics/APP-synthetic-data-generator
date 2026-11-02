@@ -234,7 +234,7 @@ describe("a bad spec", () => {
     expect(errors).toHaveTextContent("fee");
     expect(errors).toHaveTextContent("mode");
     expect(screen.queryByRole("heading", { name: "Review columns" })).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Choose a file" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Make test data/ })).toBeInTheDocument();
   });
 
   it("explains a newer spec version", async () => {

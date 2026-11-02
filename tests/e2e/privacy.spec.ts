@@ -116,7 +116,7 @@ test.describe("nothing is kept", () => {
     expect(await context.cookies()).toEqual([]);
 
     await page.reload();
-    await expect(page.getByRole("heading", { name: "Choose a file" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Make test data/ })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Detected settings" })).toHaveCount(0);
     await expect(page.locator("[data-nav-column]")).toHaveCount(0);
     await expect(page.getByRole("button", { name: /Review/ })).toBeDisabled();
@@ -125,7 +125,7 @@ test.describe("nothing is kept", () => {
   test("Start over clears the screens and the data", async ({ page }) => {
     await runFlow(page);
     await page.getByRole("button", { name: "Start over" }).click();
-    await expect(page.getByRole("heading", { name: "Choose a file" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Make test data/ })).toBeVisible();
     await expect(page.locator(".preview-table")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Start over" })).toHaveCount(0);
   });

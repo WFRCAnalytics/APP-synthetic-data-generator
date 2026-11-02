@@ -1,7 +1,7 @@
 // Ingest (FR-001 to FR-003): choose a CSV, confirm the detected settings, and see the row count,
 // column count and column names. Never any row values.
 
-import { FileUp } from "lucide-react";
+import { FileUp, PencilRuler, Upload } from "lucide-react";
 import { useRef } from "react";
 import { EmptyState } from "../../components/EmptyState";
 import { isExcelSettings, isParquetSettings, type FileSettings } from "../../lib/profile/types";
@@ -52,37 +52,69 @@ export function IngestScreen({ session, onChooseFile, onChooseSpec, onInspectShe
 
   return (
     <section aria-labelledby="ingest-heading">
-      <h2 id="ingest-heading">Choose a file</h2>
-      <p className="lead">Turn one private table into a fake one, so AI coding agents never see real data.</p>
+      <h2 id="ingest-heading">Make test data that behaves like yours, without using yours</h2>
+      <p className="lead">Start from a file you have, or design a table from nothing. AI coding agents then work on the fake one.</p>
 
-      <div className="ingest-grid">
-      <div className="field field--drop">
-        <label htmlFor="file-input">CSV file</label>
-        <input
-          id="file-input"
-          ref={input}
-          type="file"
-          accept=".csv,.tsv,.txt,.xlsx,.parquet,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.apache.parquet"
-          disabled={busy}
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) onChooseFile(file);
-          }}
-        />
-        <span className="field-hint">Up to about 500 MB. The file stays on this device. You can also choose an Excel workbook (.xlsx), where you then pick the sheet, or a Parquet file (.parquet). One file at a time; a folder of Parquet files is not supported.</span>
+      <div className="doors">
+        <div className="door door--drop">
+          <span className="door-icon" aria-hidden="true">
+            <Upload size={24} strokeWidth={1.75} />
+          </span>
+          <div>
+            <h3>Start from a file</h3>
+            <p>The app learns the columns and how the values are spread, then makes new rows that look alike. The file stays on this device.</p>
+          </div>
+          <div className="door-formats" aria-hidden="true">
+            <span>CSV</span>
+            <span>Excel</span>
+            <span>Parquet</span>
+          </div>
+          <div className="field field--drop">
+            <label htmlFor="file-input">CSV file</label>
+            <input
+              id="file-input"
+              ref={input}
+              type="file"
+              accept=".csv,.tsv,.txt,.xlsx,.parquet,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.apache.parquet"
+              disabled={busy}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) onChooseFile(file);
+              }}
+            />
+            <span className="field-hint">Up to about 500 MB. An Excel workbook (.xlsx) asks which sheet to read. One file at a time; a folder of Parquet files is not supported.</span>
+          </div>
+        </div>
+
+        {onStartDesign && (
+          <div className="door design-entry">
+            <span className="door-icon door-icon--accent" aria-hidden="true">
+              <PencilRuler size={24} strokeWidth={1.75} />
+            </span>
+            <div>
+              <h3>Start from scratch</h3>
+              <p>No real file? Add columns one at a time and say what each should hold. You get fake data for them.</p>
+            </div>
+            <div className="door-formats" aria-hidden="true">
+              <span>Whole number</span>
+              <span>Decimal</span>
+              <span>Category</span>
+              <span>Yes or no</span>
+              <span>Date</span>
+              <span>ID</span>
+              <span>Name or address</span>
+              <span>Free text</span>
+            </div>
+            <div className="door-action">
+              <button type="button" className="button button-secondary" onClick={onStartDesign} disabled={busy}>
+                Design a table
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="ingest-side">
-      {onStartDesign && (
-        <div className="field--aside design-entry">
-          <h3>Start from scratch</h3>
-          <p className="field-hint">No real file? Describe the columns yourself and get fake data for them.</p>
-          <button type="button" className="button button-secondary" onClick={onStartDesign} disabled={busy}>
-            Design a table
-          </button>
-        </div>
-      )}
-      <div className="field field--aside">
+      <div className="field spec-load">
         <label htmlFor="spec-input">Load existing spec</label>
         <input
           id="spec-input"
@@ -96,8 +128,6 @@ export function IngestScreen({ session, onChooseFile, onChooseSpec, onInspectShe
           }}
         />
         <span className="field-hint">A spec saved earlier skips profiling. It replaces any file that is open.</span>
-      </div>
-      </div>
       </div>
 
       {session.specProblems && <SpecErrors problems={session.specProblems} />}

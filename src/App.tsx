@@ -40,11 +40,13 @@ export function App() {
 
   return (
     <div className="shell">
-      <AppHeader onOpenHelp={() => setHelpOpen(true)}>
+      <AppHeader
+        onOpenHelp={() => setHelpOpen(true)}
+        steps={<Stepper state={state} onGoTo={(step) => dispatch({ type: "goTo", step })} onStartOver={state.columnsReady ? startOver : undefined} />}
+      >
         <NetworkCounter counter={netCounter} />
       </AppHeader>
       <div className="shell-body">
-        <Stepper state={state} onGoTo={(step) => dispatch({ type: "goTo", step })} onStartOver={state.columnsReady ? startOver : undefined} />
       <main className="shell-main">
 
         {state.step === "ingest" && state.designing && <DesignScreen design={design} onChange={setDesign} onBuild={(spec) => session.loadSpec(spec, true)} />}

@@ -102,20 +102,11 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
       )}
 
       <div className="review-panes">
-        <ColumnNav shown={shown} total={profiles.length} filters={filters} onFilters={setFilters} typeCounts={typeCounts} selected={current ? current.name : null} onSelect={setSelected} />
+        <ColumnNav shown={shown} total={profiles.length} rowCount={rowCount} filters={filters} onFilters={setFilters} typeCounts={typeCounts} selected={current ? current.name : null} onSelect={setSelected} />
 
         <div className="review-detail">
           {current ? (
             <>
-              <div className="detail-nav">
-                <button type="button" className="button button-secondary" disabled={index <= 0} onClick={() => setSelected(shown[index - 1].name)}>
-                  <ChevronLeft size={16} strokeWidth={1.75} aria-hidden="true" /> Previous column
-                </button>
-                <button type="button" className="button button-secondary" disabled={index < 0 || index >= shown.length - 1} onClick={() => setSelected(shown[index + 1].name)}>
-                  Next column <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" />
-                </button>
-                {index < 0 && <span className="field-hint">This column is hidden by the filters.</span>}
-              </div>
               <ColumnCard
                 key={current.name}
                 profile={current}
@@ -130,6 +121,15 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
                 specOnly={specOnly}
                 workbook={workbook}
               />
+              <div className="detail-nav">
+                <button type="button" className="button button-secondary" disabled={index <= 0} onClick={() => setSelected(shown[index - 1].name)}>
+                  <ChevronLeft size={16} strokeWidth={1.75} aria-hidden="true" /> Previous column
+                </button>
+                <button type="button" className="button button-secondary" disabled={index < 0 || index >= shown.length - 1} onClick={() => setSelected(shown[index + 1].name)}>
+                  Next column <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" />
+                </button>
+                {index < 0 && <span className="field-hint">This column is hidden by the filters.</span>}
+              </div>
             </>
           ) : (
             <div className="overview">

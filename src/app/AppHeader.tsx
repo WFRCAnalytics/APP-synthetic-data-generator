@@ -20,9 +20,11 @@ export interface AppHeaderProps {
   onOpenHelp?: () => void;
   /** Extra header content, such as the network-request counter. */
   children?: React.ReactNode;
+  /** The step navigation, shown in the middle of the header. */
+  steps?: React.ReactNode;
 }
 
-export function AppHeader({ onOpenHelp, children }: AppHeaderProps) {
+export function AppHeader({ onOpenHelp, children, steps }: AppHeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const isMobile = useMediaQuery("(max-width: 640px)");
   const isTablet = useMediaQuery("(max-width: 1024px)");
@@ -49,6 +51,7 @@ export function AppHeader({ onOpenHelp, children }: AppHeaderProps) {
           {versionLabel()}
         </span>
       </div>
+      {steps}
       <div className="app-header-actions">
         {children}
         <ThemeToggle theme={theme} onToggle={toggleTheme} />

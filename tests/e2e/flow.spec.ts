@@ -17,7 +17,7 @@ test("a CSV goes in and a fake CSV comes out, entirely on this device", async ({
   page.on("request", (r) => requests.push(r.url()));
 
   await page.goto(APP);
-  await expect(page.getByRole("heading", { name: "Choose a file" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Make test data/ })).toBeVisible();
 
   // Ingest: choose the file and confirm what was detected.
   await page.locator("#file-input").setInputFiles(join(ZOO, "zoo_small.csv"));
@@ -85,6 +85,6 @@ test("reloading the page clears everything", async ({ page }) => {
   await page.locator("#file-input").setInputFiles(join(ZOO, "variant_utf8.csv"));
   await expect(page.getByRole("heading", { name: "Detected settings" })).toBeVisible();
   await page.reload();
-  await expect(page.getByRole("heading", { name: "Choose a file" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Make test data/ })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Detected settings" })).toHaveCount(0);
 });

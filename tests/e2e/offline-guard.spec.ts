@@ -47,6 +47,6 @@ for (const scheme of ["light", "dark"] as const) {
 
 test("a served page shows no such message and runs", async ({ page }) => {
   await page.goto("/APP-synthetic-data-generator/");
-  await expect(page.getByRole("heading", { name: "Choose a file" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Make test data/ })).toBeVisible();
   await expect(page.locator("#offline-guard")).toHaveCount(0);
 });

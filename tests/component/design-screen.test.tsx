@@ -33,7 +33,7 @@ describe("the first screen", () => {
   it("offers a way in without a file, and says what it does", () => {
     render(<App />);
     expect(screen.getByText("Start from scratch")).toBeInTheDocument();
-    expect(screen.getByText(/Describe the columns yourself/)).toBeInTheDocument();
+    expect(screen.getByText(/Add columns one at a time/)).toBeInTheDocument();
   });
 
   it("opens an empty design that asks for the first column and cannot continue yet", async () => {
@@ -155,7 +155,7 @@ describe("from the design to Review and Generate", () => {
     expect(await screen.findByRole("heading", { name: "Design a table" })).toBeInTheDocument();
     expect(document.querySelectorAll("[data-design-column]")).toHaveLength(1);
     await user.click(screen.getByRole("button", { name: "Start over" }));
-    expect(screen.getByRole("heading", { name: "Choose a file" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Make test data/ })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Design a table" }));
     expect(document.querySelectorAll("[data-design-column]")).toHaveLength(0);
   });

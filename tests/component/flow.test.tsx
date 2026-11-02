@@ -120,7 +120,7 @@ async function toReview(user: ReturnType<typeof userEvent.setup>) {
 describe("ingest", () => {
   it("starts on the file picker with the privacy notice and stepper", () => {
     render(<App />);
-    expect(screen.getByRole("heading", { name: "Choose a file" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Make test data/ })).toBeInTheDocument();
     expect(screen.getByRole("note", { name: "Privacy" })).toHaveTextContent(/never uploaded/);
     expect(screen.getByRole("button", { name: /Review/ })).toBeDisabled();
     expect(screen.getByRole("button", { name: /Generate/ })).toBeDisabled();
@@ -301,7 +301,7 @@ describe("navigation", () => {
     render(<App />);
     await toReview(user);
     await user.click(screen.getByRole("button", { name: /Ingest/ }));
-    expect(screen.getByRole("heading", { name: "Choose a file" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Make test data/ })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /Review/ }));
     expect(document.querySelectorAll("[data-nav-column]")).toHaveLength(3);
   });
@@ -311,7 +311,7 @@ describe("navigation", () => {
     render(<App />);
     await toReview(user);
     await user.click(screen.getByRole("button", { name: "Start over" }));
-    expect(screen.getByRole("heading", { name: "Choose a file" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Make test data/ })).toBeInTheDocument();
     expect(screen.queryByText("Detected settings")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Review/ })).toBeDisabled();
   });

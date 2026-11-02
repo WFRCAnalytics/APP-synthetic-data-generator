@@ -70,7 +70,7 @@ body {
 
 .shell-body {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   min-height: 0;
 }
 
@@ -79,6 +79,7 @@ body {
   min-height: 0;
   overflow: auto;
   padding: var(--space-5) var(--space-6) var(--space-6);
+  background: color-mix(in srgb, var(--color-foreground) 3%, var(--color-background));
 }
 
 .screen-head {
@@ -543,7 +544,8 @@ table.data-table tbody tr:last-child td {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 56px;
+  gap: var(--space-4);
+  height: 60px;
   padding: 0 var(--space-5);
   background: var(--color-background);
   border-bottom: 1px solid var(--color-border);

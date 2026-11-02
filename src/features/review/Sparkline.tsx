@@ -6,18 +6,20 @@ export interface SparklineProps {
   bars: number[];
   /** Accessible description. */
   label: string;
+  /** Drawn as decoration (a list row), not announced. */
+  decorative?: boolean;
+  width?: number;
+  height?: number;
 }
 
-const WIDTH = 120;
-const HEIGHT = 32;
 const GAP = 1;
 
-export function Sparkline({ bars, label }: SparklineProps) {
+export function Sparkline({ bars, label, decorative = false, width: WIDTH = 120, height: HEIGHT = 32 }: SparklineProps) {
   if (bars.length === 0) return null;
   // Cap the width so a two-bar chart (yes/no) does not draw as two big blocks.
   const barWidth = Math.min(14, Math.max(1, WIDTH / bars.length - GAP));
   return (
-    <svg className="sparkline" width={WIDTH} height={HEIGHT} viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label={label}>
+    <svg className="sparkline" width={WIDTH} height={HEIGHT} viewBox={`0 0 ${WIDTH} ${HEIGHT}`} {...(decorative ? { "aria-hidden": true } : { role: "img", "aria-label": label })}>
       {bars.map((value, i) => {
         const h = Math.max(1, value * HEIGHT);
         return <rect key={i} className="sparkline-bar" x={i * (barWidth + GAP)} y={HEIGHT - h} width={barWidth} height={h} />;
