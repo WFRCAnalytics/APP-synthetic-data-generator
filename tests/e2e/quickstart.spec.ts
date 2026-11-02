@@ -101,7 +101,7 @@ test("scenario D: reproducibility - same seed, byte-identical; one change affect
   await page.getByRole("button", { name: /Review/ }).first().click();
   const card = page.locator('[data-column="float_2dp"]');
   await pick(page, "float_2dp");
-  await card.getByLabel(/Numeric mode|Mode/).selectOption("uniform");
+  await card.getByLabel(/Evenly spread/).check();
   await page.getByRole("button", { name: "Continue to Generate" }).click();
   await generate(page);
   const changed = await downloadText(page, /Download .*_fake\.csv/);

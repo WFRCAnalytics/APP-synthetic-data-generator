@@ -82,6 +82,7 @@ export function BatchPanel() {
           spec and seed, and all the files come out together in one zip. Nothing is read from any real file.
         </InfoTip>
       </div>
+      <div className="inline-row batch-controls">
       <input
         id="batch-input"
         type="file"
@@ -96,7 +97,7 @@ export function BatchPanel() {
           });
         }}
       />
-      <div className="field">
+      <div className="field inline-field">
         <label htmlFor="batch-output">File type</label>
         <select
           id="batch-output"
@@ -114,6 +115,7 @@ export function BatchPanel() {
             </option>
           ))}
         </select>
+      </div>
       </div>
       {rejected.map((r) => (
         <p key={r.specName} className="field-hint" role="alert">

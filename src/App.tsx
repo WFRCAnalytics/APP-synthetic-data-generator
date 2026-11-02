@@ -78,7 +78,7 @@ export function App() {
           />
         }
       >
-        <NetworkCounter counter={netCounter} />
+        <NetworkCounter counter={netCounter} held={{ fileName: data.fileName, bytes: data.fileSize, rows: data.rowCount }} />
       </AppHeader>
       <LocalNotice />
       <div className="shell-body">
@@ -121,6 +121,7 @@ export function App() {
                 addRule: (rule) => session.addRule(rule),
                 removeRule: (index) => session.removeRule(index),
                 setSeedText: (text) => session.setSeedText(text),
+                setPreset: (preset) => session.setPreset(preset),
                 onContinue: () => dispatch({ type: "goTo", step: "generate" }),
                 onSaveSpec: () => {
                   const blob = session.specBlob();

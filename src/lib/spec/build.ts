@@ -3,6 +3,7 @@
 // masks and repeat structures, and format settings. An unsupported column keeps only its name and
 // the user's choice, so none of its values can leak (constitution Principle II).
 
+import { applyKeep, sameKeep } from "../keep/keep";
 import { fitKind } from "../json/kinds";
 import { sourceOf, type RuleSpec } from "../rules/types";
 import {
@@ -233,6 +234,14 @@ function rulesFor(input: BuildInput): RuleSpec[] | undefined {
   return kept.length > 0 ? [...kept] : undefined;
 }
 
+/** A column with its keep choices applied; figures that already reflect them (read from a saved spec) are not coarsened again. */
+function columnWithKeep(p: ColumnProfile, rows: number): ColumnSpec {
+  const column = columnSpecOf(p);
+  if (!p.keep) return column;
+  if (p.keepFrom && sameKeep(p.keepFrom, p.keep)) return p.keepFrom && Object.keys(p.keepFrom).length > 0 ? { ...column, keep: p.keepFrom } : column;
+  return applyKeep(column, p.keep, rows);
+}
+
 export function buildSpec(input: BuildInput): SpecFile {
   return {
     spec_version: SPEC_VERSION,
@@ -242,6 +251,6 @@ export function buildSpec(input: BuildInput): SpecFile {
     keep_original_name: input.keepOriginalName,
     categorical_threshold: input.threshold,
     ...(rulesFor(input) ? { rules: rulesFor(input) } : {}),
-    columns: input.profiles.map(columnSpecOf),
+    columns: input.profiles.map((p) => columnWithKeep(p, input.rowCount)),
   };
 }

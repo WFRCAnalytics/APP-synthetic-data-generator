@@ -107,6 +107,8 @@ export interface NaSpec {
   by_token?: Record<string, number>;
 }
 
+import type { Keep } from "../keep/keep";
+
 export interface ColumnBase {
   name: string;
   /** What the column means, in a few words (a variable label from an SPSS, Stata or SAS file). Documentation: never a value. */
@@ -130,6 +132,8 @@ export interface ColumnBase {
   sentinels?: Record<string, number>;
   /** A coordinate (number columns only): the spec keeps only its bounding box and decimals, no mean, spread or percentiles, and values are spread evenly. */
   coordinate?: CoordinateAxis;
+  /** What the spec keeps of the real column: how its counts, its missing values and its range were coarsened (specs/032). Never a value. */
+  keep?: Keep;
   /** Take each row's value from the other table's row that has the same ID (category, yes/no, number and date columns; specs/030). */
   from_parent?: ParentValue;
   /** What the codes of the column mean, from a codebook (value to short label). Documentation: the file still holds the codes. */

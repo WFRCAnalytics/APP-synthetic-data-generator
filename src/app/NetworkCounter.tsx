@@ -6,18 +6,22 @@ import { ShieldAlert, ShieldCheck } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { Modal } from "../components/Modal";
 import { startNetMonitoring, type NetCounter } from "./netCounter";
+import { PrivacyMonitor } from "./PrivacyMonitor";
 import "./NetworkCounter.css";
 
 export interface NetworkCounterProps {
   counter: NetCounter;
+  /** What the tab holds in memory (a name, a size and a row count; never content), for the monitor. */
+  held?: { fileName: string; bytes: number; rows: number };
 }
 
-export function NetworkCounter({ counter }: NetworkCounterProps) {
+export function NetworkCounter({ counter, held = { fileName: "", bytes: 0, rows: 0 } }: NetworkCounterProps) {
   const counts = useSyncExternalStore(counter.subscribe, counter.getSnapshot);
+  const detail = useSyncExternalStore(counter.subscribe, counter.getDetail);
   useEffect(() => startNetMonitoring(counter), [counter]);
   const [open, setOpen] = useState(false);
 
-  const clean = counts.crossOrigin === 0 && counts.blocked === 0;
+  const clean = counts.crossOrigin === 0 && counts.blocked === 0 && detail.sentBytes === 0;
   const Icon = clean ? ShieldCheck : ShieldAlert;
   const label = `Network requests since this page loaded: ${counts.crossOrigin} outside this site, ${counts.sameOrigin} from this site, ${counts.blocked} blocked.`;
   const explanation = clean
@@ -44,30 +48,12 @@ export function NetworkCounter({ counter }: NetworkCounterProps) {
           </>
         ) : null}
       </span>
-      <Modal open={open} onClose={() => setOpen(false)} ariaLabelledBy="net-title" size="sm">
-        <div className="net-dialog">
-          <h2 id="net-title">{clean ? "Your data stays on this device" : "Something tried to reach another address"}</h2>
-          <p>{explanation}</p>
-          <dl className="net-dialog-list">
-            <dt>To other websites</dt>
-            <dd>
-              <strong>{counts.crossOrigin}</strong> <span className="field-hint">This should always be 0.</span>
-            </dd>
-            <dt>To this site</dt>
-            <dd>
-              <strong>{counts.sameOrigin}</strong> <span className="field-hint">The app&apos;s own pages and scripts, and the files that read Excel, Parquet, JSON, SPSS and Stata.</span>
-            </dd>
-            <dt>Blocked</dt>
-            <dd>
-              <strong>{counts.blocked}</strong> <span className="field-hint">Attempts the browser refused to send.</span>
-            </dd>
-          </dl>
-          <p className="field-hint">The counts cover everything this page and its workers have requested since it loaded. Reloading starts them again from zero.</p>
-          <div className="actions-row">
-            <button type="button" className="button button-secondary" onClick={() => setOpen(false)}>
-              Close
-            </button>
-          </div>
+      <Modal open={open} onClose={() => setOpen(false)} ariaLabelledBy="net-title" size="lg">
+        <PrivacyMonitor counts={counts} detail={detail} held={held} />
+        <div className="actions-row">
+          <button type="button" className="button button-secondary" onClick={() => setOpen(false)}>
+            Close
+          </button>
         </div>
       </Modal>
     </span>

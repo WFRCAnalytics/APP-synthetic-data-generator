@@ -246,8 +246,8 @@ describe("numeric mode, decimals and rescale (FR-011, FR-027)", () => {
     render(<App />);
     await toReview(user);
     const c = await openSettings(user, "dist");
-    expect(within(c).getByLabelText("Numeric mode")).toHaveValue("match_mean_sd");
-    await user.selectOptions(within(c).getByLabelText("Numeric mode"), "match_shape");
+    expect(within(c).getByLabelText(/The same average and spread/)).toBeChecked();
+    await user.click(within(c).getByLabelText(/The same shape/));
     const spec = await generated(user);
     expect(spec.columns.find((x) => x.name === "dist")).toMatchObject({ mode: "match_shape" });
   });
@@ -289,7 +289,7 @@ describe("numeric mode, decimals and rescale (FR-011, FR-027)", () => {
     const rescale = within(c).getByLabelText(/Restore the exact mean and spread/);
     expect(rescale).not.toBeChecked();
     expect(rescale).toBeEnabled();
-    await user.selectOptions(within(c).getByLabelText("Numeric mode"), "uniform");
+    await user.click(within(c).getByLabelText(/Evenly spread/));
     expect(within(card("dist")).getByLabelText(/Restore the exact mean and spread/)).toBeDisabled();
   });
 
@@ -308,7 +308,7 @@ describe("numeric mode, decimals and rescale (FR-011, FR-027)", () => {
     render(<App />);
     await toReview(user);
     const c = await openSettings(user, "when");
-    expect(within(c).getByLabelText("Numeric mode")).toBeInTheDocument();
+    expect(within(c).getByLabelText(/The same average and spread/)).toBeInTheDocument();
     expect(within(c).queryByLabelText("Decimal places")).not.toBeInTheDocument();
   });
 
@@ -317,7 +317,7 @@ describe("numeric mode, decimals and rescale (FR-011, FR-027)", () => {
     render(<App />);
     await toReview(user);
     const c = await openSettings(user, "mode");
-    expect(within(c).queryByLabelText("Numeric mode")).not.toBeInTheDocument();
+    expect(within(c).queryByLabelText(/The same average and spread/)).not.toBeInTheDocument();
   });
 });
 

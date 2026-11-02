@@ -19,6 +19,7 @@ import { SamplePreview } from "./SamplePreview";
 import { ShortStringEditor } from "./ShortStringEditor";
 import { NaTokenEditor } from "./NaTokenEditor";
 import { NumericControls } from "./NumericControls";
+import { KeepPanel } from "./KeepPanel";
 import { ProtectionsPanel } from "./ProtectionsPanel";
 import { SentinelEditor } from "./SentinelEditor";
 
@@ -125,6 +126,8 @@ export function ColumnEditors({ profile, otherNames, busy, dateCheck, onEdit, ta
         />
       )}
 
+      <KeepPanel profile={profile} rows={table?.rows ?? 0} onEdit={onEdit} />
+
       {kind === "personal" && <PersonalKindEditor profile={profile} samples={samples} onEdit={onEdit} onRequestSamples={onRequestSamples} />}
       {kind === "short_string" && <ShortStringEditor profile={profile} samples={samples} onEdit={onEdit} onRequestSamples={onRequestSamples} />}
       {kind === "free_text" && profile.summary.kind === "free_text" && (
@@ -143,26 +146,33 @@ export function ColumnEditors({ profile, otherNames, busy, dateCheck, onEdit, ta
 
       <ExcludeControl profile={profile} onChange={(exclude) => onEdit({ exclude })} />
 
-      {supportsSentinels && <SentinelEditor profile={profile} busy={busy} onApply={(sentinels) => onOverride({ sentinels })} />}
-      {hasValues && <NaTokenEditor profile={profile} busy={busy} onApply={(naTokens) => onOverride({ naTokens })} />}
+      <details className="advanced-settings" data-testid="advanced-settings">
+        <summary>Advanced settings</summary>
+        <div className="advanced-body">
+        {supportsSentinels && <SentinelEditor profile={profile} busy={busy} onApply={(sentinels) => onOverride({ sentinels })} />}
+        {hasValues && <NaTokenEditor profile={profile} busy={busy} onApply={(naTokens) => onOverride({ naTokens })} />}
 
-      {workbook && hasValues && <CellFormatEditor profile={profile} onChange={(cellFormat) => onEdit({ cellFormat })} />}
+        {workbook && hasValues && <CellFormatEditor profile={profile} onChange={(cellFormat) => onEdit({ cellFormat })} />}
 
-      <NumericControls
-        profile={profile}
-        onMode={(mode) => onEdit({ mode })}
-        onDecimals={(decimals) => onEdit({ decimals })}
-        onRescale={(rescale) => onEdit({ rescale })}
-        onCoordinate={(coordinate) => onEdit({ coordinate })}
-      />
+        <NumericControls
+          showMode={false}
+          showDecimals={false}
+          profile={profile}
+          onMode={(mode) => onEdit({ mode })}
+          onDecimals={(decimals) => onEdit({ decimals })}
+          onRescale={(rescale) => onEdit({ rescale })}
+          onCoordinate={(coordinate) => onEdit({ coordinate })}
+        />
 
-      <ProtectionsPanel
-        profile={profile}
-        otherNames={otherNames}
-        onMergeUnderK={(mergeUnderK) => onEdit({ mergeUnderK })}
-        onLabelCodes={(labelCodes) => onEdit({ labelCodes })}
-        onRename={(outputName) => onEdit({ outputName })}
-      />
+        <ProtectionsPanel
+          profile={profile}
+          otherNames={otherNames}
+          onMergeUnderK={(mergeUnderK) => onEdit({ mergeUnderK })}
+          onLabelCodes={(labelCodes) => onEdit({ labelCodes })}
+          onRename={(outputName) => onEdit({ outputName })}
+        />
+        </div>
+      </details>
     </div>
   );
 }

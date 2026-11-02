@@ -226,7 +226,7 @@ test("a latitude and a longitude keep only their bounding box, and the person ca
   const card = await shownCard(page, "lat");
   await expect(card).toContainText("Only the bounding box is kept");
   await expect(card.getByLabel("Coordinate")).toHaveValue("lat");
-  await expect(card.getByLabel("Numeric mode")).toHaveCount(0);
+  await expect(card.getByLabel(/The same average and spread/)).toHaveCount(0);
   await expect((await shownCard(page, "age")).getByLabel("Coordinate")).toHaveValue("");
 
   await page.getByRole("button", { name: "Continue to Generate" }).click();
@@ -249,7 +249,7 @@ test("a latitude and a longitude keep only their bounding box, and the person ca
   await page.getByRole("button", { name: /^1\. Ingest|Review/ }).first().click();
   const again = await shownCard(page, "lat");
   await again.getByLabel("Coordinate").selectOption("");
-  await expect(again.getByLabel("Numeric mode")).toBeVisible();
+  await expect(again.getByLabel(/The same average and spread/)).toBeVisible();
 });
 
 test("a rule between two columns holds in every row of the file, is checked, and is kept in the spec and the README", async ({ page }) => {

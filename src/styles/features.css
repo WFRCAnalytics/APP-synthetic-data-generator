@@ -216,7 +216,7 @@ section[aria-labelledby="ingest-heading"] > .empty-state .empty-state-icon {
 .shell-main:has(.review) {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .review {
@@ -227,6 +227,8 @@ section[aria-labelledby="ingest-heading"] > .empty-state .empty-state-icon {
 }
 
 .review-panes {
+  /* Never squeezed below a usable list by the rows above it: the page scrolls instead. */
+  min-height: 26rem;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(22rem, 27rem);
   gap: var(--space-5);

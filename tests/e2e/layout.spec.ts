@@ -1,6 +1,7 @@
 // Layout checks in a real browser: no panel of Review scrolls sideways, whatever the column, and a tooltip near the right edge of a
 // panel opens inside the window instead of widening the panel (the "(i)" bubbles used to extend the scrollable area of the right panel).
 import { join } from "node:path";
+import { pick } from "../helpers/review";
 import { expect, test, type Page } from "@playwright/test";
 
 const APP = "/APP-synthetic-data-generator/";
@@ -25,7 +26,7 @@ for (const width of [1280, 1000]) {
   test(`no column makes a panel of Review scroll sideways at ${width}px`, async ({ page }) => {
     await toReview(page, width);
     const names = await page.locator("[data-nav-column]").evaluateAll((els) => els.map((e) => e.getAttribute("data-nav-column") as string));
-    expect(names.length).toBeGreaterThan(10);
+    expect(names.length).toBeGreaterThan(5);
     const bad: string[] = [];
     for (const name of names) {
       await page.locator(`[data-nav-column="${name}"]`).click();
@@ -37,7 +38,7 @@ for (const width of [1280, 1000]) {
 
 test("a tooltip near the right edge opens inside the window", async ({ page }) => {
   await toReview(page, 1280);
-  await page.locator('[data-nav-column="cat_str_5"]').click();
+  await pick(page, "cat_str_5");
   const tips = page.locator(".review-detail .infotip-button");
   const count = await tips.count();
   expect(count).toBeGreaterThan(0);

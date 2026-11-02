@@ -58,7 +58,8 @@ test.describe("the network counter", () => {
     const dialog = page.getByRole("dialog");
     await expect(dialog).toContainText("Your data stays on this device");
     await expect(dialog).toContainText("To other websites");
-    await expect(dialog.getByText("This should always be 0.")).toBeVisible();
+    await expect(dialog.getByTestId("pm-sent")).toHaveText("0 B");
+    await expect(dialog.getByTestId("pm-cross")).toHaveText("0");
     await page.screenshot({ path: "test-results/net-dialog.png" });
     await page.keyboard.press("Escape");
     await expect(dialog).toBeHidden();

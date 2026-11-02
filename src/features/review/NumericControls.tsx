@@ -14,6 +14,9 @@ export interface NumericControlsProps {
   onDecimals: (decimals: number) => void;
   onRescale: (on: boolean) => void;
   onCoordinate: (axis: CoordinateAxis | null) => void;
+  /** The shape and the decimal places are chosen in the keep panel; here only the rarer settings remain. */
+  showMode?: boolean;
+  showDecimals?: boolean;
 }
 
 export function NumericControls({
@@ -22,6 +25,8 @@ export function NumericControls({
   onDecimals,
   onRescale,
   onCoordinate,
+  showMode = true,
+  showDecimals = true,
 }: NumericControlsProps) {
   const id = useId();
   const s = profile.summary;
@@ -61,7 +66,7 @@ export function NumericControls({
         </div>
       )}
 
-      {profile.coordinate ? null : (
+      {profile.coordinate || !showMode ? null : (
         <div className="field">
           <span className="label-row">
             <label htmlFor={`${id}-mode`}>Numeric mode</label>
@@ -83,7 +88,7 @@ export function NumericControls({
         </div>
       )}
 
-      {profile.type === "float" && s.kind === "numeric" && (
+      {showDecimals && profile.type === "float" && s.kind === "numeric" && (
         <div className="field">
           <span className="label-row">
             <label htmlFor={`${id}-decimals`}>Decimal places</label>

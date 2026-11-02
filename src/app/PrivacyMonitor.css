@@ -1,0 +1,349 @@
+/* The activity monitor (PrivacyMonitor.tsx): a status header, four meters, a one-minute timeline, and three detail tabs. */
+
+.pm {
+  display: grid;
+  gap: var(--space-4);
+  font-size: var(--text-sm);
+  white-space: normal;
+}
+
+.pm-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.pm-head-icon {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-full);
+  background: var(--color-success);
+  color: var(--color-success-foreground);
+}
+
+.pm--alert .pm-head-icon {
+  background: var(--color-danger);
+  color: var(--color-danger-foreground);
+}
+
+.pm-head h2 {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-xl);
+}
+
+.pm-head p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.pm-online {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+.pm-online--off {
+  border-color: var(--color-success);
+}
+
+.pm-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: var(--space-3);
+}
+
+.pm-tile {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  border-left-width: 4px;
+  min-width: 0;
+}
+
+.pm-tile--ok {
+  border-left-color: var(--color-success);
+}
+
+.pm-tile--alert {
+  border-left-color: var(--color-danger);
+  background: var(--banner-error-background);
+}
+
+.pm-tile--plain {
+  border-left-color: var(--color-wfrc-secondary-blue);
+}
+
+.pm-tile-icon {
+  display: inline-flex;
+  color: var(--color-heading);
+}
+
+.pm-tile-title {
+  font-size: var(--text-xs);
+  color: var(--color-wfrc-gray);
+}
+
+.pm-tile-value {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  line-height: var(--leading-tight);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.pm-tile-note {
+  font-size: var(--text-xs);
+  color: var(--color-wfrc-gray);
+}
+
+/* The timeline: two lanes over the last minute, received above and sent below. */
+.pm-chart {
+  margin: 0;
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.pm-lane {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  align-items: end;
+  gap: var(--space-3);
+}
+
+.pm-lane-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  padding-bottom: var(--space-1);
+}
+
+.pm-lane > svg {
+  width: 100%;
+  height: 2.75rem;
+  display: block;
+  background: var(--color-code-background);
+  border-radius: var(--radius-sm);
+}
+
+.pm-axis {
+  stroke: var(--color-border);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.pm-axis--zero {
+  stroke: var(--color-success);
+  stroke-width: 2;
+}
+
+.pm-axis--out {
+  stroke: var(--color-danger);
+  stroke-width: 2;
+}
+
+.pm-bar-in {
+  fill: var(--color-wfrc-secondary-blue);
+}
+
+.pm-bar-out {
+  fill: var(--color-danger);
+}
+
+.pm-chart-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-left: calc(6.5rem + var(--space-3));
+  font-size: var(--text-xs);
+  color: var(--color-wfrc-gray);
+}
+
+.pm-tabs {
+  display: flex;
+  gap: var(--space-1);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.pm-tab {
+  padding: var(--space-2) var(--space-4);
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.pm-tab[aria-selected="true"] {
+  border-bottom-color: var(--color-wfrc-yellow);
+  font-weight: var(--font-weight-semibold);
+}
+
+.pm-panel {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.pm-panel[hidden] {
+  display: none;
+}
+
+.pm-panel h3 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-base);
+}
+
+.pm-panel p {
+  margin: 0;
+}
+
+.pm-empty {
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--color-wfrc-gray);
+}
+
+.pm-log-wrap {
+  max-height: 14rem;
+  overflow: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.pm-log {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-xs);
+}
+
+.pm-log th,
+.pm-log td {
+  padding: var(--space-1) var(--space-3);
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.pm-log thead th {
+  position: sticky;
+  top: 0;
+  background: var(--color-background);
+  font-weight: var(--font-weight-semibold);
+}
+
+.pm-address {
+  max-width: 18rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--font-mono);
+}
+
+.pm-row--alert {
+  background: var(--banner-error-background);
+}
+
+.pm-dir {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.pm-dir--out {
+  color: var(--color-danger-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.pm-facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--space-1) var(--space-5);
+  margin: 0;
+}
+
+.pm-facts dt {
+  font-weight: var(--font-weight-semibold);
+}
+
+.pm-facts dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.pm-policy {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.pm-policy li {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.pm-policy code {
+  overflow-wrap: anywhere;
+}
+
+.pm-policy--key {
+  border-color: var(--color-success);
+  border-left-width: 4px;
+}
+
+.pm-policy-more summary {
+  cursor: pointer;
+  padding: var(--space-1) 0;
+}
+
+.pm-policy-more .pm-policy {
+  margin-top: var(--space-2);
+}
+
+.pm-policy span {
+  font-size: var(--text-xs);
+  color: var(--color-wfrc-gray);
+}
+
+.pm-steps {
+  margin: 0;
+  padding-left: var(--space-5);
+  display: grid;
+  gap: var(--space-2);
+}
+
+@media (max-width: 640px) {
+  .pm-head {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .pm-online {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+  .pm-lane {
+    grid-template-columns: 1fr;
+  }
+  .pm-chart-scale {
+    margin-left: 0;
+  }
+}

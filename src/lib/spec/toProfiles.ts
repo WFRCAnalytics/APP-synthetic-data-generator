@@ -88,6 +88,7 @@ export function profileFromSpec(c: ColumnSpec): ColumnProfile {
       : {},
     sentinels: { ...(c.sentinels ?? {}) },
     quoted: c.quoted ?? false,
+    ...(c.keep ? { keep: c.keep, keepFrom: c.keep } : {}),
     ...(c.from_parent ? { fromParent: c.from_parent } : {}),
     ...(c.description ? { description: c.description } : {}),
     ...(c.value_labels ? { valueLabels: { ...c.value_labels } } : {}),

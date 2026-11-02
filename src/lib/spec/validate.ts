@@ -53,6 +53,7 @@ const base = {
   na: v.optional(NaSchema),
   sentinels: v.optional(SentinelsSchema),
   from_parent: v.optional(v.lazy(() => ParentValueSchema)),
+  keep: v.optional(v.strictObject({ counts: v.optional(v.picklist(["exact", "rounded", "equal"])), missing: v.optional(v.picklist(["exact", "rounded", "none"])), range: v.optional(v.picklist(["exact", "rounded"])) })),
   coordinate: v.optional(v.picklist(COORDINATE_AXES as unknown as [string, ...string[]])),
   value_labels: v.optional(
     v.pipe(

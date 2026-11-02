@@ -149,3 +149,33 @@ for (const scheme of ["light", "dark"] as const) {
     });
   });
 }
+
+for (const scheme of ["light", "dark"] as const) {
+  test.describe(`${scheme} theme, dialogs`, () => {
+    test.use({ colorScheme: scheme });
+
+    test("the privacy monitor and every part of the help guide have no detectable violations", async ({ page }) => {
+      await page.goto(APP);
+      await page.getByRole("button", { name: "Stays on this device" }).click();
+      for (const tab of ["Requests", "Stored and held", "Safeguards"]) {
+        await page.getByRole("tab", { name: tab }).click();
+        expect(await violations(page), `Privacy monitor, ${tab}`).toEqual([]);
+      }
+      await page.keyboard.press("Escape");
+      await page.getByRole("button", { name: "Help & guide" }).click();
+      for (const tab of ["How it works", "File types", "Privacy and the spec", "Linking tables", "Limits"]) {
+        await page.getByRole("tab", { name: tab }).click();
+        expect(await violations(page), `Help guide, ${tab}`).toEqual([]);
+      }
+    });
+
+    test("the preset bar and the keep choices have no detectable violations", async ({ page }) => {
+      await toReview(page);
+      expect(await violations(page), "Review with the preset bar").toEqual([]);
+      for (const name of ["cat_str_5", "float_2dp"]) {
+        await pick(page, name);
+        expect(await violations(page), `Keep choices of ${name}`).toEqual([]);
+      }
+    });
+  });
+}

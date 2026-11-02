@@ -19,7 +19,9 @@ import { ColumnNav } from "./ColumnNav";
 import { countByType, filterProfiles, NO_FILTERS, type Filters } from "./filter";
 import { parquetConflict, typeLabel } from "./summary";
 import { typeLook } from "./typeIcons";
+import { PresetBar } from "./PresetBar";
 import { SpecContentsNotice } from "./SpecContentsNotice";
+import type { Preset } from "../../lib/keep/keep";
 import { TextApply } from "./TextApply";
 
 export interface ReviewActions {
@@ -34,6 +36,8 @@ export interface ReviewActions {
   onContinue: () => void;
   onSaveSpec: () => void;
   setSeedText?: (text: string) => void;
+  /** Gives every column the choices of a preset (what it keeps of the real data). */
+  setPreset?: (preset: Preset) => void;
 }
 
 export interface ReviewScreenProps {
@@ -114,6 +118,8 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
           </button>
         </div>
       </header>
+
+      {actions.setPreset && <PresetBar value={session.preset} onChange={actions.setPreset} />}
 
       {specOnly && (
         <div className="banner banner-info" role="status">

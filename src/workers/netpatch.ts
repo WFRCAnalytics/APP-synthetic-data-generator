@@ -12,10 +12,20 @@ export function installNetPatch(channelName: string, pageOrigin: string): void {
   if (typeof BroadcastChannel === "undefined") return;
   const channel = new BroadcastChannel(channelName);
 
-  const report = (input: unknown) => {
+  // How many bytes a request body holds (0 when there is none, 1 when it cannot be measured, such as a stream).
+  const sizeOf = (body: any): number => {
+    if (body === undefined || body === null) return 0;
+    if (typeof body === "string") return new TextEncoder().encode(body).length;
+    if (typeof body.size === "number") return body.size;
+    if (typeof body.byteLength === "number") return body.byteLength;
+    if (body instanceof URLSearchParams) return body.toString().length;
+    return 1;
+  };
+
+  const report = (input: unknown, method?: unknown, body?: unknown) => {
     try {
       const raw = typeof input === "string" ? input : input instanceof URL ? input.href : (input as { url?: string })?.url ?? String(input);
-      channel.postMessage({ url: new URL(raw, pageOrigin + "/").href });
+      channel.postMessage({ url: new URL(raw, pageOrigin + "/").href, method: String(method ?? (input as { method?: string })?.method ?? "GET").toUpperCase(), sent: sizeOf(body) });
     } catch {
       // never let reporting break a request
     }
@@ -23,17 +33,30 @@ export function installNetPatch(channelName: string, pageOrigin: string): void {
 
   if (typeof scope.fetch === "function") {
     const originalFetch = scope.fetch.bind(scope);
-    scope.fetch = (input: unknown, init?: unknown) => {
-      report(input);
+    scope.fetch = (input: unknown, init?: any) => {
+      report(input, init?.method, init?.body);
       return originalFetch(input, init);
     };
   }
 
   if (typeof scope.XMLHttpRequest === "function") {
     const originalOpen = scope.XMLHttpRequest.prototype.open;
-    scope.XMLHttpRequest.prototype.open = function (this: unknown, method: string, url: unknown, ...rest: unknown[]) {
-      report(url);
+    scope.XMLHttpRequest.prototype.open = function (this: any, method: string, url: unknown, ...rest: unknown[]) {
+      this.__netMethod = method;
+      report(url, method);
       return originalOpen.call(this, method, url, ...rest);
+    };
+    const originalSend = scope.XMLHttpRequest.prototype.send;
+    scope.XMLHttpRequest.prototype.send = function (this: any, body?: unknown) {
+      const sent = sizeOf(body);
+      if (sent > 0) {
+        try {
+          channel.postMessage({ url: pageOrigin + "/", method: String(this.__netMethod ?? "POST").toUpperCase(), sent, upload: true });
+        } catch {
+          // never let reporting break a request
+        }
+      }
+      return originalSend.call(this, body);
     };
   }
 }

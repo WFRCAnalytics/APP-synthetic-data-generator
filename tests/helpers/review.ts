@@ -5,6 +5,12 @@ export const card = (page: Page, name: string): Locator => page.locator(`[data-c
 
 /** Picks a column in the sidebar (searching for it first, since a long list is drawn through a window). */
 export async function pick(page: Page, name: string): Promise<void> {
+  await showColumn(page, name);
+  // The rarely needed settings sit under Advanced; a test that reaches for one finds it open.
+  await card(page, name).locator("details.advanced-settings").evaluateAll((els) => els.forEach((d) => ((d as HTMLDetailsElement).open = true)));
+}
+
+async function showColumn(page: Page, name: string): Promise<void> {
   if ((await card(page, name).count()) > 0) return;
   const search = page.getByRole("searchbox", { name: "Search columns" });
   await search.fill(name);

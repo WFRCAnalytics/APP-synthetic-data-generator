@@ -3,7 +3,8 @@
 // fake data. Nothing is written to browser storage, so a reload clears it all (Principle I).
 
 import type { CheckRow } from "../lib/generate/checks";
-import { applyAllEdits, type LocalEdits } from "../lib/profile/edits";
+import { applyAllEdits, type KeepDefaults, type LocalEdits } from "../lib/profile/edits";
+import { presetDefaults, type Preset } from "../lib/keep/keep";
 import {
   isExcelSettings,
   isJsonSettings,
@@ -125,6 +126,8 @@ export interface SessionState {
   keepOriginalName: boolean;
   /** The file type of the fake table: the same kind as the real file (the default), or another one. */
   outputKind: "same" | OutputKind | ConvertKind;
+  /** What every column keeps of the real data, as a set of choices; "custom" once a column was changed on its own (specs/032). */
+  preset: Preset | "custom";
   gen: GenState;
   /** Columns came from a saved spec: there is no source file, so nothing can be profiled again. */
   specOnly: boolean;
@@ -170,6 +173,7 @@ export const initialSession: SessionState = {
   rules: [],
   keepOriginalName: false,
   outputKind: "same",
+  preset: "balanced",
   gen: emptyGen,
   specOnly: false,
   designed: false,
@@ -381,9 +385,12 @@ export class Session {
   /** Takes a spec as the table to review: one the person loaded, or one built from a design. */
   loadSpec(spec: SpecFile, designed: boolean): void {
     this.reset();
+    // A saved or designed spec already holds what it keeps: nothing is coarsened again unless the person asks.
+    this.keepDefaults = { keep: presetDefaults("close").keep };
     const profiles = profilesFromSpec(spec.columns);
     this.base = profiles;
     this.set({
+      preset: "close",
       phase: "profiled",
       specOnly: true,
       designed,
@@ -396,7 +403,7 @@ export class Session {
       seedText: String(spec.seed),
       keepOriginalName: spec.keep_original_name ?? false,
       rules: spec.rules ? [...spec.rules] : [],
-      profiles,
+      profiles: applyAllEdits(profiles, {}, this.keepDefaults),
     });
     this.onSpecLoaded(
       profiles.map((p) => ({ name: p.name, type: p.type })),
@@ -500,7 +507,7 @@ export class Session {
           .filter((p): p is ColumnProfile => p !== undefined);
         this.set({
           phase: "profiled",
-          profiles: applyAllEdits(this.base, this.edits),
+          profiles: applyAllEdits(this.base, this.edits, this.keepDefaults),
           progress: null,
           busy: [],
         });
@@ -540,7 +547,7 @@ export class Session {
   private replaceBase(profile: ColumnProfile): void {
     this.base = this.base.map((p) => (p.name === profile.name ? profile : p));
     this.set({
-      profiles: applyAllEdits(this.base, this.edits),
+      profiles: applyAllEdits(this.base, this.edits, this.keepDefaults),
       busy: this.state.busy.filter((n) => n !== profile.name),
       reviewError: null,
     });
@@ -556,8 +563,24 @@ export class Session {
 
   /** A change that needs no data: applied at once, and kept across any later re-profile. */
   editColumn(name: string, patch: LocalEdits): void {
-    this.edits = { ...this.edits, [name]: { ...this.edits[name], ...patch } };
-    this.set({ profiles: applyAllEdits(this.base, this.edits) });
+    const prev = this.edits[name];
+    this.edits = { ...this.edits, [name]: { ...prev, ...patch, ...(patch.keep ? { keep: { ...prev?.keep, ...patch.keep } } : {}) } };
+    this.set({ profiles: applyAllEdits(this.base, this.edits, this.keepDefaults), ...(patch.keep || patch.mode ? { preset: "custom" as const } : {}) });
+  }
+
+  private keepDefaults: KeepDefaults = presetDefaults("balanced");
+
+  /** Gives every column the choices of a preset: what it keeps of the real data, and the shape of its numbers. */
+  setPreset(preset: Preset): void {
+    this.keepDefaults = presetDefaults(preset);
+    const next: Record<string, LocalEdits> = {};
+    for (const [name, e] of Object.entries(this.edits)) {
+      const { keep: _k, mode: _m, ...rest } = e;
+      void [_k, _m];
+      next[name] = rest;
+    }
+    this.edits = next;
+    this.set({ preset, profiles: applyAllEdits(this.base, this.edits, this.keepDefaults) });
   }
 
   /** A change the worker must apply by profiling the column again. A key set to undefined is removed. */
@@ -861,6 +884,7 @@ export class Session {
     this.base = [];
     this.edits = {};
     this.engine = {};
+    this.keepDefaults = presetDefaults("balanced");
     this.state = initialSession;
     this.listeners.forEach((l) => l(this.state));
   }

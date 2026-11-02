@@ -5,6 +5,7 @@
 
 import type { CoordinateAxis } from "../classify/coordinate";
 import type { PersonalLocale } from "../textgen/locales";
+import type { Keep } from "../keep/keep";
 import type { ChildCount, IdLink, ParentValue } from "../spec/types";
 import { idFit, shortStringFit } from "./idCapacity";
 import type {
@@ -50,6 +51,8 @@ export interface LocalEdits {
   childCount?: ChildCount | null;
   /** Take the value from the other table's row with the same ID; null goes back to the column's own summary. */
   fromParent?: ParentValue | null;
+  /** What to keep of the real column (counts, missing values, range); only the fields given change. */
+  keep?: Keep;
   /** What the column means (a variable label); null removes it. */
   description?: string | null;
   /** Use the IDs of another table's column; null goes back to making new ones (specs/019). */
@@ -71,9 +74,10 @@ const isCategorical = (p: ColumnProfile) => p.summary.kind === "categorical";
  * (a mode for a text column, say) is ignored rather than raising an error, so edits survive a type
  * change and simply apply again if the column becomes numeric once more.
  */
-export function applyEdits(p: ColumnProfile, e: LocalEdits | undefined): ColumnProfile {
-  if (!e) return p;
-  const out: ColumnProfile = { ...p };
+export function applyEdits(p: ColumnProfile, e: LocalEdits | undefined, fallback?: KeepDefaults): ColumnProfile {
+  const start = fallback ? withKeepDefaults(p, fallback) : p;
+  if (!e) return start;
+  const out: ColumnProfile = { ...start };
 
   if (e.exclude !== undefined) {
     // A column that cannot be generated can only be left out or kept as all-missing.
@@ -91,6 +95,8 @@ export function applyEdits(p: ColumnProfile, e: LocalEdits | undefined): ColumnP
     if (e.fromParent === null) delete out.fromParent;
     else out.fromParent = e.fromParent;
   }
+
+  if (e.keep !== undefined) out.keep = { ...(start.keep ?? {}), ...e.keep };
 
   if (e.description !== undefined) {
     if (e.description === null || e.description.trim() === "") delete out.description;
@@ -217,8 +223,28 @@ export function applyEdits(p: ColumnProfile, e: LocalEdits | undefined): ColumnP
 export function applyAllEdits(
   profiles: readonly ColumnProfile[],
   edits: Readonly<Record<string, LocalEdits>>,
+  fallback?: KeepDefaults,
 ): ColumnProfile[] {
-  return profiles.map((p) => applyEdits(p, edits[p.name]));
+  return profiles.map((p) => applyEdits(p, edits[p.name], fallback));
+}
+
+/** What a column keeps, and how a number's shape is made, until the person chooses otherwise. */
+export interface KeepDefaults {
+  keep: Required<Keep>;
+  /** The shape numbers are made in; left out, the column's own mode stays (a loaded spec keeps the modes it was saved with). */
+  shape?: NumericMode;
+}
+
+/** A freshly profiled column with the defaults filled in where the person has not chosen. */
+function withKeepDefaults(p: ColumnProfile, d: KeepDefaults): ColumnProfile {
+  const k = p.summary.kind;
+  if (k !== "categorical" && k !== "numeric" && k !== "datetime") return p;
+  return {
+    ...p,
+    keep: { ...d.keep, ...(p.keep ?? {}) },
+    // The profiler picks the mean-and-spread shape where it can be fitted and an even spread where it cannot; that stays unless the preset asks for another shape.
+    ...(k !== "categorical" && d.shape && d.shape !== "match_mean_sd" ? { mode: d.shape } : {}),
+  };
 }
 
 /** "-9, 998 ,, 999" becomes ["-9", "998", "999"]: trimmed, no blanks, no repeats. */
