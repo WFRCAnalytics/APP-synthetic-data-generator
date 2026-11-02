@@ -198,3 +198,21 @@ test("a designed table is written as Parquet and as a workbook, and the Parquet 
   const book = await downloadBytes(page, /Download trips_fake\.xlsx/);
   expect(book.subarray(0, 2).toString("latin1")).toBe("PK");
 });
+
+// Slice 14: names invented in another language and region.
+test("a designed personal column can come from another region, and the README says so", async ({ page }) => {
+  await page.goto(APP);
+  await page.getByRole("button", { name: "Design a table" }).click();
+  await page.getByRole("button", { name: /Table settings/ }).click();
+  await page.getByLabel("Number of rows").fill("600");
+  await addColumn(page, /^Personal detail/);
+  await page.getByLabel("Column name").fill("nombre");
+  await page.getByLabel("Language and region").selectOption("es");
+  await reviewAndGenerate(page);
+  const csv = await download(page, /Download my_table_fake\.csv/);
+  const names = parseCsv(csv).rows.slice(1).map((r) => r[0]);
+  expect(names).toHaveLength(600);
+  expect(names.join(" ")).toMatch(/[ñáéíóúÑÁÉÍÓÚ]/);
+  const [readme] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Download README for agents" }).click()]);
+  expect(readFileSync(await readme.path(), "utf8")).toContain("invented full name (Spanish, Spain)");
+});

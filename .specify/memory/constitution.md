@@ -48,7 +48,8 @@ end to end.
 - Survey IDs MUST be described by an editable pattern mask, optional min and max, and a
   repeat structure.
 - Personal identifiers (names, emails, phones, addresses) MUST be generated with
-  `@faker-js/faker` (locale `en_US` for v1) and MUST NOT use real values.
+  `@faker-js/faker` (locale `en_US` by default; Spain, Mexico, France, Germany and Brazil
+  selectable per column) and MUST NOT use real values.
 
 Rationale: a spec the user can audit in full is the only honest answer to "what was taken
 from my data?".
@@ -202,4 +203,4 @@ Each amendment MUST state the rationale, update the Sync Impact Report, and bump
 - **Compliance**: every pull request and plan review MUST verify compliance. Any justified
   deviation MUST be recorded in the plan's complexity-tracking table.
 
-**Version**: 1.0.1 | **Ratified**: 2026-10-30 | **Last Amended**: 2026-11-02
+**Version**: 1.0.2 | **Ratified**: 2026-10-30 | **Last Amended**: 2026-11-02

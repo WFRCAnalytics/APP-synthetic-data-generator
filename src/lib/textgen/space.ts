@@ -21,4 +21,5 @@ export const NATURAL_SPACE: Record<PersonalKind, number> = {
 export const NO_SUFFIX: ReadonlySet<PersonalKind> = new Set<PersonalKind>(["phone", "ip", "ssn"]);
 
 /** True when a column of this kind with this many distinct values needs a suffix on some of them. */
-export const needsSuffix = (kind: PersonalKind, distinct: number): boolean => !NO_SUFFIX.has(kind) && distinct > NATURAL_SPACE[kind];
+export const needsSuffix = (kind: PersonalKind, distinct: number): boolean =>
+  !NO_SUFFIX.has(kind) && distinct > NATURAL_SPACE[kind];

@@ -4,6 +4,7 @@
 // touches the database and a re-profile never loses them.
 
 import type { CoordinateAxis } from "../classify/coordinate";
+import type { PersonalLocale } from "../textgen/locales";
 import { idFit, shortStringFit } from "./idCapacity";
 import type {
   ColumnProfile,
@@ -40,6 +41,8 @@ export interface LocalEdits {
   mergeUnderK?: number | null;
   labelCodes?: boolean;
   outputName?: string;
+  /** The region the invented values of a personal column come from. */
+  locale?: PersonalLocale;
   /** Treat a decimal column as a coordinate of this axis; null says it is not one. */
   coordinate?: CoordinateAxis | null;
   /** What the codes of the column mean (a codebook); null removes them. */
@@ -107,6 +110,10 @@ export function applyEdits(p: ColumnProfile, e: LocalEdits | undefined): ColumnP
     const kind = e.personalKind ?? p.summary.personalKind;
     if (kind !== p.summary.personalKind)
       out.summary = { ...p.summary, personalKind: kind, format: undefined };
+    if (e.locale !== undefined) {
+      if (e.locale === "en_US") delete out.locale;
+      else out.locale = e.locale;
+    }
     const ack = e.ssnAcknowledged ?? p.acknowledged ?? false;
     if (kind === "ssn") {
       out.acknowledged = ack;

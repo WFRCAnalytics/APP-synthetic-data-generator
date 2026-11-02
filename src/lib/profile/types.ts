@@ -12,6 +12,7 @@ import type {
 } from "../spec/types";
 import type { Encoding } from "../encoding/detect";
 import type { CoordinateAxis } from "../classify/coordinate";
+import type { PersonalLocale } from "../textgen/locales";
 import type { JsonKind, JsonLayout } from "../json/types";
 import type { ParquetType, UnsupportedReason } from "../parquet/types";
 import type { QuoteStyle, LineEnding } from "../csv/writer";
@@ -193,6 +194,8 @@ export interface ColumnProfile {
   parquetType?: ParquetType;
   /** What the codes of the column mean, from a codebook: value to label. Documentation, never data. */
   valueLabels?: Record<string, string>;
+  /** The region the invented personal values come from (en_US when absent). */
+  locale?: PersonalLocale;
   /** The column holds a coordinate: only its bounding box and decimal places are kept, and values are spread evenly inside it. */
   coordinate?: CoordinateAxis;
   /** The JSON kind of the key in a JSON file. */

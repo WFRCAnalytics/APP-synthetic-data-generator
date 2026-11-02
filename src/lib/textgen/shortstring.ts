@@ -18,7 +18,9 @@ export class ShortStringError extends Error {
     readonly allowed: bigint,
     readonly needed: number,
   ) {
-    super(`For length ${length} the pattern allows ${allowed} distinct values but the column needs ${needed}.`);
+    super(
+      `For length ${length} the pattern allows ${allowed} distinct values but the column needs ${needed}.`,
+    );
     this.name = "ShortStringError";
   }
 }
@@ -50,13 +52,23 @@ export function makeShortStringGenerator(plan: ShortStringPlan, key: number): Sh
     const capacity = maskCapacity(mask);
     if (BigInt(x.count) > capacity) throw new ShortStringError(x.length, capacity, x.count);
     const slotKey = mix32((key ^ Math.imul(x.length, 0x9e3779b1) ^ 0x5eed) >>> 0);
-    const toValue = (index: bigint | number): string => (capacity <= TWO_53 ? maskValueAtNumber(mask as MaskToken[], Number(index)) : maskValueAt(mask, BigInt(index)));
-    const permute: (i: number) => bigint | number = capacity <= TWO_32 ? makePermutation(Number(capacity), slotKey) : ((p) => (i: number) => p(BigInt(i)))(makePermutationBig(capacity, slotKey));
+    const toValue = (index: bigint | number): string =>
+      capacity <= TWO_53
+        ? maskValueAtNumber(mask as MaskToken[], Number(index))
+        : maskValueAt(mask, BigInt(index));
+    const permute: (i: number) => bigint | number =
+      capacity <= TWO_32
+        ? makePermutation(Number(capacity), slotKey)
+        : (
+            (p) => (i: number) =>
+              p(BigInt(i))
+          )(makePermutationBig(capacity, slotKey));
     return (i: number) => toValue(permute(i));
   });
 
   // Shuffle which group has which length, so length does not follow the repeat structure.
-  const shuffle = groups > 1 ? makePermutation(groups, mix32((key ^ 0x1e9a7) >>> 0)) : (g: number) => g;
+  const shuffle =
+    groups > 1 ? makePermutation(groups, mix32((key ^ 0x1e9a7) >>> 0)) : (g: number) => g;
 
   const generator = ((group: number): string => {
     const g = shuffle(group);

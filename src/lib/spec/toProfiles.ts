@@ -174,6 +174,7 @@ export function profileFromSpec(c: ColumnSpec): ColumnProfile {
       };
       const unacknowledged = c.kind === "ssn" && c.acknowledged !== true;
       return {
+        ...(c.locale ? { locale: c.locale } : {}),
         ...base,
         detectedType: "personal",
         type: unacknowledged ? "unsupported" : "personal",

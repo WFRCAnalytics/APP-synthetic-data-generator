@@ -10,7 +10,13 @@ import { SPEC_VERSION } from "../spec/types";
 import { validateSpec } from "../spec/validate";
 import { apportion, bellQuantiles, evenQuantiles, meanOf, sdOf } from "./quantiles";
 import { missingCount, parseDay, presentRows, validateDesign } from "./validate";
-import { extensionOf, type Design, type DesignColumn, type DesignOutput, type DesignProblem } from "./types";
+import {
+  extensionOf,
+  type Design,
+  type DesignColumn,
+  type DesignOutput,
+  type DesignProblem,
+} from "./types";
 
 const na = (rows: number, pct: number) => {
   const count = missingCount(rows, pct);
@@ -29,14 +35,39 @@ export function columnSpecOf(c: DesignColumn, rows: number): ColumnSpec {
     case "decimal": {
       const decimals = c.kind === "integer" ? 0 : c.decimals;
       if (c.shape === "bell") {
-        const q = bellQuantiles(c.min, c.max, c.typical, c.spread).map((v) => round(v, Math.max(decimals, 6)));
-        return { ...base, type: c.kind === "integer" ? "integer" : "float", mode: "match_shape", min: c.min, max: c.max, mean: round(meanOf(q), 6), sd: round(sdOf(q), 6), decimals, quantiles: q };
+        const q = bellQuantiles(c.min, c.max, c.typical, c.spread).map((v) =>
+          round(v, Math.max(decimals, 6)),
+        );
+        return {
+          ...base,
+          type: c.kind === "integer" ? "integer" : "float",
+          mode: "match_shape",
+          min: c.min,
+          max: c.max,
+          mean: round(meanOf(q), 6),
+          sd: round(sdOf(q), 6),
+          decimals,
+          quantiles: q,
+        };
       }
-      return { ...base, type: c.kind === "integer" ? "integer" : "float", mode: "uniform", min: c.min, max: c.max, mean: (c.min + c.max) / 2, sd: round((c.max - c.min) / Math.sqrt(12), 6), decimals, quantiles: evenQuantiles(c.min, c.max) };
+      return {
+        ...base,
+        type: c.kind === "integer" ? "integer" : "float",
+        mode: "uniform",
+        min: c.min,
+        max: c.max,
+        mean: (c.min + c.max) / 2,
+        sd: round((c.max - c.min) / Math.sqrt(12), 6),
+        decimals,
+        quantiles: evenQuantiles(c.min, c.max),
+      };
     }
 
     case "category": {
-      const counts = apportion(c.labels.map((l) => l.weight), present);
+      const counts = apportion(
+        c.labels.map((l) => l.weight),
+        present,
+      );
       const entries: Record<string, number> = {};
       c.labels.forEach((l, i) => {
         if (counts[i] > 0) entries[l.label] = counts[i];
@@ -58,8 +89,21 @@ export function columnSpecOf(c: DesignColumn, rows: number): ColumnSpec {
       const start = parseDay(c.start) as number;
       const end = parseDay(c.end) as number;
       // Days since the epoch for a date; seconds for a moment, from the start of the first day to the end of the last.
-      const [min, max] = kind === "date" ? [start / 86400000, end / 86400000] : [start / 1000, end / 1000 + 86399];
-      return { ...base, type: c.kind, mode: "uniform", format: c.format, granularity: patternGranularity(c.format), min, max, mean: (min + max) / 2, sd: round((max - min) / Math.sqrt(12), 3), decimals: 0, quantiles: evenQuantiles(min, max) };
+      const [min, max] =
+        kind === "date" ? [start / 86400000, end / 86400000] : [start / 1000, end / 1000 + 86399];
+      return {
+        ...base,
+        type: c.kind,
+        mode: "uniform",
+        format: c.format,
+        granularity: patternGranularity(c.format),
+        min,
+        max,
+        mean: (min + max) / 2,
+        sd: round((max - min) / Math.sqrt(12), 3),
+        decimals: 0,
+        quantiles: evenQuantiles(min, max),
+      };
     }
 
     case "id": {
@@ -69,7 +113,17 @@ export function columnSpecOf(c: DesignColumn, rows: number): ColumnSpec {
     }
 
     case "personal":
-      return { ...base, type: "personal", kind: c.personal, repeat_structure: { "1": present } };
+      return {
+        ...base,
+        type: "personal",
+        kind: c.personal,
+        ...(c.locale &&
+        c.locale !== "en_US" &&
+        ["full_name", "first_name", "last_name", "email", "phone", "address"].includes(c.personal)
+          ? { locale: c.locale }
+          : {}),
+        repeat_structure: { "1": present },
+      };
 
     case "text":
       return {
@@ -89,7 +143,11 @@ export function columnSpecOf(c: DesignColumn, rows: number): ColumnSpec {
 
 /** A sheet name from a table name: the characters a sheet cannot hold are replaced, and it is cut to 31 characters. */
 export function sheetNameOf(tableName: string): string {
-  const cleaned = tableName.trim().replace(/[[\]:*?/\\]/g, "_").replace(/^'+|'+$/g, "").slice(0, 31);
+  const cleaned = tableName
+    .trim()
+    .replace(/[[\]:*?/\\]/g, "_")
+    .replace(/^'+|'+$/g, "")
+    .slice(0, 31);
   return cleaned === "" ? "Sheet1" : cleaned;
 }
 
@@ -101,7 +159,8 @@ const YES_NO = [
 ];
 
 /** Whether a yes-or-no column's two labels are a plain pair a JSON file can write as true and false. */
-const isPlainYesNo = (yes: string, no: string): boolean => YES_NO.some(([a, b]) => yes.trim().toLowerCase() === a && no.trim().toLowerCase() === b);
+const isPlainYesNo = (yes: string, no: string): boolean =>
+  YES_NO.some(([a, b]) => yes.trim().toLowerCase() === a && no.trim().toLowerCase() === b);
 
 /** The number format of a workbook cell for a column (specs/009 assumptions). */
 function cellFormatOf(c: DesignColumn): string | undefined {
@@ -175,15 +234,52 @@ function sourceOf(design: Design): SourceSpec {
   const file_name = `${design.tableName.trim()}.${extensionOf(design.output)}`;
   switch (design.output) {
     case "xlsx":
-      return { format: "xlsx", file_name, sheet: sheetNameOf(design.tableName), skip_rows: 0, header: true, date1904: false };
+      return {
+        format: "xlsx",
+        file_name,
+        sheet: sheetNameOf(design.tableName),
+        skip_rows: 0,
+        header: true,
+        date1904: false,
+      };
     case "parquet":
-      return { format: "parquet", file_name, row_groups: Math.max(1, Math.ceil(design.rows / 65536)) };
+      return {
+        format: "parquet",
+        file_name,
+        row_groups: Math.max(1, Math.ceil(design.rows / 65536)),
+      };
     case "json":
-      return { format: "json", file_name, form: "array", indent: "2", line_ending: "lf", trailing_newline: true, bom: false };
+      return {
+        format: "json",
+        file_name,
+        form: "array",
+        indent: "2",
+        line_ending: "lf",
+        trailing_newline: true,
+        bom: false,
+      };
     case "ndjson":
-      return { format: "json", file_name, form: "lines", indent: "compact", line_ending: "lf", trailing_newline: true, bom: false };
+      return {
+        format: "json",
+        file_name,
+        form: "lines",
+        indent: "compact",
+        line_ending: "lf",
+        trailing_newline: true,
+        bom: false,
+      };
     default:
-      return { format: "csv", file_name, encoding: "utf-8", delimiter: ",", quote: '"', quote_style: "minimal", line_ending: "lf", trailing_newline: true, header: true };
+      return {
+        format: "csv",
+        file_name,
+        encoding: "utf-8",
+        delimiter: ",",
+        quote: '"',
+        quote_style: "minimal",
+        line_ending: "lf",
+        trailing_newline: true,
+        header: true,
+      };
   }
 }
 
@@ -192,7 +288,8 @@ export type DesignResult = { ok: true; spec: SpecFile } | { ok: false; problems:
 /** The spec of a design, or the problems that stop it from being one. */
 export function specFromDesign(design: Design): DesignResult {
   const problems = validateDesign(design);
-  if (design.columns.length === 0) problems.push({ columnId: null, field: "columns", message: "Add at least one column." });
+  if (design.columns.length === 0)
+    problems.push({ columnId: null, field: "columns", message: "Add at least one column." });
   if (problems.length > 0) return { ok: false, problems };
 
   const spec: SpecFile = {
@@ -200,11 +297,21 @@ export function specFromDesign(design: Design): DesignResult {
     source: sourceOf(design),
     n_rows: design.rows,
     seed: design.seed,
-    columns: design.columns.map((c) => withFormatFields(columnSpecOf(c, design.rows), c, design.output)),
+    columns: design.columns.map((c) =>
+      withFormatFields(columnSpecOf(c, design.rows), c, design.output),
+    ),
   };
 
   // The same validator as a loaded spec: a design that passes it is a spec the rest of the app accepts.
   const checked = validateSpec(JSON.parse(JSON.stringify(spec)));
-  if (!checked.ok) return { ok: false, problems: checked.problems.map((p) => ({ columnId: design.columns.find((c) => c.name.trim() === p.column)?.id ?? null, field: "spec", message: p.message })) };
+  if (!checked.ok)
+    return {
+      ok: false,
+      problems: checked.problems.map((p) => ({
+        columnId: design.columns.find((c) => c.name.trim() === p.column)?.id ?? null,
+        field: "spec",
+        message: p.message,
+      })),
+    };
   return { ok: true, spec: checked.spec };
 }

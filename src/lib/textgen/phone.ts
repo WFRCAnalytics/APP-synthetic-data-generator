@@ -21,7 +21,10 @@ export function fillShape(shape: string, digits: string): string {
 }
 
 export function makePhoneComposer(format?: PersonalFormat): Composer {
-  const shapes = format?.shapes && format.shapes.length > 0 ? format.shapes : [{ shape: DEFAULT_PHONE_SHAPE, share: 1 }];
+  const shapes =
+    format?.shapes && format.shapes.length > 0
+      ? format.shapes
+      : [{ shape: DEFAULT_PHONE_SHAPE, share: 1 }];
   const total = shapes.reduce((a, s) => a + s.share, 0) || 1;
   const cumulative: number[] = [];
   shapes.reduce((acc, s) => (cumulative.push(acc + s.share / total), acc + s.share / total), 0);

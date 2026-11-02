@@ -174,6 +174,9 @@ function baseColumnSpec(p: ColumnProfile): ColumnSpec {
         ...detail,
         type: "personal",
         kind: s.personalKind,
+        ...(p.locale && p.locale !== "en_US" && s.personalKind !== "ssn"
+          ? { locale: p.locale }
+          : {}),
         repeat_structure: s.repeatStructure,
         ...(s.format && Object.keys(s.format).length > 0 ? { format: s.format } : {}),
         ...(s.personalKind === "ssn" && p.acknowledged ? { acknowledged: true } : {}),

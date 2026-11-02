@@ -61,6 +61,8 @@ download the fake file and the spec.
   keys in the same order, each written as the same JSON kind (number, text, true or false), exactly as many nulls
   and as many absent keys as the real file, and the same indent, line ending and trailing newline. A key that mixes
   numbers and text is read and written as text; keys that hold objects or lists are not read or faked.
+- **Languages and regions**: invented names, emails, phone numbers and street addresses can come from the United States (default),
+  Spain, Mexico, France, Germany or Brazil, chosen per personal column.
 - **Coordinates**: latitude, longitude and map-position columns keep only their bounding box and decimal places; values are
   spread evenly inside it. Combined coordinates and WKT shapes are still left out.
 - **Codebook**: add a CSV or JSON codebook on Review to say what the codes of a coded column mean; the labels show on Review

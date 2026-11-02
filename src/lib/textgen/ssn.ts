@@ -9,7 +9,10 @@ import { mixedRadix } from "./compose";
 export const DEFAULT_SSN_SHAPE = "999-99-9999";
 
 export function makeSsnComposer(format?: PersonalFormat): Composer {
-  const shape = format?.shape && (format.shape.match(/9/g) ?? []).length === 9 ? format.shape : DEFAULT_SSN_SHAPE;
+  const shape =
+    format?.shape && (format.shape.match(/9/g) ?? []).length === 9
+      ? format.shape
+      : DEFAULT_SSN_SHAPE;
   const AREAS = 100; // 900 to 999
   const GROUPS = 99; // 01 to 99
   const SERIALS = 9999; // 0001 to 9999

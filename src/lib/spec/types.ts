@@ -4,6 +4,7 @@
 // personal identifiers or coordinates (constitution Principle II).
 
 import type { CoordinateAxis } from "../classify/coordinate";
+import type { PersonalLocale } from "../textgen/locales";
 import type { JsonForm, JsonIndent, JsonKind, JsonLineEnding } from "../json/types";
 import type { ParquetType } from "../parquet/types";
 
@@ -191,6 +192,8 @@ export interface PersonalFormat {
 export interface PersonalColumn extends ColumnBase {
   type: "personal";
   kind: PersonalKind;
+  /** The region the invented values come from; en_US when absent. */
+  locale?: PersonalLocale;
   /** Group size (as a string key) to the number of distinct values with that size. */
   repeat_structure: Record<string, number>;
   format?: PersonalFormat;

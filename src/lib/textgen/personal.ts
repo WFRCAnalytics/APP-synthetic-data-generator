@@ -5,6 +5,8 @@
 
 import type { PersonalFormat, PersonalKind } from "../spec/types";
 import { mixedRadix } from "./compose";
+import { makeLocalePersonalComposer } from "./localePersonal";
+import type { PersonalLocale } from "./locales";
 import { makePhoneComposer } from "./phone";
 import { makeSsnComposer } from "./ssn";
 import * as words from "./wordlists";
@@ -78,7 +80,9 @@ function address(format?: PersonalFormat): Composer {
     valueAt(index, suffix) {
       const [n, si, xi] = mixedRadix(index, [NUMBERS, streets.length, suffixes.length]);
       const street = `${n + 1} ${streets[si]} ${suffixes[xi]}`;
-      const unit = format?.unit ? `, ${(index * 2654435761) % 2 === 0 ? "Apt." : "Suite"} ${(index % 899) + 100}` : "";
+      const unit = format?.unit
+        ? `, ${(index * 2654435761) % 2 === 0 ? "Apt." : "Suite"} ${(index % 899) + 100}`
+        : "";
       return `${street}${unit}${suffix === 0 ? "" : ` #${suffix + 1}`}`;
     },
   };
@@ -100,7 +104,9 @@ function url(): Composer {
 // First octets that are not private, loopback, link-local, multicast, documentation or reserved, so an
 // invented address is never a real internal address and never one of the documentation ranges.
 const RESERVED_FIRST_OCTETS = new Set([0, 10, 100, 127, 169, 172, 192, 198, 203]);
-const FIRST_OCTETS = Array.from({ length: 223 }, (_, i) => i + 1).filter((o) => !RESERVED_FIRST_OCTETS.has(o));
+const FIRST_OCTETS = Array.from({ length: 223 }, (_, i) => i + 1).filter(
+  (o) => !RESERVED_FIRST_OCTETS.has(o),
+);
 
 function ip(): Composer {
   return {
@@ -115,16 +121,32 @@ function ip(): Composer {
 
 function firstName(): Composer {
   const f = words.firstNames;
-  return { natural: f.length, suffixes: true, valueAt: (index, suffix) => `${f[index]}${suffix === 0 ? "" : ` ${suffix + 1}`}` };
+  return {
+    natural: f.length,
+    suffixes: true,
+    valueAt: (index, suffix) => `${f[index]}${suffix === 0 ? "" : ` ${suffix + 1}`}`,
+  };
 }
 
 function lastName(): Composer {
   const l = words.lastNames;
-  return { natural: l.length, suffixes: true, valueAt: (index, suffix) => `${l[index]}${suffix === 0 ? "" : ` ${suffix + 1}`}` };
+  return {
+    natural: l.length,
+    suffixes: true,
+    valueAt: (index, suffix) => `${l[index]}${suffix === 0 ? "" : ` ${suffix + 1}`}`,
+  };
 }
 
 /** The composer for a kind, honoring the format classes profiled from the real column. */
-export function makePersonalComposer(kind: PersonalKind, format?: PersonalFormat): Composer {
+export function makePersonalComposer(
+  kind: PersonalKind,
+  format?: PersonalFormat,
+  locale: PersonalLocale = "en_US",
+): Composer {
+  if (locale !== "en_US") {
+    const other = makeLocalePersonalComposer(kind, format, locale);
+    if (other) return other;
+  }
   switch (kind) {
     case "full_name":
       return fullName(format);

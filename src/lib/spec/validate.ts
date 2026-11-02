@@ -13,6 +13,7 @@ import {
   type CoordinateAxis,
 } from "../classify/coordinate";
 import { JSON_KINDS } from "../json/types";
+import { LOCALES } from "../textgen/locales";
 import { typeConflict, validateParquetType, type ParquetType } from "../parquet/types";
 import { describeFormat } from "../xlsx/formats";
 import { isValidSheetName, parseRange } from "../xlsx/names";
@@ -135,6 +136,7 @@ const PersonalSchema = v.strictObject({
     "ip",
     "ssn",
   ]),
+  locale: v.optional(v.picklist(LOCALES.map((l) => l.value) as [string, ...string[]])),
   repeat_structure: RepeatStructureSchema,
   format: v.optional(PersonalFormatSchema),
   acknowledged: v.optional(v.boolean()),
@@ -407,7 +409,8 @@ function checkColumn(col: ColumnSpec, rows: number, out: SpecProblem[]): void {
     }
   }
 
-  if (col.coordinate !== undefined && col.type !== "integer" && col.type !== "float") problem("coordinate", "Only a number column can be a coordinate.");
+  if (col.coordinate !== undefined && col.type !== "integer" && col.type !== "float")
+    problem("coordinate", "Only a number column can be a coordinate.");
 
   if (col.value_labels !== undefined) {
     // A label belongs to a value the column already holds (a category or a sentinel code), so the spec carries no other text.
@@ -440,6 +443,14 @@ function checkColumn(col: ColumnSpec, rows: number, out: SpecProblem[]): void {
     }
     case "personal": {
       checkRepeat(col.repeat_structure, remaining, problem);
+      if (
+        col.locale !== undefined &&
+        (col.kind === "ssn" || col.kind === "url" || col.kind === "ip")
+      )
+        problem(
+          "locale",
+          "A region applies to names, emails, phone numbers and street addresses only.",
+        );
       if (col.acknowledged !== undefined && col.kind !== "ssn")
         problem("acknowledged", "Only SSN-style columns take an acknowledgement.");
       if (

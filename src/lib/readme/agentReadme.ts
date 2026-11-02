@@ -4,6 +4,7 @@
 // never a row of the real file. Pure code, tested in Node.
 
 import { AXIS_LABELS } from "../classify/coordinate";
+import { localeLabel } from "../textgen/locales";
 import { EMPTY_TEXT_TOKEN, type ColumnSpec, type SpecFile } from "../spec/types";
 
 export interface AgentReadmeOptions {
@@ -53,7 +54,7 @@ function kindOf(c: ColumnSpec): string {
     case "survey_id":
       return "ID";
     case "personal":
-      return `invented ${c.kind.replace("_", " ")}`;
+      return `invented ${c.kind.replace("_", " ")}${c.locale ? ` (${localeLabel(c.locale)})` : ""}`;
     case "free_text":
       return "free text";
     case "short_string":

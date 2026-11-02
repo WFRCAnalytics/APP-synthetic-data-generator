@@ -2,6 +2,7 @@
 // change it, a plain-language explanation, a live sample of invented values and, for social-security
 // style numbers, the acknowledgement that switches generating on. Nothing here shows a real value.
 
+import { LOCALES, type PersonalLocale } from "../../lib/textgen/locales";
 import { InfoTip } from "../../components/InfoTip";
 import { useId } from "react";
 import type { LocalEdits } from "../../lib/profile/edits";
@@ -42,6 +43,15 @@ const KIND_LABEL: Record<PersonalKind, string> = {
   ssn: "Social-security-style number",
 };
 
+const LOCALE_KINDS: PersonalKind[] = [
+  "full_name",
+  "first_name",
+  "last_name",
+  "email",
+  "phone",
+  "address",
+];
+
 const NAME_KINDS: PersonalKind[] = ["full_name", "first_name", "last_name"];
 
 export function PersonalKindEditor({
@@ -71,6 +81,7 @@ export function PersonalKindEditor({
             keeps the same number of distinct values ({s.distinct.toLocaleString("en-US")}), the
             same number of repeats and the same missing values. No real value is stored in the spec.
             {(NAME_KINDS.includes(kind) || kind === "address") &&
+              (profile.locale ?? "en_US") === "en_US" &&
               " Invented values use plain US English characters, so accents or other scripts in the real values are not kept."}
           </InfoTip>
           {kind === "phone" && shapes.length > 1 && (
@@ -108,6 +119,29 @@ export function PersonalKindEditor({
         </select>
       </div>
 
+      {LOCALE_KINDS.includes(kind) && (
+        <div className="field">
+          <span className="label-row">
+            <label htmlFor={`${id}-locale`}>Language and region</label>
+            <InfoTip label="More information">
+              Where the invented names, emails, phone numbers and addresses come from. Real values
+              are never copied; this only picks the word lists they are made from.
+            </InfoTip>
+          </span>
+          <select
+            id={`${id}-locale`}
+            value={profile.locale ?? "en_US"}
+            onChange={(e) => onEdit({ locale: e.target.value as PersonalLocale })}
+          >
+            {LOCALES.map((l) => (
+              <option key={l.value} value={l.value}>
+                {l.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {kind === "ssn" && (
         <div className="field">
           <span className="label-row">
@@ -130,7 +164,11 @@ export function PersonalKindEditor({
 
       <SamplePreview
         column={profile.name}
-        description={showSample ? { kind: "personal", personalKind: kind, format: s.format } : null}
+        description={
+          showSample
+            ? { kind: "personal", personalKind: kind, format: s.format, locale: profile.locale }
+            : null
+        }
         samples={samples}
         onRequest={onRequestSamples}
       />

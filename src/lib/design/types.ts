@@ -2,6 +2,7 @@
 // behind it. A design becomes an ordinary spec (build.ts), so nothing downstream knows it was designed.
 
 import type { PersonalKind } from "../spec/types";
+import type { PersonalLocale } from "../textgen/locales";
 
 export type DesignKind = "integer" | "decimal" | "category" | "yesno" | "date" | "datetime" | "id" | "personal" | "text";
 
@@ -54,6 +55,8 @@ export interface DesignId extends DesignBase {
 export interface DesignPersonal extends DesignBase {
   kind: "personal";
   personal: Exclude<PersonalKind, "ssn">;
+  /** The region the invented values come from; en_US unless chosen. */
+  locale?: PersonalLocale;
 }
 
 export interface DesignText extends DesignBase {

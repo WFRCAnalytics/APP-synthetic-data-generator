@@ -37,7 +37,8 @@ export interface UniqueSpace {
  * of the pass becomes the suffix. Spaces up to 2^53 are supported.
  */
 export function makeUniqueSpace(natural: number, groups: number, key: number): UniqueSpace {
-  if (!Number.isSafeInteger(natural) || natural < 1) throw new RangeError("The natural space must be a positive whole number.");
+  if (!Number.isSafeInteger(natural) || natural < 1)
+    throw new RangeError("The natural space must be a positive whole number.");
   const passes = Math.max(1, Math.ceil(groups / natural));
   const total = natural * passes;
   if (!Number.isSafeInteger(total)) throw new RangeError("The space is too large.");

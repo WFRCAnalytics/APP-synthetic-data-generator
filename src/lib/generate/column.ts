@@ -108,7 +108,7 @@ export function createColumnGen(col: ColumnSpec, ctx: ColumnContext): ColumnGen 
       if (groups.rows !== placer.valueTotal) {
         throw new GenerationError(`Column "${col.name}": the repeat structure covers ${groups.rows} rows, but ${placer.valueTotal} rows are left after NA and sentinels.`);
       }
-      const composer = makePersonalComposer(col.kind, col.format);
+      const composer = makePersonalComposer(col.kind, col.format, col.locale);
       if (!composer.suffixes && groups.groups > composer.natural) {
         throw new GenerationError(`Column "${col.name}": ${groups.groups} distinct values are needed but only ${composer.natural} can be invented for this kind.`);
       }
