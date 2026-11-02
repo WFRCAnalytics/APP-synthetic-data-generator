@@ -18,7 +18,7 @@ export function describeColumn(c: DesignColumn): string {
     case "datetime":
       return `${c.start} to ${c.end}`;
     case "id":
-      return `${c.prefix}${"9".repeat(Math.max(0, Math.min(c.digits, 12)))}`;
+      return c.link ? `the IDs of ${c.link.column} in ${c.link.table ?? "another table"}, ${c.perIdMin} to ${c.perIdMax} rows each` : `${c.prefix}${"9".repeat(Math.max(0, Math.min(c.digits, 12)))}`;
     case "personal":
       return c.personal.replace("_", " ");
     case "text":

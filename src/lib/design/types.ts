@@ -2,6 +2,7 @@
 // behind it. A design becomes an ordinary spec (build.ts), so nothing downstream knows it was designed.
 
 import type { PersonalKind } from "../spec/types";
+import type { IdLink } from "../spec/types";
 import type { PersonalLocale } from "../textgen/locales";
 
 export type DesignKind = "integer" | "decimal" | "category" | "yesno" | "date" | "datetime" | "id" | "personal" | "text";
@@ -50,6 +51,11 @@ export interface DesignId extends DesignBase {
   kind: "id";
   prefix: string;
   digits: number;
+  /** Use the IDs of another table's ID column instead of making new ones (specs/027). */
+  link?: IdLink;
+  /** With a link: the fewest and the most rows that share one ID (a household's persons). */
+  perIdMin: number;
+  perIdMax: number;
 }
 
 export interface DesignPersonal extends DesignBase {

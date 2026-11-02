@@ -90,3 +90,34 @@ test("a household's size follows the rows the persons table has for it", async (
   for (const [id, , membersText] of rows) expect(Number(membersText)).toBe(counts.get(id) ?? 0);
   expect(rows.reduce((n, r) => n + Number(r[2]), 0)).toBe(column(second.csv, 0).length);
 });
+
+test("a designed table can use the IDs of a table made from a file", async ({ page }) => {
+  await makeTable(page, "households.csv", households);
+  const first = await generate(page, /Download households_fake\.csv/);
+  const parentIds = new Set(column(first.csv, 0));
+
+  await page.goto(APP);
+  await page.getByRole("button", { name: "Design a table" }).click();
+  await page.getByRole("button", { name: /Table settings/ }).click();
+  await page.getByLabel("Table name").fill("persons");
+  await page.getByLabel("Number of rows").fill("500");
+  await page.getByRole("button", { name: "Add column" }).click();
+  await page.getByRole("button", { name: /^ID/ }).click();
+  await page.getByLabel("Column name").fill("hh_id");
+  await page.getByLabel("Spec of the other table").setInputFiles(first.specPath);
+  await page.getByRole("button", { name: "Use these IDs" }).click();
+  await expect(page.getByTestId("design-id-link-summary")).toContainText("households.csv");
+  await page.getByLabel("Fewest rows per ID").fill("1");
+  await page.getByLabel("Most rows per ID").fill("4");
+
+  await page.getByRole("button", { name: "Continue to Review" }).click();
+  await expect(page.getByRole("heading", { name: "Review columns" })).toBeVisible();
+  const second = await generate(page, /Download persons_fake\.csv/);
+  const ids = column(second.csv, 0);
+  expect(ids.length).toBe(500);
+  expect(ids.every((id) => parentIds.has(id))).toBe(true);
+  const sizes = new Map<string, number>();
+  for (const id of ids) sizes.set(id, (sizes.get(id) ?? 0) + 1);
+  expect(Math.min(...sizes.values())).toBeGreaterThanOrEqual(1);
+  expect(Math.max(...sizes.values())).toBeLessThanOrEqual(4);
+});

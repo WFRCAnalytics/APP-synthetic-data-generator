@@ -2,6 +2,7 @@
 // words of the form, and names the field so it can be shown next to it.
 
 import { isSupportedPattern } from "../datefmt/directives";
+import { repeatForRange } from "./repeat";
 import { MAX_DESIGN_COLUMNS, MAX_DESIGN_ROWS, type Design, type DesignColumn, type DesignProblem } from "./types";
 
 const MAX_NAME_LENGTH = 100;
@@ -84,6 +85,20 @@ function columnProblems(c: DesignColumn, rows: number, names: Map<string, number
       break;
     }
     case "id": {
+      if (c.link) {
+        const present = presentRows(rows, c.missingPct);
+        if (!Number.isInteger(c.perIdMin) || c.perIdMin < 1) add("perIdMin", "The fewest rows per ID must be a whole number, 1 or more.");
+        else if (!Number.isInteger(c.perIdMax) || c.perIdMax < c.perIdMin) add("perIdMax", "The most rows per ID must be a whole number, not less than the fewest.");
+        else {
+          const repeat = repeatForRange(present, c.perIdMin, c.perIdMax);
+          if (!repeat) add("perIdMax", `${present.toLocaleString("en-US")} rows cannot be shared out with ${c.perIdMin} to ${c.perIdMax} rows per ID. Change the range or the number of rows.`);
+          else {
+            const distinct = Object.values(repeat).reduce((a, b) => a + b, 0);
+            if (distinct > c.link.groups) add("perIdMin", `That needs ${distinct.toLocaleString("en-US")} different IDs but the other table makes only ${c.link.groups.toLocaleString("en-US")}. Allow more rows per ID.`);
+          }
+        }
+        break;
+      }
       if (!(Number.isInteger(c.digits) && c.digits >= 1 && c.digits <= 15)) add("digits", "Digits must be a whole number from 1 to 15.");
       if (c.prefix.length > 20) add("prefix", "Use a prefix of 20 characters or fewer.");
       if (CONTROL.test(c.prefix)) add("prefix", "A prefix cannot contain line breaks or other control characters.");

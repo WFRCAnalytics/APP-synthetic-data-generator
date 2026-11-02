@@ -7,6 +7,7 @@ import { DATE_FORMATS, DATETIME_FORMATS, KIND_LABELS } from "../../lib/design/de
 import type { DesignColumn, DesignProblem } from "../../lib/design/types";
 import type { PersonalKind } from "../../lib/spec/types";
 import { ChoiceField, FieldShell, NumberField, TextField } from "./fields";
+import { DesignIdLink } from "./DesignIdLink";
 
 const PERSONAL_CHOICES: readonly { value: Exclude<PersonalKind, "ssn">; label: string }[] = [
   { value: "full_name", label: "Full names" },
@@ -195,26 +196,34 @@ export function ColumnForm({ column: c, problems, onChange }: ColumnFormProps) {
       {c.kind === "id" && (
         <fieldset className="editor-group">
           <legend>ID pattern</legend>
-          <div className="design-row">
-            <TextField
-              label="Starts with"
-              value={c.prefix}
-              onChange={(prefix) => onChange({ ...c, prefix })}
-              problems={at("prefix")}
-              hint="Optional letters before the digits."
-            />
-            <NumberField
-              label="Digits"
-              value={c.digits}
-              onChange={(digits) => onChange({ ...c, digits })}
-              problems={at("digits")}
-              hint="Every row gets a different ID."
-            />
-          </div>
-          <p className="field-hint">
-            Example: {c.prefix}
-            {"0".repeat(Math.max(0, Math.min(15, Number.isFinite(c.digits) ? c.digits - 1 : 0)))}1
-          </p>
+          <DesignIdLink c={c} onChange={onChange} problems={at} />
+          {!c.link && (
+            <>
+              <div className="design-row">
+                <TextField
+                  label="Starts with"
+                  value={c.prefix}
+                  onChange={(prefix) => onChange({ ...c, prefix })}
+                  problems={at("prefix")}
+                  hint="Optional letters before the digits."
+                />
+                <NumberField
+                  label="Digits"
+                  value={c.digits}
+                  onChange={(digits) => onChange({ ...c, digits })}
+                  problems={at("digits")}
+                  hint="Every row gets a different ID."
+                />
+              </div>
+              <p className="field-hint">
+                Example: {c.prefix}
+                {"0".repeat(
+                  Math.max(0, Math.min(15, Number.isFinite(c.digits) ? c.digits - 1 : 0)),
+                )}
+                1
+              </p>
+            </>
+          )}
         </fieldset>
       )}
 

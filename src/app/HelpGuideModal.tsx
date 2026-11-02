@@ -133,7 +133,8 @@ export function HelpGuideModal({ open, onClose }: HelpGuideModalProps) {
             table&apos;s saved spec (Review, the column&apos;s &ldquo;IDs from another table&rdquo;). A
             whole-number column of the first table can then count the other table&apos;s rows for
             each ID (&ldquo;Number of rows in another table&rdquo;), so a household&apos;s size
-            matches its persons. Other columns are not linked.
+            matches its persons. A designed table can link an ID column the same way, with a range of rows per
+            ID. Other columns are not linked.
           </li>
           <li>
             <strong>Mean and spread can shift slightly after rounding.</strong> The optional

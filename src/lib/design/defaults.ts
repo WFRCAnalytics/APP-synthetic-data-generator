@@ -75,7 +75,7 @@ function makeColumn(kind: DesignKind, taken: readonly string[]): DesignColumn {
     case "datetime":
       return { ...base, kind, start: "2020-01-01", end: "2024-12-31", format: "%Y-%m-%d %H:%M:%S" };
     case "id":
-      return { ...base, kind, prefix: "P", digits: 6 };
+      return { ...base, kind, prefix: "P", digits: 6, perIdMin: 1, perIdMax: 3 };
     case "personal":
       return { ...base, kind, personal: "full_name" };
     case "text":

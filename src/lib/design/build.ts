@@ -3,6 +3,7 @@
 // to look real. The result is validated with the same validator as a spec file the person loads.
 
 import { patternGranularity, patternKind } from "../datefmt/directives";
+import { repeatForRange } from "./repeat";
 import type { JsonKind } from "../json/types";
 import type { ParquetType } from "../parquet/types";
 import type { ColumnSpec, MaskToken, SourceSpec, SpecFile } from "../spec/types";
@@ -107,6 +108,10 @@ export function columnSpecOf(c: DesignColumn, rows: number): ColumnSpec {
     }
 
     case "id": {
+      if (c.link) {
+        const repeat = repeatForRange(present, c.perIdMin, c.perIdMax) ?? { "1": present };
+        return { ...base, type: "survey_id", mask: [...c.link.mask], repeat_structure: repeat, link: c.link };
+      }
       const mask: MaskToken[] = [...c.prefix].map((ch) => ({ literal: ch }));
       for (let i = 0; i < c.digits; i++) mask.push("digit");
       return { ...base, type: "survey_id", mask, repeat_structure: { "1": present } };
