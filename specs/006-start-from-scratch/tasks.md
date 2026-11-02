@@ -35,5 +35,5 @@
 - [x] T017 privacy: no request leaves, nothing in storage, clean console (SC-005)
 - [x] T018 spec round trip: save a designed spec, load it in a fresh session, same seed gives the same bytes (SC-004)
 - [x] T019 Help guide, README and the spec notice mention Start from scratch
-- [ ] T020 browser matrix (Chromium, Edge, Firefox, WebKit) and offline zip session
+- [x] T020 browser matrix (Chromium, Edge, Firefox, WebKit) and offline zip session
 - [ ] T021 converge pass

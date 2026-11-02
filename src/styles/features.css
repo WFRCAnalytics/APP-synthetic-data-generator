@@ -1044,3 +1044,13 @@ section[aria-labelledby] > h2 {
 .shell-main .empty-state-hint {
   color: color-mix(in srgb, var(--color-wfrc-gray) 55%, var(--color-foreground));
 }
+
+/* The two doors already say what to do; the empty-state line under them is only spoken. */
+section[aria-labelledby="ingest-heading"] > .empty-state {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}

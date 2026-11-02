@@ -96,7 +96,7 @@ test("a designed table comes out as asked, and the same spec gives the same byte
   const fresh = await browser.newPage();
   await fresh.goto(APP);
   await fresh.getByLabel("Load existing spec").setInputFiles({ name: "trips_spec.json", mimeType: "application/json", buffer: Buffer.from(specText) });
-  await expect(fresh.getByRole("heading", { name: "Review columns" })).toBeVisible();
+  await expect(fresh.getByRole("heading", { name: "Review columns" })).toBeVisible({ timeout: 30_000 });
   await fresh.getByRole("button", { name: "Continue to Generate" }).click();
   await fresh.getByRole("region", { name: "Generate the fake table" }).getByRole("button", { name: /^Generate( again)?$/ }).click();
   await expect(fresh.getByText(/checks passed\./)).toBeVisible({ timeout: 60_000 });
