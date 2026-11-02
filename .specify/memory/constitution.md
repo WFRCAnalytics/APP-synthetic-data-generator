@@ -80,6 +80,8 @@ fake data runs unchanged on real data. This covers:
 - CSV delimiter, quote style, encoding, line endings, header presence, and BOM.
 - Excel sheet name and header row offset.
 - Parquet dtypes.
+- JSON form (array or one record per line), key order, null versus missing keys, indent, line ending
+  and trailing newline.
 
 Rationale: agents break on parsing details far more often than on statistics.
 
@@ -200,4 +202,4 @@ Each amendment MUST state the rationale, update the Sync Impact Report, and bump
 - **Compliance**: every pull request and plan review MUST verify compliance. Any justified
   deviation MUST be recorded in the plan's complexity-tracking table.
 
-**Version**: 1.0.0 | **Ratified**: 2026-10-30 | **Last Amended**: 2026-10-30
+**Version**: 1.0.1 | **Ratified**: 2026-10-30 | **Last Amended**: 2026-11-02

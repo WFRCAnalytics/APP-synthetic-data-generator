@@ -1,5 +1,5 @@
 {
-  "spec_version": 1,
+  "spec_version": 5,
   "source": {
     "format": "csv",
     "file_name": "survey.csv",

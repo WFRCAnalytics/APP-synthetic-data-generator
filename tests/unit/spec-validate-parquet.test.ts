@@ -12,7 +12,7 @@ const xlsxSource = { format: "xlsx", file_name: "t.xlsx", sheet: "S", skip_rows:
 const parquetSource = { format: "parquet", file_name: "survey.parquet", row_groups: 3 };
 const quantiles = Array.from({ length: 101 }, (_, i) => 10 + i);
 
-const spec = (source: unknown, columns: unknown[], over: Record<string, unknown> = {}) => ({ spec_version: 4, source, n_rows: 200, seed: 1, columns, ...over });
+const spec = (source: unknown, columns: unknown[], over: Record<string, unknown> = {}) => ({ spec_version: 5, source, n_rows: 200, seed: 1, columns, ...over });
 const int16 = { kind: "int", bits: 16, signed: true, nullable: true };
 const amount = (over: Record<string, unknown> = {}) => ({ name: "amount", type: "float", mode: "match_shape", min: 10, max: 110, decimals: 2, quantiles, parquet_type: { kind: "decimal", precision: 10, scale: 2, nullable: true }, ...over });
 const when = (over: Record<string, unknown> = {}) => ({ name: "when", type: "date", mode: "uniform", min: 19000, max: 19100, format: "%Y-%m-%d", granularity: "day", parquet_type: { kind: "date", nullable: false }, ...over });
@@ -29,16 +29,16 @@ const ok = (s: unknown) => {
   return r.spec;
 };
 
-describe("version 4", () => {
+describe("version 5", () => {
   it("is the version this app writes, and a parquet spec of it is valid", () => {
-    expect(SPEC_VERSION).toBe(4);
+    expect(SPEC_VERSION).toBe(5);
     const s = ok(spec(parquetSource, [amount(), when(), flag(), count()]));
     expect(s.source).toEqual(parquetSource);
     expect(s.columns[0].parquet_type).toEqual({ kind: "decimal", precision: 10, scale: 2, nullable: true });
   });
 
   it("is refused in an older version label only by the version rules, not by the source", () => {
-    expect(validateSpec(spec(parquetSource, [amount()], { spec_version: 5 })).ok).toBe(false);
+    expect(validateSpec(spec(parquetSource, [amount()], { spec_version: 4 })).ok).toBe(false);
   });
 });
 
@@ -110,7 +110,7 @@ describe("parquet_type on a column", () => {
 
 describe("older specs", () => {
   it("still load, and a CSV or Excel spec of version 4 writes its own format", () => {
-    expect(validateSpec(spec(csvSource, [amount({ parquet_type: undefined })], { spec_version: 3 })).ok).toBe(true);
+    expect(validateSpec(spec(csvSource, [amount({ parquet_type: undefined })], { spec_version: 5 })).ok).toBe(true);
     expect(ok(spec(xlsxSource, [amount({ parquet_type: undefined })])).source.format).toBe("xlsx");
   });
 });

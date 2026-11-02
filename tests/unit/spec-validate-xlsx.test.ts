@@ -11,7 +11,7 @@ const csvSource = { format: "csv", file_name: "t.csv", encoding: "utf-8", delimi
 const xlsxSource = { format: "xlsx", file_name: "t.xlsx", sheet: "Survey Data", range: "A3:I203", skip_rows: 2, header: true, date1904: false };
 const quantiles = Array.from({ length: 101 }, (_, i) => 10 + i);
 
-const spec = (source: unknown, columns: unknown[], over: Record<string, unknown> = {}) => ({ spec_version: 3, source, n_rows: 200, seed: 1, columns, ...over });
+const spec = (source: unknown, columns: unknown[], over: Record<string, unknown> = {}) => ({ spec_version: 5, source, n_rows: 200, seed: 1, columns, ...over });
 const money = (over: Record<string, unknown> = {}) => ({ name: "amount", type: "float", mode: "match_shape", min: 10, max: 110, decimals: 2, quantiles, cell_format: "#,##0.00", ...over });
 const when = (over: Record<string, unknown> = {}) => ({ name: "when", type: "date", mode: "uniform", min: 19000, max: 19100, format: "%Y-%m-%d", granularity: "day", cell_format: "mm/dd/yyyy", ...over });
 const zip = (over: Record<string, unknown> = {}) => ({ name: "zip", type: "short_string", pattern: ["digit", "digit", "digit", "digit", "digit"], length_groups: { "5": 200 }, repeat_structure: { "1": 200 }, cell_format: "@", ...over });
@@ -27,17 +27,18 @@ const messages = (s: unknown) => {
 };
 
 describe("versions", () => {
-  it("writes version 3 and reads 1, 2 and 3", () => {
-    expect(SPEC_VERSION).toBe(4);
-    for (const v of [1, 2, 3, 4]) expect(validateSpec(spec(csvSource, [money({ cell_format: undefined })], { spec_version: v })).ok, `version ${v}`).toBe(true);
+  it("writes version 5 and reads only that", () => {
+    expect(SPEC_VERSION).toBe(5);
+    expect(validateSpec(spec(csvSource, [money({ cell_format: undefined })], { spec_version: 5 })).ok).toBe(true);
+    expect(validateSpec(spec(csvSource, [money({ cell_format: undefined })], { spec_version: 4 })).ok).toBe(false);
   });
 
-  it("refuses version 5 with the newer-version message, and version 0", () => {
-    expect(messages(spec(xlsxSource, [money()], { spec_version: 5 })).join(" ")).toMatch(/newer version of the app/);
+  it("refuses version 6 with the newer-version message, and version 0", () => {
+    expect(messages(spec(xlsxSource, [money()], { spec_version: 6 })).join(" ")).toMatch(/newer version of the app/);
     expect(messages(spec(xlsxSource, [money()], { spec_version: 0 })).join(" ")).toMatch(/older, unsupported format/);
   });
 
-  it("still reads the slice 1 and slice 2 fixtures", () => {
+  it("reads the committed fixture", () => {
     const v1 = JSON.parse(readFileSync(join(__dirname, "../fixtures/spec-v1.json"), "utf8"));
     expect(validateSpec(v1).ok).toBe(true);
   });

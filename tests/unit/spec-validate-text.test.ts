@@ -10,7 +10,7 @@ import { validateSpec } from "../../src/lib/spec/validate";
 const quantiles = Array.from({ length: 101 }, (_, i) => 3 + i * 4);
 
 const base = (columns: unknown[], over: Record<string, unknown> = {}) => ({
-  spec_version: 2,
+  spec_version: 5,
   source: { format: "csv", file_name: "t.csv", encoding: "utf-8", delimiter: ",", header: true },
   n_rows: 1000,
   seed: 1,
@@ -40,16 +40,13 @@ describe("spec versions", () => {
     expect(validateSpec(base([personal({ repeat_structure: { "1": 1000 } })])).ok).toBe(true);
   });
 
-  it("still accepts version 1 files from slice 1 (FR-017)", () => {
-    const old = JSON.parse(readFileSync(join(__dirname, "../fixtures/spec-v1.json"), "utf8"));
-    expect(old.spec_version).toBe(1);
-    const r = validateSpec(old);
-    if (!r.ok) throw new Error(JSON.stringify(r.problems));
-    expect(r.ok).toBe(true);
+  it("refuses an older version (the app is in beta, so none is read)", () => {
+    const [p] = problems(base([personal()], { spec_version: 3 }));
+    expect(p.message).toMatch(/older, unsupported format|this app reads/);
   });
 
   it("refuses a newer version with the newer-version message", () => {
-    const [p] = problems(base([personal()], { spec_version: 5 }));
+    const [p] = problems(base([personal()], { spec_version: 6 }));
     expect(p.message).toMatch(/newer version of the app/);
   });
 

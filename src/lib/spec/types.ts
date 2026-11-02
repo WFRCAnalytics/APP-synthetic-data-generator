@@ -5,10 +5,10 @@
 
 import type { ParquetType } from "../parquet/types";
 
-/** The version this app writes. Version 2 added the personal, free_text and short_string types; version 3 the xlsx source; version 4 the parquet source. */
-export const SPEC_VERSION = 4;
+/** The version this app writes. Version 2 added the personal, free_text and short_string types; version 3 the xlsx source; version 4 the parquet source; version 5 the json source (no older version is read while the app is in beta). */
+export const SPEC_VERSION = 5;
 /** The versions this app reads. */
-export const READABLE_SPEC_VERSIONS: readonly number[] = [1, 2, 3, 4];
+export const READABLE_SPEC_VERSIONS: readonly number[] = [5];
 
 /**
  * In `na.tokens`, the token for a cell that holds empty text (as opposed to "" for a blank cell). It is

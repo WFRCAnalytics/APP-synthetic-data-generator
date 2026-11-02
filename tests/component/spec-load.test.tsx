@@ -16,7 +16,7 @@ type User = ReturnType<typeof userEvent.setup>;
 const quantiles = Array.from({ length: 101 }, (_, i) => 10 + i * 0.9);
 
 const goodSpec = {
-  spec_version: 1,
+  spec_version: 5,
   source: { format: "csv", file_name: "trips.csv", encoding: "utf-8", delimiter: ",", quote: '"', header: true },
   n_rows: 1000,
   seed: 7,
@@ -64,7 +64,7 @@ const card = (name: string) => {
 
 const xlsxSpec = {
   ...goodSpec,
-  spec_version: 3,
+  spec_version: 5,
   source: { format: "xlsx", file_name: "survey.xlsx", sheet: "Survey Data", range: "A3:C1003", skip_rows: 2, header: true, date1904: false },
   columns: goodSpec.columns.map((c) => (c.name === "fee" ? { ...c, cell_format: "#,##0.00" } : c)),
 };
@@ -97,7 +97,7 @@ describe("a workbook spec", () => {
 
 const parquetSpec = {
   ...goodSpec,
-  spec_version: 4,
+  spec_version: 5,
   source: { format: "parquet", file_name: "survey.parquet", row_groups: 2 },
   columns: [
     { name: "mode", type: "categorical", quoted: false, storage: "integer", counts: { "1": 600, "2": 400 }, parquet_type: { kind: "int", bits: 16, signed: true, nullable: true } },
@@ -128,7 +128,7 @@ describe("a Parquet spec", () => {
     await screen.findByRole("heading", { name: "Review columns" });
     await user.click(screen.getByRole("button", { name: "Save spec (JSON)" }));
     const again = JSON.parse(await readBlob(saved.at(-1)!));
-    expect(again.spec_version).toBe(4);
+    expect(again.spec_version).toBe(5);
     expect(again.source).toEqual({ format: "parquet", file_name: "survey.parquet", row_groups: 2 });
     expect(again.columns.map((c: { parquet_type?: unknown }) => c.parquet_type)).toEqual(parquetSpec.columns.map((c) => (c as { parquet_type?: unknown }).parquet_type));
   });
@@ -216,7 +216,7 @@ describe("a good spec", () => {
     await user.click(screen.getByRole("button", { name: "Save spec (JSON)" }));
     await waitFor(() => expect(saved).toHaveLength(1));
     const again = JSON.parse(await readBlob(saved[0]));
-    expect(again.spec_version).toBe(4); // saved with the current version, though it was loaded from version 1
+    expect(again.spec_version).toBe(5); // saved with the current version, though it was loaded from version 1
     expect(again.seed).toBe(7);
     expect(again.columns.map((c: { name: string }) => c.name)).toEqual(["mode", "fee", "hh_id"]);
   });
@@ -240,7 +240,7 @@ describe("a bad spec", () => {
   it("explains a newer spec version", async () => {
     const user = userEvent.setup();
     render(<App />);
-    await chooseSpec(user, specFile({ ...goodSpec, spec_version: 5 }));
+    await chooseSpec(user, specFile({ ...goodSpec, spec_version: 6 }));
     expect(await screen.findByTestId("spec-errors")).toHaveTextContent(/newer version of the app/);
   });
 

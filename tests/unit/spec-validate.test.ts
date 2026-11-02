@@ -8,7 +8,7 @@ const quantiles = Array.from({ length: 101 }, (_, i) => i); // 0..100
 // A small but complete valid spec covering each in-scope type (row count 100).
 function validSpec() {
   return {
-    spec_version: 1,
+    spec_version: 5,
     source: {
       format: "csv",
       file_name: "trips.csv",
@@ -104,7 +104,7 @@ describe("structure problems are named by column", () => {
 
 describe("version check", () => {
   it("explains a newer spec", () => {
-    const result = validateSpec({ ...validSpec(), spec_version: 5 });
+    const result = validateSpec({ ...validSpec(), spec_version: 6 });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.problems[0].message).toMatch(/newer version/);
   });
