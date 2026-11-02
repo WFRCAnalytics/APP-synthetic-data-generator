@@ -8,6 +8,7 @@
   gap: var(--space-4);
   align-self: stretch;
   min-width: 0;
+  position: relative;
 }
 
 .stepper-list {
@@ -93,7 +94,12 @@
 }
 
 .stepper-startover {
-  align-self: center;
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: var(--space-4);
+  white-space: nowrap;
   padding: var(--space-1) var(--space-2);
   background: transparent;
   border: none;

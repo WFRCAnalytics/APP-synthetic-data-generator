@@ -548,9 +548,9 @@ table.data-table tbody tr:last-child td {
   position: sticky;
   top: 0;
   z-index: 50;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-4);
   height: 60px;
   padding: 0 var(--space-5);
@@ -597,6 +597,7 @@ table.data-table tbody tr:last-child td {
 }
 
 .app-header-actions {
+  justify-self: end;
   display: flex;
   align-items: center;
   gap: var(--space-1);

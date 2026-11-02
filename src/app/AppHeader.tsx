@@ -13,7 +13,7 @@ import logoStackedWhite from "../assets/logo/stacked/WFRC_logo_stacked_white_tra
 import { useMediaQuery } from "../theme/useMediaQuery";
 import { useTheme } from "../theme/useTheme";
 import { ThemeToggle } from "./ThemeToggle";
-import { versionLabel } from "./version";
+import { APP_VERSION } from "./version";
 
 export interface AppHeaderProps {
   /** Shows the help button when provided (the help guide arrives in a later task). */
@@ -48,7 +48,7 @@ export function AppHeader({ onOpenHelp, children, steps }: AppHeaderProps) {
         <img src={logoSrc} alt="WFRC" className="app-header-logo" />
         <h1 className="app-header-title">Synthetic Data Generator</h1>
         <span className="app-header-version" data-testid="app-version">
-          {versionLabel()}
+          v{APP_VERSION}
         </span>
       </div>
       {steps}

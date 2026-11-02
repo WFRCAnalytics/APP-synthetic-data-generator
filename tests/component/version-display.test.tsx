@@ -25,7 +25,7 @@ describe("versionLabel", () => {
 describe("the page", () => {
   it("shows the version in the header", () => {
     render(<App />);
-    expect(screen.getByTestId("app-version")).toHaveTextContent(versionLabel());
+    expect(screen.getByTestId("app-version")).toHaveTextContent(`v${APP_VERSION}`);
   });
 
   it("repeats it in the help guide", async () => {
