@@ -26,8 +26,8 @@ describe("detectStat", () => {
     expect(detectStat(bytes("HEADER RECORD*******LIBRARY HEADER RECORD!!!!!!!", 64), "a.xpt")).toBe("xpt");
     expect(detectStat(bytes("HEADER RECORD*******LIBV8   HEADER RECORD!!!!!!!", 64), "a.xpt")).toBe("xpt");
   });
-  it("only SPSS and Stata can be written back", () => {
-    expect(WRITABLE_FORMATS).toEqual(["sav", "dta"]);
+  it("SPSS, Stata and SAS transport can be written back; a SAS data set cannot", () => {
+    expect(WRITABLE_FORMATS).toEqual(["sav", "dta", "xpt"]);
   });
   it("does not take text for either", () => {
     expect(detectStat(bytes("a,b,c\n1,2,3"), "t.dta")).toBeNull();

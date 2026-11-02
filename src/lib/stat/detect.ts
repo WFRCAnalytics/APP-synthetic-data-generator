@@ -4,8 +4,22 @@ export type StatFormat = "sav" | "dta" | "sas7bdat" | "xpt";
 
 export const STAT_FORMAT_NAMES: Record<StatFormat, string> = { sav: "SPSS", dta: "Stata", sas7bdat: "SAS", xpt: "SAS transport" };
 
-/** The formats the app can also write (SAS files are read only: ReadStat's SAS writer makes files real SAS cannot open). */
-export const WRITABLE_FORMATS: readonly StatFormat[] = ["sav", "dta"];
+/**
+ * The formats the app can also write. A .sas7bdat is read only: ReadStat's writer for it is reverse-engineered, so real SAS cannot
+ * open its files. A transport file (.xpt) is a published format, so it can be written.
+ */
+export const WRITABLE_FORMATS: readonly StatFormat[] = ["sav", "dta", "xpt"];
+
+/** The file types a table can be converted to after it is made (as a CSV): the statistical formats the app writes itself. */
+export type ConvertKind = "sav" | "dta" | "xpt";
+
+export const CONVERT_KINDS: readonly { value: ConvertKind; label: string; extension: string }[] = [
+  { value: "sav", label: "SPSS", extension: "sav" },
+  { value: "dta", label: "Stata", extension: "dta" },
+  { value: "xpt", label: "SAS transport", extension: "xpt" },
+];
+
+export const isConvertKind = (value: string): value is ConvertKind => CONVERT_KINDS.some((k) => k.value === value);
 
 /** How many bytes of the start of a file are needed to tell them apart. */
 export const DETECT_BYTES = 64;

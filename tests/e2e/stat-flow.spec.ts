@@ -18,9 +18,10 @@ async function generate(page: Page) {
   await expect(page.getByText(/checks passed\.|checks did not pass\./)).toBeVisible({ timeout: 180_000 });
 }
 
-for (const [name, label, magic, readmeText] of [
-  ["survey.sav", "SPSS", "$FL2", "An SPSS data file"],
-  ["survey.dta", "Stata", "<stata_dta>", "A Stata data file"],
+for (const [name, label, magic, readmeText, valueLabels] of [
+  ["survey.sav", "SPSS", "$FL2", "An SPSS data file", true],
+  ["survey.dta", "Stata", "<stata_dta>", "A Stata data file", true],
+  ["survey.xpt", "SAS transport", "HEADER RECORD*******LIBRARY", "A SAS transport file", false],
 ] as const) {
   test(`${name}: structure only, profiled, written as the same kind of file or as CSV`, async ({ page }, testInfo) => {
     const requests: string[] = [];
@@ -32,13 +33,13 @@ for (const [name, label, magic, readmeText] of [
     await expect(summary.getByRole("heading", { name: `${label} file` })).toBeVisible();
     await expect(summary).toContainText("120 rows, 6 variables");
     expect(await page.locator("body").innerText()).not.toContain("H1000"); // no value from the file is shown
-    await expect(page.getByTestId("stat-labels")).toContainText("4 codes mean");
+    if (valueLabels) await expect(page.getByTestId("stat-labels")).toContainText("4 codes mean");
 
     await page.getByRole("button", { name: "Profile this file" }).click();
     await expect(page.getByRole("heading", { name: "Review columns" })).toBeVisible({ timeout: 180_000 });
     // The labels of the codes are beside the column, taken from the file.
     await shownCard(page, "mode");
-    await expect(page.getByLabel("Value labels of mode")).toContainText("Bus");
+    if (valueLabels) await expect(page.getByLabel("Value labels of mode")).toContainText("Bus");
     await expect(page.getByTestId("column-description")).toHaveText("Mode"); // the variable label
     await page.getByRole("button", { name: "Continue to Generate" }).click();
     await generate(page);
@@ -57,7 +58,7 @@ for (const [name, label, magic, readmeText] of [
     await readme.saveAs(readmePath);
     const readmeBody = readFileSync(readmePath, "utf8");
     expect(readmeBody).toContain(readmeText);
-    expect(readmeBody).toContain("(Bus)");
+    if (valueLabels) expect(readmeBody).toContain("(Bus)");
     expect(readmeBody).toContain("| Column | Meaning |");
     expect(readmeBody).toContain("| Household |");
 
@@ -75,23 +76,20 @@ for (const [name, label, magic, readmeText] of [
     await page.locator("#file-input").setInputFiles(path);
     await expect(page.getByTestId("stat-summary")).toContainText("120 rows, 6 variables", { timeout: 60_000 });
     // The labels of the codes and the variable labels went into the file, so they come back.
-    await expect(page.getByTestId("stat-labels")).toContainText("4 codes mean");
+    if (valueLabels) await expect(page.getByTestId("stat-labels")).toContainText("4 codes mean");
     await page.getByRole("button", { name: "Profile this file" }).click();
     await expect(page.getByRole("heading", { name: "Review columns" })).toBeVisible({ timeout: 180_000 });
     await shownCard(page, "mode");
     await expect(page.getByTestId("column-description")).toHaveText("Mode");
-    await expect(page.getByLabel("Value labels of mode")).toContainText("Bus");
+    if (valueLabels) await expect(page.getByLabel("Value labels of mode")).toContainText("Bus");
 
     const origin = new URL(page.url()).origin;
     expect(requests.filter((u) => !u.startsWith(origin) && !u.startsWith("blob:") && !u.startsWith("data:"))).toEqual([]);
   });
 }
 
-for (const [name, label] of [
-  ["survey.sas7bdat", "SAS"],
-  ["survey.xpt", "SAS transport"],
-] as const) {
-  test(`${name}: read like the others, and written as a CSV because SAS files are read only`, async ({ page }, testInfo) => {
+for (const [name, label] of [["survey.sas7bdat", "SAS"]] as const) {
+  test(`${name}: read like the others, and written as a CSV because a SAS data set cannot be written`, async ({ page }, testInfo) => {
     await page.goto(APP);
     await page.locator("#file-input").setInputFiles(join(FIX, name));
     const summary = page.getByTestId("stat-summary");
@@ -105,7 +103,7 @@ for (const [name, label] of [
     await generate(page);
     // There is no "same as the file you opened" choice: the table is a CSV unless another type is picked.
     await expect(page.locator("#output-kind")).toHaveValue("csv");
-    await expect(page.locator("#output-kind option")).toHaveCount(5);
+    await expect(page.locator("#output-kind option")).toHaveCount(8);
     const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Download survey_fake.csv" }).click()]);
     const path = testInfo.outputPath("fake.csv");
     await download.saveAs(path);

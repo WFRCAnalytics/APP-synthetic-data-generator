@@ -138,7 +138,7 @@ export function App() {
               onGenerate={() => session.generate()}
               onCancel={() => session.cancel()}
               outputChoices={session.outputChoices()}
-              onOutputKindChange={(kind) => session.setOutputKind(kind)}
+              onOutputKindChange={(kind) => session.setOutputKind(kind as Parameters<Session["setOutputKind"]>[0])}
               onDownloadFake={() => {
                 void session.fakeFile().then((file) => {
                   if (file) downloadBlob(file.blob, session.fakeFileName());

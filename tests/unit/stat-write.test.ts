@@ -8,6 +8,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { writeDta } from "../../src/lib/stat/dta";
 import { writeSav } from "../../src/lib/stat/sav";
+import { ibmFloat, writeXpt } from "../../src/lib/stat/xpt";
 import { tableFromCsv } from "../../src/lib/stat/table";
 
 const csv = [
@@ -97,6 +98,18 @@ describe.skipIf(!python)("read back with pyreadstat", () => {
     expect(readBack("t.dta", writeDta(t)).value_labels).toEqual({});
   });
 
+  it("a SAS transport file holds the same table, with variable labels", () => {
+    const back = readBack("t.xpt", writeXpt(labelled));
+    expect(back.names).toEqual(["hh_id", "age", "income", "trip_dat", "start", "when", "note", "mode"]);
+    expect(back.rows).toBe(3);
+    expect(back.cells[0].slice(0, 3)).toEqual(["H1", 34, 52000.5]);
+    expect(back.cells[1][1]).toBeNull();
+    expect(back.cells[1][6]).toBe("café");
+    expect(back.cells[0][7]).toBe(2);
+    expect(back.labels.age).toBe("Age of the respondent");
+    expect(String(back.cells[0][3])).toContain("2024-03-05");
+  });
+
   it("names that the format cannot take are made valid and stay unique", () => {
     const t = tableFromCsv("my col,my col,1st\n1,2,3\n", { "my col": "integer", "1st": "integer" }, 255);
     const sav = readBack("n.sav", writeSav(t));
@@ -104,6 +117,18 @@ describe.skipIf(!python)("read back with pyreadstat", () => {
     expect(new Set(sav.names).size).toBe(3);
     expect(new Set(dta.names).size).toBe(3);
     expect(dta.names.every((n) => /^[A-Za-z_][A-Za-z0-9_]*$/.test(n))).toBe(true);
+  });
+});
+
+describe("IBM floating point", () => {
+  const hex = (x: number) => Buffer.from(ibmFloat(x)).toString("hex");
+  it("writes the values the format's own documentation gives", () => {
+    expect(hex(1)).toBe("4110000000000000");
+    expect(hex(-1)).toBe("c110000000000000");
+    expect(hex(0.5)).toBe("4080000000000000");
+    expect(hex(100)).toBe("4264000000000000");
+    expect(hex(0)).toBe("0000000000000000");
+    expect(hex(52000.5)).toBe("44cb20800000000" + "0");
   });
 });
 

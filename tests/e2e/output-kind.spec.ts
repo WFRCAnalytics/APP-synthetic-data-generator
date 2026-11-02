@@ -26,12 +26,15 @@ test("a CSV is written as a CSV by default, and the other file types are the cho
   await toGenerate(page);
   const select = page.locator("#output-kind");
   await expect(select).toHaveValue("same");
-  await expect(select.locator("option")).toHaveText([/CSV.*same as the file you opened/, /Excel/, /Parquet/, /JSON \(a list/, /JSON Lines/]);
+  await expect(select.locator("option")).toHaveText([/CSV.*same as the file you opened/, /Excel/, /Parquet/, /JSON \(a list/, /JSON Lines/, /SPSS/, /Stata/, /SAS transport/]);
   await generate(page);
   await expect(page.getByRole("button", { name: "Download trips_fake.csv" })).toBeVisible();
 });
 
 for (const [value, ext, magic, at] of [
+  ["sav", "sav", "$FL2", 0],
+  ["dta", "dta", "<stata_dta>", 0],
+  ["xpt", "xpt", "HEADER RECORD*******LIBRARY", 0],
   ["xlsx", "xlsx", "PK", 0],
   ["parquet", "parquet", "PAR1", 0],
   ["json", "json", "[", 0],

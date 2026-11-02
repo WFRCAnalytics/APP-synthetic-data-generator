@@ -4,7 +4,7 @@ import sys
 import pyreadstat
 
 path = sys.argv[1]
-reader = pyreadstat.read_sav if path.endswith(".sav") else pyreadstat.read_dta
+reader = pyreadstat.read_sav if path.endswith(".sav") else pyreadstat.read_xport if path.endswith(".xpt") else pyreadstat.read_dta
 df, meta = reader(path)
 out = {
     "names": list(df.columns),

@@ -18,7 +18,7 @@ export interface AgentReadmeOptions {
   /** The app's version, such as 0.4.0. */
   appVersion: string;
   /** Set when the file is an SPSS or Stata file made from the table (specs/018). */
-  statFormat?: "sav" | "dta";
+  statFormat?: "sav" | "dta" | "xpt";
 }
 
 const MAX_LABELS_SHOWN = 12;
@@ -188,7 +188,11 @@ export function agentReadme(spec: SpecFile, options: AgentReadmeOptions): string
       `- **Description of the table**: ${tick(options.specFileName)} (a small JSON file that holds only counts, limits, labels and formats).`,
     );
   const layout = options.statFormat
-    ? [`${options.statFormat === "sav" ? "An SPSS" : "A Stata"} data file. Numbers, dates and times are typed; everything else is text. Variable labels and the value labels of number columns are written into the file where the table has them.`]
+    ? [
+        options.statFormat === "xpt"
+          ? "A SAS transport file (version 5): variable names are at most eight characters, text at most 200 bytes. Numbers, dates and times are typed; everything else is text. Variable labels are written; value labels are not (SAS keeps them in a separate format catalog)."
+          : `${options.statFormat === "sav" ? "An SPSS" : "A Stata"} data file. Numbers, dates and times are typed; everything else is text. Variable labels and the value labels of number columns are written into the file where the table has them.`,
+      ]
     : layoutLines(spec);
   for (const line of layout) add(`- **Layout**: ${line}`);
   add("");

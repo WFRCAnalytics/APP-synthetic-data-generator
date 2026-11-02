@@ -8,7 +8,6 @@ import { parseSeed, type SessionState } from "../../app/session";
 import type { CheckRow } from "../../lib/generate/checks";
 import { GenerateProgress } from "./GenerateProgress";
 import { isExcelSettings, isJsonSettings } from "../../lib/profile/types";
-import type { OutputKind } from "../../lib/spec/retarget";
 import { narrowIdColumns, patternFit, shortfallText } from "../../lib/profile/idCapacity";
 
 export interface GenerateScreenProps {
@@ -22,7 +21,7 @@ export interface GenerateScreenProps {
   onDownloadReadme: () => void;
   onDownloadAll: () => void;
   outputChoices: { value: string; label: string }[];
-  onOutputKindChange: (kind: OutputKind | "same") => void;
+  onOutputKindChange: (kind: string) => void;
   /** Absent when the browser cannot write to a folder. */
   onSaveToFolder?: () => void;
   savedTo?: string | null;
@@ -155,14 +154,14 @@ export function GenerateScreen(props: GenerateScreenProps) {
                     The fake table is written as the same kind of file you opened unless you pick
                     another here. Numbers, dates and yes-or-no values keep their types where the file
                     type has them. SPSS and Stata files carry the table's variable labels and the value labels of number columns, and cut long text (255
-                    bytes for SPSS, 2,045 for Stata).
+                    bytes for SPSS, 2,045 for Stata). SAS transport files carry variable labels, at most eight characters of name and 200 bytes of text.
                   </InfoTip>
                 </span>
                 <select
                   id="output-kind"
                   value={session.outputKind}
                   disabled={running}
-                  onChange={(e) => props.onOutputKindChange(e.target.value as OutputKind | "same")}
+                  onChange={(e) => props.onOutputKindChange(e.target.value)}
                 >
                   {props.outputChoices.map((o) => (
                     <option key={o.value} value={o.value}>

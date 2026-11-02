@@ -17,9 +17,10 @@ import { DESIGN_OUTPUTS, extensionOf } from "../lib/design/types";
 import { matchCodebook } from "../lib/codebook/codebook";
 import { buildSpec } from "../lib/spec/build";
 import { outputKindOf, retarget, type OutputKind } from "../lib/spec/retarget";
-import { WRITABLE_FORMATS } from "../lib/stat/detect";
+import { CONVERT_KINDS, isConvertKind, type ConvertKind } from "../lib/stat/detect";
 import { writeDta, DTA_MAX_TEXT } from "../lib/stat/dta";
 import { writeSav, SAV_MAX_TEXT } from "../lib/stat/sav";
+import { writeXpt, XPT_MAX_TEXT } from "../lib/stat/xpt";
 import { tableFromCsv, type ColumnMeta } from "../lib/stat/table";
 import { profilesFromSpec, settingsFromSource } from "../lib/spec/toProfiles";
 import type { SpecFile, SpecProblem } from "../lib/spec/types";
@@ -126,7 +127,7 @@ export interface SessionState {
   rules: RuleSpec[];
   keepOriginalName: boolean;
   /** The file type of the fake table: the same kind as the real file (the default), or another one. */
-  outputKind: "same" | OutputKind;
+  outputKind: "same" | OutputKind | ConvertKind;
   gen: GenState;
   /** Columns came from a saved spec: there is no source file, so nothing can be profiled again. */
   specOnly: boolean;
@@ -462,7 +463,7 @@ export class Session {
         this.set({
           phase: "stat",
           // A SAS file is read only, so its fake table is a CSV unless another type is chosen.
-          outputKind: WRITABLE_FORMATS.includes(msg.info.format) ? "same" : "csv",
+          outputKind: isConvertKind(msg.info.format) ? "same" : "csv",
           stat: msg.info,
           fileName: msg.fileName,
           fileSize: msg.fileSize,
@@ -634,15 +635,17 @@ export class Session {
     this.set({ keepOriginalName });
   }
 
-  setOutputKind(outputKind: "same" | OutputKind): void {
+  setOutputKind(outputKind: "same" | OutputKind | ConvertKind): void {
     this.set({ outputKind });
   }
 
   /** The file types the fake table can be written as, the same kind as the real file first. */
-  outputChoices(): { value: "same" | OutputKind; label: string }[] {
+  outputChoices(): { value: "same" | OutputKind | ConvertKind; label: string }[] {
     const { stat, settings } = this.state;
-    const own: OutputKind | null = stat
-      ? null
+    const own: OutputKind | ConvertKind | null = stat
+      ? isConvertKind(stat.format)
+        ? stat.format
+        : null
       : settings && isExcelSettings(settings)
         ? "xlsx"
         : settings && isParquetSettings(settings)
@@ -652,13 +655,13 @@ export class Session {
               ? "ndjson"
               : "json"
             : "csv";
-    const labelOf = (kind: OutputKind) => DESIGN_OUTPUTS.find((o) => o.value === kind)?.label ?? kind;
-    const readOnly = stat !== null && !WRITABLE_FORMATS.includes(stat.format);
-    const same = stat
-      ? `${stat.format === "sav" ? "SPSS (.sav)" : "Stata (.dta)"}, same as the file you opened`
-      : `${labelOf(own as OutputKind)}, same as the file you opened`;
-    if (readOnly) return DESIGN_OUTPUTS.map((o) => ({ value: o.value, label: `${o.label} (.${o.extension})` }));
-    return [{ value: "same", label: same }, ...DESIGN_OUTPUTS.filter((o) => o.value !== own).map((o) => ({ value: o.value, label: `${o.label} (.${o.extension})` }))];
+    const kinds = [...DESIGN_OUTPUTS, ...CONVERT_KINDS];
+    const readOnly = stat !== null && own === null; // a .sas7bdat is read only: its table is a CSV unless another type is chosen
+    const labelOf = (kind: string) => kinds.find((o) => o.value === kind);
+    const named = labelOf(own ?? "csv");
+    const same = `${named?.label} (.${named?.extension}), same as the file you opened`;
+    const others = kinds.filter((o) => o.value !== own).map((o) => ({ value: o.value, label: `${o.label} (.${o.extension})` }));
+    return readOnly ? others : [{ value: "same", label: same }, ...others];
   }
 
   /** The spec for the current profiles and settings. */
@@ -676,7 +679,9 @@ export class Session {
       rules: this.state.rules,
     });
     const { outputKind } = this.state;
-    return outputKind === "same" ? spec : retarget(spec, outputKind);
+    if (outputKind === "same") return spec;
+    // The statistical formats are written from a finished CSV, so their run is a CSV run.
+    return retarget(spec, isConvertKind(outputKind) ? "csv" : outputKind);
   }
 
   /** Adds a rule between two columns; a rule that would not be valid is not added, and the reason is returned. */
@@ -782,16 +787,18 @@ export class Session {
   }
 
   /** The kind of file the fake table is written as when the real one was an SPSS or Stata file, otherwise null. */
-  statFormat(): "sav" | "dta" | null {
+  statFormat(): ConvertKind | null {
     const { stat, outputKind } = this.state;
-    return stat && outputKind === "same" && WRITABLE_FORMATS.includes(stat.format) ? (stat.format as "sav" | "dta") : null;
+    if (isConvertKind(outputKind)) return outputKind;
+    return stat && outputKind === "same" && isConvertKind(stat.format) ? stat.format : null;
   }
 
   fakeFileName(): string {
-    const { stat, keepOriginalName } = this.state;
-    if (stat && this.statFormat()) return exportName(stat.sourceName, keepOriginalName);
-    const { outputKind, fileName } = this.state;
-    const named = outputKind === "same" ? fileName : fileName.replace(/\.[^.]*$/, "") + `.${extensionOf(outputKind)}`;
+    const { stat, keepOriginalName, outputKind, fileName } = this.state;
+    const convert = this.statFormat();
+    const stem = (stat ? stat.sourceName : fileName).replace(/\.[^.]*$/, "");
+    if (convert) return exportName(`${stem}.${convert}`, keepOriginalName);
+    const named = outputKind === "same" ? fileName : `${stem}.${extensionOf(outputKind as OutputKind)}`;
     return exportName(named, keepOriginalName);
   }
 
@@ -810,8 +817,8 @@ export class Session {
       hints[c.output_name ?? c.name] = c.type;
       meta[c.output_name ?? c.name] = { description: c.description, valueLabels: c.value_labels };
     }
-    const table = tableFromCsv(await blob.text(), hints, format === "sav" ? SAV_MAX_TEXT : DTA_MAX_TEXT, meta);
-    const bytes = format === "sav" ? writeSav(table) : writeDta(table);
+    const table = tableFromCsv(await blob.text(), hints, format === "sav" ? SAV_MAX_TEXT : format === "dta" ? DTA_MAX_TEXT : XPT_MAX_TEXT, meta);
+    const bytes = format === "sav" ? writeSav(table) : format === "dta" ? writeDta(table) : writeXpt(table);
     return { blob: new Blob([bytes as BlobPart], { type: "application/octet-stream" }), text: { truncated: table.truncated } };
   }
 
