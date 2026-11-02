@@ -1082,3 +1082,52 @@ section[aria-labelledby="ingest-heading"] > .empty-state {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* A label and its control on one line; several of these share a row. */
+.inline-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-6);
+  margin-bottom: var(--space-2);
+}
+
+.field.inline-field {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.inline-field--grow {
+  flex: 1 1 18rem;
+}
+
+.inline-field label,
+.inline-check {
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.inline-field select {
+  flex: 1;
+  min-width: 0;
+}
+
+.inline-field input.inline-input--number {
+  width: 5rem;
+}
+
+.inline-field input.inline-input--range {
+  width: 10rem;
+}
+
+.inline-check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.workbook-dialog .field-hint {
+  display: block;
+  margin-bottom: var(--space-3);
+}
