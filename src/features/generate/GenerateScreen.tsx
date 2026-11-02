@@ -154,7 +154,7 @@ export function GenerateScreen(props: GenerateScreenProps) {
                   <InfoTip label="About the file type">
                     The fake table is written as the same kind of file you opened unless you pick
                     another here. Numbers, dates and yes-or-no values keep their types where the file
-                    type has them. SPSS and Stata files have no value labels and cut long text (255
+                    type has them. SPSS and Stata files are written without value labels and cut long text (255
                     bytes for SPSS, 2,045 for Stata).
                   </InfoTip>
                 </span>

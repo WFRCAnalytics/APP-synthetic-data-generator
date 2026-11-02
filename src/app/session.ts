@@ -14,6 +14,7 @@ import {
   type SourceSettings,
 } from "../lib/profile/types";
 import { DESIGN_OUTPUTS, extensionOf } from "../lib/design/types";
+import { matchCodebook } from "../lib/codebook/codebook";
 import { buildSpec } from "../lib/spec/build";
 import { outputKindOf, retarget, type OutputKind } from "../lib/spec/retarget";
 import { writeDta, DTA_MAX_TEXT } from "../lib/stat/dta";
@@ -502,6 +503,12 @@ export class Session {
           progress: null,
           busy: [],
         });
+        // The labels an SPSS or Stata file carries go beside the columns they belong to, as a codebook would.
+        const fileLabels = this.state.stat?.labels ?? [];
+        if (fileLabels.length > 0) {
+          const match = matchCodebook(fileLabels, this.base);
+          if (match.applied > 0) this.applyCodebook(match.labels);
+        }
         this.onProfiled(this.base.map((p) => ({ name: p.name, type: p.type })));
         break;
       }

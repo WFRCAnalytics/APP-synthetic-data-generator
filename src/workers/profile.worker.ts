@@ -11,6 +11,7 @@ import type { ColumnOverrides, ColumnProfile, FileSettings } from "../lib/profil
 import { createEngine, duckdb, loadExcelExtension, loadJsonExtension, loadParquetExtension, loadStatExtension, type Engine } from "../lib/duckdb/engine";
 import { detectJson } from "../lib/json/detect";
 import { csvNameOf, detectStat, hasStatExtension, type StatFormat } from "../lib/stat/detect";
+import { readStatLabels } from "../lib/stat/labels";
 import { inspectStat, loadStat, type StatInfo } from "./profile/stat";
 import { inspectJson, loadJson, type JsonInfo } from "./profile/json";
 import { classifyParquet } from "../lib/parquet/detect";
@@ -285,6 +286,7 @@ async function openStat(chosen: File, format: StatFormat): Promise<void> {
       rowCount: info.rowCount,
       expandedBytes: info.expandedBytes,
       columns: info.columns.map((c) => ({ name: c.name, kind: kindOf(c.type) })),
+      labels: await readStatLabels(chosen, format),
     },
   });
 }

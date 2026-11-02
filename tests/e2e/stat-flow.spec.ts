@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test, type Page } from "@playwright/test";
+import { shownCard } from "../helpers/review";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FIX = join(HERE, "../fixtures/stat");
@@ -31,9 +32,13 @@ for (const [name, label, magic, readmeText] of [
     await expect(summary.getByRole("heading", { name: `${label} file` })).toBeVisible();
     await expect(summary).toContainText("120 rows, 6 variables");
     expect(await page.locator("body").innerText()).not.toContain("H1000"); // no value from the file is shown
+    await expect(page.getByTestId("stat-labels")).toContainText("4 codes mean");
 
     await page.getByRole("button", { name: "Profile this file" }).click();
     await expect(page.getByRole("heading", { name: "Review columns" })).toBeVisible({ timeout: 180_000 });
+    // The labels of the codes are beside the column, taken from the file.
+    await shownCard(page, "mode");
+    await expect(page.getByLabel("Value labels of mode")).toContainText("Bus");
     await page.getByRole("button", { name: "Continue to Generate" }).click();
     await generate(page);
 
@@ -49,7 +54,9 @@ for (const [name, label, magic, readmeText] of [
     const [readme] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Download README for agents" }).click()]);
     const readmePath = testInfo.outputPath("readme.md");
     await readme.saveAs(readmePath);
-    expect(readFileSync(readmePath, "utf8")).toContain(readmeText);
+    const readmeBody = readFileSync(readmePath, "utf8");
+    expect(readmeBody).toContain(readmeText);
+    expect(readmeBody).toContain("(Bus)");
 
     // CSV is the other choice.
     await page.locator("#output-kind").selectOption("csv");

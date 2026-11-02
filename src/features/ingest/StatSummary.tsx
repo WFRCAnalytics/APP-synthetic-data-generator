@@ -35,12 +35,20 @@ export function StatSummary({ fileSize, info, onConfirm, busy }: StatSummaryProp
         <h3>{name} file</h3>
         <InfoTip label="More information">
           {info.sourceName} ({(fileSize / 1048576).toFixed(1)} MB). Only the structure is read at
-          this point; no value is shown. The data is read as a plain table, and the fake file is the same kind of file by default (other file types are on the Generate screen). Value labels and variable labels are not read or written; the codes are.
+          this point; no value is shown. The data is read as a plain table, and the fake file is the same kind of file by default (other file types are on the Generate screen). Value labels are kept beside the columns on Review (they are not written into the fake file); variable labels are not read.
         </InfoTip>
       </div>
       <p>
         <strong>{info.rowCount.toLocaleString("en-US")}</strong> rows,{" "}
         <strong>{info.columns.length}</strong> variables.
+        {info.labels.length > 0 && (
+          <span data-testid="stat-labels">
+            {" "}
+            The file says what {info.labels.length.toLocaleString("en-US")}{" "}
+            {info.labels.length === 1 ? "code means" : "codes mean"}; these labels will be kept
+            beside the columns on Review.
+          </span>
+        )}
       </p>
       {warnings.map((w) => (
         <div key={w} className="banner banner-warning" role="note" data-testid="size-warning">

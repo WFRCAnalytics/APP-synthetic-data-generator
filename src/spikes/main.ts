@@ -180,6 +180,27 @@ const spike = {
     return { loaded, rows, columns, violations: [...violations] };
   },
 
+  /** Probe for specs/021: what the stats_duck extension says about a file (labels), as plain rows. Never used by the app. */
+  async statQuery(query: string) {
+    const [file] = inputFiles();
+    const engine = await createEngine(BASE);
+    const conn = await engine.db.connect();
+    await conn.query("SET autoinstall_known_extensions = false");
+    await conn.query("SET autoload_known_extensions = false");
+    await conn.query(`SET custom_extension_repository = '${location.origin}${import.meta.env.BASE_URL}duckdb-ext'`);
+    await conn.query("LOAD stats_duck");
+    await engine.db.registerFileHandle(file.name, file, duckdb.DuckDBDataProtocol.BROWSER_FILEREADER, true);
+    try {
+      const table = await conn.query(query.replace("$FILE", file.name));
+      return { rows: table.toArray().map((r) => JSON.parse(JSON.stringify(r.toJSON(), (_k, v) => (typeof v === "bigint" ? Number(v) : v)))) };
+    } catch (e) {
+      return { error: String(e).slice(0, 400) };
+    } finally {
+      await conn.close();
+      await engine.dispose();
+    }
+  },
+
   /** R14: can a large Blob be assembled from chunks and downloaded? */
   async download(megabytes: number) {
     const chunk = new Uint8Array(1024 * 1024).fill(97);
