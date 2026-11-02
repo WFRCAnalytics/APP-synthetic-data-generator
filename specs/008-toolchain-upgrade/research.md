@@ -38,3 +38,20 @@
   this: a tool whose newest major does not work with the rest stays on its last working version, and this is recorded.
   TypeScript 6.0.3 is the newest version the linter supports. To move to 7, wait for `typescript-eslint` to support it.
 - `tsc --noEmit` shows no new error; lint 0 errors; tests 1,883 pass; the build works.
+
+## R5: Group D (React 19, `@types/react` 19, `@types/react-dom` 19, `@testing-library/jest-dom` 7) and results
+
+- One type change: `useRef` needs its initial value in React 19's types (`DatePatternBox`). No behaviour change; all 1,883
+  unit, component and integration tests pass.
+- React 19's code names `react.dev` in an error message string (as React 18 named `reactjs.org`). The release check lists such
+  hosts in `scripts/release-allowlist.json` with a reason; `react.dev` was added the same way. Nothing requests it.
+- A real race found by the slower WebKit run: a spec chosen before the first effect of the page ran was lost, because the
+  session's callbacks were set in that effect. They are now set when the session is created, and the page reads the
+  session's state once after subscribing. The WebKit run passes three times in a row.
+- `engines.node` is `>=20.19` (what Vite 8 needs); CI stays on Node 24.
+- **Results**: Chromium 103 passed, Edge, Firefox and WebKit 228 passed (one WebKit flake, now fixed and re-run three times);
+  offline zip built and verified, and its session passes; golden bytes unchanged for CSV, JSON, Parquet and the workbook
+  sheet (SC-001, SC-002); no outside request or content-policy violation (SC-003).
+- **Size (SC-004)**: production assets 1,959,194 bytes against 1,884,615 (+4.0%); gzip index 133,158 (+17%, React 19),
+  generate worker 186,138 and profile worker 68,330 (both slightly smaller). Build time 0.28 s against 2.2 s.
+- **Not upgraded**: TypeScript 7 (R4), and DuckDB-WASM by design.

@@ -21,7 +21,7 @@ export const DIRECTIVE_HELP = "%Y year, %m month, %d day, %H hour (24h), %I hour
 
 export function DatePatternBox({ column, current, check, busy, onCheck, onApply }: DatePatternBoxProps) {
   const [text, setText] = useState(current);
-  const timer = useRef<ReturnType<typeof setTimeout>>();
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);
 
   const trimmed = text.trim();

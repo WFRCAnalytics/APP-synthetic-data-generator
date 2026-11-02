@@ -12,10 +12,10 @@
 - [x] T003 [US2] Group A: Vite 8, `@vitejs/plugin-react` 6, Vitest 5, jsdom 30, `@types/node`, `@tanstack/react-virtual`, `lucide-react`; fix `vite.config.ts` and the test config for the new majors; run lint, types, all tests, the built-app browser tests and the offline zip
 - [x] T004 [US2] Group B: ESLint 10 and its plugins; replace `.eslintrc.cjs` by a flat `eslint.config.js` with the same rules; no new warnings of substance
 - [x] T005 [US2] Group C: TypeScript 6.0.3 (7 stays out: see research R4); fix any new type errors; check that `tsc --noEmit` and the editors' tooling still work
-- [ ] T006 [US2] Group D: React 19, `@types/react` and `@types/react-dom` 19, `@testing-library/*` and `@testing-library/jest-dom` 7 as needed; fix types and any behaviour change; run the a11y suite in both themes
+- [x] T006 [US2] Group D: React 19, `@types/react` and `@types/react-dom` 19, `@testing-library/*` and `@testing-library/jest-dom` 7 as needed; fix types and any behaviour change; run the a11y suite in both themes
 
 ## Phase 3: Polish
 
-- [ ] T007 [P] CI: set the Node version the tools need in `.github/workflows/*.yml` and `engines` in `package.json`
-- [ ] T008 Run the browser matrix (Chromium, Edge, Firefox, WebKit) and the offline zip; check SC-001 to SC-005; record results in `research.md`
-- [ ] T009 Run `/speckit-converge` and mark the slice complete
+- [x] T007 [P] CI: set the Node version the tools need in `.github/workflows/*.yml` and `engines` in `package.json`
+- [x] T008 Run the browser matrix (Chromium, Edge, Firefox, WebKit) and the offline zip; check SC-001 to SC-005; record results in `research.md`
+- [x] T009 Run `/speckit-converge` and mark the slice complete

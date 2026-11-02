@@ -5,6 +5,7 @@
     { "host": "schemas.openxmlformats.org", "source": "namespace strings the .xlsx writer puts inside the files it makes" },
     { "host": "github.com", "source": "text in error messages and comments of faker and the DuckDB-WASM workers" },
     { "host": "reactjs.org", "source": "React's error-decoder link inside an error message string" },
+    { "host": "react.dev", "source": "React 19's documentation link inside an error message string (the page it names is never requested)" },
     { "host": "fakerjs.dev", "source": "a documentation link inside a faker error message" },
     { "host": "picsum.photos", "source": "faker's image-address generator, which this app never calls" },
     { "host": "loremflickr.com", "source": "faker's image-address generator, which this app never calls" },

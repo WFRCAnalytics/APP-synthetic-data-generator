@@ -16,15 +16,21 @@ import { ReviewScreen } from "./features/review/ReviewScreen";
 
 export function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const session = useMemo(() => new Session(), []);
+  // The session reports to the reducer from the moment it exists, not from the first effect: a file or a spec
+  // chosen before the first effect has run (a fast page, a slow browser) must not be lost.
+  const session = useMemo(() => {
+    const s = new Session();
+    s.onProfiled = (columns) => dispatch({ type: "columnsProfiled", columns });
+    s.onSpecLoaded = (columns, designed) => dispatch({ type: designed ? "designBuilt" : "specLoaded", columns });
+    return s;
+  }, []);
   const [data, setData] = useState(session.state);
   const [helpOpen, setHelpOpen] = useState(false);
   const [design, setDesign] = useState(emptyDesign);
 
   useEffect(() => {
     const unsubscribe = session.subscribe(setData);
-    session.onProfiled = (columns) => dispatch({ type: "columnsProfiled", columns });
-    session.onSpecLoaded = (columns, designed) => dispatch({ type: designed ? "designBuilt" : "specLoaded", columns });
+    setData(session.state); // anything that happened between the first render and this effect
     // Leaving the page drops the workers, and with them every byte of real data.
     return () => {
       unsubscribe();
