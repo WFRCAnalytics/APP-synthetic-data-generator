@@ -94,4 +94,4 @@ export const DATETIME_FORMATS: readonly { value: string; label: string }[] = [
   { value: "%m/%d/%Y %H:%M:%S", label: "03/31/2024 14:05:09" },
 ];
 
-export const emptyDesign = (): Design => ({ tableName: "my_table", rows: 1000, seed: 42, columns: [] });
+export const emptyDesign = (): Design => ({ tableName: "my_table", output: "csv", rows: 1000, seed: 42, columns: [] });

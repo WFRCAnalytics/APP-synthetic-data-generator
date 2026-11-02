@@ -3,12 +3,14 @@
 // to look real. The result is validated with the same validator as a spec file the person loads.
 
 import { patternGranularity, patternKind } from "../datefmt/directives";
-import type { ColumnSpec, MaskToken, SpecFile } from "../spec/types";
+import type { JsonKind } from "../json/types";
+import type { ParquetType } from "../parquet/types";
+import type { ColumnSpec, MaskToken, SourceSpec, SpecFile } from "../spec/types";
 import { SPEC_VERSION } from "../spec/types";
 import { validateSpec } from "../spec/validate";
 import { apportion, bellQuantiles, evenQuantiles, meanOf, sdOf } from "./quantiles";
 import { missingCount, parseDay, presentRows, validateDesign } from "./validate";
-import type { Design, DesignColumn, DesignProblem } from "./types";
+import { extensionOf, type Design, type DesignColumn, type DesignOutput, type DesignProblem } from "./types";
 
 const na = (rows: number, pct: number) => {
   const count = missingCount(rows, pct);
@@ -85,6 +87,106 @@ export function columnSpecOf(c: DesignColumn, rows: number): ColumnSpec {
   }
 }
 
+/** A sheet name from a table name: the characters a sheet cannot hold are replaced, and it is cut to 31 characters. */
+export function sheetNameOf(tableName: string): string {
+  const cleaned = tableName.trim().replace(/[[\]:*?/\\]/g, "_").replace(/^'+|'+$/g, "").slice(0, 31);
+  return cleaned === "" ? "Sheet1" : cleaned;
+}
+
+const YES_NO = [
+  ["yes", "no"],
+  ["y", "n"],
+  ["true", "false"],
+  ["t", "f"],
+];
+
+/** Whether a yes-or-no column's two labels are a plain pair a JSON file can write as true and false. */
+const isPlainYesNo = (yes: string, no: string): boolean => YES_NO.some(([a, b]) => yes.trim().toLowerCase() === a && no.trim().toLowerCase() === b);
+
+/** The number format of a workbook cell for a column (specs/009 assumptions). */
+function cellFormatOf(c: DesignColumn): string | undefined {
+  switch (c.kind) {
+    case "integer":
+      return "0";
+    case "decimal":
+      return c.decimals > 0 ? `0.${"0".repeat(c.decimals)}` : "0";
+    case "date":
+      return "yyyy-mm-dd";
+    case "datetime":
+      return "yyyy-mm-dd hh:mm:ss";
+    default:
+      return undefined;
+  }
+}
+
+/** The smallest signed integer width that holds a range. */
+function intBits(min: number, max: number): 8 | 16 | 32 | 64 {
+  if (min >= -128 && max <= 127) return 8;
+  if (min >= -32768 && max <= 32767) return 16;
+  if (min >= -2147483648 && max <= 2147483647) return 32;
+  return 64;
+}
+
+function parquetTypeOf(c: DesignColumn): ParquetType {
+  switch (c.kind) {
+    case "integer":
+      return { kind: "int", bits: intBits(c.min, c.max), signed: true, nullable: true };
+    case "decimal":
+      return { kind: "float", bits: 64, nullable: true };
+    case "date":
+      return { kind: "date", nullable: true };
+    case "datetime":
+      return { kind: "timestamp", unit: "us", utc: false, nullable: true };
+    default:
+      return { kind: "string", nullable: true };
+  }
+}
+
+function jsonKindOf(c: DesignColumn): JsonKind {
+  switch (c.kind) {
+    case "integer":
+    case "decimal":
+      return "number";
+    case "yesno":
+      return isPlainYesNo(c.yesLabel, c.noLabel) ? "boolean" : "string";
+    default:
+      return "string";
+  }
+}
+
+/** What a format needs to know about a column beyond what the generator needs. */
+function withFormatFields(spec: ColumnSpec, c: DesignColumn, output: DesignOutput): ColumnSpec {
+  switch (output) {
+    case "xlsx": {
+      const format = cellFormatOf(c);
+      return format ? { ...spec, cell_format: format } : spec;
+    }
+    case "parquet":
+      return { ...spec, parquet_type: parquetTypeOf(c) };
+    case "json":
+    case "ndjson":
+      return { ...spec, json_kind: jsonKindOf(c), json_missing: 0 };
+    default:
+      return spec;
+  }
+}
+
+function sourceOf(design: Design): SourceSpec {
+  const file_name = `${design.tableName.trim()}.${extensionOf(design.output)}`;
+  switch (design.output) {
+    case "xlsx":
+      return { format: "xlsx", file_name, sheet: sheetNameOf(design.tableName), skip_rows: 0, header: true, date1904: false };
+    case "parquet":
+      return { format: "parquet", file_name, row_groups: Math.max(1, Math.ceil(design.rows / 65536)) };
+    case "json":
+      return { format: "json", file_name, form: "array", indent: "2", line_ending: "lf", trailing_newline: true, bom: false };
+    case "ndjson":
+      return { format: "json", file_name, form: "lines", indent: "compact", line_ending: "lf", trailing_newline: true, bom: false };
+    default:
+      return { format: "csv", file_name, encoding: "utf-8", delimiter: ",", quote: '"', quote_style: "minimal", line_ending: "lf", trailing_newline: true, header: true };
+  }
+}
+
 export type DesignResult = { ok: true; spec: SpecFile } | { ok: false; problems: DesignProblem[] };
 
 /** The spec of a design, or the problems that stop it from being one. */
@@ -95,10 +197,10 @@ export function specFromDesign(design: Design): DesignResult {
 
   const spec: SpecFile = {
     spec_version: SPEC_VERSION,
-    source: { format: "csv", file_name: `${design.tableName.trim()}.csv`, encoding: "utf-8", delimiter: ",", quote: '"', quote_style: "minimal", line_ending: "lf", trailing_newline: true, header: true },
+    source: sourceOf(design),
     n_rows: design.rows,
     seed: design.seed,
-    columns: design.columns.map((c) => columnSpecOf(c, design.rows)),
+    columns: design.columns.map((c) => withFormatFields(columnSpecOf(c, design.rows), c, design.output)),
   };
 
   // The same validator as a loaded spec: a design that passes it is a spec the rest of the app accepts.

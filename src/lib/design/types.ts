@@ -64,9 +64,24 @@ export interface DesignText extends DesignBase {
 
 export type DesignColumn = DesignNumber | DesignCategory | DesignYesNo | DesignDate | DesignId | DesignPersonal | DesignText;
 
+/** The file type a designed table is written as. */
+export type DesignOutput = "csv" | "xlsx" | "parquet" | "json" | "ndjson";
+
+export const DESIGN_OUTPUTS: readonly { value: DesignOutput; label: string; extension: string }[] = [
+  { value: "csv", label: "CSV", extension: "csv" },
+  { value: "xlsx", label: "Excel workbook", extension: "xlsx" },
+  { value: "parquet", label: "Parquet", extension: "parquet" },
+  { value: "json", label: "JSON (a list of records)", extension: "json" },
+  { value: "ndjson", label: "JSON Lines (one record per line)", extension: "ndjson" },
+];
+
+export const extensionOf = (output: DesignOutput): string => DESIGN_OUTPUTS.find((o) => o.value === output)?.extension ?? "csv";
+
 export interface Design {
-  /** The file name stem; the spec's source is `<tableName>.csv` and the export `<tableName>_fake.csv`. */
+  /** The file name stem; the spec's source is `<tableName>.<extension>` and the export `<tableName>_fake.<extension>`. */
   tableName: string;
+  /** The file type; CSV unless the person chooses another. */
+  output: DesignOutput;
   rows: number;
   seed: number;
   columns: DesignColumn[];
