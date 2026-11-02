@@ -179,7 +179,7 @@ function cellFormatOf(c: DesignColumn): string | undefined {
 }
 
 /** The smallest signed integer width that holds a range. */
-function intBits(min: number, max: number): 8 | 16 | 32 | 64 {
+export function intBits(min: number, max: number): 8 | 16 | 32 | 64 {
   if (min >= -128 && max <= 127) return 8;
   if (min >= -32768 && max <= 32767) return 16;
   if (min >= -2147483648 && max <= 2147483647) return 32;
@@ -230,14 +230,15 @@ function withFormatFields(spec: ColumnSpec, c: DesignColumn, output: DesignOutpu
   }
 }
 
-function sourceOf(design: Design): SourceSpec {
-  const file_name = `${design.tableName.trim()}.${extensionOf(design.output)}`;
-  switch (design.output) {
+/** The source of a table written as this file type: its name is the stem and the type's extension. */
+export function sourceForOutput(output: DesignOutput, stem: string, rows: number): SourceSpec {
+  const file_name = `${stem}.${extensionOf(output)}`;
+  switch (output) {
     case "xlsx":
       return {
         format: "xlsx",
         file_name,
-        sheet: sheetNameOf(design.tableName),
+        sheet: sheetNameOf(stem),
         skip_rows: 0,
         header: true,
         date1904: false,
@@ -246,7 +247,7 @@ function sourceOf(design: Design): SourceSpec {
       return {
         format: "parquet",
         file_name,
-        row_groups: Math.max(1, Math.ceil(design.rows / 65536)),
+        row_groups: Math.max(1, Math.ceil(rows / 65536)),
       };
     case "json":
       return {
@@ -281,6 +282,10 @@ function sourceOf(design: Design): SourceSpec {
         header: true,
       };
   }
+}
+
+function sourceOf(design: Design): SourceSpec {
+  return sourceForOutput(design.output, design.tableName.trim(), design.rows);
 }
 
 export type DesignResult = { ok: true; spec: SpecFile } | { ok: false; problems: DesignProblem[] };

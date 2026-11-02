@@ -13,7 +13,9 @@ import {
   type FileSettings,
   type SourceSettings,
 } from "../lib/profile/types";
+import { DESIGN_OUTPUTS, extensionOf } from "../lib/design/types";
 import { buildSpec } from "../lib/spec/build";
+import { outputKindOf, retarget, type OutputKind } from "../lib/spec/retarget";
 import { writeDta, DTA_MAX_TEXT } from "../lib/stat/dta";
 import { writeSav, SAV_MAX_TEXT } from "../lib/stat/sav";
 import { tableFromCsv } from "../lib/stat/table";
@@ -121,8 +123,8 @@ export interface SessionState {
   /** Relations between columns that the person stated (specs/015). */
   rules: RuleSpec[];
   keepOriginalName: boolean;
-  /** For an SPSS or Stata file: write the same kind of file (the default) or a CSV. */
-  statOutput: "same" | "csv";
+  /** The file type of the fake table: the same kind as the real file (the default), or another one. */
+  outputKind: "same" | OutputKind;
   gen: GenState;
   /** Columns came from a saved spec: there is no source file, so nothing can be profiled again. */
   specOnly: boolean;
@@ -167,7 +169,7 @@ export const initialSession: SessionState = {
   seedText: "42",
   rules: [],
   keepOriginalName: false,
-  statOutput: "same",
+  outputKind: "same",
   gen: emptyGen,
   specOnly: false,
   designed: false,
@@ -620,15 +622,36 @@ export class Session {
     this.set({ keepOriginalName });
   }
 
-  setStatOutput(statOutput: "same" | "csv"): void {
-    this.set({ statOutput });
+  setOutputKind(outputKind: "same" | OutputKind): void {
+    this.set({ outputKind });
+  }
+
+  /** The file types the fake table can be written as, the same kind as the real file first. */
+  outputChoices(): { value: "same" | OutputKind; label: string }[] {
+    const { stat, settings } = this.state;
+    const own: OutputKind | null = stat
+      ? null
+      : settings && isExcelSettings(settings)
+        ? "xlsx"
+        : settings && isParquetSettings(settings)
+          ? "parquet"
+          : settings && isJsonSettings(settings)
+            ? settings.layout.form === "lines"
+              ? "ndjson"
+              : "json"
+            : "csv";
+    const labelOf = (kind: OutputKind) => DESIGN_OUTPUTS.find((o) => o.value === kind)?.label ?? kind;
+    const same = stat
+      ? `${stat.format === "sav" ? "SPSS (.sav)" : "Stata (.dta)"}, same as the file you opened`
+      : `${labelOf(own as OutputKind)}, same as the file you opened`;
+    return [{ value: "same", label: same }, ...DESIGN_OUTPUTS.filter((o) => o.value !== own).map((o) => ({ value: o.value, label: `${o.label} (.${o.extension})` }))];
   }
 
   /** The spec for the current profiles and settings. */
   buildSpec(): SpecFile | null {
     const { settings, profiles } = this.state;
     if (!settings || profiles.length === 0) return null;
-    return buildSpec({
+    const spec = buildSpec({
       fileName: this.state.fileName,
       settings,
       rowCount: this.state.rowCount,
@@ -638,6 +661,8 @@ export class Session {
       profiles,
       rules: this.state.rules,
     });
+    const { outputKind } = this.state;
+    return outputKind === "same" ? spec : retarget(spec, outputKind);
   }
 
   /** Adds a rule between two columns; a rule that would not be valid is not added, and the reason is returned. */
@@ -736,30 +761,24 @@ export class Session {
 
   /** The fake CSV as a Blob, or null before a run has finished. */
   fakeBlob(): Blob | null {
-    const settings = this.state.settings;
-    const type =
-      settings && isExcelSettings(settings)
-        ? XLSX_MIME
-        : settings && isParquetSettings(settings)
-          ? PARQUET_MIME
-          : settings && isJsonSettings(settings)
-            ? settings.layout.form === "lines"
-              ? NDJSON_MIME
-              : JSON_MIME
-            : "text/csv";
-    return this.state.gen.status === "done" ? new Blob(this.parts as BlobPart[], { type }) : null;
+    const spec = this.state.gen.status === "done" ? this.buildSpec() : null;
+    if (!spec) return null;
+    const mime: Record<OutputKind, string> = { csv: "text/csv", xlsx: XLSX_MIME, parquet: PARQUET_MIME, json: JSON_MIME, ndjson: NDJSON_MIME };
+    return new Blob(this.parts as BlobPart[], { type: mime[outputKindOf(spec)] });
   }
 
   /** The kind of file the fake table is written as when the real one was an SPSS or Stata file, otherwise null. */
   statFormat(): "sav" | "dta" | null {
-    const { stat, statOutput } = this.state;
-    return stat && statOutput === "same" ? stat.format : null;
+    const { stat, outputKind } = this.state;
+    return stat && outputKind === "same" ? stat.format : null;
   }
 
   fakeFileName(): string {
     const { stat, keepOriginalName } = this.state;
     if (stat && this.statFormat()) return exportName(stat.sourceName, keepOriginalName);
-    return exportName(this.state.fileName, keepOriginalName);
+    const { outputKind, fileName } = this.state;
+    const named = outputKind === "same" ? fileName : fileName.replace(/\.[^.]*$/, "") + `.${extensionOf(outputKind)}`;
+    return exportName(named, keepOriginalName);
   }
 
   /**

@@ -1,18 +1,41 @@
-/* The privacy promise is a strip along the bottom of the window, never out of sight and never in the way. */
+/* The privacy promise is an announcement under the navbar that can be closed. */
 .local-notice {
   display: flex;
+  flex: none;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
   padding: var(--space-2) var(--space-5);
-  border-top: 1px solid var(--color-border);
-  background: color-mix(in srgb, var(--color-foreground) 3%, var(--color-background));
-  font-size: var(--text-xs);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-wfrc-secondary-blue) 50%, var(--color-border));
+  background: color-mix(in srgb, var(--color-wfrc-secondary-blue) 14%, var(--color-background));
+  font-size: var(--text-sm);
   line-height: 1.4;
   color: var(--color-foreground);
 }
 
 .local-notice svg {
   flex: none;
+}
+
+.local-notice-text {
+  flex: 1 1 auto;
+}
+
+.local-notice-close {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.local-notice-close:hover {
+  background: color-mix(in srgb, var(--color-foreground) 10%, transparent);
 }
 
 /* The same notice component also explains what a saved spec holds, inside the Review overview: there it

@@ -80,6 +80,7 @@ export function App() {
       >
         <NetworkCounter counter={netCounter} />
       </AppHeader>
+      <LocalNotice />
       <div className="shell-body">
         <main className="shell-main">
           {state.step === "ingest" && state.designing && (
@@ -136,7 +137,8 @@ export function App() {
               onKeepNameChange={(keep) => session.setKeepOriginalName(keep)}
               onGenerate={() => session.generate()}
               onCancel={() => session.cancel()}
-              onStatOutputChange={(output) => session.setStatOutput(output)}
+              outputChoices={session.outputChoices()}
+              onOutputKindChange={(kind) => session.setOutputKind(kind)}
               onDownloadFake={() => {
                 void session.fakeFile().then((file) => {
                   if (file) downloadBlob(file.blob, session.fakeFileName());
@@ -173,7 +175,6 @@ export function App() {
           )}
         </main>
       </div>
-      <LocalNotice />
       <HelpGuideModal open={helpOpen} onClose={() => setHelpOpen(false)} />
     </div>
   );

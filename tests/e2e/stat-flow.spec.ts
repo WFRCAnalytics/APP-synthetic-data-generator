@@ -38,7 +38,7 @@ for (const [name, label, magic, readmeText] of [
     await generate(page);
 
     // The default file type is the one that was opened.
-    await expect(page.locator("#stat-output")).toHaveValue("same");
+    await expect(page.locator("#output-kind")).toHaveValue("same");
     const ext = name.slice(name.lastIndexOf("."));
     const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: `Download survey_fake${ext}` }).click()]);
     const path = testInfo.outputPath(`fake${ext}`);
@@ -52,7 +52,7 @@ for (const [name, label, magic, readmeText] of [
     expect(readFileSync(readmePath, "utf8")).toContain(readmeText);
 
     // CSV is the other choice.
-    await page.locator("#stat-output").selectOption("csv");
+    await page.locator("#output-kind").selectOption("csv");
     const [csvDownload] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Download survey_fake.csv" }).click()]);
     const csvPath = testInfo.outputPath("fake.csv");
     await csvDownload.saveAs(csvPath);

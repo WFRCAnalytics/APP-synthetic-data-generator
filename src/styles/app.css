@@ -62,8 +62,8 @@ body {
 }
 
 .shell {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  display: flex;
+  flex-direction: column;
   height: 100dvh;
   min-height: 0;
 }
@@ -71,6 +71,7 @@ body {
 .shell-body {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
+  flex: 1 1 auto;
   min-height: 0;
 }
 

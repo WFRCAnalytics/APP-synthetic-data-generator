@@ -8,6 +8,7 @@ import { parseSeed, type SessionState } from "../../app/session";
 import type { CheckRow } from "../../lib/generate/checks";
 import { GenerateProgress } from "./GenerateProgress";
 import { isExcelSettings, isJsonSettings } from "../../lib/profile/types";
+import type { OutputKind } from "../../lib/spec/retarget";
 import { narrowIdColumns, patternFit, shortfallText } from "../../lib/profile/idCapacity";
 
 export interface GenerateScreenProps {
@@ -20,7 +21,8 @@ export interface GenerateScreenProps {
   onDownloadSpec: () => void;
   onDownloadReadme: () => void;
   onDownloadAll: () => void;
-  onStatOutputChange: (output: "same" | "csv") => void;
+  outputChoices: { value: string; label: string }[];
+  onOutputKindChange: (kind: OutputKind | "same") => void;
   /** Absent when the browser cannot write to a folder. */
   onSaveToFolder?: () => void;
   savedTo?: string | null;
@@ -145,33 +147,33 @@ export function GenerateScreen(props: GenerateScreenProps) {
               </span>
             </div>
 
-            {session.stat && (
+            {session.settings && (
               <div className="field">
                 <span className="label-row">
-                  <label htmlFor="stat-output">File type</label>
+                  <label htmlFor="output-kind">File type</label>
                   <InfoTip label="About the file type">
-                    The fake table is written as the same kind of file you opened, with numbers,
-                    dates and times typed and everything else as text. Value labels and variable
-                    labels are not written. Text longer than{" "}
-                    {session.stat.format === "sav" ? "255" : "2,045"} bytes is cut. Choose CSV for
-                    a plain text file instead.
+                    The fake table is written as the same kind of file you opened unless you pick
+                    another here. Numbers, dates and yes-or-no values keep their types where the file
+                    type has them. SPSS and Stata files have no value labels and cut long text (255
+                    bytes for SPSS, 2,045 for Stata).
                   </InfoTip>
                 </span>
                 <select
-                  id="stat-output"
-                  value={session.statOutput}
+                  id="output-kind"
+                  value={session.outputKind}
                   disabled={running}
-                  onChange={(e) => props.onStatOutputChange(e.target.value as "same" | "csv")}
+                  onChange={(e) => props.onOutputKindChange(e.target.value as OutputKind | "same")}
                 >
-                  <option value="same">
-                    {session.stat.format === "sav" ? "SPSS (.sav), same as the file you opened" : "Stata (.dta), same as the file you opened"}
-                  </option>
-                  <option value="csv">CSV (.csv)</option>
+                  {props.outputChoices.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             )}
 
-            {session.settings && isExcelSettings(session.settings) && (
+            {session.outputKind === "same" && session.settings && isExcelSettings(session.settings) && (
               <p className="field-hint" data-testid="one-sheet-note">
                 The fake workbook holds one sheet, &ldquo;{session.settings.sheet}&rdquo;. Other
                 sheets of the original workbook are not included.
@@ -275,7 +277,7 @@ export function GenerateScreen(props: GenerateScreenProps) {
               )}
               <p className="field-hint">
                 {(gen.totalBytes / 1048576).toFixed(2)} MB. Single-file download.
-                {session.settings && isJsonSettings(session.settings) && (
+                {session.outputKind === "same" && session.settings && isJsonSettings(session.settings) && (
                   <span data-testid="json-layout">
                     {" "}
                     Written as{" "}
