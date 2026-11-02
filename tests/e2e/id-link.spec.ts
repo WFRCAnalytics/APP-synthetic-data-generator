@@ -222,3 +222,42 @@ test("a person's zone is the zone of their household", async ({ page }) => {
   for (const [hh, z] of rows) expect(z).toBe(parent.get(hh));
   expect(new Set(rows.map((r) => r[1])).size).toBe(4);
 });
+
+test("a trip's zone is the zone of its person's household", async ({ page }) => {
+  const nl = String.fromCharCode(10);
+  const rowsOf = (csv: string) => csv.trim().split(nl).slice(1).map((l) => l.split(","));
+  await makeTable(page, "households.csv", zoned);
+  const households = await generate(page, /Download households_fake\.csv/);
+  const zoneOf = new Map(rowsOf(households.csv).map((r) => [r[0], r[1]] as [string, string]));
+
+  // Each of 120 households has one to four people; every person has an ID of their own.
+  const people = Array.from({ length: 120 }, (_, h) => Array.from({ length: 1 + (h % 4) }, (_, k) => [`H${1000 + h}`, ["north", "south"][(h + k) % 2]])).flat();
+  const personsCsv = ["person_id,hh_id,zone"].concat(people.map(([hh, z], i) => `P${5000 + i},${hh},${z}`)).join(nl) + nl;
+  await makeTable(page, "persons.csv", personsCsv);
+  const hhCard = await shownCard(page, "hh_id");
+  await hhCard.getByLabel("Spec of the other table").setInputFiles(households.specPath);
+  await hhCard.getByRole("button", { name: "Use these IDs" }).click();
+  const zone = await shownCard(page, "zone");
+  await zone.getByLabel("Spec of the table to take the value from").setInputFiles(households.specPath);
+  await zone.getByRole("button", { name: "Take its value" }).click();
+  const persons = await generate(page, /Download persons_fake\.csv/);
+  const householdOf = new Map(rowsOf(persons.csv).map((r) => [r[0], r[1]] as [string, string]));
+
+  // Each person made one to three trips.
+  const trips = people.flatMap((_, i) => Array.from({ length: 1 + (i % 3) }, (_, k) => `P${5000 + i},${["home", "work", "shop"][k]}`));
+  const tripsCsv = ["person_id,purpose,zone"].concat(trips.map((t, i) => `${t},${["north", "south"][i % 2]}`)).join(nl) + nl;
+  await makeTable(page, "trips.csv", tripsCsv);
+  const pidCard = await shownCard(page, "person_id");
+  await pidCard.getByLabel("Spec of the other table").setInputFiles(persons.specPath);
+  await pidCard.getByRole("button", { name: "Use these IDs" }).click();
+  const tripZone = await shownCard(page, "zone");
+  await tripZone.getByLabel("Spec of the table to take the value from").setInputFiles(persons.specPath);
+  await tripZone.getByRole("button", { name: "Take its value" }).click();
+  await expect(tripZone.getByTestId("parent-value-summary")).toContainText("persons.csv");
+  const tripsOut = await generate(page, /Download trips_fake\.csv/);
+
+  const rows = rowsOf(tripsOut.csv);
+  expect(rows.length).toBe(trips.length);
+  for (const [pid, , z] of rows) expect(z).toBe(zoneOf.get(householdOf.get(pid) as string));
+  expect(new Set(rows.map((r) => r[2])).size).toBe(4);
+});
