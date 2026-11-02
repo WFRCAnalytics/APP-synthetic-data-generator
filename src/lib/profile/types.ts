@@ -13,6 +13,7 @@ import type {
 import type { Encoding } from "../encoding/detect";
 import type { CoordinateAxis } from "../classify/coordinate";
 import type { PersonalLocale } from "../textgen/locales";
+import type { IdLink } from "../spec/types";
 import type { JsonKind, JsonLayout } from "../json/types";
 import type { ParquetType, UnsupportedReason } from "../parquet/types";
 import type { QuoteStyle, LineEnding } from "../csv/writer";
@@ -196,6 +197,8 @@ export interface ColumnProfile {
   valueLabels?: Record<string, string>;
   /** The region the invented personal values come from (en_US when absent). */
   locale?: PersonalLocale;
+  /** A survey ID column that uses the IDs of another table's column (specs/019). Holds no ID value. */
+  idLink?: IdLink;
   /** The column holds a coordinate: only its bounding box and decimal places are kept, and values are spread evenly inside it. */
   coordinate?: CoordinateAxis;
   /** The JSON kind of the key in a JSON file. */

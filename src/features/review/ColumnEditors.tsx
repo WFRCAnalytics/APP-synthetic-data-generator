@@ -10,6 +10,7 @@ import { CellFormatEditor } from "./CellFormatEditor";
 import { DatePatternBox } from "./DatePatternBox";
 import { ExcludeControl } from "./ExcludeControl";
 import type { SampleDescription } from "../../lib/textgen/sample";
+import { IdLinkPanel } from "./IdLinkPanel";
 import { IdMaskEditor } from "./IdMaskEditor";
 import { PersonalKindEditor } from "./PersonalKindEditor";
 import { SamplePreview } from "./SamplePreview";
@@ -131,7 +132,8 @@ export function ColumnEditors({ profile, otherNames, busy, dateCheck, onEdit, on
         </div>
       )}
 
-      {kind === "survey_id" && <IdMaskEditor profile={profile} onChange={(idPattern) => onEdit({ idPattern })} />}
+      {kind === "survey_id" && !profile.idLink && <IdMaskEditor profile={profile} onChange={(idPattern) => onEdit({ idPattern })} />}
+      {kind === "survey_id" && <IdLinkPanel profile={profile} onEdit={onEdit} />}
 
       <ExcludeControl profile={profile} onChange={(exclude) => onEdit({ exclude })} />
 

@@ -218,6 +218,7 @@ function baseColumnSpec(p: ColumnProfile): ColumnSpec {
         ...(s.max !== undefined ? { max: s.max } : {}),
         ...(s.padWidth !== undefined ? { pad_width: s.padWidth } : {}),
         repeat_structure: s.repeatStructure,
+        ...(p.idLink ? { link: p.idLink } : {}),
       };
   }
 }

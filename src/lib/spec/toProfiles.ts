@@ -232,6 +232,7 @@ export function profileFromSpec(c: ColumnSpec): ColumnProfile {
     }
     case "survey_id": {
       const profile: ColumnProfile = {
+        ...(c.link ? { idLink: c.link } : {}),
         ...base,
         detectedType: "survey_id",
         type: "survey_id",
@@ -248,7 +249,7 @@ export function profileFromSpec(c: ColumnSpec): ColumnProfile {
         },
       };
       // A hand-edited spec may name a pattern that is too narrow for its repeat structure.
-      if (idFit(profile)?.short)
+      if (!c.link && idFit(profile)?.short)
         return { ...profile, status: "needs_attention", attentionReasons: ["id_mask_too_narrow"] };
       return profile;
     }

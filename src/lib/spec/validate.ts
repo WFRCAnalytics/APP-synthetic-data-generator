@@ -5,7 +5,7 @@
 
 import * as v from "valibot";
 import { isSupportedPattern, patternGranularity, patternKind } from "../datefmt/directives";
-import { maskCapacity } from "../mask/mask";
+import { idCapacity, maskCapacity } from "../mask/mask";
 import {
   boxFits,
   COORDINATE_AXES,
@@ -93,6 +93,17 @@ const MaskTokenSchema = v.union([
   v.picklist(["digit", "upper", "lower", "letter", "alnum"]),
   v.strictObject({ literal: v.pipe(v.string(), v.length(1)) }),
 ]);
+
+const IdLinkSchema = v.strictObject({
+  column: v.pipe(v.string(), v.minLength(1)),
+  seed: v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(4294967295)),
+  mask: v.pipe(v.array(MaskTokenSchema), v.minLength(1)),
+  min: v.optional(v.pipe(v.number(), v.integer())),
+  max: v.optional(v.pipe(v.number(), v.integer())),
+  pad_width: v.optional(v.pipe(v.number(), v.integer(), v.minValue(0))),
+  groups: positiveCount,
+  table: v.optional(v.string()),
+});
 
 const RepeatStructureSchema = v.record(v.string(), positiveCount);
 
@@ -204,6 +215,7 @@ const ColumnSchema = v.variant("type", [
     max: v.optional(v.pipe(v.number(), v.integer())),
     pad_width: v.optional(v.pipe(v.number(), v.integer(), v.minValue(0))),
     repeat_structure: v.record(v.string(), positiveCount),
+    link: v.optional(IdLinkSchema),
   }),
   PersonalSchema,
   FreeTextSchema,
@@ -670,6 +682,19 @@ function checkColumn(col: ColumnSpec, rows: number, out: SpecProblem[]): void {
       if (col.min !== undefined && col.max !== undefined && col.min > col.max)
         problem("min", "min is greater than max.");
       checkRepeat(col.repeat_structure, remaining, problem);
+      if (col.link) {
+        const { link } = col;
+        if (link.min !== undefined && link.max !== undefined && link.min > link.max)
+          problem("link", "The linked pattern's min is greater than its max.");
+        const own = Object.values(col.repeat_structure).reduce((a, b) => a + b, 0);
+        if (own > link.groups)
+          problem(
+            "link",
+            `This column has ${own} distinct IDs but the other table's column makes only ${link.groups}, so it cannot use only IDs from it.`,
+          );
+        if (BigInt(link.groups) > idCapacity(link.mask, link.min, link.max))
+          problem("link", "The other table's pattern cannot hold that many IDs.");
+      }
       break;
     }
     case "empty":

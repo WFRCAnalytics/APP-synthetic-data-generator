@@ -5,6 +5,7 @@
 
 import type { CoordinateAxis } from "../classify/coordinate";
 import type { PersonalLocale } from "../textgen/locales";
+import type { IdLink } from "../spec/types";
 import { idFit, shortStringFit } from "./idCapacity";
 import type {
   ColumnProfile,
@@ -45,6 +46,8 @@ export interface LocalEdits {
   locale?: PersonalLocale;
   /** Treat a decimal column as a coordinate of this axis; null says it is not one. */
   coordinate?: CoordinateAxis | null;
+  /** Use the IDs of another table's column; null goes back to making new ones (specs/019). */
+  idLink?: IdLink | null;
   /** What the codes of the column mean (a codebook); null removes them. */
   valueLabels?: Record<string, string> | null;
   /** The number format code of the column in an Excel output; "General" means none. */
@@ -76,6 +79,11 @@ export function applyEdits(p: ColumnProfile, e: LocalEdits | undefined): ColumnP
   if (e.valueLabels !== undefined) {
     if (e.valueLabels === null || Object.keys(e.valueLabels).length === 0) delete out.valueLabels;
     else out.valueLabels = { ...e.valueLabels };
+  }
+
+  if (p.summary.kind === "survey_id" && e.idLink !== undefined) {
+    if (e.idLink === null) delete out.idLink;
+    else out.idLink = e.idLink;
   }
 
   if (e.cellFormat !== undefined) {
@@ -173,6 +181,12 @@ export function applyEdits(p: ColumnProfile, e: LocalEdits | undefined): ColumnP
     if (idFit(out)?.short) reasons.push("id_mask_too_narrow");
     out.attentionReasons = reasons;
     out.status = reasons.length > 0 ? "needs_attention" : "ok";
+  }
+
+  // A column that uses another table's IDs does not use its own pattern, so a pattern that is too narrow is not a problem.
+  if (out.idLink && out.summary.kind === "survey_id" && out.attentionReasons.includes("id_mask_too_narrow")) {
+    out.attentionReasons = out.attentionReasons.filter((r) => r !== "id_mask_too_narrow");
+    out.status = out.attentionReasons.length > 0 ? "needs_attention" : "ok";
   }
 
   return out;

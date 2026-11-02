@@ -4,8 +4,9 @@
 // and the output does not depend on chunk size (FR-021, research.md R5).
 
 import { effectiveCounts } from "../protections";
+import { makePermutation } from "../rng/permute";
 import { subSeed } from "../rng/subseed";
-import type { ColumnSpec } from "../spec/types";
+import type { ColumnSpec, IdLink, SurveyIdColumn } from "../spec/types";
 import { makeLabelLookup } from "./categorical";
 import { makeDateFormatter } from "./datetime";
 import { formatNumber, makeNumericSource, withRescale, type NumericPlan } from "./numeric";
@@ -48,6 +49,35 @@ function numericSourceFor(col: NumericPlan & { rescale?: boolean }, key: number,
   const source = makeNumericSource(col, key, placer.valueTotal);
   const wantsRescale = col.rescale === true && col.mode === "match_mean_sd" && col.mean !== undefined && col.sd !== undefined && col.max > col.min;
   return wantsRescale ? withRescale(source, placer, nRows, { mean: col.mean as number, sd: col.sd as number, min: col.min, max: col.max }) : source;
+}
+
+/**
+ * A survey ID column that uses another table's IDs (specs/019). The other table's IDs are a keyed bijection of its group
+ * numbers into the pattern, so the same pattern, seed and column name make them again here. This column keeps its own
+ * repeat structure (how many rows share an ID); each of its groups is sent to a different group of the other table, so every
+ * ID written exists there and no two groups of this column share one.
+ */
+function linkedIdColumn(col: SurveyIdColumn, link: IdLink, ctx: ColumnContext, key: number, gen: (valueAt: (row: number) => string) => ColumnGen): ColumnGen {
+  const placer = makePlacer(ctx.nRows, key, col.na, col.sentinels);
+  if (rowsCovered(col.repeat_structure) !== placer.valueTotal) {
+    throw new GenerationError(`Column "${col.name}": the repeat structure covers ${rowsCovered(col.repeat_structure)} rows, but ${placer.valueTotal} rows are left after NA and sentinels.`);
+  }
+  const own = makeGroupMapper(col.repeat_structure);
+  if (own.groups > link.groups) {
+    throw new GenerationError(`Column "${col.name}": it has ${own.groups} distinct IDs but the other table's column makes only ${link.groups}.`);
+  }
+  let theirs;
+  try {
+    theirs = makeIdGenerator({ mask: link.mask, min: link.min, max: link.max, pad_width: link.pad_width, repeat_structure: { "1": link.groups } }, subSeed(link.seed, link.column));
+  } catch (err) {
+    if (err instanceof IdPatternError) throw new GenerationError(`Column "${col.name}": ${err.message}`);
+    throw err;
+  }
+  const pick = makePermutation(link.groups, mix32((key ^ 0x1ced1ced) >>> 0));
+  return gen((row) => {
+    const p = placer(row);
+    return p.kind === "value" ? theirs(pick(own(p.index))) : p.token;
+  });
 }
 
 export function createColumnGen(col: ColumnSpec, ctx: ColumnContext): ColumnGen {
@@ -158,6 +188,7 @@ export function createColumnGen(col: ColumnSpec, ctx: ColumnContext): ColumnGen 
     }
 
     case "survey_id": {
+      if (col.link) return linkedIdColumn(col, col.link, ctx, key, gen);
       const placer = makePlacer(ctx.nRows, key, col.na, col.sentinels);
       if (rowsCovered(col.repeat_structure) !== placer.valueTotal) {
         throw new GenerationError(`Column "${col.name}": the repeat structure covers ${rowsCovered(col.repeat_structure)} rows, but ${placer.valueTotal} rows are left after NA and sentinels.`);

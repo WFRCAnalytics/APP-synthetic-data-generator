@@ -112,6 +112,8 @@ function describeValues(c: ColumnSpec): string {
       return `${labels.length} ${labels.length === 1 ? "value" : "values"}: ${shown.join(", ")}${labels.length > MAX_LABELS_SHOWN ? ", ..." : ""}`;
     }
     case "survey_id":
+      if (c.link)
+        return `the IDs of column ${tick(c.link.column)} in ${tick(c.link.table ?? "another table")} (${n(c.link.groups)} IDs): every ID here is one of that table's, made with seed ${c.link.seed}`;
       return c.mask.length > 0
         ? `pattern ${tick(maskText(c.mask))} (9 digit, A upper case, a lower case)`
         : "unique codes";

@@ -111,8 +111,10 @@ export function HelpGuideModal({ open, onClose }: HelpGuideModalProps) {
             conditions return plausible counts, not realistic ones.
           </li>
           <li>
-            <strong>Joins across tables do not work.</strong> IDs are invented for each table, so
-            keys in separately generated tables will not match.
+            <strong>Tables are made one at a time.</strong> IDs are invented for each table, so keys in
+            separately generated tables will not match, unless you link an ID column to the other
+            table&apos;s saved spec (Review, the column&apos;s &ldquo;IDs from another table&rdquo;).
+            Other columns are not linked, and there is no cascade between tables.
           </li>
           <li>
             <strong>Mean and spread can shift slightly after rounding.</strong> The optional

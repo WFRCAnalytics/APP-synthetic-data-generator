@@ -167,6 +167,25 @@ export interface DateColumn extends ColumnBase, NumericFields {
   granularity: Granularity;
 }
 
+/**
+ * A survey ID column whose IDs are those another table's ID column makes (specs/019): the other table's pattern, seed and
+ * column name are enough to make the same IDs again, so a join on the two tables finds every row. Holds no ID value.
+ */
+export interface IdLink {
+  /** The name of the column in the other table. */
+  column: string;
+  /** The seed the other table is generated with. */
+  seed: number;
+  mask: MaskToken[];
+  min?: number;
+  max?: number;
+  pad_width?: number;
+  /** How many distinct IDs the other table's column makes. */
+  groups: number;
+  /** The other table's name, for people to read; never used to make IDs. */
+  table?: string;
+}
+
 export interface SurveyIdColumn extends ColumnBase {
   type: "survey_id";
   mask: MaskToken[];
@@ -175,6 +194,8 @@ export interface SurveyIdColumn extends ColumnBase {
   pad_width?: number;
   /** Group size (as a string key) to the number of distinct IDs with that size. */
   repeat_structure: Record<string, number>;
+  /** Use another table's IDs instead of making new ones. */
+  link?: IdLink;
 }
 
 export type PersonalKind =

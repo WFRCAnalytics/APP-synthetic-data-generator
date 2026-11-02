@@ -27,7 +27,7 @@ describe("the help guide", () => {
     const user = userEvent.setup();
     render(<App />);
     const dialog = await open(user);
-    for (const limit of ["No cross-column logic.", "Joins across tables do not work.", "Labels are real.", "Memory limits table size.", "Not in this version."]) {
+    for (const limit of ["No cross-column logic.", "Tables are made one at a time.", "Labels are real.", "Memory limits table size.", "Not in this version."]) {
       expect(within(dialog).getByText(limit)).toBeInTheDocument();
     }
   });
