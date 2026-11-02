@@ -49,11 +49,23 @@ export function IngestScreen({ session, onChooseFile, onChooseSpec, onInspectShe
   const settings = session.settings && !isExcelSettings(session.settings) && !isParquetSettings(session.settings) ? session.settings : null;
   const busy = phase === "opening" || phase === "loading" || phase === "profiling";
   const names = session.columnNames;
+  // Once a file is open its settings are the work; the two ways in fold into a one-line bar.
+  const compact = phase !== "idle" && !session.specOnly && session.fileName !== "";
 
   return (
-    <section aria-labelledby="ingest-heading">
+    <section aria-labelledby="ingest-heading" className={compact ? "ingest-compact" : undefined}>
       <h2 id="ingest-heading">Make test data that behaves like yours, without using yours</h2>
       <p className="lead">Start from a file you have, or design a table from nothing. AI coding agents then work on the fake one.</p>
+
+      {compact && (
+        <div className="source-bar">
+          <FileUp size={18} strokeWidth={1.75} aria-hidden="true" />
+          <span className="source-bar-name">{session.fileName}</span>
+          <button type="button" className="button button-secondary" onClick={() => input.current?.click()} disabled={busy}>
+            Choose a different file
+          </button>
+        </div>
+      )}
 
       <div className="doors">
         <div className="door door--drop">

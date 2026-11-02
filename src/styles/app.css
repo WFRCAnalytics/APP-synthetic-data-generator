@@ -124,12 +124,14 @@ body {
    those editors look unstyled — this closes that gap rather than inventing a second,
    spreadsheet-specific input style. */
 .field input[type="text"],
+.field input:not([type]),
 .field input[type="date"],
 .field input[type="email"],
 .field input[type="number"],
 .field textarea,
 .field select,
 .data-table td input[type="text"],
+.data-table td input:not([type]),
 .data-table td input[type="number"],
 .data-table td input[type="email"],
 .data-table td input[type="date"],
@@ -145,12 +147,14 @@ body {
 }
 
 .field input[type="text"]:hover,
+.field input:not([type]):hover,
 .field input[type="date"]:hover,
 .field input[type="email"]:hover,
 .field input[type="number"]:hover,
 .field textarea:hover,
 .field select:hover,
 .data-table td input[type="text"]:hover,
+.data-table td input:not([type]):hover,
 .data-table td input[type="number"]:hover,
 .data-table td input[type="email"]:hover,
 .data-table td input[type="date"]:hover,
@@ -159,12 +163,14 @@ body {
 }
 
 .field input[type="text"]:focus-visible,
+.field input:not([type]):focus-visible,
 .field input[type="date"]:focus-visible,
 .field input[type="email"]:focus-visible,
 .field input[type="number"]:focus-visible,
 .field textarea:focus-visible,
 .field select:focus-visible,
 .data-table td input[type="text"]:focus-visible,
+.data-table td input:not([type]):focus-visible,
 .data-table td input[type="number"]:focus-visible,
 .data-table td input[type="email"]:focus-visible,
 .data-table td input[type="date"]:focus-visible,
@@ -484,8 +490,9 @@ table.data-table tbody tr:last-child td {
    borders-on-borders. */
 .card {
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--color-background);
+  padding: var(--space-5) var(--space-6);
   margin-bottom: var(--space-5);
   transition:
     box-shadow var(--transition-base),
