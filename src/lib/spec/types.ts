@@ -3,6 +3,7 @@
 // ID pattern masks and repeat structures, and format settings. Never rows, ID lists, free text,
 // personal identifiers or coordinates (constitution Principle II).
 
+import type { CoordinateAxis } from "../classify/coordinate";
 import type { JsonForm, JsonIndent, JsonKind, JsonLineEnding } from "../json/types";
 import type { ParquetType } from "../parquet/types";
 
@@ -123,6 +124,8 @@ export interface ColumnBase {
   na?: NaSpec;
   /** Sentinel code to exact count. */
   sentinels?: Record<string, number>;
+  /** A coordinate (number columns only): the spec keeps only its bounding box and decimals, no mean, spread or percentiles, and values are spread evenly. */
+  coordinate?: CoordinateAxis;
   /** What the codes of the column mean, from a codebook (value to short label). Documentation: the file still holds the codes. */
   value_labels?: Record<string, string>;
 }

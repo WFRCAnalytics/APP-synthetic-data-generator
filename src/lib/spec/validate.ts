@@ -6,6 +6,12 @@
 import * as v from "valibot";
 import { isSupportedPattern, patternGranularity, patternKind } from "../datefmt/directives";
 import { maskCapacity } from "../mask/mask";
+import {
+  boxFits,
+  COORDINATE_AXES,
+  MAX_COORDINATE_DECIMALS,
+  type CoordinateAxis,
+} from "../classify/coordinate";
 import { JSON_KINDS } from "../json/types";
 import { typeConflict, validateParquetType, type ParquetType } from "../parquet/types";
 import { describeFormat } from "../xlsx/formats";
@@ -40,6 +46,7 @@ const base = {
   quoted: v.optional(v.boolean()),
   na: v.optional(NaSchema),
   sentinels: v.optional(SentinelsSchema),
+  coordinate: v.optional(v.picklist(COORDINATE_AXES as unknown as [string, ...string[]])),
   value_labels: v.optional(
     v.pipe(
       v.record(v.string(), v.pipe(v.string(), v.minLength(1), v.maxLength(100))),
@@ -400,6 +407,8 @@ function checkColumn(col: ColumnSpec, rows: number, out: SpecProblem[]): void {
     }
   }
 
+  if (col.coordinate !== undefined && col.type !== "integer" && col.type !== "float") problem("coordinate", "Only a number column can be a coordinate.");
+
   if (col.value_labels !== undefined) {
     // A label belongs to a value the column already holds (a category or a sentinel code), so the spec carries no other text.
     const known = new Set([
@@ -501,6 +510,33 @@ function checkColumn(col: ColumnSpec, rows: number, out: SpecProblem[]): void {
     case "datetime":
     case "time": {
       if (col.min > col.max) problem("min", "min is greater than max.");
+      if (col.coordinate !== undefined) {
+        if (col.type !== "integer" && col.type !== "float")
+          problem("coordinate", "Only a number column can be a coordinate.");
+        else {
+          const axis = col.coordinate as CoordinateAxis;
+          if (!boxFits(axis, col.min, col.max))
+            problem(
+              "coordinate",
+              `The bounding box does not fit a ${axis === "lat" ? "latitude (-90 to 90)" : axis === "lon" ? "longitude (-180 to 180)" : "coordinate"}.`,
+            );
+          if (col.mode !== "uniform")
+            problem(
+              "coordinate",
+              "A coordinate is spread evenly inside its bounding box, so its mode is uniform.",
+            );
+          if (col.mean !== undefined || col.sd !== undefined || col.quantiles !== undefined)
+            problem(
+              "coordinate",
+              "A coordinate keeps only its bounding box and decimal places, not a mean, spread or percentiles.",
+            );
+          if ((col.decimals ?? 0) > MAX_COORDINATE_DECIMALS)
+            problem(
+              "decimals",
+              `A coordinate keeps at most ${MAX_COORDINATE_DECIMALS} decimal places.`,
+            );
+        }
+      }
       if (col.type === "free_text" && col.max > MAX_TEXT_LENGTH)
         problem(
           "max",

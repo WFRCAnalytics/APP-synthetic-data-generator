@@ -547,28 +547,24 @@
       "kind": "ip"
     },
     "lat": {
-      "type": "unsupported",
-      "status": "unsupported",
-      "reasons": [
-        "unsupported_type"
-      ],
+      "type": "float",
+      "status": "ok",
+      "reasons": [],
       "assert": [
         "type",
         "status"
       ],
-      "notes": "coordinates"
+      "notes": "a latitude: read as a decimal and marked as a coordinate by the profiler"
     },
     "lon": {
-      "type": "unsupported",
-      "status": "unsupported",
-      "reasons": [
-        "unsupported_type"
-      ],
+      "type": "float",
+      "status": "ok",
+      "reasons": [],
       "assert": [
         "type",
         "status"
       ],
-      "notes": "coordinates"
+      "notes": "a longitude: read as a decimal and marked as a coordinate by the profiler"
     },
     "coord_pair": {
       "type": "unsupported",

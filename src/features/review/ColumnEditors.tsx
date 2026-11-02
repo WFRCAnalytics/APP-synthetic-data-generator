@@ -145,6 +145,7 @@ export function ColumnEditors({ profile, otherNames, busy, dateCheck, onEdit, on
         onMode={(mode) => onEdit({ mode })}
         onDecimals={(decimals) => onEdit({ decimals })}
         onRescale={(rescale) => onEdit({ rescale })}
+        onCoordinate={(coordinate) => onEdit({ coordinate })}
       />
 
       <ProtectionsPanel

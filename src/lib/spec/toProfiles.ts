@@ -137,6 +137,7 @@ export function profileFromSpec(c: ColumnSpec): ColumnProfile {
     case "float":
       return {
         ...base,
+        ...(c.coordinate ? { coordinate: c.coordinate } : {}),
         detectedType: c.type,
         type: c.type,
         status: "ok",

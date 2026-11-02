@@ -61,6 +61,8 @@ download the fake file and the spec.
   keys in the same order, each written as the same JSON kind (number, text, true or false), exactly as many nulls
   and as many absent keys as the real file, and the same indent, line ending and trailing newline. A key that mixes
   numbers and text is read and written as text; keys that hold objects or lists are not read or faked.
+- **Coordinates**: latitude, longitude and map-position columns keep only their bounding box and decimal places; values are
+  spread evenly inside it. Combined coordinates and WKT shapes are still left out.
 - **Codebook**: add a CSV or JSON codebook on Review to say what the codes of a coded column mean; the labels show on Review
   and in the README for agents, and the fake file keeps the codes.
 - **README for agents**: next to the fake file and the spec, a Markdown page that says the data is not real, how the file is laid

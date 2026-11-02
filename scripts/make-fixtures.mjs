@@ -230,8 +230,8 @@ function buildZoo() {
   add("ip_address", (_i, r) => `${pick(r, ["198.51.100", "203.0.113", "192.0.2"])}.${intIn(r, 1, 254)}`, personal("ip"));
 
   // Unsupported in this version (coordinates and the like)
-  add("lat", (_i, r) => (40.5 + r() * 0.6).toFixed(6), unsupported({ assert: ["type", "status"], notes: "coordinates" }));
-  add("lon", (_i, r) => (-112.1 + r() * 0.5).toFixed(6), unsupported({ assert: ["type", "status"], notes: "coordinates" }));
+  add("lat", (_i, r) => (40.5 + r() * 0.6).toFixed(6), { type: "float", status: "ok", reasons: [], assert: ["type", "status"], notes: "a latitude: read as a decimal and marked as a coordinate by the profiler" });
+  add("lon", (_i, r) => (-112.1 + r() * 0.5).toFixed(6), { type: "float", status: "ok", reasons: [], assert: ["type", "status"], notes: "a longitude: read as a decimal and marked as a coordinate by the profiler" });
   add("coord_pair", (_i, r) => `(${(40.5 + r() * 0.6).toFixed(6)}, ${(-112.1 + r() * 0.5).toFixed(6)})`, unsupported({ assert: ["type", "status"] }));
   add("wkt_point", (_i, r) => `POINT (${(-112.1 + r() * 0.5).toFixed(6)} ${(40.5 + r() * 0.6).toFixed(6)})`, unsupported({ assert: ["type", "status"] }));
   add("zip_text", (_i, r) => pad(intIn(r, 1000, 99999), 5), { type: "short_string", status: "ok", reasons: [], assert: ["type", "status"], notes: "leading zero must not be lost" });

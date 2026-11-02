@@ -31,7 +31,7 @@ test("a CSV goes in and a fake CSV comes out, entirely on this device", async ({
   await expect(page.getByTestId("filter-count")).toHaveText("Showing 88 of 88 columns");
   await expect(await shownCard(page, "cat_str_5")).toContainText("Categorical");
   await expect(await shownCard(page, "email")).toContainText("Personal identifier");
-  await expect(await shownCard(page, "lat")).toContainText("Left out"); // coordinates are not supported yet
+  await expect(await shownCard(page, "lat")).toContainText("Only the bounding box is kept"); // a latitude is a coordinate
   await expect(await shownCard(page, "int_sentinels")).toContainText("Needs attention");
 
   // No real personal value is anywhere on the page.
@@ -55,7 +55,8 @@ test("a CSV goes in and a fake CSV comes out, entirely on this device", async ({
   const header = fake.split("\n")[0];
   expect(header.startsWith("bool_tf,bool_yn,bool_yesno,bool_01")).toBe(true);
   expect(header.split(",")).toContain("email"); // personal columns are generated now, with invented values
-  expect(header.split(",")).not.toContain("lat"); // coordinates are still left out
+  expect(header.split(",")).toContain("lat"); // a latitude is written, spread evenly inside its box
+  expect(header.split(",")).not.toContain("coord_pair"); // a combined coordinate is still left out
   expect(fake).not.toMatch(/@example\.com/);
 
   // Everything stayed on this device.

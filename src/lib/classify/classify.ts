@@ -5,7 +5,7 @@
 //
 // Safety rules that matter most:
 //  - Personal data (names, email, phone, address, ...), free text and short strings are described by
-//    counts, lengths and shapes only, never by values; coordinates stay `unsupported`, so their
+//    counts, lengths and shapes only, never by values; combined and WKT coordinates stay `unsupported`, so their
 //    values can never reach the preview, the spec or the export (Principle I and II).
 //  - A column named like an ID is a survey ID before it can be categorical, so a household ID with
 //    few distinct values is never stored as category labels.
@@ -44,8 +44,8 @@ export const DEFAULT_THRESHOLD = 50;
 const ID_NAME_PATTERNS = [/(^|[^A-Za-z])id$/i, /[a-z]Id$/, /^[A-Z0-9]{4,}ID$/, /_num$/i];
 export const isIdName = (name: string) => ID_NAME_PATTERNS.some((r) => r.test(name));
 const TIME_NAME = /time|hhmm|hour|depart|arriv|start|end|(^|_)tm$/i;
-const PERSONAL_NAME = /(^|[^a-z])(e_?mail|phone|tel|telephone|mobile|ssn|name|address|street|surname|firstname|lastname|fullname|givenname)([^a-z]|$)/i;
-const LAT_LON_NAME = /(^|[^a-z])(lat|latitude|lon|lng|long|longitude)([^a-z]|$)/i;
+const PERSONAL_NAME =
+  /(^|[^a-z])(e_?mail|phone|tel|telephone|mobile|ssn|name|address|street|surname|firstname|lastname|fullname|givenname)([^a-z]|$)/i;
 
 const BOOLEAN_PAIRS: string[][] = [
   ["true", "false"],
@@ -76,19 +76,35 @@ const EMAIL_RUN = /^[A9._%+-]+@[A9.-]+\.A$/;
 const URL_RUN = /^A:\/\/[A9._~:/?#@!$&'()*+,;=%-]+$/;
 const URL_SHAPE = /^A{3,5}:\/\/[A9._~:/?#@!$&'()*+,;=%-]+$/;
 const IPV4_SHAPE = /^9{1,3}\.9{1,3}\.9{1,3}\.9{1,3}$/;
-const FREE_TEXT_NAME = /(^|[^a-z])(comments?|notes?|remarks?|description|desc|feedback|text|narrative|other_specify|specify)([^a-z]|$)/i;
+const FREE_TEXT_NAME =
+  /(^|[^a-z])(comments?|notes?|remarks?|description|desc|feedback|text|narrative|other_specify|specify)([^a-z]|$)/i;
 const MAX_SHORT_STRING = 64;
 const FREE_TEXT_MEAN = 40;
 const TZ_SHAPE = /(\d{2}:\d{2}|9{2}:9{2})[+-]9{2}:9{2}$|[+-]9{2}:9{2}$|9Z$|AZ$/;
-const COORD_SHAPES = [/^\(9+\.9+, -?9+\.9+\)$/, /^POINT/i, /^A{4,10} ?\(-?9+(\.9+)? -?9+(\.9+)?\)$/, /^\(-?9+\.9+, -?9+\.9+\)$/];
+const COORD_SHAPES = [
+  /^\(9+\.9+, -?9+\.9+\)$/,
+  /^POINT/i,
+  /^A{4,10} ?\(-?9+(\.9+)? -?9+(\.9+)?\)$/,
+  /^\(-?9+\.9+, -?9+\.9+\)$/,
+];
 
 function shareOf(shapes: ShapeCount[], sample: number, test: (s: string) => boolean): number {
   if (sample === 0) return 0;
   return shapes.filter((s) => test(s.shape)).reduce((a, s) => a + s.count, 0) / sample;
 }
 
-function unsupported(na: NaInfo, reasons: ReasonCode[] = [], personalKind?: PersonalKind): Classification {
-  return { type: "unsupported", status: "unsupported", reasons: ["unsupported_type", ...reasons], na, ...(personalKind ? { personalKind } : {}) };
+function unsupported(
+  na: NaInfo,
+  reasons: ReasonCode[] = [],
+  personalKind?: PersonalKind,
+): Classification {
+  return {
+    type: "unsupported",
+    status: "unsupported",
+    reasons: ["unsupported_type", ...reasons],
+    na,
+    ...(personalKind ? { personalKind } : {}),
+  };
 }
 
 /** The kind of a personal identifier column and how much of the column fits it, or null. */
@@ -99,12 +115,19 @@ function personalKindFor(
 ): { kind: PersonalKind; share: number } | null {
   const ssn = textShare((s) => SSN_SHAPE.test(s));
   if (ssn > 0.5) return { kind: "ssn", share: ssn };
-  const runShare = (test: (s: string) => boolean) => (stats.runShapes ? shareOf(stats.runShapes, stats.shapeSample, test) : 0);
-  const email = Math.max(textShare((s) => EMAIL_SHAPE.test(s)), runShare((s) => EMAIL_RUN.test(s)));
+  const runShare = (test: (s: string) => boolean) =>
+    stats.runShapes ? shareOf(stats.runShapes, stats.shapeSample, test) : 0;
+  const email = Math.max(
+    textShare((s) => EMAIL_SHAPE.test(s)),
+    runShare((s) => EMAIL_RUN.test(s)),
+  );
   if (email > 0.5) return { kind: "email", share: email };
   const phone = textShare((s) => PHONE_SHAPES.some((r) => r.test(s)));
   if (phone > 0.5) return { kind: "phone", share: phone };
-  const url = Math.max(textShare((s) => URL_SHAPE.test(s)), runShare((s) => URL_RUN.test(s)));
+  const url = Math.max(
+    textShare((s) => URL_SHAPE.test(s)),
+    runShare((s) => URL_RUN.test(s)),
+  );
   if (url > 0.5) return { kind: "url", share: url };
   const ip = textShare((s) => IPV4_SHAPE.test(s));
   if (ip > 0.5) return { kind: "ip", share: ip };
@@ -136,7 +159,8 @@ function pairMatches(values: string[]): boolean {
 /** Patterns worth trying for a column whose shapes look like dates or times. */
 function datePatternsFor(stats: BasicStats): string[] {
   const patterns = new Set<string>();
-  for (const { shape } of stats.shapes) for (const p of SHAPE_PATTERNS[shape] ?? []) patterns.add(p);
+  for (const { shape } of stats.shapes)
+    for (const p of SHAPE_PATTERNS[shape] ?? []) patterns.add(p);
   if (patterns.size === 0 && TIME_NAME.test(stats.name)) {
     // Four digits such as 0815 are only read as a clock time when the name says so.
     if (shareOf(stats.shapes, stats.shapeSample, (s) => s === "9999") > 0.9) patterns.add("%H%M");
@@ -158,12 +182,16 @@ export function classifyColumn(
   const sentinelKeys = Object.keys(sentinels);
   const sentinelCount = Object.values(sentinels).reduce((a, b) => a + b, 0);
   const values = stats.valueCount - sentinelCount;
-  const distinctValues = Math.max(0, stats.distinct - Object.keys(stats.tokenCounts).length - sentinelKeys.length);
+  const distinctValues = Math.max(
+    0,
+    stats.distinct - Object.keys(stats.tokenCounts).length - sentinelKeys.length,
+  );
   const flagSentinel = () => {
     if (sentinelKeys.length > 0) reasons.push("possible_sentinel");
   };
   const done = (type: ColumnType, extra: Partial<Classification> = {}): Classification => {
-    const status: ColumnStatus = type === "unsupported" ? "unsupported" : reasons.length > 0 ? "needs_attention" : "ok";
+    const status: ColumnStatus =
+      type === "unsupported" ? "unsupported" : reasons.length > 0 ? "needs_attention" : "ok";
     return { type, status, reasons: [...reasons], na, ...extra };
   };
 
@@ -171,7 +199,8 @@ export function classifyColumn(
   if (stats.valueCount === 0) return done("empty");
 
   const numberLike = stats.floatCount + stats.thousandsCount === stats.valueCount;
-  const textShare = (test: (s: string) => boolean) => shareOf(stats.shapes, stats.shapeSample, test);
+  const textShare = (test: (s: string) => boolean) =>
+    shareOf(stats.shapes, stats.shapeSample, test);
 
   // A time zone offset is out of scope (research.md R8).
   if (textShare((s) => /9{2}:9{2}/.test(s) && TZ_SHAPE.test(s)) > 0.5) {
@@ -189,9 +218,7 @@ export function classifyColumn(
 
   // 3. Coordinates: named latitude/longitude, or combined "(lat, lon)" and WKT strings.
   if (textShare((s) => COORD_SHAPES.some((r) => r.test(s))) > 0.5) return unsupported(na);
-  if (LAT_LON_NAME.test(stats.name) && stats.floatCount > 0 && stats.floatCount >= stats.valueCount * 0.9) {
-    return unsupported(na);
-  }
+  // A column of latitudes or longitudes is an ordinary decimal column here; the profiler marks it as a coordinate (specs/013).
 
   // 4. Dates, datetimes and times.
   const datePatterns = datePatternsFor(stats);
@@ -203,7 +230,8 @@ export function classifyColumn(
   // 5. Personal identifiers (kinds are proposed from value shapes first, then from the column name).
   const personal = personalKindFor(stats, numberLike, textShare);
   if (personal) {
-    if (personal.kind === "ssn") return unsupported(na, ["possible_identifier", "ssn_needs_acknowledgement"], "ssn");
+    if (personal.kind === "ssn")
+      return unsupported(na, ["possible_identifier", "ssn_needs_acknowledgement"], "ssn");
     if (personal.share < 0.8) reasons.push("kind_mixed");
     return done("personal", { personalKind: personal.kind });
   }
@@ -212,7 +240,8 @@ export function classifyColumn(
   if (isIdName(stats.name)) {
     const codeLike = stats.maxLength <= 24 && stats.floatCount === stats.intCount;
     // For an ID column the frequent values are never fetched, so whitespace is judged from the shapes.
-    const wholeOrCode = stats.intCount === stats.valueCount || !stats.shapes.some((s) => s.shape.includes(" "));
+    const wholeOrCode =
+      stats.intCount === stats.valueCount || !stats.shapes.some((s) => s.shape.includes(" "));
     if (codeLike && wholeOrCode) {
       const top = stats.shapes[0];
       const dominant = top && stats.shapeSample > 0 ? top.count / stats.shapeSample : 1;
@@ -227,7 +256,8 @@ export function classifyColumn(
   const decimalLike = !integerLike && stats.floatCount === stats.valueCount;
   if (distinctValues <= options.threshold && !decimalLike) {
     flagSentinel();
-    if (plainInteger && Math.abs(distinctValues - options.threshold) <= 1) reasons.push("near_categorical_threshold");
+    if (plainInteger && Math.abs(distinctValues - options.threshold) <= 1)
+      reasons.push("near_categorical_threshold");
     return done("categorical", { storage: plainInteger ? "integer" : "string" });
   }
 
@@ -236,7 +266,8 @@ export function classifyColumn(
   const numeric =
     stats.leadingZeroCount === 0 &&
     stats.floatCount + stats.thousandsCount > 0 &&
-    (unparsed === 0 || (stats.unparsedDistinct <= 5 && unparsed < stats.valueCount * 0.2 && stats.floatCount > 0));
+    (unparsed === 0 ||
+      (stats.unparsedDistinct <= 5 && unparsed < stats.valueCount * 0.2 && stats.floatCount > 0));
   if (numeric && values > 0) {
     flagSentinel();
     let extraNa: ValueCount[] | undefined;
@@ -247,17 +278,24 @@ export function classifyColumn(
       reasons.push("possible_na_token");
     }
     // Integer when every numeric value is a whole number (plain or with thousands separators).
-    const isInteger = stats.sciCount === 0 && stats.intCount + stats.thousandsCount === stats.valueCount - unparsed;
-    if (isInteger && Math.abs(distinctValues - options.threshold) <= 1) reasons.push("near_categorical_threshold");
+    const isInteger =
+      stats.sciCount === 0 && stats.intCount + stats.thousandsCount === stats.valueCount - unparsed;
+    if (isInteger && Math.abs(distinctValues - options.threshold) <= 1)
+      reasons.push("near_categorical_threshold");
     return {
-      ...done(isInteger ? "integer" : "float", { extraNa, thousands: stats.thousandsCount > 0 && stats.plainBigCount === 0 }),
+      ...done(isInteger ? "integer" : "float", {
+        extraNa,
+        thousands: stats.thousandsCount > 0 && stats.plainBigCount === 0,
+      }),
       na: naInfo,
     };
   }
 
   // 10-11. Free text and short strings: described by lengths and patterns, never by values.
   const values10 = Math.max(1, stats.valueCount);
-  const spaceShare = (stats.spaceCount ?? textShare((s) => s.includes(" "))) / (stats.spaceCount === undefined ? 1 : values10);
+  const spaceShare =
+    (stats.spaceCount ?? textShare((s) => s.includes(" "))) /
+    (stats.spaceCount === undefined ? 1 : values10);
   const isFreeText =
     stats.maxLength > MAX_SHORT_STRING ||
     stats.meanLength >= FREE_TEXT_MEAN ||
@@ -298,13 +336,23 @@ export function resolveDate(
   const ranked = [...parsed].sort((a, b) => b.parsed - a.parsed);
   const best = ranked[0];
   if (!best || best.parsed === 0 || total === 0) {
-    return { pattern: null, type: "unsupported", status: "unsupported", reasons: ["unsupported_type", "date_format_unrecognized"] };
+    return {
+      pattern: null,
+      type: "unsupported",
+      status: "unsupported",
+      reasons: ["unsupported_type", "date_format_unrecognized"],
+    };
   }
 
   const second = ranked[1];
   if (second && best.parsed + second.parsed >= total * 0.99 && second.parsed > total * 0.05) {
     // Two formats share the column.
-    return { pattern: null, type: "unsupported", status: "needs_attention", reasons: ["date_format_mixed"] };
+    return {
+      pattern: null,
+      type: "unsupported",
+      status: "needs_attention",
+      reasons: ["date_format_mixed"],
+    };
   }
 
   if (best.parsed >= total * 0.9) {
@@ -321,5 +369,10 @@ export function resolveDate(
     };
   }
 
-  return { pattern: null, type: "unsupported", status: "unsupported", reasons: ["unsupported_type", "date_format_unrecognized"] };
+  return {
+    pattern: null,
+    type: "unsupported",
+    status: "unsupported",
+    reasons: ["unsupported_type", "date_format_unrecognized"],
+  };
 }

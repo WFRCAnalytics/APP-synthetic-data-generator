@@ -3,8 +3,16 @@
 // apart from the engine-side overrides and applied on top of a profile, so changing one never
 // touches the database and a re-profile never loses them.
 
+import type { CoordinateAxis } from "../classify/coordinate";
 import { idFit, shortStringFit } from "./idCapacity";
-import type { ColumnProfile, ExcludeMode, MaskToken, NumericMode, PersonalKind, ReasonCode } from "./types";
+import type {
+  ColumnProfile,
+  ExcludeMode,
+  MaskToken,
+  NumericMode,
+  PersonalKind,
+  ReasonCode,
+} from "./types";
 
 /** An ID pattern chosen in the token editor, replacing the detected one. */
 export interface IdPattern {
@@ -32,6 +40,8 @@ export interface LocalEdits {
   mergeUnderK?: number | null;
   labelCodes?: boolean;
   outputName?: string;
+  /** Treat a decimal column as a coordinate of this axis; null says it is not one. */
+  coordinate?: CoordinateAxis | null;
   /** What the codes of the column mean (a codebook); null removes them. */
   valueLabels?: Record<string, string> | null;
   /** The number format code of the column in an Excel output; "General" means none. */
@@ -40,7 +50,8 @@ export interface LocalEdits {
 
 export const MAX_DECIMALS = 15;
 
-const isNumericKind = (p: ColumnProfile) => p.summary.kind === "numeric" || p.summary.kind === "datetime";
+const isNumericKind = (p: ColumnProfile) =>
+  p.summary.kind === "numeric" || p.summary.kind === "datetime";
 const isCategorical = (p: ColumnProfile) => p.summary.kind === "categorical";
 
 /**
@@ -69,6 +80,15 @@ export function applyEdits(p: ColumnProfile, e: LocalEdits | undefined): ColumnP
     else out.cellFormat = e.cellFormat.trim();
   }
 
+  if (
+    p.summary.kind === "numeric" &&
+    (p.type === "float" || p.type === "integer") &&
+    e.coordinate !== undefined
+  ) {
+    if (e.coordinate === null) delete out.coordinate;
+    else out.coordinate = e.coordinate;
+  }
+
   if (isNumericKind(p)) {
     if (e.mode !== undefined) out.mode = e.mode;
     if (e.rescale !== undefined) out.rescale = e.rescale && (e.mode ?? p.mode) === "match_mean_sd";
@@ -85,7 +105,8 @@ export function applyEdits(p: ColumnProfile, e: LocalEdits | undefined): ColumnP
 
   if (p.summary.kind === "personal") {
     const kind = e.personalKind ?? p.summary.personalKind;
-    if (kind !== p.summary.personalKind) out.summary = { ...p.summary, personalKind: kind, format: undefined };
+    if (kind !== p.summary.personalKind)
+      out.summary = { ...p.summary, personalKind: kind, format: undefined };
     const ack = e.ssnAcknowledged ?? p.acknowledged ?? false;
     if (kind === "ssn") {
       out.acknowledged = ack;
@@ -93,13 +114,22 @@ export function applyEdits(p: ColumnProfile, e: LocalEdits | undefined): ColumnP
       if (!ack) {
         out.type = "unsupported";
         out.status = "unsupported";
-        out.attentionReasons = [...new Set<ReasonCode>([...p.attentionReasons.filter((r) => r !== "kind_mixed"), "unsupported_type", "ssn_needs_acknowledgement"])];
+        out.attentionReasons = [
+          ...new Set<ReasonCode>([
+            ...p.attentionReasons.filter((r) => r !== "kind_mixed"),
+            "unsupported_type",
+            "ssn_needs_acknowledgement",
+          ]),
+        ];
         out.exclude = e.exclude === "keep_as_na" ? "keep_as_na" : "drop";
       } else {
         out.type = "personal";
         out.status = "ok";
-        out.attentionReasons = p.attentionReasons.filter((r) => r !== "unsupported_type" && r !== "ssn_needs_acknowledgement");
-        out.exclude = e.exclude ?? (p.exclude === "drop" && p.type === "unsupported" ? "include" : p.exclude);
+        out.attentionReasons = p.attentionReasons.filter(
+          (r) => r !== "unsupported_type" && r !== "ssn_needs_acknowledgement",
+        );
+        out.exclude =
+          e.exclude ?? (p.exclude === "drop" && p.type === "unsupported" ? "include" : p.exclude);
       }
     } else {
       out.acknowledged = undefined;
@@ -107,7 +137,9 @@ export function applyEdits(p: ColumnProfile, e: LocalEdits | undefined): ColumnP
         // An SSN-style column switched to another kind becomes an ordinary personal column.
         out.type = "personal";
         out.status = "ok";
-        out.attentionReasons = p.attentionReasons.filter((r) => r !== "unsupported_type" && r !== "ssn_needs_acknowledgement");
+        out.attentionReasons = p.attentionReasons.filter(
+          (r) => r !== "unsupported_type" && r !== "ssn_needs_acknowledgement",
+        );
         out.exclude = e.exclude ?? "include";
       }
     }
@@ -128,7 +160,9 @@ export function applyEdits(p: ColumnProfile, e: LocalEdits | undefined): ColumnP
     const { mask, min, max, pad } = e.idPattern;
     out.summary = { ...p.summary, mask, min, max, padWidth: pad ?? 0 };
     // The edited pattern may be too narrow for the column; say so, and clear the note once it fits.
-    const reasons: ReasonCode[] = p.attentionReasons.filter((r) => r !== "id_mask_too_narrow" && r !== "id_mixed_masks");
+    const reasons: ReasonCode[] = p.attentionReasons.filter(
+      (r) => r !== "id_mask_too_narrow" && r !== "id_mixed_masks",
+    );
     if (idFit(out)?.short) reasons.push("id_mask_too_narrow");
     out.attentionReasons = reasons;
     out.status = reasons.length > 0 ? "needs_attention" : "ok";
@@ -138,11 +172,21 @@ export function applyEdits(p: ColumnProfile, e: LocalEdits | undefined): ColumnP
 }
 
 /** Applies every column's edits, in column order. */
-export function applyAllEdits(profiles: readonly ColumnProfile[], edits: Readonly<Record<string, LocalEdits>>): ColumnProfile[] {
+export function applyAllEdits(
+  profiles: readonly ColumnProfile[],
+  edits: Readonly<Record<string, LocalEdits>>,
+): ColumnProfile[] {
   return profiles.map((p) => applyEdits(p, edits[p.name]));
 }
 
 /** "-9, 998 ,, 999" becomes ["-9", "998", "999"]: trimmed, no blanks, no repeats. */
 export function parseList(text: string): string[] {
-  return [...new Set(text.split(",").map((t) => t.trim()).filter((t) => t !== ""))];
+  return [
+    ...new Set(
+      text
+        .split(",")
+        .map((t) => t.trim())
+        .filter((t) => t !== ""),
+    ),
+  ];
 }

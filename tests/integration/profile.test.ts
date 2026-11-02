@@ -6,6 +6,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { columnSpecOf } from "../../src/lib/spec/build";
 import { maskToRegexString } from "../../src/lib/mask/mask";
 import type { ColumnProfile } from "../../src/lib/profile/types";
 import { loadCsv } from "../../src/workers/profile/load";
@@ -177,7 +178,7 @@ describe("categorical counts, NA counts and sentinels are exact", () => {
 });
 
 describe("privacy: profiles carry no values", () => {
-  const unsupportedColumns = ["lat", "lon", "coord_pair", "wkt_point"];
+  const unsupportedColumns = ["coord_pair", "wkt_point"];
   const describedColumns = ["email", "person_name", "first_name", "last_name", "street_address", "phone_us", "phone_intl", "free_text", "comments", "ssn_like", "url", "uuid", "ip_address", "plate", "vendor_code", "short_code_many", "zip_text", "currency_text", "email_mixed"];
 
   it.each(unsupportedColumns)("the profile of %s holds no cell value", (name) => {
@@ -187,6 +188,17 @@ describe("privacy: profiles carry no values", () => {
     expect(p.summary).toEqual({ kind: "unsupported" });
     const text = JSON.stringify(p);
     for (const v of column(name).slice(0, 300)) if (v.length > 6) expect(text.includes(v)).toBe(false);
+  });
+
+  it("a latitude and a longitude are decimals marked as coordinates, kept to their bounding box in the spec", () => {
+    for (const [name, axis] of [["lat", "lat"], ["lon", "lon"]] as const) {
+      const p = profiles.get(name)!;
+      expect(p.type).toBe("float");
+      expect(p.coordinate).toBe(axis);
+      const spec = JSON.stringify(columnSpecOf(p));
+      expect(spec).not.toContain("quantiles");
+      expect(spec).toContain('"coordinate":"' + axis + '"');
+    }
   });
 
   it.each(describedColumns)("the profile of %s is counts, lengths and shapes, never a value", (name) => {

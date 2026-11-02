@@ -33,7 +33,8 @@ export function shortStringFit(p: ColumnProfile): IdFit | null {
     const allowed = maskCapacity(s.pattern.slice(0, Number(length)));
     const short = allowed < BigInt(needed);
     if (short && !worst.short) worst = { allowed, needed, short };
-    else if (!worst.short && Number(allowed) - needed < Number(worst.allowed) - worst.needed) worst = { allowed, needed, short };
+    else if (!worst.short && Number(allowed) - needed < Number(worst.allowed) - worst.needed)
+      worst = { allowed, needed, short };
   }
   return worst;
 }

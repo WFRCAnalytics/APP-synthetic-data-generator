@@ -3,6 +3,7 @@
 // spec alone, so it says nothing the spec does not already hold (category labels, exact limits, counts and formats), and
 // never a row of the real file. Pure code, tested in Node.
 
+import { AXIS_LABELS } from "../classify/coordinate";
 import { EMPTY_TEXT_TOKEN, type ColumnSpec, type SpecFile } from "../spec/types";
 
 export interface AgentReadmeOptions {
@@ -87,6 +88,8 @@ function describeValues(c: ColumnSpec): string {
   switch (c.type) {
     case "integer":
     case "float":
+      if (c.coordinate)
+        return `${AXIS_LABELS[c.coordinate].toLowerCase()} inside the box ${num(c.min)} to ${num(c.max)}, ${c.decimals ?? 0} decimal places, spread evenly`;
       return `${num(c.min)} to ${num(c.max)}${c.type === "float" ? `, ${c.decimals ?? 0} decimal places` : ""}`;
     case "date":
     case "datetime":

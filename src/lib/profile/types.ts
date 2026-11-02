@@ -1,13 +1,30 @@
 // Types for what profiling produces and the user edits (data-model.md). These hold summaries only;
 // real rows never appear in them (constitution Principle I).
 
-import type { ColumnType, ExcludeMode, Granularity, MaskToken, NumericMode, PersonalFormat, PersonalKind } from "../spec/types";
+import type {
+  ColumnType,
+  ExcludeMode,
+  Granularity,
+  MaskToken,
+  NumericMode,
+  PersonalFormat,
+  PersonalKind,
+} from "../spec/types";
 import type { Encoding } from "../encoding/detect";
+import type { CoordinateAxis } from "../classify/coordinate";
 import type { JsonKind, JsonLayout } from "../json/types";
 import type { ParquetType, UnsupportedReason } from "../parquet/types";
 import type { QuoteStyle, LineEnding } from "../csv/writer";
 
-export type { ColumnType, ExcludeMode, Granularity, MaskToken, NumericMode, PersonalFormat, PersonalKind };
+export type {
+  ColumnType,
+  ExcludeMode,
+  Granularity,
+  MaskToken,
+  NumericMode,
+  PersonalFormat,
+  PersonalKind,
+};
 
 export interface FileSettings {
   encoding: Encoding;
@@ -176,6 +193,8 @@ export interface ColumnProfile {
   parquetType?: ParquetType;
   /** What the codes of the column mean, from a codebook: value to label. Documentation, never data. */
   valueLabels?: Record<string, string>;
+  /** The column holds a coordinate: only its bounding box and decimal places are kept, and values are spread evenly inside it. */
+  coordinate?: CoordinateAxis;
   /** The JSON kind of the key in a JSON file. */
   jsonKind?: JsonKind;
   /** In how many records the key is absent from a JSON file. */

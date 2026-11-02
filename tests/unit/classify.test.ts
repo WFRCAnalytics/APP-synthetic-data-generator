@@ -294,10 +294,10 @@ describe("personal data is described by kind, never by value (specs/002 FR-001)"
 });
 
 describe("unsupported columns (nothing may leak)", () => {
-  it("catches latitude and longitude by name", () => {
-    expect(classify(floats("o_lat")).type).toBe("unsupported");
-    expect(classify(floats("longitude")).type).toBe("unsupported");
-    expect(classify(floats("lon")).type).toBe("unsupported");
+  it("reads latitude and longitude columns as decimals, which the profiler then marks as coordinates", () => {
+    expect(classify(floats("o_lat")).type).toBe("float");
+    expect(classify(floats("longitude")).type).toBe("float");
+    expect(classify(floats("lon")).type).toBe("float");
   });
 
   it("does not mistake words that contain lat or long", () => {

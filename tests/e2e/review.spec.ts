@@ -214,3 +214,40 @@ test("a codebook puts labels beside the codes, in the card, the spec and the REA
   const [readme] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Download README for agents" }).click()]);
   expect(readFileSync(await readme.path(), "utf8")).toContain("`Central` (Central district)");
 });
+
+test("a latitude and a longitude keep only their bounding box, and the person can turn that off", async ({ page }) => {
+  let csv = "id,lat,lon,age\n";
+  for (let i = 0; i < 400; i++) csv += `${i},${(40.5 + ((i * 37) % 680) / 1000).toFixed(5)},${(-112.2 + ((i * 53) % 700) / 1000).toFixed(5)},${18 + (i % 60)}\n`;
+  await page.goto(APP);
+  await page.locator("#file-input").setInputFiles({ name: "places.csv", mimeType: "text/csv", buffer: Buffer.from(csv) });
+  await page.getByRole("button", { name: /profile this file/i }).click();
+  await expect(page.getByRole("heading", { name: "Review columns" })).toBeVisible({ timeout: 120_000 });
+
+  const card = await shownCard(page, "lat");
+  await expect(card).toContainText("Only the bounding box is kept");
+  await expect(card.getByLabel("Coordinate")).toHaveValue("lat");
+  await expect(card.getByLabel("Numeric mode")).toHaveCount(0);
+  await expect((await shownCard(page, "age")).getByLabel("Coordinate")).toHaveValue("");
+
+  await page.getByRole("button", { name: "Continue to Generate" }).click();
+  await page.getByRole("region", { name: "Generate the fake table" }).getByRole("button", { name: /^Generate( again)?$/ }).click();
+  await expect(page.getByText(/checks (passed|did not pass)/)).toBeVisible({ timeout: 120_000 });
+  const [fake] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: /Download places_fake\.csv/ }).click()]);
+  const { rows } = parseCsv(readFileSync(await fake.path(), "utf8"));
+  const lats = rows.slice(1).map((r) => Number(r[1]));
+  expect(Math.min(...lats)).toBeGreaterThanOrEqual(40.5);
+  expect(Math.max(...lats)).toBeLessThanOrEqual(41.18);
+  const [spec] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Download spec (JSON)" }).click()]);
+  const json = JSON.parse(readFileSync(await spec.path(), "utf8"));
+  const latSpec = json.columns.find((c: { name: string }) => c.name === "lat");
+  expect(latSpec).toMatchObject({ coordinate: "lat", mode: "uniform" });
+  expect(latSpec.quantiles).toBeUndefined();
+  expect(latSpec.mean).toBeUndefined();
+  expect(json.columns.find((c: { name: string }) => c.name === "age").quantiles).toHaveLength(101);
+
+  // Turned off, the column is an ordinary decimal again.
+  await page.getByRole("button", { name: /^1\. Ingest|Review/ }).first().click();
+  const again = await shownCard(page, "lat");
+  await again.getByLabel("Coordinate").selectOption("");
+  await expect(again.getByLabel("Numeric mode")).toBeVisible();
+});

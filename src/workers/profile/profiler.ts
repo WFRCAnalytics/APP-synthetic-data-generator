@@ -2,7 +2,13 @@
 // compute the type-specific summary with exact numbers from the full table (FR-005 to FR-009).
 // Runs against an abstract SqlRunner, so it works in the browser worker and in Node tests.
 
-import { classifyColumn, DEFAULT_THRESHOLD, personalKindFromName, resolveDate } from "../../lib/classify/classify";
+import { guessAxis } from "../../lib/classify/coordinate";
+import {
+  classifyColumn,
+  DEFAULT_THRESHOLD,
+  personalKindFromName,
+  resolveDate,
+} from "../../lib/classify/classify";
 import { detectNa, withExtraTokens, type NaInfo } from "../../lib/classify/na";
 import { detectSentinels } from "../../lib/classify/sentinels";
 import { KNOWN_NA_TOKENS, type BasicStats } from "../../lib/classify/stats";
@@ -23,7 +29,16 @@ import type { PersonalKind } from "../../lib/spec/types";
 import { profileIds } from "./ids";
 import { freeTextFlags, profilePersonal, profileShortString } from "./personal";
 import { collectBasic, createSample, isValue } from "./stats";
-import { ident, lit, litList, QUANTILE_LIST, SRC, toNumber, toNumberArray, type SqlRunner } from "./sql";
+import {
+  ident,
+  lit,
+  litList,
+  QUANTILE_LIST,
+  SRC,
+  toNumber,
+  toNumberArray,
+  type SqlRunner,
+} from "./sql";
 
 export interface ProfileOptions {
   /** Distinct-value limit for categorical. */
@@ -36,26 +51,45 @@ type DateType = Extract<ColumnType, "date" | "datetime" | "time">;
 const kindOf = (pattern: string): ColumnType => patternKind(pattern) as DateType;
 
 /** Exact counts for a fixed set of values (used for user-confirmed sentinels). */
-async function countValues(sql: SqlRunner, col: string, values: readonly string[]): Promise<Record<string, number>> {
+async function countValues(
+  sql: SqlRunner,
+  col: string,
+  values: readonly string[],
+): Promise<Record<string, number>> {
   if (values.length === 0) return {};
-  const rows = await sql.all(`SELECT ${col} AS v, count(*) AS n FROM ${SRC} WHERE ${col} IN (${litList(values)}) GROUP BY ${col}`);
+  const rows = await sql.all(
+    `SELECT ${col} AS v, count(*) AS n FROM ${SRC} WHERE ${col} IN (${litList(values)}) GROUP BY ${col}`,
+  );
   const out: Record<string, number> = {};
   for (const r of rows) out[String(r.v)] = toNumber(r.n);
   return out;
 }
 
 /** Condition selecting the values that belong to the data: not NA, not a sentinel. */
-function dataCondition(col: string, naTokens: readonly string[], sentinelKeys: readonly string[]): string {
-  const notSentinel = sentinelKeys.length > 0 ? ` AND ${col} NOT IN (${litList(sentinelKeys)})` : "";
+function dataCondition(
+  col: string,
+  naTokens: readonly string[],
+  sentinelKeys: readonly string[],
+): string {
+  const notSentinel =
+    sentinelKeys.length > 0 ? ` AND ${col} NOT IN (${litList(sentinelKeys)})` : "";
   return `${isValue(col, naTokens)}${notSentinel}`;
 }
 
 /** How many values each candidate date pattern parses. */
-async function parseCounts(sql: SqlRunner, col: string, patterns: readonly string[], where: string) {
+async function parseCounts(
+  sql: SqlRunner,
+  col: string,
+  patterns: readonly string[],
+  where: string,
+) {
   const selects = patterns.map(
-    (p, i) => `count(*) FILTER (WHERE try_strptime(${col}, ${lit(toDuckdbPattern(p))}) IS NOT NULL) AS p${i}`,
+    (p, i) =>
+      `count(*) FILTER (WHERE try_strptime(${col}, ${lit(toDuckdbPattern(p))}) IS NOT NULL) AS p${i}`,
   );
-  const [row] = await sql.all(`SELECT ${selects.join(", ")}, count(*) AS total FROM ${SRC} WHERE ${where}`);
+  const [row] = await sql.all(
+    `SELECT ${selects.join(", ")}, count(*) AS total FROM ${SRC} WHERE ${where}`,
+  );
   return {
     parsed: patterns.map((pattern, i) => ({ pattern, parsed: toNumber(row[`p${i}`]) })),
     total: toNumber(row.total),
@@ -89,7 +123,15 @@ async function numericSummary(
   );
   const n = toNumber(r.n);
   if (n === 0) {
-    return { min: 0, max: 0, mean: 0, sd: 0, decimals: 0, quantiles: new Array(101).fill(0), histogram: new Array(20).fill(0) };
+    return {
+      min: 0,
+      max: 0,
+      mean: 0,
+      sd: 0,
+      decimals: 0,
+      quantiles: new Array(101).fill(0),
+      histogram: new Array(20).fill(0),
+    };
   }
   const min = toNumber(r.mn);
   const max = toNumber(r.mx);
@@ -149,8 +191,15 @@ interface Forced {
  * Applies a type the user chose, or returns null when the column's values cannot honestly be read
  * that way (for example a number type for a column of words). Dates are chosen by typing a pattern.
  */
-function forceType(target: ColumnType, basic: BasicStats, sentinelKeys: readonly string[]): Forced | null {
-  const distinctValues = Math.max(0, basic.distinct - Object.keys(basic.tokenCounts).length - sentinelKeys.length);
+function forceType(
+  target: ColumnType,
+  basic: BasicStats,
+  sentinelKeys: readonly string[],
+): Forced | null {
+  const distinctValues = Math.max(
+    0,
+    basic.distinct - Object.keys(basic.tokenCounts).length - sentinelKeys.length,
+  );
   switch (target) {
     case "unsupported":
       return { type: "unsupported" };
@@ -159,8 +208,14 @@ function forceType(target: ColumnType, basic: BasicStats, sentinelKeys: readonly
     case "boolean": {
       if (distinctValues > MAX_FORCED_LABELS) return null;
       if (target === "boolean" && distinctValues !== 2) return null;
-      const plainInteger = basic.intCount === basic.valueCount && basic.leadingZeroCount === 0 && basic.thousandsCount === 0;
-      return { type: target, storage: target === "boolean" ? "string" : plainInteger ? "integer" : "string" };
+      const plainInteger =
+        basic.intCount === basic.valueCount &&
+        basic.leadingZeroCount === 0 &&
+        basic.thousandsCount === 0;
+      return {
+        type: target,
+        storage: target === "boolean" ? "string" : plainInteger ? "integer" : "string",
+      };
     }
 
     case "integer":
@@ -169,7 +224,14 @@ function forceType(target: ColumnType, basic: BasicStats, sentinelKeys: readonly
       if (numeric === 0 || basic.leadingZeroCount > 0) return null;
       // A few stray markers can be read as missing; many mean the column is not numeric.
       if (basic.unparsedCount > 0 && basic.unparsedDistinct > 5) return null;
-      if (target === "integer" && !(basic.sciCount === 0 && basic.intCount + basic.thousandsCount === basic.valueCount - basic.unparsedCount)) return null;
+      if (
+        target === "integer" &&
+        !(
+          basic.sciCount === 0 &&
+          basic.intCount + basic.thousandsCount === basic.valueCount - basic.unparsedCount
+        )
+      )
+        return null;
       return {
         type: target,
         thousands: basic.thousandsCount > 0 && basic.plainBigCount === 0,
@@ -200,7 +262,12 @@ export async function countDatePattern(
   sentinels: readonly string[],
 ): Promise<{ parsed: number; total: number }> {
   const c = ident(name);
-  const { parsed, total } = await parseCounts(sql, c, [pattern], dataCondition(c, naTokens, sentinels));
+  const { parsed, total } = await parseCounts(
+    sql,
+    c,
+    [pattern],
+    dataCondition(c, naTokens, sentinels),
+  );
   return { parsed: parsed[0].parsed, total };
 }
 
@@ -216,7 +283,9 @@ export async function profileColumn(
   const naList = overrides.naTokens ?? [...KNOWN_NA_TOKENS];
   const basic = await collectBasic(sql, name, rowCount, naList, options.threshold);
   const na0 = detectNa(basic);
-  const sentinels = overrides.sentinels ? await countValues(sql, c, overrides.sentinels) : detectSentinels(basic);
+  const sentinels = overrides.sentinels
+    ? await countValues(sql, c, overrides.sentinels)
+    : detectSentinels(basic);
   const sentinelKeys = Object.keys(sentinels);
 
   const cls = classifyColumn(basic, na0, sentinels, options);
@@ -234,7 +303,9 @@ export async function profileColumn(
     // The user typed a pattern: it must parse every value, otherwise the column is not supported (Q2).
     const pattern = overrides.datePattern;
     const supported = isSupportedPattern(pattern);
-    const { parsed, total } = supported ? await parseCounts(sql, c, [pattern], dataCondition(c, naList, sentinelKeys)) : { parsed: [{ pattern, parsed: 0 }], total: 0 };
+    const { parsed, total } = supported
+      ? await parseCounts(sql, c, [pattern], dataCondition(c, naList, sentinelKeys))
+      : { parsed: [{ pattern, parsed: 0 }], total: 0 };
     reasons.length = 0;
     if (supported && total > 0 && parsed[0].parsed === total) {
       type = kindOf(pattern);
@@ -296,7 +367,9 @@ export async function profileColumn(
     case "boolean":
     case "categorical": {
       const limit = forcedLabels ? MAX_FORCED_LABELS + 1 : options.threshold + 1;
-      const rows = await sql.all(`SELECT ${c} AS v, count(*) AS n FROM ${SRC} WHERE ${where} GROUP BY ${c} ORDER BY n DESC, v LIMIT ${limit}`);
+      const rows = await sql.all(
+        `SELECT ${c} AS v, count(*) AS n FROM ${SRC} WHERE ${where} GROUP BY ${c} ORDER BY n DESC, v LIMIT ${limit}`,
+      );
       const counts: Record<string, number> = {};
       for (const r of rows) counts[String(r.v)] = toNumber(r.n);
       summary = { kind: "categorical", storage: storage ?? "string", counts };
@@ -305,9 +378,18 @@ export async function profileColumn(
 
     case "integer":
     case "float": {
-      const expr = thousands ? `try_cast(replace(${c}, ',', '') AS DOUBLE)` : `try_cast(${c} AS DOUBLE)`;
-      const scientific = type === "float" && basic.sciCount > 0 && basic.sciCount >= basic.valueCount * 0.5;
-      const num = await numericSummary(sql, expr, where, type === "float" ? c : undefined, scientific);
+      const expr = thousands
+        ? `try_cast(replace(${c}, ',', '') AS DOUBLE)`
+        : `try_cast(${c} AS DOUBLE)`;
+      const scientific =
+        type === "float" && basic.sciCount > 0 && basic.sciCount >= basic.valueCount * 0.5;
+      const num = await numericSummary(
+        sql,
+        expr,
+        where,
+        type === "float" ? c : undefined,
+        scientific,
+      );
       summary = { kind: "numeric", ...num, ...(thousands ? { thousands: true } : {}) };
       break;
     }
@@ -317,7 +399,8 @@ export async function profileColumn(
     case "time": {
       const pattern = datePattern as string;
       const num = await numericSummary(sql, dateNumberExpr(c, pattern), where);
-      const granularity = patternKind(pattern) === "date" ? "day" : /%S/.test(pattern) ? "second" : "minute";
+      const granularity =
+        patternKind(pattern) === "date" ? "day" : /%S/.test(pattern) ? "second" : "minute";
       summary = { kind: "datetime", format: pattern, granularity, ...num };
       break;
     }
@@ -325,7 +408,13 @@ export async function profileColumn(
     case "personal": {
       const kind: PersonalKind = cls.personalKind ?? personalKindFromName(name);
       const agg = await profilePersonal(sql, c, where, kind);
-      summary = { kind: "personal", personalKind: kind, repeatStructure: agg.repeatStructure, distinct: agg.distinct, ...(agg.format ? { format: agg.format } : {}) };
+      summary = {
+        kind: "personal",
+        personalKind: kind,
+        repeatStructure: agg.repeatStructure,
+        distinct: agg.distinct,
+        ...(agg.format ? { format: agg.format } : {}),
+      };
       if (needsSuffix(kind, agg.distinct)) reasons.push("suffix_needed");
       break;
     }
@@ -334,7 +423,11 @@ export async function profileColumn(
       // Length in characters, capped; exact min and max come from the full table.
       const num = await numericSummary(sql, `least(length(${c}), ${MAX_TEXT_LENGTH})`, where);
       const flags = await freeTextFlags(sql, c, where);
-      const { thousands: _thousands, scientific: _scientific, ...length } = num as typeof num & { thousands?: boolean; scientific?: boolean };
+      const {
+        thousands: _thousands,
+        scientific: _scientific,
+        ...length
+      } = num as typeof num & { thousands?: boolean; scientific?: boolean };
       void _thousands;
       void _scientific;
       summary = { kind: "free_text", ...length, decimals: 0, lineBreaks: flags.lineBreaks };
@@ -344,7 +437,13 @@ export async function profileColumn(
 
     case "short_string": {
       const agg = await profileShortString(sql, c, where);
-      summary = { kind: "short_string", pattern: agg.pattern, lengthGroups: agg.lengthGroups, repeatStructure: agg.repeatStructure, distinct: agg.distinct };
+      summary = {
+        kind: "short_string",
+        pattern: agg.pattern,
+        lengthGroups: agg.lengthGroups,
+        repeatStructure: agg.repeatStructure,
+        distinct: agg.distinct,
+      };
       break;
     }
 
@@ -362,7 +461,13 @@ export async function profileColumn(
       // acknowledgement on Review can switch it on without profiling again.
       if (cls.personalKind === "ssn") {
         const agg = await profilePersonal(sql, c, where, "ssn");
-        summary = { kind: "personal", personalKind: "ssn", repeatStructure: agg.repeatStructure, distinct: agg.distinct, ...(agg.format ? { format: agg.format } : {}) };
+        summary = {
+          kind: "personal",
+          personalKind: "ssn",
+          repeatStructure: agg.repeatStructure,
+          distinct: agg.distinct,
+          ...(agg.format ? { format: agg.format } : {}),
+        };
       } else summary = { kind: "unsupported" };
   }
 
@@ -376,16 +481,24 @@ export async function profileColumn(
     }
   }
 
+  // A decimal column named and ranged like a latitude, a longitude or a projected position keeps only its bounding box.
+  const coordinate =
+    type === "float" && summary.kind === "numeric"
+      ? (guessAxis(name, summary.min, summary.max) ?? undefined)
+      : undefined;
+
   // An ID with no readable pattern cannot be generated, so it is left out like any unsupported column.
   const noPattern = summary.kind === "survey_id" && summary.mask.length === 0;
   if (noPattern) reasons.push("id_mixed_masks");
   // A short string whose pattern cannot hold its distinct values (punctuation that varies, say) is
   // left out until the user widens the pattern on Review.
-  const narrowShort = summary.kind === "short_string" && shortStringFit({ summary } as ColumnProfile)?.short === true;
+  const narrowShort =
+    summary.kind === "short_string" && shortStringFit({ summary } as ColumnProfile)?.short === true;
   if (narrowShort) reasons.push("id_mask_too_narrow");
   if (reasons.length > 0 && status === "ok") status = "needs_attention";
 
-  const exclude: ColumnProfile["exclude"] = type === "unsupported" || noPattern || narrowShort ? "drop" : "include";
+  const exclude: ColumnProfile["exclude"] =
+    type === "unsupported" || noPattern || narrowShort ? "drop" : "include";
 
   return {
     name,
@@ -401,6 +514,7 @@ export async function profileColumn(
     exclude,
     quoted: false,
     mode,
+    ...(coordinate ? { coordinate } : {}),
     summary,
   };
 }
@@ -424,11 +538,16 @@ export async function profileAll(
   const profiles: ColumnProfile[] = [];
   for (let i = 0; i < columnNames.length; i++) {
     if (isCancelled()) break;
-    const profile = await profileColumn(sql, columnNames[i], rowCount, options, overrides[columnNames[i]]);
+    const profile = await profileColumn(
+      sql,
+      columnNames[i],
+      rowCount,
+      options,
+      overrides[columnNames[i]],
+    );
     profile.quoted = options.quoted?.[i] ?? false;
     profiles.push(profile);
     onProgress?.({ done: i + 1, total: columnNames.length });
   }
   return profiles;
 }
-

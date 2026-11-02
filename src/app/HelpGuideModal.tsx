@@ -86,7 +86,7 @@ export function HelpGuideModal({ open, onClose }: HelpGuideModalProps) {
             <strong>Memory limits table size.</strong> Tables up to about 500 MB are supported. Files in some encodings need twice their size in memory.
           </li>
           <li>
-            <strong>Not in this version.</strong> Nested JSON, GeoJSON, coordinates, languages other than US English for invented names and addresses, and several tables at once.
+            <strong>Not in this version.</strong> Nested JSON, GeoJSON, combined coordinates and shapes, languages other than US English for invented names and addresses, and several tables at once.
           </li>
           <li>
             <strong>Browsers.</strong> Chrome and Edge are fully supported; Firefox and Safari work and download one file at a time.

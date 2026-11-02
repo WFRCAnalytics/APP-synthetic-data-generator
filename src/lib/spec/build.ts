@@ -73,6 +73,9 @@ export function buildSource(fileName: string, s: SourceSettings): SourceSpec {
 function numericFields(p: ColumnProfile): NumericFields | null {
   const s = p.summary;
   if (s.kind !== "numeric" && s.kind !== "datetime") return null;
+  // A coordinate keeps its bounding box and decimal places only: no mean, spread or percentiles of where people are.
+  if (p.coordinate && s.kind === "numeric")
+    return { mode: "uniform", min: s.min, max: s.max, decimals: s.decimals };
   return {
     mode: p.mode ?? "match_mean_sd",
     min: s.min,
@@ -153,6 +156,7 @@ function baseColumnSpec(p: ColumnProfile): ColumnSpec {
       return {
         ...detail,
         type: p.type as "integer" | "float",
+        ...(p.coordinate ? { coordinate: p.coordinate } : {}),
         ...(numericFields(p) as NumericFields),
         ...(s.thousands ? { thousands: true } : {}),
         ...(s.scientific ? { scientific: true } : {}),
