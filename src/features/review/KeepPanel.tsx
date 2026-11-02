@@ -197,7 +197,7 @@ export function KeepPanel({ profile, rows, onEdit }: KeepPanelProps) {
 
   const note: Partial<Record<ColumnProfile["summary"]["kind"], string>> = {
     personal: "Nothing from the real values is kept. The fake values are invented; only the kind of data and how often values repeat are followed.",
-    free_text: "Only how long the real text is is kept. The fake text is made-up filler.",
+    free_text: "Only the length of the real text is kept. The fake text is made-up filler.",
     short_string: "Only the pattern of characters and the lengths are kept, never a value.",
     survey_id: "The IDs are invented to the pattern below. Only how often an ID repeats is followed, never an ID.",
     numeric: "A coordinate keeps only its bounding box and decimal places; the values are spread evenly inside it.",

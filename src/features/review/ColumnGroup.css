@@ -99,3 +99,47 @@
   white-space: nowrap;
   cursor: pointer;
 }
+
+/* The right-hand panel never scrolls sideways: whatever a group holds (a long name, a long value, a file name, a row of pattern
+   tiles) is made to fit the width of the panel or to wrap. Grid and fieldset children would otherwise grow to their content. */
+.cg-body {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.cg-body > *,
+.cg-body fieldset {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.cg-body label,
+.cg-body legend,
+.cg-body .field-hint,
+.cg-body .keep-option-note,
+.cg-body .cg-found,
+.cg-body .banner,
+.cg-body .sample-preview {
+  overflow-wrap: anywhere;
+}
+
+.cg-body input[type="file"],
+.cg-body input[type="text"],
+.cg-body input[type="number"],
+.cg-body select {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.cg-body .sample-value {
+  display: inline-block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.cg-body .id-mask-positions li {
+  min-width: 0;
+}
+
+.review-detail {
+  overflow-x: hidden;
+}
