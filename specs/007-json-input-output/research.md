@@ -108,3 +108,22 @@
   list is cut to `[5]` in one cleanup task; the tests that load version 1 to 4 specs are removed with it.
   A spec of another version is refused with the existing "made by another version" message.
 - **Rationale**: the user's instruction, and fewer code paths to keep correct across four formats.
+
+## R9: Results (2026-11-02)
+
+- **Bundle**: no new runtime dependency. The JSON reader is one more file in `public/duckdb-ext/` (about 1 MB per
+  build, two builds); the app's own JavaScript grew by the detection, kinds, conversion and writer code (about 4 KB
+  gzipped).
+- **Audit**: the engine's worker logs the errors it raises to the console, and for JSON such a line names a position in
+  the file (`at byte 31 in record/value 2`). It is not a value, but the worker's console is now silenced before its own
+  script runs (`patchedWorkerSource`), and `tests/e2e/json-privacy.spec.ts` checks the console for markers and engine text.
+- **Key order**: a plain `min(position)` per key gives the wrong order when keys shift between records; the first record
+  that has the key and the key's position in it (`arg_min(pos, rn)`) is right and tested (`nulls_missing.json`, whose
+  first record lacks one key).
+- **Number text**: the engine renders numbers itself (`1.50` is `1.5`, `1e5` is `100000.0`); a whole double has its `.0`
+  removed. Trailing zeros of a decimal are not recoverable and the fake file writes plain notation.
+- **Scale (SC-006)**: a 500 MB file of 7.2 million records (one per line, five keys) on the reference laptop:
+  profile 69.9 s, generate and write 47.4 s, worst frame delay 5.8 ms, all 15 checks passed.
+- **Browsers**: Chromium, Edge, Firefox and WebKit run `json-flow`, `json-privacy` and `json-extension`; the offline zip
+  runs a JSON session that matches the hosted build byte for byte.
+- **Open**: SC-009 (a person reaching Review in under 2 minutes without instructions) needs a person.

@@ -111,9 +111,9 @@
 - [x] T034 [P] Accessibility: extend `tests/e2e/a11y.spec.ts` to the JSON summary card and the mixed and unsupported tooltips in light and dark themes
 - [x] T035 [P] Browser matrix: add `json-flow` and `json-privacy` to the Firefox and WebKit `testMatch` in `playwright.config.ts` and to `scripts/e2e-browsers.mjs`; run Chromium, Edge (`PW_EDGE=1`), Firefox and WebKit
 - [x] T036 [P] Docs: Help guide, `SpecContentsNotice.tsx` (a JSON spec holds the file name, form, layout, key kinds and null and missing counts, no value), `README.md`, and the file-type chips on the start screen
-- [ ] T037 Large file: `python scripts/make-json-fixtures.py --large` writes a file of about 500 MB of expanded data to `.fixtures/`; add `tests/e2e/json-scale.spec.ts` gated by its presence (SC-006)
-- [ ] T038 Record in `research.md` the bundle size, audit notes (no new dependency) and the measured results; run quickstart scenarios 1 to 6 and record results and the SC-009 person sign-off line as open
-- [ ] T039 Run `/speckit-converge`, tag nothing, and mark the slice complete
+- [x] T037 Large file: `python scripts/make-json-fixtures.py --large` writes a file of about 500 MB of expanded data to `.fixtures/`; add `tests/e2e/json-scale.spec.ts` gated by its presence (SC-006)
+- [x] T038 Record in `research.md` the bundle size, audit notes (no new dependency) and the measured results; run quickstart scenarios 1 to 6 and record results and the SC-009 person sign-off line as open
+- [x] T039 Run `/speckit-converge`, tag nothing, and mark the slice complete
 
 ---
 
@@ -133,3 +133,7 @@
 ## Implementation strategy
 
 MVP first: Phases 1 to 3 give a working array round trip. Then US2 adds the lines form, US3 the null, missing and mixed structure, US4 proves the privacy claim. Commit after each task group.
+
+## Phase 8: Convergence
+
+- [x] T040 [P] Bring `data-model.md`, `contracts/spec-file-v5.md` and `contracts/json-output.md` in line with the built design: null records are the missing-value cells that are not absent, so only `json_missing` is recorded (no `json_nulls`), and the kind rules say what a `string` key may be (partial)

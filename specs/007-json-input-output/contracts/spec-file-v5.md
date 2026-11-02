@@ -17,10 +17,10 @@ Version 5 adds a JSON source. Everything else is as in version 4. Versions 1 to 
   },
   "n_rows": 48210,
   "columns": [
-    { "name": "id", "type": "survey_id", "json_kind": "string", "json_nulls": 0, "json_missing": 0 },
-    { "name": "age", "type": "integer", "json_kind": "number", "json_nulls": 12, "json_missing": 0 },
-    { "name": "note", "type": "free_text", "json_kind": "string", "json_nulls": 0, "json_missing": 301 },
-    { "name": "tags", "type": "unsupported", "json_kind": "array", "unsupported_reason": "nested_array" }
+    { "name": "id", "type": "survey_id", "json_kind": "string", "json_missing": 0 },
+    { "name": "age", "type": "integer", "json_kind": "number", "na": { "tokens": [""], "count": 12 }, "json_missing": 0 },
+    { "name": "note", "type": "free_text", "json_kind": "string", "na": { "tokens": [""], "count": 301 }, "json_missing": 301 },
+    { "name": "tags", "type": "unsupported", "json_kind": "array", "exclude": "drop" }
   ]
 }
 ```

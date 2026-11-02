@@ -10,9 +10,9 @@
 | `null` | the key was always `null` (or its only values were null) | `null` |
 | `object`, `array` | nested value: unsupported | omitted (default) or `null` in every record if kept |
 
-Each description also records `nulls` (records where the key is `null`) and `missing` (records without
-the key). `nulls + missing` plus the generated values equals the record count. A description holds no value,
-range, statistic or nested key name.
+Each description also records `json_missing` (records without the key). The records where the key is `null`
+are the other missing values (the column's NA count minus `json_missing`), so null and absent are kept apart
+without a second number. A description holds no value, range, statistic or nested key name.
 
 ## Unsupported reasons (fixed texts, new reason codes on a column)
 
@@ -35,7 +35,7 @@ by name and loaded as all-NULL. A mixed key is not unsupported: it carries the a
 
 ## Column additions
 
-`json_kind`, `json_nulls` and `json_missing` on every column of a JSON spec. `cell_format`, `stored_as_text`
+`json_kind` and `json_missing` on every column of a JSON spec. `cell_format`, `stored_as_text`
 and `parquet_type` do not apply.
 
 ## Written file
@@ -45,7 +45,7 @@ See [contracts/json-output.md](contracts/json-output.md).
 ## Validation
 
 A JSON spec needs `json_kind` on every column that is written; the kind must agree with the column type
-(a numeric type with `string` is refused, a text type with `number` is refused, a `date` column is `string`);
-`nulls` and `missing` are whole numbers in `0..n_rows` and `nulls + missing <= n_rows`; `form` and `indent`
+(a `string` key may have any type; a `number` key may not be a date, personal or free-text column; a `boolean` key is a yes or no or a category; a `null` key is an empty column; a nested key is unsupported);
+`json_missing` is a whole number no larger than the column's count of missing-value cells; `form` and `indent`
 are from the closed sets; `indent` applies to arrays only. A CSV, Excel or Parquet spec with any `json_*`
 field is refused.

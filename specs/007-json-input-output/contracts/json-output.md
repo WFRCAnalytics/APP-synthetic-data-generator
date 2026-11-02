@@ -3,7 +3,7 @@
 **Contains**: an optional byte-order mark (as recorded); for `form: "array"`, `[`, the records, `]`; for
 `form: "lines"`, one record per line; the recorded line ending, indent and trailing newline. Each record is
 a JSON object whose keys are the recorded names in the recorded order. A key is omitted from exactly
-`json_missing` records, is `null` in exactly `json_nulls` records, and elsewhere holds a fake value of its
+`json_missing` records, is `null` in exactly the other missing-value records (NA count minus `json_missing`), and elsewhere holds a fake value of its
 recorded kind: a JSON number, a JSON string, or `true` or `false`.
 
 **Does not contain**: any value, key or text from the real file beyond the key names; nested values (an

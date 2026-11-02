@@ -44,7 +44,7 @@ test.describe("a JSON file of about 500 MB", () => {
     await page.getByRole("region", { name: "Generate the fake table" }).getByRole("button", { name: "Generate", exact: true }).click();
     await expect(page.getByText(/checks passed\.|checks did not pass\./)).toBeVisible({ timeout: LIMIT });
     const generateMs = Date.now() - generated;
-    const [download] = await Promise.all([page.waitForEvent("download", { timeout: LIMIT }), page.getByRole("button", { name: /Download .*_fake\.parquet/ }).click()]);
+    const [download] = await Promise.all([page.waitForEvent("download", { timeout: LIMIT }), page.getByRole("button", { name: /Download .*_fake\.ndjson/ }).click()]);
     await download.path();
 
     console.log("SCALE RESULT", JSON.stringify({ profileMs, generateMs, worstFrameMs: Math.max(0, ...latencies) }));
