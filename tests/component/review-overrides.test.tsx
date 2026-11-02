@@ -30,7 +30,7 @@ afterEach(() => {
 const file = () => new File(["mode,dist\n1,2\n"], "trips.csv", { type: "text/csv" });
 
 async function toReview(user: User) {
-  await user.upload(screen.getByLabelText("CSV file"), file());
+  await user.upload(screen.getByLabelText("Data file"), file());
   await user.click(await screen.findByRole("button", { name: /profile this file/i }));
   await screen.findByRole("heading", { name: "Review columns" });
 }

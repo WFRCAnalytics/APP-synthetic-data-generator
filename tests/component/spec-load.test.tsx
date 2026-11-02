@@ -171,7 +171,7 @@ describe("a good spec", () => {
   it("replaces a file that was open, so a spec and a real file are never combined (FR-004)", async () => {
     const user = userEvent.setup();
     render(<App />);
-    await user.upload(screen.getByLabelText("CSV file"), new File(["mode,fee\n1,2\n"], "other.csv", { type: "text/csv" }));
+    await user.upload(screen.getByLabelText("Data file"), new File(["mode,fee\n1,2\n"], "other.csv", { type: "text/csv" }));
     await user.click(await screen.findByRole("button", { name: /profile this file/i }));
     await screen.findByRole("heading", { name: "Review columns" });
     await user.click(screen.getByRole("button", { name: /Ingest/ }));
@@ -256,7 +256,7 @@ describe("a bad spec", () => {
   it("leaves an open session as it was", async () => {
     const user = userEvent.setup();
     render(<App />);
-    await user.upload(screen.getByLabelText("CSV file"), new File(["mode,fee\n1,2\n"], "other.csv", { type: "text/csv" }));
+    await user.upload(screen.getByLabelText("Data file"), new File(["mode,fee\n1,2\n"], "other.csv", { type: "text/csv" }));
     await user.click(await screen.findByRole("button", { name: /profile this file/i }));
     await screen.findByRole("heading", { name: "Review columns" });
     await user.click(screen.getByRole("button", { name: /Ingest/ }));

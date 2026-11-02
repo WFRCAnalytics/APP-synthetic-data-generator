@@ -47,7 +47,7 @@ afterEach(() => {
 });
 
 async function toReview(user: User) {
-  await user.upload(screen.getByLabelText("CSV file"), new File(["mode,who\n1,a\n"], "people.csv", { type: "text/csv" }));
+  await user.upload(screen.getByLabelText("Data file"), new File(["mode,who\n1,a\n"], "people.csv", { type: "text/csv" }));
   await user.click(await screen.findByRole("button", { name: /profile this file/i }));
   await screen.findByRole("heading", { name: "Review columns" });
 }
