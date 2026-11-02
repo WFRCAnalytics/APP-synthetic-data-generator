@@ -15,5 +15,5 @@
 ## Phase 3: Polish
 
 - [x] T007 [P] Help guide, README and the designed-table banner say that a designed table can be written in each format
-- [ ] T008 Run the browser matrix and the offline zip; record results in `research.md`
-- [ ] T009 Run `/speckit-converge` and mark the slice complete
+- [x] T008 Run the browser matrix and the offline zip; record results in `research.md`
+- [x] T009 Run `/speckit-converge` and mark the slice complete
