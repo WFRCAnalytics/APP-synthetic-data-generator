@@ -22,13 +22,13 @@ import { IngestScreen } from "./features/ingest/IngestScreen";
 import { ReviewScreen } from "./features/review/ReviewScreen";
 
 /** The fake file, the spec and the README, or null when the run is not finished. */
-function allFilesOf(session: Session): NamedBlob[] | null {
-  const fake = session.fakeBlob();
+async function allFilesOf(session: Session): Promise<NamedBlob[] | null> {
+  const fake = await session.fakeFile();
   const spec = session.specBlob();
   const readme = session.readmeBlob();
   if (!fake || !spec || !readme) return null;
   return [
-    { name: session.fakeFileName(), blob: fake },
+    { name: session.fakeFileName(), blob: fake.blob },
     { name: session.specFileName(), blob: spec },
     { name: session.readmeFileName(), blob: readme },
   ];
@@ -136,9 +136,11 @@ export function App() {
               onKeepNameChange={(keep) => session.setKeepOriginalName(keep)}
               onGenerate={() => session.generate()}
               onCancel={() => session.cancel()}
+              onStatOutputChange={(output) => session.setStatOutput(output)}
               onDownloadFake={() => {
-                const blob = session.fakeBlob();
-                if (blob) downloadBlob(blob, session.fakeFileName());
+                void session.fakeFile().then((file) => {
+                  if (file) downloadBlob(file.blob, session.fakeFileName());
+                });
               }}
               onDownloadReadme={() => {
                 const blob = session.readmeBlob();
@@ -149,18 +151,20 @@ export function App() {
                 if (blob) downloadBlob(blob, session.specFileName());
               }}
               onDownloadAll={() => {
-                const files = allFilesOf(session);
-                if (files)
-                  void zipOf(files).then((zip) =>
-                    downloadBlob(zip, zipFileNameFor(session.fakeFileName())),
-                  );
+                void allFilesOf(session).then((files) => {
+                  if (files)
+                    void zipOf(files).then((zip) =>
+                      downloadBlob(zip, zipFileNameFor(session.fakeFileName())),
+                    );
+                });
               }}
               onSaveToFolder={
                 canSaveToFolder()
                   ? () => {
-                      const files = allFilesOf(session);
-                      if (!files) return;
-                      saveToFolder(files).then(setSavedTo, () => {});
+                      // The folder picker needs the click that asked for it, so the files are made first.
+                      void allFilesOf(session).then((files) => {
+                        if (files) saveToFolder(files).then(setSavedTo, () => {});
+                      });
                     }
                   : undefined
               }

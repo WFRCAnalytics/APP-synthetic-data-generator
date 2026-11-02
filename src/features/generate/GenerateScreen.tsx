@@ -20,6 +20,7 @@ export interface GenerateScreenProps {
   onDownloadSpec: () => void;
   onDownloadReadme: () => void;
   onDownloadAll: () => void;
+  onStatOutputChange: (output: "same" | "csv") => void;
   /** Absent when the browser cannot write to a folder. */
   onSaveToFolder?: () => void;
   savedTo?: string | null;
@@ -143,6 +144,32 @@ export function GenerateScreen(props: GenerateScreenProps) {
                 </InfoTip>
               </span>
             </div>
+
+            {session.stat && (
+              <div className="field">
+                <span className="label-row">
+                  <label htmlFor="stat-output">File type</label>
+                  <InfoTip label="About the file type">
+                    The fake table is written as the same kind of file you opened, with numbers,
+                    dates and times typed and everything else as text. Value labels and variable
+                    labels are not written. Text longer than{" "}
+                    {session.stat.format === "sav" ? "255" : "2,045"} bytes is cut. Choose CSV for
+                    a plain text file instead.
+                  </InfoTip>
+                </span>
+                <select
+                  id="stat-output"
+                  value={session.statOutput}
+                  disabled={running}
+                  onChange={(e) => props.onStatOutputChange(e.target.value as "same" | "csv")}
+                >
+                  <option value="same">
+                    {session.stat.format === "sav" ? "SPSS (.sav), same as the file you opened" : "Stata (.dta), same as the file you opened"}
+                  </option>
+                  <option value="csv">CSV (.csv)</option>
+                </select>
+              </div>
+            )}
 
             {session.settings && isExcelSettings(session.settings) && (
               <p className="field-hint" data-testid="one-sheet-note">

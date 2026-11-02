@@ -17,6 +17,8 @@ export interface AgentReadmeOptions {
   seed: number;
   /** The app's version, such as 0.4.0. */
   appVersion: string;
+  /** Set when the file is an SPSS or Stata file made from the table (specs/018). */
+  statFormat?: "sav" | "dta";
 }
 
 const MAX_LABELS_SHOWN = 12;
@@ -183,7 +185,10 @@ export function agentReadme(spec: SpecFile, options: AgentReadmeOptions): string
     add(
       `- **Description of the table**: ${tick(options.specFileName)} (a small JSON file that holds only counts, limits, labels and formats).`,
     );
-  for (const line of layoutLines(spec)) add(`- **Layout**: ${line}`);
+  const layout = options.statFormat
+    ? [`${options.statFormat === "sav" ? "An SPSS" : "A Stata"} data file. Numbers, dates and times are typed; everything else is text. There are no value labels or variable labels.`]
+    : layoutLines(spec);
+  for (const line of layout) add(`- **Layout**: ${line}`);
   add("");
 
   add("## The columns", "");

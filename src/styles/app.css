@@ -697,3 +697,39 @@ label:has(> input[type="checkbox"]) {
   align-items: center;
   gap: var(--space-2);
 }
+
+/* Scrollbars: thin, quiet and drawn in the app's own colours wherever something scrolls (the page, the help guide, the
+   review table, the dialogs, the code boxes). The thumb is the text colour at low strength, so it follows light and dark;
+   the track stays clear. Browsers that know the standard properties use them; the rest get the same look from the
+   WebKit pseudo-elements. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-foreground) 32%, transparent) transparent;
+}
+
+@supports not (scrollbar-color: auto) {
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--color-foreground) 32%, transparent);
+    border: 2px solid transparent;
+    border-radius: var(--radius-full);
+    background-clip: content-box;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--color-foreground) 52%, transparent);
+    background-clip: content-box;
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}

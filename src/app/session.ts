@@ -14,6 +14,9 @@ import {
   type SourceSettings,
 } from "../lib/profile/types";
 import { buildSpec } from "../lib/spec/build";
+import { writeDta, DTA_MAX_TEXT } from "../lib/stat/dta";
+import { writeSav, SAV_MAX_TEXT } from "../lib/stat/sav";
+import { tableFromCsv } from "../lib/stat/table";
 import { profilesFromSpec, settingsFromSource } from "../lib/spec/toProfiles";
 import type { SpecFile, SpecProblem } from "../lib/spec/types";
 import type { SampleDescription } from "../lib/textgen/sample";
@@ -118,6 +121,8 @@ export interface SessionState {
   /** Relations between columns that the person stated (specs/015). */
   rules: RuleSpec[];
   keepOriginalName: boolean;
+  /** For an SPSS or Stata file: write the same kind of file (the default) or a CSV. */
+  statOutput: "same" | "csv";
   gen: GenState;
   /** Columns came from a saved spec: there is no source file, so nothing can be profiled again. */
   specOnly: boolean;
@@ -162,6 +167,7 @@ export const initialSession: SessionState = {
   seedText: "42",
   rules: [],
   keepOriginalName: false,
+  statOutput: "same",
   gen: emptyGen,
   specOnly: false,
   designed: false,
@@ -614,6 +620,10 @@ export class Session {
     this.set({ keepOriginalName });
   }
 
+  setStatOutput(statOutput: "same" | "csv"): void {
+    this.set({ statOutput });
+  }
+
   /** The spec for the current profiles and settings. */
   buildSpec(): SpecFile | null {
     const { settings, profiles } = this.state;
@@ -740,8 +750,32 @@ export class Session {
     return this.state.gen.status === "done" ? new Blob(this.parts as BlobPart[], { type }) : null;
   }
 
+  /** The kind of file the fake table is written as when the real one was an SPSS or Stata file, otherwise null. */
+  statFormat(): "sav" | "dta" | null {
+    const { stat, statOutput } = this.state;
+    return stat && statOutput === "same" ? stat.format : null;
+  }
+
   fakeFileName(): string {
-    return exportName(this.state.fileName, this.state.keepOriginalName);
+    const { stat, keepOriginalName } = this.state;
+    if (stat && this.statFormat()) return exportName(stat.sourceName, keepOriginalName);
+    return exportName(this.state.fileName, keepOriginalName);
+  }
+
+  /**
+   * The fake file as it is downloaded: the bytes of the run, or for an SPSS or Stata file the same table written in that
+   * format (the run itself always makes a CSV). Null before a run has finished.
+   */
+  async fakeFile(): Promise<{ blob: Blob; text: { truncated: number } } | null> {
+    const blob = this.fakeBlob();
+    const format = this.statFormat();
+    if (!blob || !format) return blob ? { blob, text: { truncated: 0 } } : null;
+    const spec = this.buildSpec();
+    const hints: Record<string, string> = {};
+    for (const c of spec?.columns ?? []) hints[c.output_name ?? c.name] = c.type;
+    const table = tableFromCsv(await blob.text(), hints, format === "sav" ? SAV_MAX_TEXT : DTA_MAX_TEXT);
+    const bytes = format === "sav" ? writeSav(table) : writeDta(table);
+    return { blob: new Blob([bytes as BlobPart], { type: "application/octet-stream" }), text: { truncated: table.truncated } };
   }
 
   specBlob(): Blob | null {
@@ -764,6 +798,7 @@ export class Session {
       specFileName: this.specFileName(),
       seed: parseSeed(this.state.seedText) ?? spec.seed,
       appVersion: APP_VERSION,
+      statFormat: this.statFormat() ?? undefined,
     });
     return new Blob([text], { type: "text/markdown" });
   }
