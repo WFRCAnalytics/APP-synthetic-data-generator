@@ -88,7 +88,7 @@ export function writeSav(table: StatTable): Uint8Array {
   // Variable records
   columns.forEach((c, i) => {
     let type = 0;
-    let format = 0;
+    let format: number;
     switch (c.kind) {
       case "number":
         format = (5 << 16) | (18 << 8) | c.decimals;

@@ -57,7 +57,7 @@ export function cutToBytes(text: string, max: number): string {
  * @param maxText the longest text the target format can hold, in bytes
  */
 export function tableFromCsv(csv: string, hints: Record<string, string>, maxText: number): StatTable {
-  const { rows } = splitRecords(csv.replace(/^﻿/, ""), ",", '"', false, Number.MAX_SAFE_INTEGER);
+  const { rows } = splitRecords(csv.replace(/^\uFEFF/, ""), ",", '"', false, Number.MAX_SAFE_INTEGER);
   const header = rows[0] ?? [];
   const body = rows.slice(1);
   let truncated = 0;
