@@ -123,7 +123,7 @@ test("codes an SPSS file declares as missing are read as blanks, and the summary
   await expect(page.getByRole("heading", { name: "Review columns" })).toBeVisible({ timeout: 180_000 });
   // 9 of the 60 values of attitude are the declared codes: they are blanks, not categories 98 and 99.
   await shownCard(page, "attitude");
-  await expect(page.locator('[data-column="attitude"]')).not.toContainText("98");
+  await expect(page.locator('[data-column="attitude"]')).not.toContainText(/98/);
 });
 
 test("a file named .sav that is not an SPSS file is refused with a fixed message", async ({ page }) => {

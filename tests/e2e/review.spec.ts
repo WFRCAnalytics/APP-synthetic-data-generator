@@ -44,16 +44,16 @@ test("moves between columns with the arrow keys, and opens one with Enter", asyn
   await expect(page.locator("[data-nav-column]").nth(1)).toBeFocused();
   await expect(page.locator("[data-nav-column]").nth(1)).toHaveAttribute("aria-current", "true");
   await expect(page.locator(".column-card")).toHaveCount(1);
-  await expect(page.locator(".column-card").getByLabel("Type")).toBeVisible();
+  await expect(page.locator(".column-card").getByRole("switch", { name: "Include this column" })).toBeVisible();
 });
 
 test("confirming sentinel codes re-profiles the column and changes the spec", async ({ page }) => {
   await toReview(page);
   await expect((await shownCard(page, "int_sentinels"))).toContainText("Codes kept: -9");
   const c = await openSettings(page, "int_sentinels");
-  const box = c.getByLabel("Sentinel codes");
+  const box = c.getByLabel("Special answer codes");
   await box.fill("-9");
-  await c.getByLabel("Sentinel codes").locator("xpath=ancestor::form").getByRole("button", { name: "Apply" }).click();
+  await c.getByLabel("Special answer codes").locator("xpath=ancestor::form").getByRole("button", { name: "Apply" }).click();
   // 998, 999 and -1 are now ordinary values, so the range widens and only -9 is a code.
   await expect((await shownCard(page, "int_sentinels"))).toContainText("Codes kept: -9 (");
   await expect((await shownCard(page, "int_sentinels"))).not.toContainText("998");
@@ -100,9 +100,9 @@ test("a date pattern is counted live, and one that misses values leaves the colu
 test("a column left out is not in the fake file, and a renamed one has its new name", async ({ page }) => {
   await toReview(page);
   const a = await openSettings(page, "bool_tf");
-  await a.getByLabel("In the fake file").selectOption("drop");
+  await a.getByLabel("In the fake file", { exact: true }).selectOption("drop");
   const b = await openSettings(page, "cat_str_5");
-  const name = b.getByLabel("New column name");
+  const name = b.getByLabel("Name in the fake file");
   await name.fill("region");
   await b.getByRole("button", { name: "Rename" }).click();
   await expect((await shownCard(page, "cat_str_5"))).toContainText("Written as region");
@@ -117,7 +117,7 @@ test("a column left out is not in the fake file, and a renamed one has its new n
 test("neutral label codes and rare-category merging change the written labels", async ({ page }) => {
   await toReview(page);
   const c = await openSettings(page, "cat_str_5");
-  await c.getByLabel(/Replace labels with neutral codes/).check();
+  await c.getByLabel(/Hide label names/).check();
   const { fake } = await generate(page);
   // Some columns hold line breaks inside quoted fields, so split with a real CSV parser.
   const { rows: all } = parseCsv(fake);
@@ -132,7 +132,7 @@ test("neutral label codes and rare-category merging change the written labels", 
 test("the mean and spread can be restored exactly, and the spec says so", async ({ page }) => {
   await toReview(page);
   const c = await openSettings(page, "float_lognormal");
-  await c.getByLabel(/Restore the exact mean and spread/).check();
+  await c.getByLabel(/Make the average and spread match exactly/).check();
   const { spec } = await generate(page);
   expect(specColumn(spec, "float_lognormal").rescale).toBe(true);
   await expect(page.getByText(/checks passed\./)).toBeVisible();
@@ -141,7 +141,7 @@ test("the mean and spread can be restored exactly, and the spec says so", async 
 test("a new categorical limit profiles again and keeps the user's other changes", async ({ page }) => {
   await toReview(page);
   const a = await openSettings(page, "bool_tf");
-  await a.getByLabel("In the fake file").selectOption("drop");
+  await a.getByLabel("In the fake file", { exact: true }).selectOption("drop");
   await expect((await shownCard(page, "cat_int_50")).locator(".badge").first()).toHaveText("Categorical");
 
   await page.getByRole("button", { name: "Overview" }).click(); // the limit lives in the overview
@@ -159,8 +159,8 @@ test("the spec notice is on the screen and the optional protections start off", 
   await toReview(page);
   await expect(page.getByRole("note", { name: "What the spec contains" })).toContainText("real category labels");
   const c = await openSettings(page, "cat_str_5");
-  await expect(c.getByLabel(/Merge categories with fewer than/)).toHaveValue("");
-  await expect(c.getByLabel(/Replace labels with neutral codes/)).not.toBeChecked();
+  await expect(c.getByLabel(/Group very small labels/)).toHaveValue("");
+  await expect(c.getByLabel(/Hide label names/)).not.toBeChecked();
 });
 
 test("search and filters work on the real 88-column table", async ({ page }) => {

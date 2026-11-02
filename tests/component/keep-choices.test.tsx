@@ -111,14 +111,63 @@ describe("choices on one column", () => {
     expect(within(c).getByText(/12,000 to 990,000/)).toBeInTheDocument();
   });
 
-  it("keep the rarely needed settings under Advanced", async () => {
+  it("group the settings in four named, collapsible groups with a summary each", async () => {
     const user = userEvent.setup();
     render(<App />);
     await toReview(user);
     const c = await pick(user, "zone");
-    const advanced = within(c).getByTestId("advanced-settings");
-    expect(advanced).toHaveTextContent("Optional protections");
-    expect(within(advanced).getByLabelText(/New column name|Rename/i, { selector: "input" })).toBeInTheDocument();
-    expect(within(c).getByTestId("keep-panel")).not.toContainElement(advanced);
+    const groups = Array.from(c.querySelectorAll("details.cg")).map((g) => g.getAttribute("data-group"));
+    expect(groups).toEqual(["read", "keep", "write"]); // the table is a single file, so there is nothing to connect to
+    const read = c.querySelector('[data-group="read"]') as HTMLElement;
+    expect(read).toHaveTextContent("How the app read this column");
+    expect(read).toHaveTextContent("4 missing");
+    expect(c.querySelector('[data-group="keep"]')).toHaveTextContent("rounded counts");
+    expect(c.querySelector('[data-group="write"]')).toHaveTextContent("Same name");
+  });
+
+  it("open what matters by default: what the column keeps, and nothing else unless something needs a look", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await toReview(user);
+    const c = await pick(user, "zone");
+    expect((c.querySelector('[data-group="keep"]') as HTMLDetailsElement).open).toBe(true);
+    expect((c.querySelector('[data-group="write"]') as HTMLDetailsElement).open).toBe(false);
+    expect((c.querySelector('[data-group="read"]') as HTMLDetailsElement).open).toBe(false);
+  });
+
+  it("remember which groups were opened while looking at other columns", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await toReview(user);
+    let c = await pick(user, "zone");
+    await user.click((c.querySelector('[data-group="write"]') as HTMLElement).querySelector("summary") as HTMLElement);
+    expect((c.querySelector('[data-group="write"]') as HTMLDetailsElement).open).toBe(true);
+    await pick(user, "income");
+    c = await pick(user, "zone");
+    expect((c.querySelector('[data-group="write"]') as HTMLDetailsElement).open).toBe(true);
+  });
+
+  it("put the special codes and the missing words together, with what was found", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await toReview(user);
+    const c = await pick(user, "zone");
+    const block = within(c).getByText("Missing and special values").closest("fieldset") as HTMLElement;
+    expect(within(block).getByLabelText("Special answer codes")).toBeInTheDocument();
+    expect(within(block).getByLabelText("Words that also mean missing")).toBeInTheDocument();
+    expect(within(block).getByTestId("missing-found")).toHaveTextContent("4 blank");
+  });
+
+  it("leave a column out with the switch in its header", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await toReview(user);
+    const c = await pick(user, "zone");
+    const toggle = within(c).getByRole("switch", { name: "Include this column" });
+    expect(toggle).toBeChecked();
+    await user.click(toggle);
+    expect(within(c).getByRole("switch", { name: "Include this column" })).not.toBeChecked();
+    const spec = await generated(user);
+    expect(col(spec, "zone")).toMatchObject({ exclude: "drop" });
   });
 });

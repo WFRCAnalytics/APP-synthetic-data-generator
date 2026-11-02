@@ -7,7 +7,7 @@ export const card = (page: Page, name: string): Locator => page.locator(`[data-c
 export async function pick(page: Page, name: string): Promise<void> {
   await showColumn(page, name);
   // The rarely needed settings sit under Advanced; a test that reaches for one finds it open.
-  await card(page, name).locator("details.advanced-settings").evaluateAll((els) => els.forEach((d) => ((d as HTMLDetailsElement).open = true)));
+  await card(page, name).locator("details.cg").evaluateAll((els) => els.forEach((d) => ((d as HTMLDetailsElement).open = true)));
 }
 
 async function showColumn(page: Page, name: string): Promise<void> {

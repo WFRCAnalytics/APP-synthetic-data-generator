@@ -167,7 +167,7 @@ describe("review", () => {
     expect(document.querySelector(".column-card")).toBeNull(); // nothing is picked yet: the overview shows
     await user.click(document.querySelector('[data-nav-column="mode"]') as HTMLElement);
     const modeCard = document.querySelector('[data-column="mode"]') as HTMLElement;
-    expect(within(modeCard).getByText("Categorical")).toBeInTheDocument();
+    expect(within(modeCard).getAllByText("Categorical").length).toBeGreaterThan(0); // the badge, and the summary of how it was read
     expect(within(modeCard).getByText(/1: 60/)).toBeInTheDocument();
     await user.click(document.querySelector('[data-nav-column="dist"]') as HTMLElement);
     const dist = document.querySelector('[data-column="dist"]') as HTMLElement;

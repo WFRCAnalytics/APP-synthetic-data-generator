@@ -91,7 +91,7 @@ describe("blank cells and empty text", () => {
   it("shows the empty-text marker as a word and sends the token back", async () => {
     const p = categorical("flag", { naTokens: ["", EMPTY_TEXT_TOKEN, "NA"], naByToken: { "": 3, [EMPTY_TEXT_TOKEN]: 2, NA: 1 } });
     const { onOverride, user } = setup(p);
-    const box = screen.getByLabelText("Missing-value markers");
+    const box = screen.getByLabelText("Words that also mean missing");
     expect(box).toHaveValue("(empty text), NA");
     expect(document.body.textContent).not.toContain(EMPTY_TEXT_TOKEN);
     await user.clear(box);

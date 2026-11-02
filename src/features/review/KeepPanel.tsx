@@ -86,10 +86,7 @@ export function KeepPanel({ profile, rows, onEdit }: KeepPanelProps) {
   if (s.kind === "categorical" && (profile.type === "categorical" || profile.type === "boolean")) {
     return (
       <section className="keep-panel" aria-label="What to keep" data-testid="keep-panel">
-        <h4 className="column-card-settings-title">What should the fake column keep?</h4>
-        <p className="field-hint">
-          Every label is kept as it is. Merging rare labels, or replacing labels with codes, is under Advanced settings.
-        </p>
+        <p className="field-hint">Every label is kept as it is unless you group the very small ones or hide the names.</p>
         <Choice<CountsKeep>
           legend="How often each label appears"
           name={`${id}-counts`}
@@ -103,6 +100,37 @@ export function KeepPanel({ profile, rows, onEdit }: KeepPanelProps) {
           ]}
         />
         {missingChoice}
+        <fieldset className="keep-group">
+          <legend>Label names</legend>
+          <div className="field">
+            <span className="label-row">
+              <label htmlFor={`${id}-merge`}>Group very small labels as &ldquo;Other&rdquo; (fewer than this many rows)</label>
+              <InfoTip label="More information">Leave blank to keep every label. Rare labels can identify a person.</InfoTip>
+            </span>
+            <input
+              id={`${id}-merge`}
+              type="number"
+              min={2}
+              step={1}
+              placeholder="off"
+              value={profile.mergeUnderK ? String(profile.mergeUnderK) : ""}
+              onChange={(e) => {
+                const raw = e.target.value;
+                if (raw === "") return onEdit({ mergeUnderK: null });
+                const k = Number(raw);
+                if (Number.isInteger(k) && k >= 2) onEdit({ mergeUnderK: k });
+              }}
+            />
+          </div>
+          <div className="field">
+            <span className="label-row">
+              <label htmlFor={`${id}-codes`}>
+                <input id={`${id}-codes`} type="checkbox" checked={profile.labelCodes === true} onChange={(e) => onEdit({ labelCodes: e.target.checked })} /> Hide label names (use cat_01, cat_02, &hellip;)
+              </label>
+              <InfoTip label="More information">Analysis code that filters on exact labels will need updating before you switch to the real file.</InfoTip>
+            </span>
+          </div>
+        </fieldset>
       </section>
     );
   }
@@ -114,7 +142,6 @@ export function KeepPanel({ profile, rows, onEdit }: KeepPanelProps) {
     const mode: NumericMode = profile.mode ?? "match_mean_sd";
     return (
       <section className="keep-panel" aria-label="What to keep" data-testid="keep-panel">
-        <h4 className="column-card-settings-title">What should the fake column keep?</h4>
         <Choice<RangeKeep>
           legend="Lowest and highest value"
           name={`${id}-range`}
@@ -138,6 +165,14 @@ export function KeepPanel({ profile, rows, onEdit }: KeepPanelProps) {
             { value: "uniform", label: "Evenly spread", note: "Every value between the lowest and highest is equally likely. Reveals nothing about the shape." },
           ]}
         />
+        <div className="field keep-rescale">
+          <span className="label-row">
+            <label htmlFor={`${id}-rescale`}>
+              <input id={`${id}-rescale`} type="checkbox" checked={profile.rescale === true} disabled={mode !== "match_mean_sd"} onChange={(e) => onEdit({ rescale: e.target.checked })} /> Make the average and spread match exactly
+            </label>
+            <InfoTip label="More information">Off by default. Moves a few values so the fake column matches; the lowest and highest values stay exact.</InfoTip>
+          </span>
+        </div>
         {missingChoice}
         {profile.type === "float" && s.kind === "numeric" && (
           <div className="field keep-decimals">
@@ -171,7 +206,6 @@ export function KeepPanel({ profile, rows, onEdit }: KeepPanelProps) {
   const text = note[s.kind];
   return text ? (
     <section className="keep-panel keep-panel--note" aria-label="What to keep" data-testid="keep-panel">
-      <h4 className="column-card-settings-title">What should the fake column keep?</h4>
       <p className="keep-note">{text}</p>
     </section>
   ) : null;

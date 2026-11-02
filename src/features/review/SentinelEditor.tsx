@@ -17,14 +17,14 @@ export function SentinelEditor({ profile, busy, onApply }: SentinelEditorProps) 
   const current = Object.keys(profile.sentinels).sort((a, b) => (Number.isNaN(Number(a)) || Number.isNaN(Number(b)) ? a.localeCompare(b) : Number(a) - Number(b)));
   return (
     <TextApply
-      label="Sentinel codes"
+      label="Special answer codes"
       value={current.join(", ")}
       placeholder="none"
       disabled={busy}
       hint={
         current.length > 0
           ? `Codes found: ${current.map((c) => `${c} (${profile.sentinels[c].toLocaleString("en-US")} rows)`).join(", ")}. Separate codes with commas.`
-          : "Codes that mean don't know, refused or not applicable, separated by commas."
+          : "Codes that mean don't know, refused or not applicable (like -9 or 998), separated by commas."
       }
       onApply={(text) => onApply(parseList(text))}
       extra={{ label: "Use the proposed codes", onClick: () => onApply(undefined) }}

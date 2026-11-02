@@ -95,7 +95,7 @@ export function HelpGuideModal({ open, onClose }: HelpGuideModalProps) {
               Choose a file, or start from scratch with &ldquo;Design a table&rdquo;. The app shows only what the table looks like: row count, column names and kinds, never a value.
             </Step>
             <Step n={2} icon={<ListChecks size={20} strokeWidth={1.75} />} title="Review">
-              First choose how closely the fake table follows your data: Match closely, Balanced (the start) or Most private. Then pick any column to change what it keeps, such as how often each label appears, the lowest and highest value, or missing values. Settings you rarely need are under Advanced.
+              First choose how closely the fake table follows your data: Match closely, Balanced (the start) or Most private. Then pick any column to change what it keeps, such as how often each label appears, the lowest and highest value, or missing values. A column's settings are in four groups you can open and close: how the app read it, what the fake column keeps, how it is written in the fake file, and, when you make several tables, how it connects to another.
             </Step>
             <Step n={3} icon={<Sparkles size={20} strokeWidth={1.75} />} title="Generate">
               Choose a seed, generate, and read the check table, which says whether each column matches what was asked for.

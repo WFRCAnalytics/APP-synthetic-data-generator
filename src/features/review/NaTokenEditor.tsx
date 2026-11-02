@@ -21,11 +21,11 @@ export function NaTokenEditor({ profile, busy, onApply }: NaTokenEditorProps) {
   const current = profile.naTokens.filter((t) => t !== "").map((t) => (t === EMPTY_TEXT_TOKEN ? EMPTY_TEXT_WORD : t));
   return (
     <TextApply
-      label="Missing-value markers"
+      label="Words that also mean missing"
       value={current.join(", ")}
       placeholder="none besides blank"
       disabled={busy}
-      hint={`Blank fields always count as missing (${(profile.naByToken[""] ?? 0).toLocaleString("en-US")} here). Add others, such as NA or refused, separated by commas.`}
+      hint={`Blank fields always count as missing (${(profile.naByToken[""] ?? 0).toLocaleString("en-US")} here). Add other words, like NA or refused, separated by commas.`}
       onApply={(text) => onApply(parseList(text).map((t) => (t === EMPTY_TEXT_WORD ? EMPTY_TEXT_TOKEN : t)))}
     />
   );

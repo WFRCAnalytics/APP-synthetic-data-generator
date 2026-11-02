@@ -165,7 +165,7 @@ describe("sentinel codes (FR-007)", () => {
     render(<App />);
     await toReview(user);
     const c = await openSettings(user, "dist");
-    expect(within(c).getByLabelText("Sentinel codes")).toHaveValue("-9");
+    expect(within(c).getByLabelText("Special answer codes")).toHaveValue("-9");
     expect(within(c).getByText(/-9 \(5 rows\)/)).toBeInTheDocument();
   });
 
@@ -174,11 +174,11 @@ describe("sentinel codes (FR-007)", () => {
     render(<App />);
     await toReview(user);
     const c = await openSettings(user, "dist");
-    const box = within(c).getByLabelText("Sentinel codes");
+    const box = within(c).getByLabelText("Special answer codes");
     await user.clear(box);
     await user.type(box, "-9, 998 , 999");
-    await user.click(applyFor(c, "Sentinel codes"));
-    await waitFor(() => expect(within(card("dist")).getByLabelText("Sentinel codes")).toHaveValue("-9, 998, 999"));
+    await user.click(applyFor(c, "Special answer codes"));
+    await waitFor(() => expect(within(card("dist")).getByLabelText("Special answer codes")).toHaveValue("-9, 998, 999"));
     const message = sent.profile.filter((m) => m.type === "reprofile").pop();
     expect(message && message.type === "reprofile" && message.overrides.sentinels).toEqual(["-9", "998", "999"]);
   });
@@ -188,8 +188,8 @@ describe("sentinel codes (FR-007)", () => {
     render(<App />);
     await toReview(user);
     const c = await openSettings(user, "dist");
-    await user.clear(within(c).getByLabelText("Sentinel codes"));
-    await user.click(applyFor(c, "Sentinel codes"));
+    await user.clear(within(c).getByLabelText("Special answer codes"));
+    await user.click(applyFor(c, "Special answer codes"));
     await waitFor(() => expect(sent.profile.some((m) => m.type === "reprofile" && Array.isArray(m.overrides.sentinels) && m.overrides.sentinels.length === 0)).toBe(true));
   });
 
@@ -208,10 +208,10 @@ describe("sentinel codes (FR-007)", () => {
     render(<App />);
     await toReview(user);
     const c = await openSettings(user, "dist");
-    const box = within(c).getByLabelText("Sentinel codes");
+    const box = within(c).getByLabelText("Special answer codes");
     await user.clear(box);
     await user.type(box, "-1");
-    await user.click(applyFor(c, "Sentinel codes"));
+    await user.click(applyFor(c, "Special answer codes"));
     await waitFor(() => expect(within(card("dist")).getByText(/Codes kept: -1/)).toBeInTheDocument());
     const spec = await generated(user);
     expect(spec.columns.find((x) => x.name === "dist")).toMatchObject({ sentinels: { "-1": 3 } });
@@ -232,9 +232,9 @@ describe("missing-value markers (FR-008)", () => {
     render(<App />);
     await toReview(user);
     const c = await openSettings(user, "mode");
-    await user.type(within(c).getByLabelText("Missing-value markers"), "NA, refused");
-    await user.click(applyFor(c, "Missing-value markers"));
-    await waitFor(() => expect(within(card("mode")).getByLabelText("Missing-value markers")).toHaveValue("NA, refused"));
+    await user.type(within(c).getByLabelText("Words that also mean missing"), "NA, refused");
+    await user.click(applyFor(c, "Words that also mean missing"));
+    await waitFor(() => expect(within(card("mode")).getByLabelText("Words that also mean missing")).toHaveValue("NA, refused"));
     const message = sent.profile.filter((m) => m.type === "reprofile").pop();
     expect(message && message.type === "reprofile" && message.overrides.naTokens).toEqual(["NA", "refused"]);
   });
@@ -286,11 +286,11 @@ describe("numeric mode, decimals and rescale (FR-011, FR-027)", () => {
     render(<App />);
     await toReview(user);
     const c = await openSettings(user, "dist");
-    const rescale = within(c).getByLabelText(/Restore the exact mean and spread/);
+    const rescale = within(c).getByLabelText(/Make the average and spread match exactly/);
     expect(rescale).not.toBeChecked();
     expect(rescale).toBeEnabled();
     await user.click(within(c).getByLabelText(/Evenly spread/));
-    expect(within(card("dist")).getByLabelText(/Restore the exact mean and spread/)).toBeDisabled();
+    expect(within(card("dist")).getByLabelText(/Make the average and spread match exactly/)).toBeDisabled();
   });
 
   it("turns the rescale on and sends it in the spec", async () => {
@@ -298,7 +298,7 @@ describe("numeric mode, decimals and rescale (FR-011, FR-027)", () => {
     render(<App />);
     await toReview(user);
     const c = await openSettings(user, "dist");
-    await user.click(within(c).getByLabelText(/Restore the exact mean and spread/));
+    await user.click(within(c).getByLabelText(/Make the average and spread match exactly/));
     const spec = await generated(user);
     expect(spec.columns.find((x) => x.name === "dist")).toMatchObject({ rescale: true });
   });
@@ -378,9 +378,9 @@ describe("optional protections are off by default (FR-013)", () => {
     render(<App />);
     await toReview(user);
     const c = await openSettings(user, "mode");
-    expect(within(c).getByLabelText(/Merge categories with fewer than/)).toHaveValue(null);
-    expect(within(c).getByLabelText(/Replace labels with neutral codes/)).not.toBeChecked();
-    expect(within(c).getByLabelText("New column name")).toHaveValue("mode");
+    expect(within(c).getByLabelText(/Group very small labels/)).toHaveValue(null);
+    expect(within(c).getByLabelText(/Hide label names/)).not.toBeChecked();
+    expect(within(c).getByLabelText("Name in the fake file")).toHaveValue("mode");
     const spec = await generated(user);
     const col = spec.columns.find((x) => x.name === "mode") as unknown as Record<string, unknown>;
     expect(col).not.toHaveProperty("merge_under_k");
@@ -393,12 +393,12 @@ describe("optional protections are off by default (FR-013)", () => {
     render(<App />);
     await toReview(user);
     const c = await openSettings(user, "mode");
-    fireEvent.change(within(c).getByLabelText(/Merge categories with fewer than/), { target: { value: "10" } });
+    fireEvent.change(within(c).getByLabelText(/Group very small labels/), { target: { value: "10" } });
     let spec = await generated(user);
     expect(spec.columns.find((x) => x.name === "mode")).toMatchObject({ merge_under_k: 10 });
     await user.click(screen.getByRole("button", { name: /Review/ }));
     const reopened = await openSettings(user, "mode"); // going back closes every card's settings
-    fireEvent.change(within(reopened).getByLabelText(/Merge categories with fewer than/), { target: { value: "" } });
+    fireEvent.change(within(reopened).getByLabelText(/Group very small labels/), { target: { value: "" } });
     spec = await generated(user);
     expect(spec.columns.find((x) => x.name === "mode")).not.toHaveProperty("merge_under_k");
   });
@@ -408,7 +408,7 @@ describe("optional protections are off by default (FR-013)", () => {
     render(<App />);
     await toReview(user);
     const c = await openSettings(user, "mode");
-    await user.click(within(c).getByLabelText(/Replace labels with neutral codes/));
+    await user.click(within(c).getByLabelText(/Hide label names/));
     const spec = await generated(user);
     expect(spec.columns.find((x) => x.name === "mode")).toMatchObject({ label_codes: true });
   });
@@ -427,11 +427,11 @@ describe("optional protections are off by default (FR-013)", () => {
     render(<App />);
     await toReview(user);
     const c = await openSettings(user, "mode");
-    const box = within(c).getByLabelText("New column name");
+    const box = within(c).getByLabelText("Name in the fake file");
     await user.clear(box);
     await user.type(box, "travel_mode");
-    await user.click(applyFor(c, "New column name", "Rename"));
-    expect(within(card("mode")).getByText("Written as travel_mode")).toBeInTheDocument();
+    await user.click(applyFor(c, "Name in the fake file", "Rename"));
+    expect(within(card("mode")).getAllByText(/Written as travel_mode/).length).toBeGreaterThan(0); // under the name, and in the summary of the writing group
     const spec = await generated(user);
     expect(spec.columns.find((x) => x.name === "mode")).toMatchObject({ output_name: "travel_mode" });
   });
@@ -441,14 +441,14 @@ describe("optional protections are off by default (FR-013)", () => {
     render(<App />);
     await toReview(user);
     const c = await openSettings(user, "mode");
-    const box = within(c).getByLabelText("New column name");
+    const box = within(c).getByLabelText("Name in the fake file");
     await user.clear(box);
     await user.type(box, "dist");
     expect(within(c).getByRole("alert")).toHaveTextContent(/already has this name/);
-    expect(applyFor(c, "New column name", "Rename")).toBeDisabled();
+    expect(applyFor(c, "Name in the fake file", "Rename")).toBeDisabled();
     await user.clear(box);
     expect(within(c).getByRole("alert")).toHaveTextContent(/needs a name/);
-    expect(applyFor(c, "New column name", "Rename")).toBeDisabled();
+    expect(applyFor(c, "Name in the fake file", "Rename")).toBeDisabled();
   });
 });
 
@@ -539,10 +539,10 @@ describe("a change survives profiling again", () => {
 
     const c = await openSettings(user, "dist");
     fireEvent.change(within(c).getByLabelText("Decimal places"), { target: { value: "5" } });
-    const sentinels = within(c).getByLabelText("Sentinel codes");
+    const sentinels = within(c).getByLabelText("Special answer codes");
     await user.clear(sentinels);
     await user.type(sentinels, "-1");
-    await user.click(applyFor(c, "Sentinel codes"));
+    await user.click(applyFor(c, "Special answer codes"));
     await waitFor(() => expect(within(card("dist")).getByText(/Codes kept: -1/)).toBeInTheDocument());
 
     await user.click(screen.getByRole("button", { name: "Overview" })); // the limit lives in the overview

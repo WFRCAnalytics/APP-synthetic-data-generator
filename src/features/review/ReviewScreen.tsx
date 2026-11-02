@@ -63,6 +63,8 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   const [thresholdText, setThresholdText] = useState(String(threshold));
   const [selected, setSelected] = useState<string | null>(null);
+  // Which settings groups the person opened or closed, per column, kept while they look at others (nothing is stored in the browser).
+  const [groupState, setGroupState] = useState<Record<string, Record<string, boolean>>>({});
 
   const shown = useMemo(() => filterProfiles(profiles, filters), [profiles, filters]);
   const typeCounts = useMemo(() => countByType(profiles), [profiles]);
@@ -177,6 +179,8 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
                 }
                 specOnly={specOnly}
                 workbook={workbook}
+                groups={groupState[current.name]}
+                onGroup={(group, open) => setGroupState((s) => ({ ...s, [current.name]: { ...s[current.name], [group]: open } }))}
               />
               <div className="detail-nav">
                 <button

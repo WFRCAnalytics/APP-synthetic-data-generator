@@ -29,6 +29,9 @@ export interface ColumnCardProps {
   onRequestSamples?: (description: SampleDescription) => void;
   specOnly?: boolean;
   workbook?: boolean;
+  /** Which settings groups are open on this column, and how to change that. */
+  groups?: Record<string, boolean>;
+  onGroup?: (group: string, open: boolean) => void;
 }
 
 const noop = () => {};
@@ -46,6 +49,8 @@ export function ColumnCard({
   onRequestSamples,
   specOnly,
   workbook,
+  groups,
+  onGroup,
 }: ColumnCardProps) {
   const dropped = profile.exclude === "drop";
   const bars = sparkBars(profile);
@@ -91,6 +96,16 @@ export function ColumnCard({
             )}
           </div>
         </div>
+        <label className="include-switch">
+          <input
+            type="checkbox"
+            role="switch"
+            checked={profile.exclude === "include"}
+            disabled={profile.type === "unsupported"}
+            onChange={(e) => onEdit({ exclude: e.target.checked ? "include" : "drop" })}
+          />
+          Include this column
+        </label>
       </header>
 
       <div className="column-card-body">
@@ -160,6 +175,8 @@ export function ColumnCard({
           onRequestSamples={onRequestSamples}
           specOnly={specOnly}
           workbook={workbook}
+          groups={groups}
+          onGroup={onGroup}
         />
       </section>
     </article>

@@ -66,7 +66,7 @@ test("the whole flow can be done from the keyboard, and focus is always visible"
   });
   expect(ring.outline !== "none" || ring.shadow !== "none", "a focus indicator is drawn").toBe(true);
   await page.keyboard.press("ArrowDown");
-  await expect(page.locator(".column-card").getByLabel("Type")).toBeVisible();
+  await expect(page.locator(".column-card").getByRole("switch", { name: "Include this column" })).toBeVisible();
 
   // Every focusable control on the page is reachable by Tab and shows a focus indicator.
   const unreachable = await page.evaluate(() => {
