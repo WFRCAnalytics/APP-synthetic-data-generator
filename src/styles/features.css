@@ -1241,3 +1241,64 @@ section[aria-labelledby="ingest-heading"] > .empty-state {
 .text-apply .button-link {
   font-size: var(--text-sm);
 }
+
+/* ---- Design: the same dictionary as Review, with what each column holds ---- */
+.column-nav--design .column-nav-head,
+.column-nav--design .column-nav-item {
+  grid-template-columns: 2rem minmax(0, 1.3fr) 8.5rem 4rem minmax(0, 1.5fr);
+}
+
+.column-nav--design .type-chip--typed {
+  border-color: var(--color-border);
+}
+
+@media (max-width: 60rem) {
+  .column-nav--design .column-nav-head,
+  .column-nav--design .column-nav-item {
+    grid-template-columns: 2rem minmax(0, 1fr) 8rem;
+  }
+}
+
+/* ---- Check table: a result that always shows, values that read as words ---- */
+.check-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.check-table th:nth-child(1) {
+  width: 15%;
+}
+
+.check-table th:nth-child(2) {
+  width: 18%;
+}
+
+.check-table th:nth-child(3),
+.check-table th:nth-child(4) {
+  width: 26%;
+}
+
+.check-table th:nth-child(5) {
+  width: 15%;
+}
+
+.check-table td,
+.check-table th {
+  max-width: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.check-result {
+  white-space: nowrap;
+}
+
+.check-result svg {
+  vertical-align: -3px;
+  margin-right: var(--space-1);
+  color: var(--color-success);
+}
+
+.check-table tr[data-pass="false"] .check-result svg {
+  color: var(--color-danger-text);
+}

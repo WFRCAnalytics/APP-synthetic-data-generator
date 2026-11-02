@@ -21,6 +21,8 @@ export interface GenerateScreenProps {
   fakeFileName: string;
 }
 
+import { formatCheckValue } from "./checkFormat";
+
 function CheckTable({ checks }: { checks: CheckRow[] }) {
   const failing = checks.filter((c) => !c.pass);
   // Failures first, so a problem is never buried under a hundred passes.
@@ -62,9 +64,16 @@ function CheckTable({ checks }: { checks: CheckRow[] }) {
               <tr key={`${c.column}-${c.metric}-${i}`} data-pass={c.pass}>
                 <td>{c.column}</td>
                 <td>{c.metric.replace("_", " ")}</td>
-                <td title={c.target}>{c.target}</td>
-                <td title={c.achieved}>{c.achieved}</td>
-                <td>{c.pass ? "Pass" : "Differs"}</td>
+                <td title={c.target}>{formatCheckValue(c.target)}</td>
+                <td title={c.achieved}>{formatCheckValue(c.achieved)}</td>
+                <td className="check-result">
+                  {c.pass ? (
+                    <CircleCheck size={15} strokeWidth={2} aria-hidden="true" />
+                  ) : (
+                    <CircleX size={15} strokeWidth={2} aria-hidden="true" />
+                  )}
+                  {c.pass ? "Pass" : "Differs"}
+                </td>
               </tr>
             ))}
           </tbody>

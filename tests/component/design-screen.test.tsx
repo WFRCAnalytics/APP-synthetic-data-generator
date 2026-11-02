@@ -50,7 +50,7 @@ describe("adding and describing columns", () => {
   it("adds a column of the chosen kind with settings that work as they are", async () => {
     const user = userEvent.setup();
     await toDesign(user);
-    await addKind(user, /Whole number/);
+    await addKind(user, /^Whole number/);
     expect(screen.getByLabelText("Column name")).toHaveValue("count");
     expect(screen.getByLabelText("Smallest")).toHaveValue("0");
     expect(screen.getByLabelText("Largest")).toHaveValue("100");
@@ -60,7 +60,7 @@ describe("adding and describing columns", () => {
   it("says what is wrong next to the field, and blocks Continue until it is fixed", async () => {
     const user = userEvent.setup();
     await toDesign(user);
-    await addKind(user, /Whole number/);
+    await addKind(user, /^Whole number/);
     const largest = screen.getByLabelText("Largest");
     await user.clear(largest);
     await user.type(largest, "-5");
@@ -77,9 +77,9 @@ describe("adding and describing columns", () => {
   it("refuses two columns with one name", async () => {
     const user = userEvent.setup();
     await toDesign(user);
-    await addKind(user, /Whole number/);
+    await addKind(user, /^Whole number/);
     await user.click(screen.getByRole("button", { name: "Add column" }));
-    await addKind(user, /Whole number/);
+    await addKind(user, /^Whole number/);
     const name = screen.getByLabelText("Column name");
     await user.clear(name);
     await user.type(name, "COUNT");
@@ -115,7 +115,7 @@ describe("adding and describing columns", () => {
   it("duplicates, moves and removes a column", async () => {
     const user = userEvent.setup();
     await toDesign(user);
-    await addKind(user, /Whole number/);
+    await addKind(user, /^Whole number/);
     await user.click(screen.getByRole("button", { name: "Duplicate" }));
     const names = () => Array.from(document.querySelectorAll("[data-design-column]")).map((e) => e.getAttribute("data-design-column"));
     expect(names()).toEqual(["count", "count_copy"]);
@@ -130,7 +130,7 @@ describe("from the design to Review and Generate", () => {
   it("sets the table name and the number of rows", async () => {
     const user = userEvent.setup();
     await toDesign(user);
-    await addKind(user, /Whole number/);
+    await addKind(user, /^Whole number/);
     await user.click(screen.getByRole("button", { name: /Table settings/ }));
     const name = screen.getByLabelText("Table name");
     await user.clear(name);
@@ -148,7 +148,7 @@ describe("from the design to Review and Generate", () => {
   it("offers a file type, CSV first, and names the file after it", async () => {
     const user = userEvent.setup();
     await toDesign(user);
-    await addKind(user, /Whole number/);
+    await addKind(user, /^Whole number/);
     await user.click(screen.getByRole("button", { name: /Table settings/ }));
     const type = screen.getByLabelText("File type") as HTMLSelectElement;
     expect(type.value).toBe("csv");
@@ -162,7 +162,7 @@ describe("from the design to Review and Generate", () => {
   it("builds a spec of the chosen format and keeps the choice when going back to Design", async () => {
     const user = userEvent.setup();
     await toDesign(user);
-    await addKind(user, /Whole number/);
+    await addKind(user, /^Whole number/);
     await user.click(screen.getByRole("button", { name: /Table settings/ }));
     await user.selectOptions(screen.getByLabelText("File type"), "parquet");
     await user.click(screen.getByRole("button", { name: "Continue to Review" }));
@@ -177,7 +177,7 @@ describe("from the design to Review and Generate", () => {
   it("goes back to Design with the columns kept, and Start over clears them", async () => {
     const user = userEvent.setup();
     await toDesign(user);
-    await addKind(user, /Whole number/);
+    await addKind(user, /^Whole number/);
     await user.click(screen.getByRole("button", { name: "Continue to Review" }));
     await screen.findByRole("heading", { name: "Review columns" });
     await user.click(screen.getByRole("button", { name: /Design/ }));
@@ -192,7 +192,7 @@ describe("from the design to Review and Generate", () => {
   it("says in Review that settings needing data are changed in Design, and sends nothing to read", async () => {
     const user = userEvent.setup();
     await toDesign(user);
-    await addKind(user, /Whole number/);
+    await addKind(user, /^Whole number/);
     await user.click(screen.getByRole("button", { name: "Continue to Review" }));
     await screen.findByRole("heading", { name: "Review columns" });
     expect(sent.profile).toHaveLength(0); // no file was ever opened
