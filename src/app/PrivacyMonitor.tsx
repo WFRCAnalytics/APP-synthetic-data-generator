@@ -3,7 +3,8 @@
 // dialog is open, so a person can check the promise instead of taking it on trust. It never shows a value from a file.
 
 import { ArrowDown, ArrowUp, Database, Globe, HardDrive, ShieldAlert, ShieldCheck, Upload, Wifi, WifiOff } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { offlineState, subscribeOffline } from "./offline";
 import type { NetCounts, NetDetail, NetEntry } from "./netCounter";
 import { formatBytes, inspectStorage, readPolicy, type StorageReport } from "./storageProbe";
 import "./PrivacyMonitor.css";
@@ -161,7 +162,9 @@ export function PrivacyMonitor({ counts, detail, held }: PrivacyMonitorProps) {
   const otherRules = policy.filter((d) => !KEY_RULES.includes(d.name));
   const recent = [...detail.log].reverse().slice(0, 120);
   const memory = (performance as unknown as { memory?: { usedJSHeapSize?: number } }).memory?.usedJSHeapSize;
-  const stored = storage ? storage.cookies + storage.localItems + storage.sessionItems + (storage.databases ?? 0) + (storage.caches ?? 0) + (storage.serviceWorkers ?? 0) : null;
+  // Cookies, storage and databases would hold your data or your settings, so they count against the page. The cached files are the app's own code.
+  const stored = storage ? storage.cookies + storage.localItems + storage.sessionItems + (storage.databases ?? 0) : null;
+  const offline = useSyncExternalStore(subscribeOffline, offlineState);
 
   return (
     <div className={`pm ${clean ? "pm--clean" : "pm--alert"}`} data-testid="privacy-monitor">
@@ -187,7 +190,7 @@ export function PrivacyMonitor({ counts, detail, held }: PrivacyMonitorProps) {
         <Tile icon={<Upload size={16} strokeWidth={1.75} />} title="Sent out" value={formatBytes(detail.sentBytes)} note={`${detail.uploads} uploads, to anywhere`} tone={detail.sentBytes === 0 ? "ok" : "alert"} testId="pm-sent" />
         <Tile icon={<Globe size={16} strokeWidth={1.75} />} title="To other websites" value={`${counts.crossOrigin}`} note={`${counts.blocked} blocked by the browser`} tone={counts.crossOrigin === 0 && counts.blocked === 0 ? "ok" : "alert"} testId="pm-cross" />
         <Tile icon={<ArrowDown size={16} strokeWidth={1.75} />} title="From this site" value={formatBytes(detail.receivedBytes)} note={`${counts.sameOrigin} files, the app itself`} tone="plain" testId="pm-received" />
-        <Tile icon={<HardDrive size={16} strokeWidth={1.75} />} title="Saved in browser" value={storage ? (storage.bytes === null ? `${stored ?? 0} items` : formatBytes(storage.bytes)) : "..."} note={stored === 0 ? "cookies, storage, databases: none" : `${stored ?? 0} items stored`} tone={stored === 0 || stored === null ? "ok" : "plain"} testId="pm-saved" />
+        <Tile icon={<HardDrive size={16} strokeWidth={1.75} />} title="Saved in browser" value={storage ? (storage.bytes === null ? `${stored ?? 0} items` : formatBytes(storage.bytes)) : "..."} note={stored === 0 ? (storage?.caches ? "your data: none. The app's own files only" : "cookies, storage, databases: none") : `${stored ?? 0} items stored`} tone={stored === 0 || stored === null ? "ok" : "plain"} testId="pm-saved" />
       </div>
 
       <Chart log={detail.log} now={now} />
@@ -254,7 +257,7 @@ export function PrivacyMonitor({ counts, detail, held }: PrivacyMonitorProps) {
         <h3>
           <Database size={16} strokeWidth={1.75} aria-hidden="true" /> Saved by this site in your browser
         </h3>
-        <p className="field-hint">Read from the browser just now. The app saves nothing, so these should all be 0.</p>
+        <p className="field-hint">Read from the browser just now. The app saves none of your data, so cookies, storage and databases should be 0. The hosted page keeps its own files (the app itself) so it works without internet.</p>
         <dl className="pm-facts" data-testid="pm-storage">
           <dt>Cookies</dt>
           <dd>{storage?.cookies ?? "..."}</dd>
@@ -264,13 +267,25 @@ export function PrivacyMonitor({ counts, detail, held }: PrivacyMonitorProps) {
           <dd>{storage?.sessionItems ?? "..."}</dd>
           <dt>Databases</dt>
           <dd>{storage ? (storage.databases ?? "not reported") : "..."}</dd>
-          <dt>Cached files</dt>
+          <dt>Cached app files</dt>
           <dd>{storage ? (storage.caches ?? "not reported") : "..."}</dd>
-          <dt>Background installs</dt>
+          <dt>Offline helper</dt>
           <dd>{storage ? (storage.serviceWorkers ?? "not reported") : "..."}</dd>
           <dt>Disk used by this site</dt>
           <dd>{storage ? (storage.bytes === null ? "not reported" : formatBytes(storage.bytes)) : "..."}</dd>
         </dl>
+        <h3>
+          <Wifi size={16} strokeWidth={1.75} aria-hidden="true" /> Works without internet
+        </h3>
+        <p className="field-hint" data-testid="pm-offline">
+          {offline.phase === "ready"
+            ? `The app's own files are saved (${formatBytes(offline.total)}), so it keeps working if your internet goes away. Your data is never part of them.`
+            : offline.phase === "preparing"
+              ? `Saving the app's own files so it works without internet${offline.total > 0 ? `: ${formatBytes(offline.done)} of ${formatBytes(offline.total)}` : ""}.`
+              : offline.phase === "failed"
+                ? "Some of the app's files could not be saved, so offline use may not work. Reload while connected to try again."
+                : "Not kept here: this copy is loaded fresh each time, or your browser does not keep files for the page."}
+        </p>
         <h3>
           <HardDrive size={16} strokeWidth={1.75} aria-hidden="true" /> Held in this tab&apos;s memory
         </h3>

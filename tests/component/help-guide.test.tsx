@@ -19,7 +19,7 @@ describe("the help guide", () => {
     render(<App />);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     const dialog = await open(user);
-    expect(dialog).toHaveTextContent("Nothing is saved in the browser");
+    expect(dialog).toHaveTextContent("None of your data is saved in the browser");
     expect(dialog).toHaveTextContent("never holds lists of IDs");
   });
 

@@ -47,7 +47,8 @@ const files = [];
 const add = (path, data, mode) => files.push({ path: `${top}/${path}`, data, ...(mode ? { mode } : {}) });
 
 // The site: dist/ unchanged.
-for (const rel of await collectFiles(dist)) add(`site/APP-synthetic-data-generator/${rel}`, normalizeLineEndings(rel, new Uint8Array(readFileSync(safeJoin(dist, rel)))));
+// sw.js keeps an offline copy for the hosted page; a copy that runs from a folder needs none, so it is not part of the zip.
+for (const rel of (await collectFiles(dist)).filter((r) => r !== "sw.js")) add(`site/APP-synthetic-data-generator/${rel}`, normalizeLineEndings(rel, new Uint8Array(readFileSync(safeJoin(dist, rel)))));
 
 // The launcher.
 const launcherDir = join(root, "release", "launcher");

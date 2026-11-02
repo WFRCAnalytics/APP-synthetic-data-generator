@@ -8,6 +8,8 @@ import { patternFit, shortfallText } from "../../lib/profile/idCapacity";
 import type { LocalEdits } from "../../lib/profile/edits";
 import type { ColumnProfile, MaskToken } from "../../lib/profile/types";
 import type { SampleDescription } from "../../lib/textgen/sample";
+import { PATTERN_KINDS, kindOf } from "./runLogic";
+import { PatternRuns } from "./PatternRuns";
 import { SamplePreview } from "./SamplePreview";
 
 export interface ShortStringEditorProps {
@@ -16,16 +18,6 @@ export interface ShortStringEditorProps {
   onEdit: (patch: LocalEdits) => void;
   onRequestSamples: ((description: SampleDescription) => void) | undefined;
 }
-
-const KINDS: [string, string][] = [
-  ["digit", "Digit"],
-  ["upper", "Capital letter"],
-  ["lower", "Lowercase letter"],
-  ["letter", "Any letter"],
-  ["alnum", "Letter or digit"],
-  ["literal", "Fixed character"],
-];
-const kindOf = (t: MaskToken): string => (isLiteral(t) ? "literal" : t);
 
 export function ShortStringEditor({ profile, samples, onEdit, onRequestSamples }: ShortStringEditorProps) {
   const s = profile.summary;
@@ -41,11 +33,14 @@ export function ShortStringEditor({ profile, samples, onEdit, onRequestSamples }
   return (
     <fieldset className="id-mask-editor" data-short-pattern-for={profile.name}>
       <legend>String pattern</legend>
+      <PatternRuns tokens={s.pattern} onChange={(shortPattern) => onEdit({ shortPattern })} />
+      <details className="pattern-detail">
+        <summary>Edit each position ({s.pattern.length})</summary>
       <ol className="id-mask-positions">
         {s.pattern.map((t, i) => (
           <li key={i}>
             <select aria-label={`Position ${i + 1}`} value={kindOf(t)} onChange={(e) => setToken(i, e.target.value)}>
-              {KINDS.map(([value, label]) => (
+              {PATTERN_KINDS.map(([value, label]) => (
                 <option key={value} value={value}>
                   {label}
                 </option>
@@ -64,6 +59,7 @@ export function ShortStringEditor({ profile, samples, onEdit, onRequestSamples }
           </li>
         ))}
       </ol>
+      </details>
       <div className="actions-row">
         <button type="button" className="button-link" onClick={() => onEdit({ shortPattern: undefined })}>
           Reset to detected

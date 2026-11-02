@@ -175,6 +175,20 @@ describe("short strings", () => {
     await waitFor(() => expect(within(c).getByTestId("sample-plate")).toHaveTextContent("short_string-sample-1"));
   });
 
+  it("shows the pattern as runs of the same kind, and changing a run changes every position in it", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await toReview(user);
+    const c = await open(user, "plate");
+    const runs = within(c).getByTestId("pattern-runs");
+    expect(within(runs).getAllByRole("listitem")).toHaveLength(3); // two capitals, a dash, four digits
+    expect(within(runs).getByLabelText("Kind of positions 1 to 2")).toHaveValue("upper");
+    expect(within(runs).getByLabelText("Kind of position 3")).toHaveValue("literal");
+    await user.selectOptions(within(runs).getByLabelText("Kind of positions 4 to 7"), "alnum");
+    for (const n of [4, 5, 6, 7]) expect(within(c).getByLabelText(`Position ${n}`)).toHaveValue("alnum");
+    expect(within(c).getByLabelText("Position 1")).toHaveValue("upper");
+  });
+
   it("explains a pattern too narrow, leaves the column out, and blocks Generate once it is included, until it is widened", async () => {
     resetScenario([...profiles(), tight()]);
     const user = userEvent.setup();

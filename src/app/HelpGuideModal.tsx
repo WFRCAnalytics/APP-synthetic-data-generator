@@ -132,7 +132,7 @@ export function HelpGuideModal({ open, onClose }: HelpGuideModalProps) {
             </div>
           </figure>
           <p>
-            Everything stays here. Your file is read and profiled in this browser tab; nothing is uploaded, and the app makes no requests to other sites. The shield in the header opens a live monitor of every request, what the browser has saved for this site, and the rules the browser enforces. Reloading or closing the page clears your data from memory. Nothing is saved in the browser.
+            Everything stays here. Your file is read and profiled in this browser tab; nothing is uploaded, and the app makes no requests to other sites. The shield in the header opens a live monitor of every request, what the browser has saved for this site, and the rules the browser enforces. Reloading or closing the page clears your data from memory. None of your data is saved in the browser; the hosted page keeps only the app’s own files, so it keeps working if your internet goes away.
           </p>
 
           <h3>No file? Design a table</h3>
