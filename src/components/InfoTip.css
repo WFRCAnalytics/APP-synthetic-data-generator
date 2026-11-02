@@ -1,0 +1,75 @@
+.infotip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+
+.infotip-button {
+  display: inline-grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-wfrc-gray);
+  cursor: help;
+}
+
+.infotip-button:hover {
+  background: color-mix(in srgb, var(--color-foreground) 8%, transparent);
+  color: var(--color-foreground);
+}
+
+.infotip-button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.infotip--warning .infotip-button {
+  color: var(--color-foreground);
+}
+
+.infotip-bubble {
+  position: absolute;
+  z-index: 60;
+  bottom: calc(100% + 6px);
+  width: max-content;
+  max-width: 19rem;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-foreground);
+  color: var(--color-background);
+  box-shadow: var(--shadow-md);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.45;
+  text-align: left;
+  white-space: normal;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.infotip-bubble--start {
+  left: -0.5rem;
+}
+
+.infotip-bubble--end {
+  right: -0.5rem;
+}
+
+.infotip:hover .infotip-bubble,
+.infotip:focus-within .infotip-bubble,
+.infotip-bubble[data-open="true"] {
+  visibility: visible;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .infotip-bubble {
+    transition: opacity var(--transition-fast);
+  }
+}

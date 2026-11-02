@@ -2,6 +2,7 @@
 // with a live sample of invented IDs and what the pattern allows against what the column needs.
 // Nothing here holds a real ID; the pattern came from lengths and character classes only.
 
+import { X } from "lucide-react";
 import { useId, useState } from "react";
 import { sampleIds } from "../../lib/generate/survey-id";
 import { isLiteral, isNumericMask } from "../../lib/mask/mask";
@@ -25,7 +26,8 @@ const KINDS: [string, string][] = [
 ];
 
 const kindOf = (t: MaskToken): string => (isLiteral(t) ? "literal" : t);
-const asNumber = (text: string): number | undefined => (text.trim() !== "" && Number.isInteger(Number(text)) ? Number(text) : undefined);
+const asNumber = (text: string): number | undefined =>
+  text.trim() !== "" && Number.isInteger(Number(text)) ? Number(text) : undefined;
 
 export function IdMaskEditor({ profile, onChange }: IdMaskEditorProps) {
   const id = useId();
@@ -42,7 +44,12 @@ export function IdMaskEditor({ profile, onChange }: IdMaskEditorProps) {
   const setMask = (mask: MaskToken[]) => {
     // A range only applies to whole-number patterns.
     const keep = isNumericMask(mask);
-    onChange({ mask, min: keep ? pattern.min : undefined, max: keep ? pattern.max : undefined, pad: keep ? pattern.pad : 0 });
+    onChange({
+      mask,
+      min: keep ? pattern.min : undefined,
+      max: keep ? pattern.max : undefined,
+      pad: keep ? pattern.pad : 0,
+    });
   };
   const setToken = (i: number, kind: string) => {
     const next = [...s.mask];
@@ -56,7 +63,11 @@ export function IdMaskEditor({ profile, onChange }: IdMaskEditorProps) {
       <ol className="id-mask-positions">
         {s.mask.map((t, i) => (
           <li key={i}>
-            <select aria-label={`Position ${i + 1}`} value={kindOf(t)} onChange={(e) => setToken(i, e.target.value)}>
+            <select
+              aria-label={`Position ${i + 1}`}
+              value={kindOf(t)}
+              onChange={(e) => setToken(i, e.target.value)}
+            >
               {KINDS.map(([value, label]) => (
                 <option key={value} value={value}>
                   {label}
@@ -77,14 +88,24 @@ export function IdMaskEditor({ profile, onChange }: IdMaskEditorProps) {
                 }}
               />
             )}
-            <button type="button" className="button-link" aria-label={`Remove position ${i + 1}`} onClick={() => setMask(s.mask.filter((_, j) => j !== i))}>
-              Remove
+            <button
+              type="button"
+              className="id-mask-remove"
+              title="Remove this position"
+              aria-label={`Remove position ${i + 1}`}
+              onClick={() => setMask(s.mask.filter((_, j) => j !== i))}
+            >
+              <X size={14} strokeWidth={2} aria-hidden="true" />
             </button>
           </li>
         ))}
       </ol>
       <div className="actions-row">
-        <button type="button" className="button button-secondary" onClick={() => setMask([...s.mask, "digit"])}>
+        <button
+          type="button"
+          className="button button-secondary"
+          onClick={() => setMask([...s.mask, "digit"])}
+        >
           Add position
         </button>
         <button type="button" className="button-link" onClick={() => onChange(undefined)}>
@@ -126,7 +147,9 @@ export function IdMaskEditor({ profile, onChange }: IdMaskEditorProps) {
               id={`${id}-pad`}
               inputMode="numeric"
               value={(s.padWidth ?? 0).toString()}
-              onChange={(e) => onChange({ ...pattern, pad: Math.max(0, asNumber(e.target.value) ?? 0) })}
+              onChange={(e) =>
+                onChange({ ...pattern, pad: Math.max(0, asNumber(e.target.value) ?? 0) })
+              }
             />
           </div>
         </div>
@@ -136,8 +159,14 @@ export function IdMaskEditor({ profile, onChange }: IdMaskEditorProps) {
         Examples (invented): {sample.length > 0 ? sample.join(", ") : "none: the pattern is empty"}
       </p>
       {fit && (
-        <p className={fit.short ? "banner banner-error" : "field-hint"} role={fit.short ? "alert" : undefined} data-testid={`id-fit-${profile.name}`}>
-          {fit.short ? shortfallText(fit) : `The pattern allows ${fit.allowed.toLocaleString("en-US")} distinct IDs; the column needs ${fit.needed.toLocaleString("en-US")}.`}
+        <p
+          className={fit.short ? "banner banner-error" : "field-hint"}
+          role={fit.short ? "alert" : undefined}
+          data-testid={`id-fit-${profile.name}`}
+        >
+          {fit.short
+            ? shortfallText(fit)
+            : `The pattern allows ${fit.allowed.toLocaleString("en-US")} distinct IDs; the column needs ${fit.needed.toLocaleString("en-US")}.`}
         </p>
       )}
     </fieldset>

@@ -4,7 +4,7 @@
 
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Ban, EyeOff, Info, Search, TriangleAlert, X } from "lucide-react";
-import { useEffect, useId, useRef, type KeyboardEvent } from "react";
+import { useEffect, useId, useRef, type CSSProperties, type KeyboardEvent } from "react";
 import type { ColumnProfile } from "../../lib/profile/types";
 import { isFiltering, NO_FILTERS, type Filters } from "./filter";
 import { Sparkline } from "./Sparkline";
@@ -144,7 +144,8 @@ export function ColumnNav({
               <button
                 key={t}
                 type="button"
-                className="type-chip"
+                className="type-chip type-chip--typed"
+                style={{ "--type": look.color } as CSSProperties}
                 aria-pressed={filters.type === t}
                 aria-label={`${label}, ${typeCounts[t]}`}
                 title={`${label} (${typeCounts[t]})`}
@@ -241,6 +242,7 @@ export function ColumnNav({
                   <button
                     type="button"
                     className="column-nav-item"
+                    style={{ "--type": look.color } as CSSProperties}
                     data-nav-column={p.name}
                     data-status={p.status}
                     data-dropped={p.exclude === "drop" ? "true" : undefined}

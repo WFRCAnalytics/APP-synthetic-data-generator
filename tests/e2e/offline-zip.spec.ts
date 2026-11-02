@@ -121,7 +121,7 @@ async function excelSession(page: Page, base: string): Promise<Buffer> {
   await page.locator("#file-input").setInputFiles(join(ROOT, "tests/fixtures/xlsx/quirks.xlsx"));
   await expect(page.getByRole("heading", { name: "Choose a sheet" })).toBeVisible({ timeout: 60_000 });
   await page.getByLabel("Sheet", { exact: true }).selectOption({ label: "Survey Data" });
-  await expect(page.getByLabel("Rows to skip above the header")).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByLabel("Rows to skip")).toBeVisible({ timeout: 60_000 });
   await page.getByRole("button", { name: "Use this sheet" }).click();
   await expect(page.getByRole("heading", { name: "Review columns" })).toBeVisible({ timeout: 180_000 });
   return generateAndDownload(page, "xlsx");

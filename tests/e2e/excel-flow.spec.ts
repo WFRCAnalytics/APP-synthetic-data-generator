@@ -18,7 +18,7 @@ async function chooseWorkbook(page: Page, name: string, sheet: string) {
   await page.locator("#file-input").setInputFiles(join(FIX, name));
   await expect(page.getByRole("heading", { name: "Choose a sheet" })).toBeVisible({ timeout: 60_000 });
   await page.getByLabel("Sheet", { exact: true }).selectOption({ label: sheet });
-  await expect(page.getByLabel("Rows to skip above the header")).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByLabel("Rows to skip")).toBeVisible({ timeout: 60_000 });
 }
 
 async function review(page: Page) {
@@ -50,15 +50,15 @@ test("the load dialog lists the sheets by name only and suggests where the table
   const options = await page.getByLabel("Sheet", { exact: true }).locator("option").allTextContents();
   expect(options).toEqual(["Notes", "Survey Data", "Lookup (hidden)"]);
   await expect(page.getByTestId("skip-suggestion")).toContainText("Suggested: 2");
-  await expect(page.getByLabel("Cell range (optional)")).toHaveValue("A3:I203");
-  await expect(page.getByTestId("merged-note")).toBeVisible();
+  await expect(page.getByLabel("Cell range")).toHaveValue("A3:I203");
+  await expect(page.getByTestId("merged-note")).toBeAttached();
 
   // No cell value, comment or other sheet's content is on the page.
   const text = await page.locator("body").innerText();
   for (const secret of ["comment number", "Merged heading", "PRIVATE-MARKER", "secret"]) expect(text).not.toContain(secret);
 
   await page.getByLabel("Sheet", { exact: true }).selectOption({ label: "Lookup (hidden)" });
-  await expect(page.getByTestId("sheet-hidden-note")).toBeVisible();
+  await expect(page.getByTestId("sheet-hidden-note")).toBeAttached();
 });
 
 test("a workbook goes in and a fake workbook comes out, and reads back the same", async ({ page }, testInfo) => {
@@ -84,7 +84,7 @@ test("a workbook goes in and a fake workbook comes out, and reads back the same"
   await expect(page.getByRole("heading", { name: "Choose a sheet" })).toBeVisible({ timeout: 60_000 });
   const options = await page.getByLabel("Sheet", { exact: true }).locator("option").allTextContents();
   expect(options).toEqual(["Survey Data"]); // only the chosen sheet is in the fake workbook
-  await expect(page.getByLabel("Rows to skip above the header")).toHaveValue("2", { timeout: 60_000 });
+  await expect(page.getByLabel("Rows to skip")).toHaveValue("2", { timeout: 60_000 });
   await review(page);
   expect(await types(page)).toEqual(realTypes);
 

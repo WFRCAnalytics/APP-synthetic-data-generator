@@ -134,7 +134,7 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
           ) : (
             <div className="overview">
               <h3>Overview</h3>
-              <p className="overview-lead">Pick a column on the left to see how it will be faked and to change what the app decided. Columns with a warning sign need a look first.</p>
+              <p className="overview-lead">Pick a column to see how it will be faked.</p>
               <dl className="overview-stats">
                 <div>
                   <dt>Columns</dt>

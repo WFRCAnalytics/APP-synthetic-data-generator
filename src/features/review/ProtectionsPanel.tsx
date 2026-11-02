@@ -1,6 +1,7 @@
 // The optional protections, all off by default (constitution Principle VI, FR-013): merge rare
 // categories into "Other", replace labels with neutral codes, and rename the column.
 
+import { InfoTip } from "../../components/InfoTip";
 import { useId, useState } from "react";
 import { validateOutputName } from "../../lib/protections";
 import type { ColumnProfile } from "../../lib/profile/types";
@@ -15,11 +16,18 @@ export interface ProtectionsPanelProps {
   onRename: (name: string) => void;
 }
 
-export function ProtectionsPanel({ profile, otherNames, onMergeUnderK, onLabelCodes, onRename }: ProtectionsPanelProps) {
+export function ProtectionsPanel({
+  profile,
+  otherNames,
+  onMergeUnderK,
+  onLabelCodes,
+  onRename,
+}: ProtectionsPanelProps) {
   const id = useId();
   const categorical = profile.summary.kind === "categorical";
   const [nameText, setNameText] = useState(profile.outputName);
-  const nameError = nameText === profile.outputName ? null : validateOutputName(nameText, otherNames);
+  const nameError =
+    nameText === profile.outputName ? null : validateOutputName(nameText, otherNames);
   const mergeText = profile.mergeUnderK ? String(profile.mergeUnderK) : "";
 
   return (
@@ -29,7 +37,14 @@ export function ProtectionsPanel({ profile, otherNames, onMergeUnderK, onLabelCo
       {categorical && (
         <>
           <div className="field">
-            <label htmlFor={`${id}-merge`}>Merge categories with fewer than this many rows into &ldquo;Other&rdquo;</label>
+            <span className="label-row">
+              <label htmlFor={`${id}-merge`}>
+                Merge categories with fewer than this many rows into &ldquo;Other&rdquo;
+              </label>
+              <InfoTip label="More information">
+                Leave blank to keep every label. Rare labels can identify a person.
+              </InfoTip>
+            </span>
             <input
               id={`${id}-merge`}
               type="number"
@@ -44,14 +59,24 @@ export function ProtectionsPanel({ profile, otherNames, onMergeUnderK, onLabelCo
                 if (Number.isInteger(n) && n >= 2) onMergeUnderK(n);
               }}
             />
-            <span className="field-hint">Leave blank to keep every label. Rare labels can identify a person.</span>
           </div>
 
           <div className="field">
-            <label htmlFor={`${id}-codes`}>
-              <input id={`${id}-codes`} type="checkbox" checked={profile.labelCodes === true} onChange={(e) => onLabelCodes(e.target.checked)} /> Replace labels with neutral codes (cat_01, cat_02, &hellip;)
-            </label>
-            <span className="field-hint">Analysis code that filters on exact labels will need updating before you switch to the real file.</span>
+            <span className="label-row">
+              <label htmlFor={`${id}-codes`}>
+                <input
+                  id={`${id}-codes`}
+                  type="checkbox"
+                  checked={profile.labelCodes === true}
+                  onChange={(e) => onLabelCodes(e.target.checked)}
+                />{" "}
+                Replace labels with neutral codes (cat_01, cat_02, &hellip;)
+              </label>
+              <InfoTip label="More information">
+                Analysis code that filters on exact labels will need updating before you switch to
+                the real file.
+              </InfoTip>
+            </span>
           </div>
         </>
       )}

@@ -3,6 +3,7 @@
 // instead of silently becoming 0.
 
 import { useEffect, useId, useState, type ReactNode } from "react";
+import { InfoTip } from "../../components/InfoTip";
 import { SelectField } from "../../components/SelectField";
 import type { DesignProblem } from "../../lib/design/types";
 
@@ -17,21 +18,18 @@ export interface FieldShellProps {
 export function FieldShell({ label, hint, problems = [], children }: FieldShellProps) {
   const id = useId();
   const messages = problems.map((p) => p.message);
-  const describedBy = messages.length > 0 ? `${id}-error` : hint ? `${id}-hint` : undefined;
+  const describedBy = messages.length > 0 ? `${id}-error` : undefined;
   return (
     <div className="field">
-      <label htmlFor={id}>{label}</label>
+      <span className="label-row">
+        <label htmlFor={id}>{label}</label>
+        {hint && messages.length === 0 && <InfoTip label="More information">{hint}</InfoTip>}
+      </span>
       {children({ id, describedBy, invalid: messages.length > 0 })}
-      {messages.length > 0 ? (
+      {messages.length > 0 && (
         <span id={`${id}-error`} className="field-hint field-error">
           {messages.join(" ")}
         </span>
-      ) : (
-        hint && (
-          <span id={`${id}-hint`} className="field-hint">
-            {hint}
-          </span>
-        )
       )}
     </div>
   );

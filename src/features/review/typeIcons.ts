@@ -28,7 +28,7 @@ const LOOKS: Record<string, TypeLook> = {
   integer: { icon: Hash, color: "var(--chart-1)" },
   float: { icon: DecimalsArrowRight, color: "var(--chart-1)" },
   categorical: { icon: Tags, color: "var(--chart-4)" },
-  boolean: { icon: ToggleLeft, color: "var(--chart-4)" },
+  boolean: { icon: ToggleLeft, color: "var(--chart-2)" },
   date: { icon: Calendar, color: "var(--chart-3)" },
   datetime: { icon: CalendarClock, color: "var(--chart-3)" },
   time: { icon: Clock, color: "var(--chart-3)" },

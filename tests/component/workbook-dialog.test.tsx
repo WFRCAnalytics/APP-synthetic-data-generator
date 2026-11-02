@@ -77,27 +77,27 @@ describe("the options", () => {
   it("suggests the rows to skip and the range, and explains why", async () => {
     const { user } = setup();
     await user.selectOptions(screen.getByLabelText("Sheet"), "Survey Data");
-    expect(screen.getByLabelText("Rows to skip above the header")).toHaveValue("2");
+    expect(screen.getByLabelText("Rows to skip")).toHaveValue("2");
     expect(screen.getByTestId("skip-suggestion")).toHaveTextContent("Suggested: 2, because the table seems to start on row 3");
-    expect(screen.getByLabelText("Cell range (optional)")).toHaveValue("A3:I203");
+    expect(screen.getByLabelText("Cell range")).toHaveValue("A3:I203");
   });
 
   it("changes the suggested range when the rows to skip change", async () => {
     const { user } = setup();
     await user.selectOptions(screen.getByLabelText("Sheet"), "Survey Data");
-    const skip = screen.getByLabelText("Rows to skip above the header");
+    const skip = screen.getByLabelText("Rows to skip");
     await user.clear(skip);
     await user.type(skip, "4");
-    expect(screen.getByLabelText("Cell range (optional)")).toHaveValue("A5:I203");
+    expect(screen.getByLabelText("Cell range")).toHaveValue("A5:I203");
   });
 
   it("keeps a range the user typed when the rows to skip change", async () => {
     const { user } = setup();
     await user.selectOptions(screen.getByLabelText("Sheet"), "Survey Data");
-    const range = screen.getByLabelText("Cell range (optional)");
+    const range = screen.getByLabelText("Cell range");
     await user.clear(range);
     await user.type(range, "A3:C50");
-    const skip = screen.getByLabelText("Rows to skip above the header");
+    const skip = screen.getByLabelText("Rows to skip");
     await user.clear(skip);
     await user.type(skip, "2");
     expect(range).toHaveValue("A3:C50");
@@ -106,7 +106,7 @@ describe("the options", () => {
   it("refuses an invalid range, and a range that does not start after the skipped rows", async () => {
     const { user } = setup();
     await user.selectOptions(screen.getByLabelText("Sheet"), "Survey Data");
-    const range = screen.getByLabelText("Cell range (optional)");
+    const range = screen.getByLabelText("Cell range");
     await user.clear(range);
     await user.type(range, "nonsense");
     expect(screen.getByRole("alert")).toHaveTextContent("Enter a range such as A3:I203");
@@ -120,7 +120,7 @@ describe("the options", () => {
   it("refuses a rows-to-skip value that is not a whole number", async () => {
     const { user } = setup();
     await user.selectOptions(screen.getByLabelText("Sheet"), "Survey Data");
-    const skip = screen.getByLabelText("Rows to skip above the header");
+    const skip = screen.getByLabelText("Rows to skip");
     await user.clear(skip);
     await user.type(skip, "-1");
     expect(screen.getByText("Enter a whole number, 0 or more.")).toBeInTheDocument();
@@ -139,8 +139,8 @@ describe("confirming", () => {
   it("hands on a cleared range as none, and the header toggle", async () => {
     const { onConfirm, user } = setup();
     await user.selectOptions(screen.getByLabelText("Sheet"), "Survey Data");
-    await user.clear(screen.getByLabelText("Cell range (optional)"));
-    await user.click(screen.getByLabelText("First row of the table is a header"));
+    await user.clear(screen.getByLabelText("Cell range"));
+    await user.click(screen.getByLabelText("First row is a header"));
     await user.click(screen.getByRole("button", { name: "Use this sheet" }));
     expect(onConfirm).toHaveBeenCalledWith({ sheet: "Survey Data", range: undefined, skipRows: 2, header: false });
   });

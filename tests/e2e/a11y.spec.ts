@@ -95,7 +95,7 @@ for (const scheme of ["light", "dark"] as const) {
       await page.locator("#file-input").setInputFiles(join(HERE, "../fixtures/xlsx/quirks.xlsx"));
       await expect(page.getByRole("heading", { name: "Choose a sheet" })).toBeVisible({ timeout: 60_000 });
       await page.getByLabel("Sheet", { exact: true }).selectOption({ label: "Survey Data" });
-      await expect(page.getByTestId("merged-note")).toBeVisible({ timeout: 60_000 });
+      await expect(page.getByTestId("merged-note")).toBeAttached({ timeout: 60_000 });
       expect(await violations(page), "Workbook dialog").toEqual([]);
 
       await page.getByRole("button", { name: "Use this sheet" }).click();

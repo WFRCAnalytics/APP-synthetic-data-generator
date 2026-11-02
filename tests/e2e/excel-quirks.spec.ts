@@ -18,7 +18,7 @@ async function fakeOf(page: Page, name: string, sheet: string, path: string) {
   await page.locator("#file-input").setInputFiles(join(FIX, name));
   await expect(page.getByRole("heading", { name: "Choose a sheet" })).toBeVisible({ timeout: 60_000 });
   await page.getByLabel("Sheet", { exact: true }).selectOption({ label: sheet });
-  await expect(page.getByLabel("Rows to skip above the header")).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByLabel("Rows to skip")).toBeVisible({ timeout: 60_000 });
   await page.getByRole("button", { name: "Use this sheet" }).click();
   await expect(page.getByRole("heading", { name: "Review columns" })).toBeVisible({ timeout: 180_000 });
   await page.getByRole("button", { name: "Continue to Generate" }).click();

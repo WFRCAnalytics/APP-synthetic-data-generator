@@ -25,7 +25,7 @@ test.describe("a ~50 MB workbook", () => {
     await page.goto(APP);
     await page.locator("#file-input").setInputFiles(LARGE);
     await expect(page.getByRole("heading", { name: "Choose a sheet" })).toBeVisible({ timeout: 120_000 });
-    await expect(page.getByLabel("Rows to skip above the header")).toBeVisible({ timeout: 120_000 });
+    await expect(page.getByLabel("Rows to skip")).toBeVisible({ timeout: 120_000 });
 
     const started = Date.now();
     await page.getByRole("button", { name: "Use this sheet" }).click();

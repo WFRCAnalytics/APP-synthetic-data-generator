@@ -1,6 +1,7 @@
 // A labelled text box with an Apply button (Enter also applies), used by the editors that take a
 // typed value: sentinel codes, NA tokens, a date pattern, a new column name.
 
+import { InfoTip } from "../../components/InfoTip";
 import { useEffect, useId, useState } from "react";
 
 export interface TextApplyProps {
@@ -37,7 +38,10 @@ export function TextApply({ label, value, onApply, hint, error, disabled, applyL
         submit();
       }}
     >
-      <label htmlFor={id}>{label}</label>
+      <span className="label-row">
+        <label htmlFor={id}>{label}</label>
+        {hint && !error && <InfoTip label="More information">{hint}</InfoTip>}
+      </span>
       <div className="text-apply-row">
         <input
           id={id}
@@ -46,7 +50,7 @@ export function TextApply({ label, value, onApply, hint, error, disabled, applyL
           placeholder={placeholder}
           disabled={disabled}
           aria-invalid={error ? true : undefined}
-          aria-describedby={`${id}-hint`}
+          aria-describedby={error ? `${id}-hint` : undefined}
           onChange={(e) => {
             setText(e.target.value);
             onChange?.(e.target.value);
@@ -61,16 +65,10 @@ export function TextApply({ label, value, onApply, hint, error, disabled, applyL
           </button>
         )}
       </div>
-      {error ? (
+      {error && (
         <span id={`${id}-hint`} className="field-hint field-error" role="alert">
           {error}
         </span>
-      ) : (
-        hint && (
-          <span id={`${id}-hint`} className="field-hint">
-            {hint}
-          </span>
-        )
       )}
     </form>
   );

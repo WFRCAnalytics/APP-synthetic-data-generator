@@ -451,13 +451,17 @@ section[aria-labelledby="ingest-heading"] > .empty-state .empty-state-icon {
   cursor: pointer;
 }
 
+.column-nav-item {
+  background: color-mix(in srgb, var(--type, var(--color-foreground)) 6%, var(--color-background));
+}
+
 .column-nav-item:hover {
-  background: color-mix(in srgb, var(--color-foreground) 4%, var(--color-background));
+  background: color-mix(in srgb, var(--type, var(--color-foreground)) 12%, var(--color-background));
 }
 
 .column-nav-item[aria-current="true"] {
-  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-background));
-  box-shadow: inset 3px 0 0 var(--color-primary);
+  background: color-mix(in srgb, var(--type, var(--color-primary)) 18%, var(--color-background));
+  box-shadow: inset 4px 0 0 var(--type, var(--color-primary));
 }
 
 .column-nav-item:focus-visible {
@@ -498,9 +502,6 @@ section[aria-labelledby="ingest-heading"] > .empty-state .empty-state-icon {
   color: var(--color-link);
 }
 
-.column-nav-item[aria-current="true"] .column-nav-spark {
-  color: var(--color-heading);
-}
 
 .flag-attention {
   color: var(--color-wfrc-yellow);
@@ -601,9 +602,14 @@ section[aria-labelledby="ingest-heading"] > .empty-state .empty-state-icon {
   align-items: center;
 }
 
+.text-apply-row {
+  flex-wrap: wrap;
+}
+
 .text-apply-row input {
-  flex: 0 1 6rem;
+  flex: 1 1 8rem;
   min-width: 0;
+  width: auto;
 }
 
 /* The detail of one column. */
@@ -619,6 +625,25 @@ section[aria-labelledby="ingest-heading"] > .empty-state .empty-state-icon {
   gap: var(--space-3);
 }
 
+.type-chip--typed {
+  border-color: color-mix(in srgb, var(--type) 45%, var(--color-background));
+  background: color-mix(in srgb, var(--type) 10%, var(--color-background));
+}
+
+.type-chip--typed:hover {
+  background: color-mix(in srgb, var(--type) 18%, var(--color-background));
+}
+
+.type-chip--typed[aria-pressed="true"] {
+  border: 2px solid var(--type);
+  background: color-mix(in srgb, var(--type) 24%, var(--color-background));
+  color: var(--color-foreground);
+}
+
+.type-chip--typed[aria-pressed="true"] svg {
+  color: var(--type) !important;
+}
+
 .type-tile {
   display: inline-flex;
   flex: none;
@@ -626,9 +651,10 @@ section[aria-labelledby="ingest-heading"] > .empty-state .empty-state-icon {
   justify-content: center;
   width: 2.75rem;
   height: 2.75rem;
-  border: 1px solid var(--color-border);
+  border: 1px solid color-mix(in srgb, var(--type) 40%, var(--color-background));
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--color-foreground) 3%, var(--color-background));
+  background: color-mix(in srgb, var(--type) 14%, var(--color-background));
+  color: var(--type);
 }
 
 .column-card-title {
@@ -692,7 +718,7 @@ section[aria-labelledby="ingest-heading"] > .empty-state .empty-state-icon {
 }
 
 .sparkline-bar {
-  fill: var(--color-link);
+  fill: var(--type, var(--color-link));
 }
 
 .column-card-settings-title {
@@ -958,7 +984,7 @@ section[aria-labelledby] > h2 {
 
 .design-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
   gap: var(--space-3) var(--space-4);
 }
 
@@ -1130,4 +1156,88 @@ section[aria-labelledby="ingest-heading"] > .empty-state {
 .workbook-dialog .field-hint {
   display: block;
   margin-bottom: var(--space-3);
+}
+
+.dialog-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+}
+
+.dialog-title h3 {
+  margin: 0 var(--space-1) 0 0;
+}
+
+.label-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* ---- ID pattern: one small tile per position ---- */
+.id-mask-positions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  list-style: none;
+}
+
+.id-mask-positions li {
+  flex: 1 1 9.5rem;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-foreground) 3%, var(--color-background));
+}
+
+.id-mask-positions select {
+  flex: 1;
+  min-width: 0;
+  min-height: 2rem;
+}
+
+.id-mask-positions .id-mask-literal {
+  width: 2.75rem;
+  min-height: 2rem;
+  padding: 0 var(--space-1);
+  text-align: center;
+  font-family: var(--font-mono);
+}
+
+.id-mask-remove {
+  display: inline-grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-wfrc-gray);
+  cursor: pointer;
+}
+
+.id-mask-remove:hover {
+  background: color-mix(in srgb, var(--color-foreground) 8%, transparent);
+  color: var(--color-foreground);
+}
+
+.id-mask-remove:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* The fieldsets that group several controls. */
+.editor-group {
+  border-radius: var(--radius-md);
+}
+
+.text-apply .button-link {
+  font-size: var(--text-sm);
 }

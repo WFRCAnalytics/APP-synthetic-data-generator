@@ -4,6 +4,7 @@
 // optional cell range. The hints come from the workbook's packaging, never from cell values.
 
 import { useEffect, useId, useMemo, useState } from "react";
+import { InfoTip } from "../../components/InfoTip";
 import type { WorkbookChoice, WorkbookState } from "../../app/session";
 import { formatRange, parseRange, columnLetters } from "../../lib/xlsx/names";
 import { workbookSizeWarnings, workbookTooLarge } from "./sizeWarnings";
@@ -69,11 +70,34 @@ export function WorkbookDialog({ workbook, fileName, onInspect, onConfirm }: Wor
 
   return (
     <div className="card workbook-dialog" role="group" aria-labelledby={`${id}-title`}>
-      <h3 id={`${id}-title`}>Choose a sheet</h3>
-      <p className="field-hint">
-        {fileName} holds {info.sheets.length} {info.sheets.length === 1 ? "sheet" : "sheets"}. Only
-        the sheet you choose is read; nothing from the others is kept.
-      </p>
+      <div className="dialog-title">
+        <h3 id={`${id}-title`}>Choose a sheet</h3>
+        <InfoTip label="More information">
+          {fileName} holds {info.sheets.length} {info.sheets.length === 1 ? "sheet" : "sheets"}.
+          Only the sheet you choose is read; nothing from the others is kept.
+        </InfoTip>
+        {hints?.mergedCells === true && (
+          <InfoTip label="Merged cells in this sheet" tone="warning" testId="merged-note">
+            This sheet has merged cells. A merged value is read once, in its top-left cell, and the
+            other cells of the merge are blank.
+          </InfoTip>
+        )}
+        {hints?.mergedCells === "not_checked" && (
+          <InfoTip label="Merged cells were not checked" tone="warning">
+            This sheet is large, so merged cells were not checked for.
+          </InfoTip>
+        )}
+        {hints && hints.mixedFormats.length > 0 && (
+          <InfoTip label="Mixed number formats" tone="warning" testId="mixed-note">
+            {hints.mixedFormats.length === 1
+              ? "One column mixes"
+              : `${hints.mixedFormats.length} columns mix`}{" "}
+            different kinds of number format (
+            {hints.mixedFormats.map((i) => columnLetters(hints.firstCol + i)).join(", ")}); the
+            format of the first cells is used.
+          </InfoTip>
+        )}
+      </div>
 
       <div className="inline-row">
         <div className="field inline-field inline-field--grow">
@@ -86,10 +110,15 @@ export function WorkbookDialog({ workbook, fileName, onInspect, onConfirm }: Wor
               </option>
             ))}
           </select>
+          {selected?.hidden && (
+            <InfoTip label="This sheet is hidden" tone="warning" testId="sheet-hidden-note">
+              This sheet is hidden in the workbook.
+            </InfoTip>
+          )}
         </div>
         {hints && (
           <div className="field inline-field">
-            <label htmlFor={`${id}-range`}>Cell range (optional)</label>
+            <label htmlFor={`${id}-range`}>Cell range</label>
             <input
               id={`${id}-range`}
               className="inline-input--range"
@@ -98,27 +127,23 @@ export function WorkbookDialog({ workbook, fileName, onInspect, onConfirm }: Wor
               onChange={(e) => setRangeText(e.target.value)}
               placeholder="A1:H500"
             />
+            <InfoTip label="More information" align="end">
+              Optional. The table from its header row, such as{" "}
+              {formatRange({
+                firstCol: 0,
+                firstRow: skipRows,
+                lastCol: 8,
+                lastRow: skipRows + 200,
+              })}
+              . Clear it to read everything from the skipped rows.
+            </InfoTip>
           </div>
         )}
       </div>
-      {selected?.hidden && (
-        <span className="field-hint" data-testid="sheet-hidden-note">
-          This sheet is hidden in the workbook.
+      {rangeError && (
+        <span className="field-error" role="alert">
+          {rangeError}
         </span>
-      )}
-      {hints && (
-        <>
-          <p className="field-hint">
-            The range is the table from its header row, such as{" "}
-            {formatRange({ firstCol: 0, firstRow: skipRows, lastCol: 8, lastRow: skipRows + 200 })}.
-            Clear it to read everything from the skipped rows.
-          </p>
-          {rangeError && (
-            <span className="field-error" role="alert">
-              {rangeError}
-            </span>
-          )}
-        </>
       )}
 
       {!hints && (
@@ -131,7 +156,7 @@ export function WorkbookDialog({ workbook, fileName, onInspect, onConfirm }: Wor
         <>
           <div className="inline-row">
             <div className="field inline-field">
-              <label htmlFor={`${id}-skip`}>Rows to skip above the header</label>
+              <label htmlFor={`${id}-skip`}>Rows to skip</label>
               <input
                 id={`${id}-skip`}
                 className="inline-input--number"
@@ -140,6 +165,16 @@ export function WorkbookDialog({ workbook, fileName, onInspect, onConfirm }: Wor
                 aria-invalid={!skipValid}
                 onChange={(e) => setSkipText(e.target.value)}
               />
+              <InfoTip label="More information">
+                Rows above the header, such as titles.
+                {hints.suggestedSkipRows > 0 && skipText === null && (
+                  <span data-testid="skip-suggestion">
+                    {" "}
+                    Suggested: {hints.suggestedSkipRows}, because the table seems to start on row{" "}
+                    {hints.suggestedSkipRows + 1}.
+                  </span>
+                )}
+              </InfoTip>
             </div>
             <label htmlFor={`${id}-header`} className="inline-check">
               <input
@@ -148,36 +183,10 @@ export function WorkbookDialog({ workbook, fileName, onInspect, onConfirm }: Wor
                 checked={header}
                 onChange={(e) => setHeader(e.target.checked)}
               />{" "}
-              First row of the table is a header
+              First row is a header
             </label>
           </div>
-          {hints.suggestedSkipRows > 0 && skipText === null && (
-            <span className="field-hint" data-testid="skip-suggestion">
-              Suggested: {hints.suggestedSkipRows}, because the table seems to start on row{" "}
-              {hints.suggestedSkipRows + 1}.
-            </span>
-          )}
           {!skipValid && <span className="field-error">Enter a whole number, 0 or more.</span>}
-
-          {hints.mergedCells === true && (
-            <p className="field-hint" data-testid="merged-note">
-              This sheet has merged cells. A merged value is read once, in its top-left cell, and
-              the other cells of the merge are blank.
-            </p>
-          )}
-          {hints.mergedCells === "not_checked" && (
-            <p className="field-hint">This sheet is large, so merged cells were not checked for.</p>
-          )}
-          {hints.mixedFormats.length > 0 && (
-            <p className="field-hint" data-testid="mixed-note">
-              {hints.mixedFormats.length === 1
-                ? "One column mixes"
-                : `${hints.mixedFormats.length} columns mix`}{" "}
-              different kinds of number format (
-              {hints.mixedFormats.map((i) => columnLetters(hints.firstCol + i)).join(", ")}); the
-              format of the first cells is used.
-            </p>
-          )}
 
           {warnings.map((w) => (
             <div key={w} className="banner banner-warning" role="status" data-testid="size-warning">

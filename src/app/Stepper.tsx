@@ -3,7 +3,7 @@
 // steps are recomputed by the screens themselves. Start over sits at the end once there is something
 // to start over from.
 
-import { Check } from "lucide-react";
+import { Check, RotateCcw } from "lucide-react";
 import { isReachable, STEPS, type AppState, type StepId } from "./state";
 import "./Stepper.css";
 
@@ -47,6 +47,7 @@ export function Stepper({ state, onGoTo, onStartOver }: StepperProps) {
       </ol>
       {onStartOver && (
         <button type="button" className="stepper-startover" onClick={onStartOver}>
+          <RotateCcw size={14} strokeWidth={2} aria-hidden="true" />
           Start over
         </button>
       )}
