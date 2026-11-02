@@ -20,6 +20,7 @@ import { buildSpec } from "../lib/spec/build";
 import { outputKindOf, retarget, type OutputKind } from "../lib/spec/retarget";
 import { CONVERT_KINDS, isConvertKind, type ConvertKind } from "../lib/stat/detect";
 import { statFileFromCsv } from "../lib/stat/convert";
+import { workerStoppedMessage } from "./offline";
 import { profilesFromSpec, settingsFromSource } from "../lib/spec/toProfiles";
 import type { SpecFile, SpecProblem } from "../lib/spec/types";
 import type { SampleDescription } from "../lib/textgen/sample";
@@ -417,7 +418,7 @@ export class Session {
     });
     worker.onmessage = (e: MessageEvent<ProfileResponse>) => this.onProfileMessage(e.data);
     worker.onerror = () =>
-      this.set({ phase: "error", error: "The profiling worker stopped unexpectedly." });
+      this.set({ phase: "error", error: workerStoppedMessage("profiling") });
     return worker;
   }
 
@@ -760,7 +761,7 @@ export class Session {
     this.generateWorker = worker;
     worker.onmessage = (e: MessageEvent<GenerateResponse>) => this.onGenerateMessage(e.data);
     worker.onerror = () =>
-      this.setGen({ status: "error", error: "The generating worker stopped unexpectedly." });
+      this.setGen({ status: "error", error: workerStoppedMessage("generating") });
     worker.postMessage({ type: "generate", spec, seed, chunkRows: 5000 } satisfies GenerateRequest);
   }
 

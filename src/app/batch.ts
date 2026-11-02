@@ -11,6 +11,7 @@ import type { GenerateRequest, GenerateResponse } from "../workers/protocol";
 import { retarget, type OutputKind } from "../lib/spec/retarget";
 import { statFileFromCsv } from "../lib/stat/convert";
 import { isConvertKind, type ConvertKind } from "../lib/stat/detect";
+import { workerStoppedMessage } from "./offline";
 import { APP_VERSION } from "./version";
 import { exportName } from "./session";
 import type { NamedBlob } from "./saveAll";
@@ -136,7 +137,7 @@ function runSpec(spec: SpecFile, onProgress: (share: number) => void, register: 
     };
     worker.onerror = () => {
       worker.terminate();
-      reject(new Error("The generating worker stopped unexpectedly."));
+      reject(new Error(workerStoppedMessage("generating")));
     };
     worker.postMessage({ type: "generate", spec, seed: spec.seed, chunkRows: 5000 } satisfies GenerateRequest);
   });

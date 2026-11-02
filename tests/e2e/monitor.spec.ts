@@ -44,3 +44,15 @@ test("the monitor says when the computer is offline, and the app keeps working",
   await expect(page.getByTestId("pm-online")).toContainText("Offline");
   await context.setOffline(false);
 });
+
+test("the monitor says offline when the network is gone even though the browser still claims to be online", async ({ page }) => {
+  // A VPN or virtual adapter keeps navigator.onLine true with no internet: block only this site's own requests, as a dead connection does.
+  await page.goto(APP);
+  expect(await page.evaluate(() => navigator.onLine)).toBe(true);
+  await page.getByRole("button", { name: "Stays on this device" }).click();
+  await expect(page.getByTestId("pm-online")).toContainText("Online");
+  await page.route("**/connection-check*", (route) => route.abort("internetdisconnected"));
+  await expect(page.getByTestId("pm-online")).toContainText("Offline", { timeout: 15_000 });
+  await page.unroute("**/connection-check*");
+  await expect(page.getByTestId("pm-online")).toContainText("Online", { timeout: 15_000 });
+});

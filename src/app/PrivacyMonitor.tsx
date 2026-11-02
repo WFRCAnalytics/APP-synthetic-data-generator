@@ -134,11 +134,22 @@ export function PrivacyMonitor({ counts, detail, held }: PrivacyMonitorProps) {
     return () => clearInterval(timer);
   }, []);
   useEffect(() => {
-    const on = () => setOnline(true);
+    // The browser's own flag only says whether a network adapter is up, and a VPN or virtual adapter keeps it true with no internet. So
+    // while this dialog is open the page asks this site for a tiny file: any answer, even "not found", means the network works.
+    let live = true;
+    const check = () =>
+      void fetch(`${import.meta.env.BASE_URL}connection-check?${Date.now()}`, { method: "HEAD", cache: "no-store" })
+        .then(() => live && setOnline(true))
+        .catch(() => live && setOnline(false));
+    const on = () => check();
     const off = () => setOnline(false);
+    check();
+    const timer = setInterval(check, 4000);
     window.addEventListener("online", on);
     window.addEventListener("offline", off);
     return () => {
+      live = false;
+      clearInterval(timer);
       window.removeEventListener("online", on);
       window.removeEventListener("offline", off);
     };
@@ -240,7 +251,7 @@ export function PrivacyMonitor({ counts, detail, held }: PrivacyMonitorProps) {
                         </span>
                       )}
                     </td>
-                    <td>{KIND_LABEL[e.initiator] ?? e.initiator}</td>
+                    <td>{e.url.includes("connection-check") ? "connection check" : (KIND_LABEL[e.initiator] ?? e.initiator)}</td>
                     <td className="pm-address" title={shown(e, origin, base)}>
                       {e.kind === "cross" ? <strong>{shown(e, origin, base)}</strong> : shown(e, origin, base)}
                     </td>

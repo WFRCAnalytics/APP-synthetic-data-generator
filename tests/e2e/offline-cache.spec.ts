@@ -10,6 +10,7 @@ const csv = ["id,zone,income"].concat(Array.from({ length: 200 }, (_, i) => `H${
 
 async function offlineReady(page: Page) {
   await page.goto(APP);
+  await expect(page.getByTestId("offline-chip")).toContainText("Works offline", { timeout: 180_000 }); // the header says when it is safe to disconnect
   await page.getByRole("button", { name: "Stays on this device" }).click();
   await page.getByRole("tab", { name: "Stored and held" }).click();
   await expect(page.getByTestId("pm-offline")).toContainText("saved", { timeout: 180_000 });

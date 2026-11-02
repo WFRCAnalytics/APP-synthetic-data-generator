@@ -1,6 +1,6 @@
 // The offline copy (specs/034): when a page keeps one, which build of the engine it asks for, and that the hosted page and a local copy differ.
 import { describe, expect, it } from "vitest";
-import { engineVariant, offlineWanted } from "../../src/app/offline";
+import { engineVariant, offlineWanted, workerStoppedMessage } from "../../src/app/offline";
 
 const at = (protocol: string, hostname: string, search = "") => ({ protocol, hostname, search });
 
@@ -21,5 +21,17 @@ describe("offlineWanted", () => {
 describe("engineVariant", () => {
   it("is one of the two builds the site serves", () => {
     expect(["eh", "mvp"]).toContain(engineVariant());
+  });
+});
+
+describe("workerStoppedMessage", () => {
+  it("is the plain message while connected", () => {
+    expect(workerStoppedMessage("profiling")).toBe("The profiling worker stopped unexpectedly.");
+  });
+  it("says what to do when offline without a saved copy", () => {
+    Object.defineProperty(globalThis, "navigator", { value: { onLine: false }, configurable: true });
+    expect(workerStoppedMessage("generating")).toContain("You are offline");
+    expect(workerStoppedMessage("generating")).toContain("Works offline");
+    Object.defineProperty(globalThis, "navigator", { value: undefined, configurable: true });
   });
 });

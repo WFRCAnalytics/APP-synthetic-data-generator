@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useReducer, useState } from "react";
 import { AppHeader } from "./app/AppHeader";
 import { HelpGuideModal } from "./app/HelpGuideModal";
-import { NetworkCounter } from "./app/NetworkCounter";
+import { NetworkCounter, OfflineChip } from "./app/NetworkCounter";
 import { netCounter } from "./app/netMonitor";
 import { downloadBlob } from "./app/download";
 import {
@@ -78,6 +78,7 @@ export function App() {
           />
         }
       >
+        <OfflineChip />
         <NetworkCounter counter={netCounter} held={{ fileName: data.fileName, bytes: data.fileSize, rows: data.rowCount }} />
       </AppHeader>
       <LocalNotice />

@@ -40,6 +40,17 @@ export function engineVariant(): "eh" | "mvp" {
   }
 }
 
+/**
+ * What to say when a background worker stops. With no network and no saved copy of the app, that is the likely cause, and the fix is to
+ * reload while connected and wait for the header to say "Works offline"; otherwise the plain message stands.
+ */
+export function workerStoppedMessage(worker: "profiling" | "generating"): string {
+  const base = `The ${worker} worker stopped unexpectedly.`;
+  const offline = typeof navigator !== "undefined" && navigator.onLine === false;
+  if (!offline || state.phase === "ready") return base;
+  return `${base} You are offline, and the app's files were not saved yet. Reload this page while connected, wait until the header says "Works offline", then try again.`;
+}
+
 let started = false;
 
 /** Registers the worker and, once it is active, asks it to fetch the engine now. Safe to call more than once. */

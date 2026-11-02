@@ -6,6 +6,7 @@ import { ShieldAlert, ShieldCheck } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { Modal } from "../components/Modal";
 import { startNetMonitoring, type NetCounter } from "./netCounter";
+import { offlineState, subscribeOffline } from "./offline";
 import { PrivacyMonitor } from "./PrivacyMonitor";
 import "./NetworkCounter.css";
 
@@ -56,6 +57,24 @@ export function NetworkCounter({ counter, held = { fileName: "", bytes: 0, rows:
           </button>
         </div>
       </Modal>
+    </span>
+  );
+}
+
+/** Whether the app has saved its own files, so a person knows when it is safe to lose the connection. Shown only where a copy is kept. */
+export function OfflineChip() {
+  const offline = useSyncExternalStore(subscribeOffline, offlineState);
+  if (offline.phase === "off") return null;
+  const preparing = offline.phase === "preparing";
+  const text =
+    offline.phase === "ready"
+      ? "Works offline"
+      : preparing
+        ? `Saving for offline${offline.total > 0 ? `: ${Math.min(99, Math.round((offline.done / offline.total) * 100))}%` : ""}`
+        : "Offline copy incomplete";
+  return (
+    <span className={`offline-chip offline-chip--${offline.phase}`} role="status" data-testid="offline-chip" title="The app keeps its own files (never your data) so it keeps working without internet. Wait for this to say Works offline before disconnecting.">
+      {text}
     </span>
   );
 }
