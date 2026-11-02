@@ -12,8 +12,16 @@ export function readSummary(p: ColumnProfile): string {
   const codes = Object.keys(p.sentinels).length;
   if (codes > 0) parts.push(`${codes} special ${codes === 1 ? "code" : "codes"}`);
   if (p.naCount > 0) parts.push(`${n(p.naCount)} missing`);
-  return parts.join(", ");
+  const text = parts.join(", ");
+  // Where special codes can apply and none were found, say where to add them: nothing is flagged, so nothing else would point to it.
+  return takesCodes(p) && codes === 0 ? `${text}. No special codes found: add some if values like 999 mean don't know.` : text;
 }
+
+/** Whether special answer codes (-9, 998, 999) can apply to the column: numbers and categories. */
+export const takesCodes = (p: ColumnProfile): boolean => p.summary.kind === "numeric" || p.summary.kind === "categorical";
+
+/** Whether the group of how the column was read should be open when it is first shown: when it needs a look, or when special codes can apply. */
+export const readOpensByDefault = (p: ColumnProfile): boolean => readNeedsLook(p) || takesCodes(p);
 
 /** Whether the group of how the column was read needs a look: the app was unsure, or could not read it. */
 export const readNeedsLook = (p: ColumnProfile): boolean => p.status !== "ok" || p.attentionReasons.length > 0;

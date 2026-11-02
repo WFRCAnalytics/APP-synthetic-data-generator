@@ -29,7 +29,7 @@ import { SamplePreview } from "./SamplePreview";
 import { SentinelEditor } from "./SentinelEditor";
 import { ShortStringEditor } from "./ShortStringEditor";
 import { TextApply } from "./TextApply";
-import { canConnect, connectSummary, keepSummary, readNeedsLook, readSummary, writeSummary } from "./groupSummary";
+import { canConnect, connectSummary, keepSummary, readNeedsLook, readOpensByDefault, readSummary, writeSummary } from "./groupSummary";
 
 export interface ColumnEditorsProps {
   profile: ColumnProfile;
@@ -106,7 +106,7 @@ export function ColumnEditors({ profile, otherNames, busy, dateCheck, onEdit, ta
 
   return (
     <div className={`column-editors ${profile.exclude === "include" ? "" : "cg-off"}`} aria-busy={busy}>
-      <ColumnGroup id="read" icon={ScanSearch} title="How the app read this column" summary={readSummary(profile)} open={open("read", readLook)} onToggle={(o) => onGroup("read", o)} attention={readLook}>
+      <ColumnGroup id="read" icon={ScanSearch} title="How the app read this column" summary={readSummary(profile)} open={open("read", readOpensByDefault(profile))} onToggle={(o) => onGroup("read", o)} attention={readLook}>
         <div className="field">
           <label htmlFor={typeId}>Type</label>
           <select

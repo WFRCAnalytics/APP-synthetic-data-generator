@@ -125,14 +125,23 @@ describe("choices on one column", () => {
     expect(c.querySelector('[data-group="write"]')).toHaveTextContent("Same name");
   });
 
-  it("open what matters by default: what the column keeps, and nothing else unless something needs a look", async () => {
+  it("open what matters by default: how a number or category was read, and what the column keeps", async () => {
     const user = userEvent.setup();
     render(<App />);
     await toReview(user);
     const c = await pick(user, "zone");
     expect((c.querySelector('[data-group="keep"]') as HTMLDetailsElement).open).toBe(true);
     expect((c.querySelector('[data-group="write"]') as HTMLDetailsElement).open).toBe(false);
-    expect((c.querySelector('[data-group="read"]') as HTMLDetailsElement).open).toBe(false);
+    expect((c.querySelector('[data-group="read"]') as HTMLDetailsElement).open).toBe(true); // special codes can apply to a category
+  });
+
+  it("say where to add special codes when none were found", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await toReview(user);
+    const c = await pick(user, "income");
+    expect(c.querySelector('[data-group="read"]')).toHaveTextContent("No special codes found: add some if values like 999 mean don't know.");
+    expect(within(c).getByLabelText("Special answer codes")).toBeVisible();
   });
 
   it("remember which groups were opened while looking at other columns", async () => {
