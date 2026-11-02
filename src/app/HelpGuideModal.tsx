@@ -25,7 +25,7 @@ export function HelpGuideModal({ open, onClose }: HelpGuideModalProps) {
         <h3>How it works</h3>
         <ol>
           <li>
-            <strong>Ingest.</strong> Choose a CSV, Excel (.xlsx) or Parquet (.parquet) file. For a Parquet file the app shows its row count, row groups, and each column's name and type, never a value or any of the file's own notes; list, struct, map and binary columns are not read and are left out. For a CSV the app shows its delimiter, encoding, row count and column names; for a workbook it lists the sheet names, and you choose one sheet and where its table starts. Rows and cell values are never shown. Old .xls files are not read: save them as .xlsx or CSV first. The fake workbook holds only the sheet you chose and no macros.
+            <strong>Ingest.</strong> Choose a CSV, Excel (.xlsx), Parquet (.parquet) or JSON (.json, .ndjson, .jsonl) file. For a JSON file the app shows its record count, key names and the kind of each key, never a value; a list of records and one record per line both work, and the fake file comes out in the same form and layout. Keys that hold objects or lists are not read and are left out. For a Parquet file the app shows its row count, row groups, and each column's name and type, never a value or any of the file's own notes; list, struct, map and binary columns are not read and are left out. For a CSV the app shows its delimiter, encoding, row count and column names; for a workbook it lists the sheet names, and you choose one sheet and where its table starts. Rows and cell values are never shown. Old .xls files are not read: save them as .xlsx or CSV first. The fake workbook holds only the sheet you chose and no macros.
           </li>
           <li>
             <strong>Start from scratch.</strong> No real file? Choose &ldquo;Design a table&rdquo;, name it, say how many rows, and add columns one at a time: a number between two limits, a category with weights, a date range, an ID, a person&rsquo;s name. Nothing is read from anywhere; the columns are described by you.
@@ -86,7 +86,7 @@ export function HelpGuideModal({ open, onClose }: HelpGuideModalProps) {
             <strong>Memory limits table size.</strong> Tables up to about 500 MB are supported. Files in some encodings need twice their size in memory.
           </li>
           <li>
-            <strong>Not in this version.</strong> Excel and Parquet files, coordinates, languages other than US English for invented names and addresses, and several tables at once.
+            <strong>Not in this version.</strong> Nested JSON, GeoJSON, coordinates, languages other than US English for invented names and addresses, and several tables at once.
           </li>
           <li>
             <strong>Browsers.</strong> Chrome and Edge are fully supported; Firefox and Safari work and download one file at a time.

@@ -7,7 +7,7 @@ import { CircleCheck, CircleX, Download } from "lucide-react";
 import { parseSeed, type SessionState } from "../../app/session";
 import type { CheckRow } from "../../lib/generate/checks";
 import { GenerateProgress } from "./GenerateProgress";
-import { isExcelSettings } from "../../lib/profile/types";
+import { isExcelSettings, isJsonSettings } from "../../lib/profile/types";
 import { narrowIdColumns, patternFit, shortfallText } from "../../lib/profile/idCapacity";
 
 export interface GenerateScreenProps {
@@ -204,6 +204,16 @@ export function GenerateScreen(props: GenerateScreenProps) {
               </div>
               <p className="field-hint">
                 {(gen.totalBytes / 1048576).toFixed(2)} MB. Single-file download.
+                {session.settings && isJsonSettings(session.settings) && (
+                  <span data-testid="json-layout">
+                    {" "}
+                    Written as{" "}
+                    {session.settings.layout.form === "array"
+                      ? `a list of records${session.settings.layout.indent === "compact" ? " on one line" : `, indented by ${session.settings.layout.indent === "tab" ? "a tab" : session.settings.layout.indent + " spaces"}`}`
+                      : "one record per line"}
+                    .
+                  </span>
+                )}
                 {gen.codec && (
                   <span data-testid="parquet-codec">
                     {" "}

@@ -3,7 +3,7 @@
 // Runs in CI before every deploy and release, because a new DuckDB version or a failed extension download
 // would otherwise break JSON silently.
 import { existsSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
 
@@ -14,7 +14,7 @@ const FILES = [
 ];
 
 for (const { file, rows } of FILES) {
-  test.describe(file.split(/[\/]/).pop() ?? file, () => {
+  test.describe(basename(file), () => {
     test.skip(!existsSync(file), "run scripts/make-json-fixtures.py first");
 
     test("the JSON extension loads from the site and reads the records", async ({ page }) => {

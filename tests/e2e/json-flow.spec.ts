@@ -33,7 +33,7 @@ async function generateAndDownload(page: Page, filename: RegExp, seed = "42") {
 }
 
 const parseFile = (path: string, lines: boolean): Record<string, unknown>[] => {
-  const text = readFileSync(path, "utf8").replace(/^﻿/, "");
+  const text = readFileSync(path, "utf8").replace(/^\uFEFF/, "");
   return lines
     ? text
         .split(/\r?\n/)
@@ -63,6 +63,7 @@ test("an array goes in and a fake array comes out, with the same keys, order and
   await expect(page.getByTestId("filter-count")).toHaveText("Showing 8 of 8 columns");
 
   const download = await generateAndDownload(page, /Download survey_fake\.json/);
+  await expect(page.getByTestId("json-layout")).toContainText("a list of records, indented by 2 spaces");
   expect(download.suggestedFilename()).toBe("survey_fake.json");
   const fakePath = testInfo.outputPath("survey_fake.json");
   await download.saveAs(fakePath);
@@ -87,6 +88,7 @@ test("one record per line goes in and one record per line comes out", async ({ p
   await expect(page.getByTestId("json-summary")).toContainText("One record per line");
   await review(page);
   const download = await generateAndDownload(page, /Download survey_fake\.ndjson/);
+  await expect(page.getByTestId("json-layout")).toContainText("one record per line");
   expect(download.suggestedFilename()).toBe("survey_fake.ndjson");
   const fakePath = testInfo.outputPath("survey_fake.ndjson");
   await download.saveAs(fakePath);

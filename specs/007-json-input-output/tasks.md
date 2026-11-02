@@ -52,7 +52,7 @@
 - [x] T015 [US1] Worker and protocol: detect JSON by content in `src/workers/profile.worker.ts` (the first non-space character, never the extension), add `inspectJson`/`jsonInfo` messages to `src/workers/protocol.ts`, map every failure to the fixed messages of T010, discard the engine's message, load the extension before reading
 - [x] T016 [US1] Generation: `src/lib/generate/json.ts` (`jsonLayoutOf(spec)`, `writeJson(spec, seed, chunkRows, observe, between)` using the CSV path's rendering and `convert.ts`), the JSON branch in `src/lib/generate/table.ts` and `src/workers/generate.worker.ts` streaming chunks
 - [x] T017 [US1] App: `src/app/session.ts` (file kind, `fakeBlob` mime `application/json`, the file name with `_fake` keeping `.json`, `.ndjson` or `.jsonl`), `src/features/ingest/IngestScreen.tsx` accepts `.json`, `.ndjson` and `.jsonl` and tells the user "One file at a time", a `JsonSummary` card in `src/features/ingest/` (record count, form, keys with kinds, no value) using the tooltip component for notes, the size warning in `sizeWarnings.ts` (research R7)
-- [ ] T018 [P] [US1] Component test `tests/component/json-ingest.test.tsx`: the card shows names, kinds and counts and no value; the size warning and stop; refused files show the fixed messages
+- [x] T018 [P] [US1] Component test `tests/component/json-ingest.test.tsx`: the card shows names, kinds and counts and no value; the size warning and stop; refused files show the fixed messages
 - [x] T019 [P] [US1] End-to-end test `tests/e2e/json-flow.spec.ts`: choose `survey.json`, review, generate, download, then read the download with the same code as the real file (`JSON.parse`) and the app's own engine, and compare keys, order and value kinds; check the file name is `survey_fake.json`
 
 **Checkpoint**: an array round trip works through the app.
@@ -67,7 +67,7 @@
 
 - [x] T020 [P] [US2] Extend `tests/integration/json-load.test.ts` and `json-readback.test.ts` to `survey.ndjson` and `survey_crlf_bom.json`: form detected by content whatever the extension, CRLF and the byte-order mark recorded and reproduced, blank lines tolerated on read
 - [x] T021 [P] [US2] Extend `tests/e2e/json-flow.spec.ts` with the lines file: the download has one complete record per line, no brackets, no commas between records, the extension kept (`.ndjson`, `.jsonl`)
-- [ ] T022 [US2] Make the form follow the spec: an array spec writes an array and a lines spec writes lines, in `src/lib/generate/json.ts` and the Generate screen note that states the form and layout; a `.json` file with one record per line is a lines file
+- [x] T022 [US2] Make the form follow the spec: an array spec writes an array and a lines spec writes lines, in `src/lib/generate/json.ts` and the Generate screen note that states the form and layout; a `.json` file with one record per line is a lines file
 
 **Checkpoint**: both forms round trip.
 
@@ -80,7 +80,7 @@
 **Independent Test**: `npx vitest run json-load json-readback` with `nulls_missing.json` and `mixed.json`, and the keys in `json-flow`.
 
 - [x] T023 [P] [US3] Integration tests: `nulls_missing.json` gives the recorded `json_nulls` and `json_missing` per key, and the written file has exactly those counts of `null` and absent keys (SC-005); `mixed.json` loads as text with the `mixed_kinds` reason
-- [ ] T024 [P] [US3] Component test: the review card shows the mixed warning as a tooltip, a null-only key reads as an all-missing column, and the type shown for each kind matches the spec's `json_kind`
+- [x] T024 [P] [US3] Component test: the review card shows the mixed warning as a tooltip, a null-only key reads as an all-missing column, and the type shown for each kind matches the spec's `json_kind`
 - [x] T025 [US3] Carry kinds and counts through profiling and the spec: `src/lib/spec/build.ts` and `toProfiles.ts` write and read `json_kind`, `json_nulls`, `json_missing`; `src/workers/profile.worker.ts` keeps them through re-profiling and type overrides; the writer follows the recorded kind when the user changes a column's profiled type (a numeric key changed to category still writes numbers; a text key changed to number is refused with a plain message)
 - [x] T026 [US3] The `mixed_kinds` reason in `src/lib/profile/types.ts` with its fixed text in `src/features/review/summary.ts`, shown on the card and in the attention list
 
@@ -107,10 +107,10 @@
 ## Phase 7: Polish and Cross-Cutting
 
 - [ ] T032 [P] Loading a JSON spec without the file: `Session.loadSpecFile` accepts version 5, the output form follows `source.form`, CSV, Excel and Parquet specs keep their formats; tests in `tests/component/spec-load.test.tsx` and `tests/e2e/json-flow.spec.ts` (SC-004: same spec and seed, same bytes)
-- [ ] T033 [P] Offline release: add a JSON session to `tests/e2e/offline-zip.spec.ts` (output equal to the hosted build's), and confirm `verify-release` lists the `json` extension files in the checksum list
-- [ ] T034 [P] Accessibility: extend `tests/e2e/a11y.spec.ts` to the JSON summary card and the mixed and unsupported tooltips in light and dark themes
+- [x] T033 [P] Offline release: add a JSON session to `tests/e2e/offline-zip.spec.ts` (output equal to the hosted build's), and confirm `verify-release` lists the `json` extension files in the checksum list
+- [x] T034 [P] Accessibility: extend `tests/e2e/a11y.spec.ts` to the JSON summary card and the mixed and unsupported tooltips in light and dark themes
 - [ ] T035 [P] Browser matrix: add `json-flow` and `json-privacy` to the Firefox and WebKit `testMatch` in `playwright.config.ts` and to `scripts/e2e-browsers.mjs`; run Chromium, Edge (`PW_EDGE=1`), Firefox and WebKit
-- [ ] T036 [P] Docs: Help guide, `SpecContentsNotice.tsx` (a JSON spec holds the file name, form, layout, key kinds and null and missing counts, no value), `README.md`, and the file-type chips on the start screen
+- [x] T036 [P] Docs: Help guide, `SpecContentsNotice.tsx` (a JSON spec holds the file name, form, layout, key kinds and null and missing counts, no value), `README.md`, and the file-type chips on the start screen
 - [ ] T037 Large file: `python scripts/make-json-fixtures.py --large` writes a file of about 500 MB of expanded data to `.fixtures/`; add `tests/e2e/json-scale.spec.ts` gated by its presence (SC-006)
 - [ ] T038 Record in `research.md` the bundle size, audit notes (no new dependency) and the measured results; run quickstart scenarios 1 to 6 and record results and the SC-009 person sign-off line as open
 - [ ] T039 Run `/speckit-converge`, tag nothing, and mark the slice complete

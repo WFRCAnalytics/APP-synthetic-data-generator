@@ -16,7 +16,7 @@ lengths and patterns), never rows, ID lists, free text, personal identifiers or 
 
 ## How it works
 
-1. **Ingest** (or **Design**): pick a CSV, an Excel workbook (.xlsx) or a Parquet file (.parquet), or start from scratch and describe the columns of a table yourself (numbers between limits, categories with weights, dates, IDs, invented personal details). For a CSV the app detects delimiter, encoding,
+1. **Ingest** (or **Design**): pick a CSV, an Excel workbook (.xlsx), a Parquet file (.parquet) or a JSON file (.json, .ndjson, .jsonl), or start from scratch and describe the columns of a table yourself (numbers between limits, categories with weights, dates, IDs, invented personal details). For a CSV the app detects delimiter, encoding,
    quoting and header; for a workbook it lists the sheet names and you choose a sheet, the rows to
    skip above the header and, if you like, a cell range. It shows the row count, column count and
    column names, never row values.
@@ -30,7 +30,7 @@ name and format) and run the code locally.
 
 ## Status
 
-The first slices work end to end for CSV, Excel (.xlsx) and Parquet files: choose a file, confirm the detected settings,
+The first slices work end to end for CSV, Excel (.xlsx), Parquet and JSON files: choose a file, confirm the detected settings,
 review and change how each column is understood, generate, check that every summary was met, and
 download the fake file and the spec.
 
@@ -55,8 +55,14 @@ download the fake file and the spec.
   same nullability, with values kept inside each type's range. Nested columns (list, struct, map) and raw
   binary are not read or faked. The file's key-value notes, creator text and row-group statistics are never
   read; the fake file names this app as its creator and carries none of them. Pages are gzip-compressed.
-- **Spec files**: save, load (version 1 to 4), and generate from a spec alone. A workbook spec makes a
-  workbook.
+- **JSON**: a list of records or one record per line (NDJSON, JSON Lines) is read in the browser with DuckDB's
+  JSON reader (a file this site serves itself, nothing fetched from elsewhere), and only its structure is shown:
+  record count, keys in first-seen order and the kind of each key. The fake file is in the same form, with the same
+  keys in the same order, each written as the same JSON kind (number, text, true or false), exactly as many nulls
+  and as many absent keys as the real file, and the same indent, line ending and trailing newline. A key that mixes
+  numbers and text is read and written as text; keys that hold objects or lists are not read or faked.
+- **Spec files**: save, load (the current version only while the app is in beta), and generate from a spec alone.
+  A workbook spec makes a workbook, a Parquet spec a Parquet file and a JSON spec a JSON file.
 - **Privacy**: a live request counter and a strict Content-Security-Policy. Tests prove that no
   real value of any column reaches the page, the spec, the preview, the file or an error message.
 - **Browsers**: tested in Chrome, Edge, Firefox and WebKit.
@@ -105,6 +111,7 @@ gives the same file checksums (file times come from the commit date, or `SOURCE_
 - [`specs/003-excel-input-output/`](specs/003-excel-input-output/): Excel workbooks in and out
 - [`specs/005-parquet-input-output/`](specs/005-parquet-input-output/): Parquet files in and out
 - [`specs/004-offline-zip-release/`](specs/004-offline-zip-release/): the offline zip release
+- [`specs/007-json-input-output/`](specs/007-json-input-output/): JSON files in and out
 
 ## Development
 

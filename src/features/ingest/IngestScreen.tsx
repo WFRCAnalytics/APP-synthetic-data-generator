@@ -111,6 +111,7 @@ export function IngestScreen({
             <span>CSV</span>
             <span>Excel</span>
             <span>Parquet</span>
+            <span>JSON</span>
           </div>
           <div className="field field--drop">
             <span className="label-row">

@@ -128,3 +128,24 @@ for (const scheme of ["light", "dark"] as const) {
     });
   });
 }
+
+for (const scheme of ["light", "dark"] as const) {
+  test.describe(`${scheme} theme, JSON`, () => {
+    test.use({ colorScheme: scheme });
+
+    test("the structure card, the tips and the review of a nested and mixed file have no detectable violations", async ({ page }) => {
+      await page.goto(APP);
+      await page.locator("#file-input").setInputFiles(join(HERE, "../fixtures/json/nested.json"));
+      await expect(page.getByTestId("json-summary")).toBeVisible({ timeout: 60_000 });
+      await expect(page.getByTestId("json-unsupported-note")).toBeAttached();
+      expect(await violations(page), "JSON structure card").toEqual([]);
+
+      await page.getByRole("button", { name: "Profile this file" }).click();
+      await expect(page.getByRole("heading", { name: "Review columns" })).toBeVisible({ timeout: 180_000 });
+      await pick(page, "detail");
+      expect(await violations(page), "Review of a JSON file").toEqual([]);
+      await pick(page, "label");
+      expect(await violations(page), "Review of a JSON text key").toEqual([]);
+    });
+  });
+}
