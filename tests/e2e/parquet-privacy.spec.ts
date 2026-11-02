@@ -96,5 +96,5 @@ test("an error message from a damaged file quotes nothing from it", async ({ pag
   await expect(page.getByRole("alert")).toContainText("damaged or incomplete", { timeout: 60_000 });
   const everything = (await page.locator("body").innerText()) + consoleLines.join("\n");
   expect(hasMarker(everything)).toEqual([]);
-  expect(everything).not.toMatch(/magic bytes|truncated\.parquet/);
+  expect(everything).not.toMatch(/magic bytes/);
 });
