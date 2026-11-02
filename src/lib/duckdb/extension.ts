@@ -3,7 +3,7 @@
 import { AppError } from "../errors";
 
 /** The extensions the app loads from its own folder. */
-export type SiteExtension = "excel" | "parquet";
+export type SiteExtension = "excel" | "parquet" | "json";
 
 /**
  * Loads an extension from the site's own folder (specs/003 research R2, specs/005 research R1).
@@ -29,3 +29,6 @@ export const loadExcelExtension = (run: (sql: string) => Promise<unknown>, repos
 
 /** The Parquet reader (specs/005). */
 export const loadParquetExtension = (run: (sql: string) => Promise<unknown>, repositoryUrl: string): Promise<void> => loadExtension(run, repositoryUrl, "parquet");
+
+/** The JSON reader (specs/007). */
+export const loadJsonExtension = (run: (sql: string) => Promise<unknown>, repositoryUrl: string): Promise<void> => loadExtension(run, repositoryUrl, "json");

@@ -36,7 +36,7 @@ jobs:
       - run: npm run build
       - run: npx vitest run tests/unit/bundle-wordlists.test.ts
       - run: npx playwright install --with-deps chromium
-      - run: npx playwright test --project=chromium excel-extension parquet-extension
+      - run: npx playwright test --project=chromium excel-extension parquet-extension json-extension
       # The tag must be the release of package.json's version (a dry run also accepts v<version>-<pre-release>)
       - run: node scripts/check-tag.mjs "$TAG" ${{ github.event_name == 'workflow_dispatch' && '--dry-run' || '' }}
       - run: node scripts/build-release.mjs

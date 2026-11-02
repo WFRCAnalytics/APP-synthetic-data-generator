@@ -1,0 +1,4002 @@
+[
+  {
+    "hh_id": "HH-1000",
+    "person_no": 1,
+    "age": 18,
+    "income": 49144.95,
+    "mode": "car",
+    "has_pass": true,
+    "trip_date": "2023-05-01",
+    "name": "PRIVATE-MARKER Person 0"
+  },
+  {
+    "hh_id": "HH-1001",
+    "person_no": 2,
+    "age": 25,
+    "income": 33576.43,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-02",
+    "name": "PRIVATE-MARKER Person 1"
+  },
+  {
+    "hh_id": "HH-1002",
+    "person_no": 3,
+    "age": 32,
+    "income": 78584.1,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-03",
+    "name": "PRIVATE-MARKER Person 2"
+  },
+  {
+    "hh_id": "HH-1003",
+    "person_no": 4,
+    "age": 39,
+    "income": 26519.27,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-04",
+    "name": "PRIVATE-MARKER Person 3"
+  },
+  {
+    "hh_id": "HH-1004",
+    "person_no": 5,
+    "age": 46,
+    "income": 68229.38,
+    "mode": "rail",
+    "has_pass": true,
+    "trip_date": "2023-05-05",
+    "name": "PRIVATE-MARKER Person 4"
+  },
+  {
+    "hh_id": "HH-1005",
+    "person_no": 1,
+    "age": 53,
+    "income": 52912.0,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-06",
+    "name": "PRIVATE-MARKER Person 5"
+  },
+  {
+    "hh_id": "HH-1006",
+    "person_no": 2,
+    "age": 60,
+    "income": 25219.9,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-07",
+    "name": "PRIVATE-MARKER Person 6"
+  },
+  {
+    "hh_id": "HH-1007",
+    "person_no": 3,
+    "age": 67,
+    "income": 65669.22,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-08",
+    "name": "PRIVATE-MARKER Person 7"
+  },
+  {
+    "hh_id": "HH-1008",
+    "person_no": 4,
+    "age": 74,
+    "income": 23374.61,
+    "mode": "bike",
+    "has_pass": true,
+    "trip_date": "2023-05-09",
+    "name": "PRIVATE-MARKER Person 8"
+  },
+  {
+    "hh_id": "HH-1009",
+    "person_no": 5,
+    "age": 81,
+    "income": 59028.11,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-10",
+    "name": "PRIVATE-MARKER Person 9"
+  },
+  {
+    "hh_id": "HH-1010",
+    "person_no": 1,
+    "age": 18,
+    "income": 26286.99,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-11",
+    "name": "PRIVATE-MARKER Person 10"
+  },
+  {
+    "hh_id": "HH-1011",
+    "person_no": 2,
+    "age": 25,
+    "income": 28164.17,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-12",
+    "name": "PRIVATE-MARKER Person 11"
+  },
+  {
+    "hh_id": "HH-1012",
+    "person_no": 3,
+    "age": 32,
+    "income": 58206.73,
+    "mode": "walk",
+    "has_pass": true,
+    "trip_date": "2023-05-13",
+    "name": "PRIVATE-MARKER Person 12"
+  },
+  {
+    "hh_id": "HH-1013",
+    "person_no": 4,
+    "age": 39,
+    "income": 94416.69,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-14",
+    "name": "PRIVATE-MARKER Person 13"
+  },
+  {
+    "hh_id": "HH-1014",
+    "person_no": 5,
+    "age": 46,
+    "income": 31142.18,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-15",
+    "name": "PRIVATE-MARKER Person 14"
+  },
+  {
+    "hh_id": "HH-1015",
+    "person_no": 1,
+    "age": 53,
+    "income": 40091.51,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-16",
+    "name": "PRIVATE-MARKER Person 15"
+  },
+  {
+    "hh_id": "HH-1016",
+    "person_no": 2,
+    "age": 60,
+    "income": 76468.99,
+    "mode": "bus",
+    "has_pass": true,
+    "trip_date": "2023-05-17",
+    "name": "PRIVATE-MARKER Person 16"
+  },
+  {
+    "hh_id": "HH-1017",
+    "person_no": 3,
+    "age": 67,
+    "income": 105293.8,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-18",
+    "name": "PRIVATE-MARKER Person 17"
+  },
+  {
+    "hh_id": "HH-1018",
+    "person_no": 4,
+    "age": 74,
+    "income": 71939.27,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-19",
+    "name": "PRIVATE-MARKER Person 18"
+  },
+  {
+    "hh_id": "HH-1019",
+    "person_no": 5,
+    "age": 81,
+    "income": 55701.24,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-20",
+    "name": "PRIVATE-MARKER Person 19"
+  },
+  {
+    "hh_id": "HH-1020",
+    "person_no": 1,
+    "age": 18,
+    "income": 107862.96,
+    "mode": "car",
+    "has_pass": true,
+    "trip_date": "2023-05-21",
+    "name": "PRIVATE-MARKER Person 20"
+  },
+  {
+    "hh_id": "HH-1021",
+    "person_no": 2,
+    "age": 25,
+    "income": 24192.44,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-22",
+    "name": "PRIVATE-MARKER Person 21"
+  },
+  {
+    "hh_id": "HH-1022",
+    "person_no": 3,
+    "age": 32,
+    "income": 97262.16,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-23",
+    "name": "PRIVATE-MARKER Person 22"
+  },
+  {
+    "hh_id": "HH-1023",
+    "person_no": 4,
+    "age": 39,
+    "income": 46064.84,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-24",
+    "name": "PRIVATE-MARKER Person 23"
+  },
+  {
+    "hh_id": "HH-1024",
+    "person_no": 5,
+    "age": 46,
+    "income": 32982.96,
+    "mode": "rail",
+    "has_pass": true,
+    "trip_date": "2023-05-25",
+    "name": "PRIVATE-MARKER Person 24"
+  },
+  {
+    "hh_id": "HH-1025",
+    "person_no": 1,
+    "age": 53,
+    "income": 30601.3,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-26",
+    "name": "PRIVATE-MARKER Person 25"
+  },
+  {
+    "hh_id": "HH-1026",
+    "person_no": 2,
+    "age": 60,
+    "income": 47763.36,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-27",
+    "name": "PRIVATE-MARKER Person 26"
+  },
+  {
+    "hh_id": "HH-1027",
+    "person_no": 3,
+    "age": 67,
+    "income": 93451.37,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-28",
+    "name": "PRIVATE-MARKER Person 27"
+  },
+  {
+    "hh_id": "HH-1028",
+    "person_no": 4,
+    "age": 74,
+    "income": 36265.37,
+    "mode": "bike",
+    "has_pass": true,
+    "trip_date": "2023-05-01",
+    "name": "PRIVATE-MARKER Person 28"
+  },
+  {
+    "hh_id": "HH-1029",
+    "person_no": 5,
+    "age": 81,
+    "income": 72344.01,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-02",
+    "name": "PRIVATE-MARKER Person 29"
+  },
+  {
+    "hh_id": "HH-1030",
+    "person_no": 1,
+    "age": 18,
+    "income": 77502.21,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-03",
+    "name": "PRIVATE-MARKER Person 30"
+  },
+  {
+    "hh_id": "HH-1031",
+    "person_no": 2,
+    "age": 25,
+    "income": 53515.78,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-04",
+    "name": "PRIVATE-MARKER Person 31"
+  },
+  {
+    "hh_id": "HH-1032",
+    "person_no": 3,
+    "age": 32,
+    "income": 69297.0,
+    "mode": "walk",
+    "has_pass": true,
+    "trip_date": "2023-05-05",
+    "name": "PRIVATE-MARKER Person 32"
+  },
+  {
+    "hh_id": "HH-1033",
+    "person_no": 4,
+    "age": 39,
+    "income": 25651.01,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-06",
+    "name": "PRIVATE-MARKER Person 33"
+  },
+  {
+    "hh_id": "HH-1034",
+    "person_no": 5,
+    "age": 46,
+    "income": 25364.11,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-07",
+    "name": "PRIVATE-MARKER Person 34"
+  },
+  {
+    "hh_id": "HH-1035",
+    "person_no": 1,
+    "age": 53,
+    "income": 38536.28,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-08",
+    "name": "PRIVATE-MARKER Person 35"
+  },
+  {
+    "hh_id": "HH-1036",
+    "person_no": 2,
+    "age": 60,
+    "income": 81236.0,
+    "mode": "bus",
+    "has_pass": true,
+    "trip_date": "2023-05-09",
+    "name": "PRIVATE-MARKER Person 36"
+  },
+  {
+    "hh_id": "HH-1037",
+    "person_no": 3,
+    "age": 67,
+    "income": 58483.31,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-10",
+    "name": "PRIVATE-MARKER Person 37"
+  },
+  {
+    "hh_id": "HH-1038",
+    "person_no": 4,
+    "age": 74,
+    "income": 48273.25,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-11",
+    "name": "PRIVATE-MARKER Person 38"
+  },
+  {
+    "hh_id": "HH-1039",
+    "person_no": 5,
+    "age": 81,
+    "income": 72700.57,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-12",
+    "name": "PRIVATE-MARKER Person 39"
+  },
+  {
+    "hh_id": "HH-1040",
+    "person_no": 1,
+    "age": 18,
+    "income": 60786.59,
+    "mode": "car",
+    "has_pass": true,
+    "trip_date": "2023-05-13",
+    "name": "PRIVATE-MARKER Person 40"
+  },
+  {
+    "hh_id": "HH-1041",
+    "person_no": 2,
+    "age": 25,
+    "income": 46979.03,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-14",
+    "name": "PRIVATE-MARKER Person 41"
+  },
+  {
+    "hh_id": "HH-1042",
+    "person_no": 3,
+    "age": 32,
+    "income": 91494.15,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-15",
+    "name": "PRIVATE-MARKER Person 42"
+  },
+  {
+    "hh_id": "HH-1043",
+    "person_no": 4,
+    "age": 39,
+    "income": 82909.5,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-16",
+    "name": "PRIVATE-MARKER Person 43"
+  },
+  {
+    "hh_id": "HH-1044",
+    "person_no": 5,
+    "age": 46,
+    "income": 41968.69,
+    "mode": "rail",
+    "has_pass": true,
+    "trip_date": "2023-05-17",
+    "name": "PRIVATE-MARKER Person 44"
+  },
+  {
+    "hh_id": "HH-1045",
+    "person_no": 1,
+    "age": 53,
+    "income": 71698.13,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-18",
+    "name": "PRIVATE-MARKER Person 45"
+  },
+  {
+    "hh_id": "HH-1046",
+    "person_no": 2,
+    "age": 60,
+    "income": 67267.69,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-19",
+    "name": "PRIVATE-MARKER Person 46"
+  },
+  {
+    "hh_id": "HH-1047",
+    "person_no": 3,
+    "age": 67,
+    "income": 98762.37,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-20",
+    "name": "PRIVATE-MARKER Person 47"
+  },
+  {
+    "hh_id": "HH-1048",
+    "person_no": 4,
+    "age": 74,
+    "income": 85650.08,
+    "mode": "bike",
+    "has_pass": true,
+    "trip_date": "2023-05-21",
+    "name": "PRIVATE-MARKER Person 48"
+  },
+  {
+    "hh_id": "HH-1049",
+    "person_no": 5,
+    "age": 81,
+    "income": 45914.4,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-22",
+    "name": "PRIVATE-MARKER Person 49"
+  },
+  {
+    "hh_id": "HH-1050",
+    "person_no": 1,
+    "age": 18,
+    "income": 108215.74,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-23",
+    "name": "PRIVATE-MARKER Person 50"
+  },
+  {
+    "hh_id": "HH-1051",
+    "person_no": 2,
+    "age": 25,
+    "income": 30625.92,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-24",
+    "name": "PRIVATE-MARKER Person 51"
+  },
+  {
+    "hh_id": "HH-1052",
+    "person_no": 3,
+    "age": 32,
+    "income": 57631.05,
+    "mode": "walk",
+    "has_pass": true,
+    "trip_date": "2023-05-25",
+    "name": "PRIVATE-MARKER Person 52"
+  },
+  {
+    "hh_id": "HH-1053",
+    "person_no": 4,
+    "age": 39,
+    "income": 88142.68,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-26",
+    "name": "PRIVATE-MARKER Person 53"
+  },
+  {
+    "hh_id": "HH-1054",
+    "person_no": 5,
+    "age": 46,
+    "income": 33678.61,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-27",
+    "name": "PRIVATE-MARKER Person 54"
+  },
+  {
+    "hh_id": "HH-1055",
+    "person_no": 1,
+    "age": 53,
+    "income": 64006.68,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-28",
+    "name": "PRIVATE-MARKER Person 55"
+  },
+  {
+    "hh_id": "HH-1056",
+    "person_no": 2,
+    "age": 60,
+    "income": 23528.65,
+    "mode": "bus",
+    "has_pass": true,
+    "trip_date": "2023-05-01",
+    "name": "PRIVATE-MARKER Person 56"
+  },
+  {
+    "hh_id": "HH-1057",
+    "person_no": 3,
+    "age": 67,
+    "income": 80139.43,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-02",
+    "name": "PRIVATE-MARKER Person 57"
+  },
+  {
+    "hh_id": "HH-1058",
+    "person_no": 4,
+    "age": 74,
+    "income": 88811.38,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-03",
+    "name": "PRIVATE-MARKER Person 58"
+  },
+  {
+    "hh_id": "HH-1059",
+    "person_no": 5,
+    "age": 81,
+    "income": 71572.33,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-04",
+    "name": "PRIVATE-MARKER Person 59"
+  },
+  {
+    "hh_id": "HH-1060",
+    "person_no": 1,
+    "age": 18,
+    "income": 98793.0,
+    "mode": "car",
+    "has_pass": true,
+    "trip_date": "2023-05-05",
+    "name": "PRIVATE-MARKER Person 60"
+  },
+  {
+    "hh_id": "HH-1061",
+    "person_no": 2,
+    "age": 25,
+    "income": 48237.28,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-06",
+    "name": "PRIVATE-MARKER Person 61"
+  },
+  {
+    "hh_id": "HH-1062",
+    "person_no": 3,
+    "age": 32,
+    "income": 82576.58,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-07",
+    "name": "PRIVATE-MARKER Person 62"
+  },
+  {
+    "hh_id": "HH-1063",
+    "person_no": 4,
+    "age": 39,
+    "income": 73493.29,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-08",
+    "name": "PRIVATE-MARKER Person 63"
+  },
+  {
+    "hh_id": "HH-1064",
+    "person_no": 5,
+    "age": 46,
+    "income": 72190.57,
+    "mode": "rail",
+    "has_pass": true,
+    "trip_date": "2023-05-09",
+    "name": "PRIVATE-MARKER Person 64"
+  },
+  {
+    "hh_id": "HH-1065",
+    "person_no": 1,
+    "age": 53,
+    "income": 61058.48,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-10",
+    "name": "PRIVATE-MARKER Person 65"
+  },
+  {
+    "hh_id": "HH-1066",
+    "person_no": 2,
+    "age": 60,
+    "income": 95597.1,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-11",
+    "name": "PRIVATE-MARKER Person 66"
+  },
+  {
+    "hh_id": "HH-1067",
+    "person_no": 3,
+    "age": 67,
+    "income": 105021.3,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-12",
+    "name": "PRIVATE-MARKER Person 67"
+  },
+  {
+    "hh_id": "HH-1068",
+    "person_no": 4,
+    "age": 74,
+    "income": 62668.85,
+    "mode": "bike",
+    "has_pass": true,
+    "trip_date": "2023-05-13",
+    "name": "PRIVATE-MARKER Person 68"
+  },
+  {
+    "hh_id": "HH-1069",
+    "person_no": 5,
+    "age": 81,
+    "income": 79773.7,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-14",
+    "name": "PRIVATE-MARKER Person 69"
+  },
+  {
+    "hh_id": "HH-1070",
+    "person_no": 1,
+    "age": 18,
+    "income": 25460.25,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-15",
+    "name": "PRIVATE-MARKER Person 70"
+  },
+  {
+    "hh_id": "HH-1071",
+    "person_no": 2,
+    "age": 25,
+    "income": 83134.28,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-16",
+    "name": "PRIVATE-MARKER Person 71"
+  },
+  {
+    "hh_id": "HH-1072",
+    "person_no": 3,
+    "age": 32,
+    "income": 78241.6,
+    "mode": "walk",
+    "has_pass": true,
+    "trip_date": "2023-05-17",
+    "name": "PRIVATE-MARKER Person 72"
+  },
+  {
+    "hh_id": "HH-1073",
+    "person_no": 4,
+    "age": 39,
+    "income": 109378.63,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-18",
+    "name": "PRIVATE-MARKER Person 73"
+  },
+  {
+    "hh_id": "HH-1074",
+    "person_no": 5,
+    "age": 46,
+    "income": 93973.23,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-19",
+    "name": "PRIVATE-MARKER Person 74"
+  },
+  {
+    "hh_id": "HH-1075",
+    "person_no": 1,
+    "age": 53,
+    "income": 45613.6,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-20",
+    "name": "PRIVATE-MARKER Person 75"
+  },
+  {
+    "hh_id": "HH-1076",
+    "person_no": 2,
+    "age": 60,
+    "income": 54721.23,
+    "mode": "bus",
+    "has_pass": true,
+    "trip_date": "2023-05-21",
+    "name": "PRIVATE-MARKER Person 76"
+  },
+  {
+    "hh_id": "HH-1077",
+    "person_no": 3,
+    "age": 67,
+    "income": 80178.74,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-22",
+    "name": "PRIVATE-MARKER Person 77"
+  },
+  {
+    "hh_id": "HH-1078",
+    "person_no": 4,
+    "age": 74,
+    "income": 22030.66,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-23",
+    "name": "PRIVATE-MARKER Person 78"
+  },
+  {
+    "hh_id": "HH-1079",
+    "person_no": 5,
+    "age": 81,
+    "income": 61552.58,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-24",
+    "name": "PRIVATE-MARKER Person 79"
+  },
+  {
+    "hh_id": "HH-1000",
+    "person_no": 1,
+    "age": 18,
+    "income": 35124.35,
+    "mode": "car",
+    "has_pass": true,
+    "trip_date": "2023-05-25",
+    "name": "PRIVATE-MARKER Person 80"
+  },
+  {
+    "hh_id": "HH-1001",
+    "person_no": 2,
+    "age": 25,
+    "income": 30538.62,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-26",
+    "name": "PRIVATE-MARKER Person 81"
+  },
+  {
+    "hh_id": "HH-1002",
+    "person_no": 3,
+    "age": 32,
+    "income": 25305.9,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-27",
+    "name": "PRIVATE-MARKER Person 82"
+  },
+  {
+    "hh_id": "HH-1003",
+    "person_no": 4,
+    "age": 39,
+    "income": 89140.97,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-28",
+    "name": "PRIVATE-MARKER Person 83"
+  },
+  {
+    "hh_id": "HH-1004",
+    "person_no": 5,
+    "age": 46,
+    "income": 31640.62,
+    "mode": "rail",
+    "has_pass": true,
+    "trip_date": "2023-05-01",
+    "name": "PRIVATE-MARKER Person 84"
+  },
+  {
+    "hh_id": "HH-1005",
+    "person_no": 1,
+    "age": 53,
+    "income": 42285.34,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-02",
+    "name": "PRIVATE-MARKER Person 85"
+  },
+  {
+    "hh_id": "HH-1006",
+    "person_no": 2,
+    "age": 60,
+    "income": 55185.47,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-03",
+    "name": "PRIVATE-MARKER Person 86"
+  },
+  {
+    "hh_id": "HH-1007",
+    "person_no": 3,
+    "age": 67,
+    "income": 98427.98,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-04",
+    "name": "PRIVATE-MARKER Person 87"
+  },
+  {
+    "hh_id": "HH-1008",
+    "person_no": 4,
+    "age": 74,
+    "income": 27252.32,
+    "mode": "bike",
+    "has_pass": true,
+    "trip_date": "2023-05-05",
+    "name": "PRIVATE-MARKER Person 88"
+  },
+  {
+    "hh_id": "HH-1009",
+    "person_no": 5,
+    "age": 81,
+    "income": 60426.87,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-06",
+    "name": "PRIVATE-MARKER Person 89"
+  },
+  {
+    "hh_id": "HH-1010",
+    "person_no": 1,
+    "age": 18,
+    "income": 69449.59,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-07",
+    "name": "PRIVATE-MARKER Person 90"
+  },
+  {
+    "hh_id": "HH-1011",
+    "person_no": 2,
+    "age": 25,
+    "income": 99504.54,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-08",
+    "name": "PRIVATE-MARKER Person 91"
+  },
+  {
+    "hh_id": "HH-1012",
+    "person_no": 3,
+    "age": 32,
+    "income": 93735.19,
+    "mode": "walk",
+    "has_pass": true,
+    "trip_date": "2023-05-09",
+    "name": "PRIVATE-MARKER Person 92"
+  },
+  {
+    "hh_id": "HH-1013",
+    "person_no": 4,
+    "age": 39,
+    "income": 97758.6,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-10",
+    "name": "PRIVATE-MARKER Person 93"
+  },
+  {
+    "hh_id": "HH-1014",
+    "person_no": 5,
+    "age": 46,
+    "income": 45057.9,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-11",
+    "name": "PRIVATE-MARKER Person 94"
+  },
+  {
+    "hh_id": "HH-1015",
+    "person_no": 1,
+    "age": 53,
+    "income": 57376.69,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-12",
+    "name": "PRIVATE-MARKER Person 95"
+  },
+  {
+    "hh_id": "HH-1016",
+    "person_no": 2,
+    "age": 60,
+    "income": 52289.4,
+    "mode": "bus",
+    "has_pass": true,
+    "trip_date": "2023-05-13",
+    "name": "PRIVATE-MARKER Person 96"
+  },
+  {
+    "hh_id": "HH-1017",
+    "person_no": 3,
+    "age": 67,
+    "income": 99577.35,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-14",
+    "name": "PRIVATE-MARKER Person 97"
+  },
+  {
+    "hh_id": "HH-1018",
+    "person_no": 4,
+    "age": 74,
+    "income": 106195.81,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-15",
+    "name": "PRIVATE-MARKER Person 98"
+  },
+  {
+    "hh_id": "HH-1019",
+    "person_no": 5,
+    "age": 81,
+    "income": 33582.88,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-16",
+    "name": "PRIVATE-MARKER Person 99"
+  },
+  {
+    "hh_id": "HH-1020",
+    "person_no": 1,
+    "age": 18,
+    "income": 35859.6,
+    "mode": "car",
+    "has_pass": true,
+    "trip_date": "2023-05-17",
+    "name": "PRIVATE-MARKER Person 100"
+  },
+  {
+    "hh_id": "HH-1021",
+    "person_no": 2,
+    "age": 25,
+    "income": 40876.12,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-18",
+    "name": "PRIVATE-MARKER Person 101"
+  },
+  {
+    "hh_id": "HH-1022",
+    "person_no": 3,
+    "age": 32,
+    "income": 41000.25,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-19",
+    "name": "PRIVATE-MARKER Person 102"
+  },
+  {
+    "hh_id": "HH-1023",
+    "person_no": 4,
+    "age": 39,
+    "income": 63646.65,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-20",
+    "name": "PRIVATE-MARKER Person 103"
+  },
+  {
+    "hh_id": "HH-1024",
+    "person_no": 5,
+    "age": 46,
+    "income": 73021.12,
+    "mode": "rail",
+    "has_pass": true,
+    "trip_date": "2023-05-21",
+    "name": "PRIVATE-MARKER Person 104"
+  },
+  {
+    "hh_id": "HH-1025",
+    "person_no": 1,
+    "age": 53,
+    "income": 43647.2,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-22",
+    "name": "PRIVATE-MARKER Person 105"
+  },
+  {
+    "hh_id": "HH-1026",
+    "person_no": 2,
+    "age": 60,
+    "income": 20368.42,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-23",
+    "name": "PRIVATE-MARKER Person 106"
+  },
+  {
+    "hh_id": "HH-1027",
+    "person_no": 3,
+    "age": 67,
+    "income": 57705.19,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-24",
+    "name": "PRIVATE-MARKER Person 107"
+  },
+  {
+    "hh_id": "HH-1028",
+    "person_no": 4,
+    "age": 74,
+    "income": 53232.82,
+    "mode": "bike",
+    "has_pass": true,
+    "trip_date": "2023-05-25",
+    "name": "PRIVATE-MARKER Person 108"
+  },
+  {
+    "hh_id": "HH-1029",
+    "person_no": 5,
+    "age": 81,
+    "income": 70970.71,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-26",
+    "name": "PRIVATE-MARKER Person 109"
+  },
+  {
+    "hh_id": "HH-1030",
+    "person_no": 1,
+    "age": 18,
+    "income": 105778.81,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-27",
+    "name": "PRIVATE-MARKER Person 110"
+  },
+  {
+    "hh_id": "HH-1031",
+    "person_no": 2,
+    "age": 25,
+    "income": 82144.43,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-28",
+    "name": "PRIVATE-MARKER Person 111"
+  },
+  {
+    "hh_id": "HH-1032",
+    "person_no": 3,
+    "age": 32,
+    "income": 66394.23,
+    "mode": "walk",
+    "has_pass": true,
+    "trip_date": "2023-05-01",
+    "name": "PRIVATE-MARKER Person 112"
+  },
+  {
+    "hh_id": "HH-1033",
+    "person_no": 4,
+    "age": 39,
+    "income": 75583.35,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-02",
+    "name": "PRIVATE-MARKER Person 113"
+  },
+  {
+    "hh_id": "HH-1034",
+    "person_no": 5,
+    "age": 46,
+    "income": 80858.01,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-03",
+    "name": "PRIVATE-MARKER Person 114"
+  },
+  {
+    "hh_id": "HH-1035",
+    "person_no": 1,
+    "age": 53,
+    "income": 24859.36,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-04",
+    "name": "PRIVATE-MARKER Person 115"
+  },
+  {
+    "hh_id": "HH-1036",
+    "person_no": 2,
+    "age": 60,
+    "income": 100957.97,
+    "mode": "bus",
+    "has_pass": true,
+    "trip_date": "2023-05-05",
+    "name": "PRIVATE-MARKER Person 116"
+  },
+  {
+    "hh_id": "HH-1037",
+    "person_no": 3,
+    "age": 67,
+    "income": 90197.25,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-06",
+    "name": "PRIVATE-MARKER Person 117"
+  },
+  {
+    "hh_id": "HH-1038",
+    "person_no": 4,
+    "age": 74,
+    "income": 98706.19,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-07",
+    "name": "PRIVATE-MARKER Person 118"
+  },
+  {
+    "hh_id": "HH-1039",
+    "person_no": 5,
+    "age": 81,
+    "income": 91808.58,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-08",
+    "name": "PRIVATE-MARKER Person 119"
+  },
+  {
+    "hh_id": "HH-1040",
+    "person_no": 1,
+    "age": 18,
+    "income": 55314.1,
+    "mode": "car",
+    "has_pass": true,
+    "trip_date": "2023-05-09",
+    "name": "PRIVATE-MARKER Person 120"
+  },
+  {
+    "hh_id": "HH-1041",
+    "person_no": 2,
+    "age": 25,
+    "income": 55908.09,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-10",
+    "name": "PRIVATE-MARKER Person 121"
+  },
+  {
+    "hh_id": "HH-1042",
+    "person_no": 3,
+    "age": 32,
+    "income": 29318.34,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-11",
+    "name": "PRIVATE-MARKER Person 122"
+  },
+  {
+    "hh_id": "HH-1043",
+    "person_no": 4,
+    "age": 39,
+    "income": 77086.06,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-12",
+    "name": "PRIVATE-MARKER Person 123"
+  },
+  {
+    "hh_id": "HH-1044",
+    "person_no": 5,
+    "age": 46,
+    "income": 25602.3,
+    "mode": "rail",
+    "has_pass": true,
+    "trip_date": "2023-05-13",
+    "name": "PRIVATE-MARKER Person 124"
+  },
+  {
+    "hh_id": "HH-1045",
+    "person_no": 1,
+    "age": 53,
+    "income": 26061.29,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-14",
+    "name": "PRIVATE-MARKER Person 125"
+  },
+  {
+    "hh_id": "HH-1046",
+    "person_no": 2,
+    "age": 60,
+    "income": 38788.69,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-15",
+    "name": "PRIVATE-MARKER Person 126"
+  },
+  {
+    "hh_id": "HH-1047",
+    "person_no": 3,
+    "age": 67,
+    "income": 34607.29,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-16",
+    "name": "PRIVATE-MARKER Person 127"
+  },
+  {
+    "hh_id": "HH-1048",
+    "person_no": 4,
+    "age": 74,
+    "income": 50604.83,
+    "mode": "bike",
+    "has_pass": true,
+    "trip_date": "2023-05-17",
+    "name": "PRIVATE-MARKER Person 128"
+  },
+  {
+    "hh_id": "HH-1049",
+    "person_no": 5,
+    "age": 81,
+    "income": 24731.8,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-18",
+    "name": "PRIVATE-MARKER Person 129"
+  },
+  {
+    "hh_id": "HH-1050",
+    "person_no": 1,
+    "age": 18,
+    "income": 20021.0,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-19",
+    "name": "PRIVATE-MARKER Person 130"
+  },
+  {
+    "hh_id": "HH-1051",
+    "person_no": 2,
+    "age": 25,
+    "income": 33613.84,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-20",
+    "name": "PRIVATE-MARKER Person 131"
+  },
+  {
+    "hh_id": "HH-1052",
+    "person_no": 3,
+    "age": 32,
+    "income": 29131.79,
+    "mode": "walk",
+    "has_pass": true,
+    "trip_date": "2023-05-21",
+    "name": "PRIVATE-MARKER Person 132"
+  },
+  {
+    "hh_id": "HH-1053",
+    "person_no": 4,
+    "age": 39,
+    "income": 52724.89,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-22",
+    "name": "PRIVATE-MARKER Person 133"
+  },
+  {
+    "hh_id": "HH-1054",
+    "person_no": 5,
+    "age": 46,
+    "income": 22295.08,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-23",
+    "name": "PRIVATE-MARKER Person 134"
+  },
+  {
+    "hh_id": "HH-1055",
+    "person_no": 1,
+    "age": 53,
+    "income": 98689.91,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-24",
+    "name": "PRIVATE-MARKER Person 135"
+  },
+  {
+    "hh_id": "HH-1056",
+    "person_no": 2,
+    "age": 60,
+    "income": 75266.21,
+    "mode": "bus",
+    "has_pass": true,
+    "trip_date": "2023-05-25",
+    "name": "PRIVATE-MARKER Person 136"
+  },
+  {
+    "hh_id": "HH-1057",
+    "person_no": 3,
+    "age": 67,
+    "income": 33369.54,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-26",
+    "name": "PRIVATE-MARKER Person 137"
+  },
+  {
+    "hh_id": "HH-1058",
+    "person_no": 4,
+    "age": 74,
+    "income": 42703.2,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-27",
+    "name": "PRIVATE-MARKER Person 138"
+  },
+  {
+    "hh_id": "HH-1059",
+    "person_no": 5,
+    "age": 81,
+    "income": 51265.06,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-28",
+    "name": "PRIVATE-MARKER Person 139"
+  },
+  {
+    "hh_id": "HH-1060",
+    "person_no": 1,
+    "age": 18,
+    "income": 52774.71,
+    "mode": "car",
+    "has_pass": true,
+    "trip_date": "2023-05-01",
+    "name": "PRIVATE-MARKER Person 140"
+  },
+  {
+    "hh_id": "HH-1061",
+    "person_no": 2,
+    "age": 25,
+    "income": 31055.8,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-02",
+    "name": "PRIVATE-MARKER Person 141"
+  },
+  {
+    "hh_id": "HH-1062",
+    "person_no": 3,
+    "age": 32,
+    "income": 96404.32,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-03",
+    "name": "PRIVATE-MARKER Person 142"
+  },
+  {
+    "hh_id": "HH-1063",
+    "person_no": 4,
+    "age": 39,
+    "income": 109379.24,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-04",
+    "name": "PRIVATE-MARKER Person 143"
+  },
+  {
+    "hh_id": "HH-1064",
+    "person_no": 5,
+    "age": 46,
+    "income": 61939.05,
+    "mode": "rail",
+    "has_pass": true,
+    "trip_date": "2023-05-05",
+    "name": "PRIVATE-MARKER Person 144"
+  },
+  {
+    "hh_id": "HH-1065",
+    "person_no": 1,
+    "age": 53,
+    "income": 63545.12,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-06",
+    "name": "PRIVATE-MARKER Person 145"
+  },
+  {
+    "hh_id": "HH-1066",
+    "person_no": 2,
+    "age": 60,
+    "income": 27729.62,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-07",
+    "name": "PRIVATE-MARKER Person 146"
+  },
+  {
+    "hh_id": "HH-1067",
+    "person_no": 3,
+    "age": 67,
+    "income": 29196.89,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-08",
+    "name": "PRIVATE-MARKER Person 147"
+  },
+  {
+    "hh_id": "HH-1068",
+    "person_no": 4,
+    "age": 74,
+    "income": 50837.23,
+    "mode": "bike",
+    "has_pass": true,
+    "trip_date": "2023-05-09",
+    "name": "PRIVATE-MARKER Person 148"
+  },
+  {
+    "hh_id": "HH-1069",
+    "person_no": 5,
+    "age": 81,
+    "income": 43828.12,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-10",
+    "name": "PRIVATE-MARKER Person 149"
+  },
+  {
+    "hh_id": "HH-1070",
+    "person_no": 1,
+    "age": 18,
+    "income": 94596.98,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-11",
+    "name": "PRIVATE-MARKER Person 150"
+  },
+  {
+    "hh_id": "HH-1071",
+    "person_no": 2,
+    "age": 25,
+    "income": 34529.47,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-12",
+    "name": "PRIVATE-MARKER Person 151"
+  },
+  {
+    "hh_id": "HH-1072",
+    "person_no": 3,
+    "age": 32,
+    "income": 22078.61,
+    "mode": "walk",
+    "has_pass": true,
+    "trip_date": "2023-05-13",
+    "name": "PRIVATE-MARKER Person 152"
+  },
+  {
+    "hh_id": "HH-1073",
+    "person_no": 4,
+    "age": 39,
+    "income": 105588.7,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-14",
+    "name": "PRIVATE-MARKER Person 153"
+  },
+  {
+    "hh_id": "HH-1074",
+    "person_no": 5,
+    "age": 46,
+    "income": 67543.17,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-15",
+    "name": "PRIVATE-MARKER Person 154"
+  },
+  {
+    "hh_id": "HH-1075",
+    "person_no": 1,
+    "age": 53,
+    "income": 33194.23,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-16",
+    "name": "PRIVATE-MARKER Person 155"
+  },
+  {
+    "hh_id": "HH-1076",
+    "person_no": 2,
+    "age": 60,
+    "income": 68885.52,
+    "mode": "bus",
+    "has_pass": true,
+    "trip_date": "2023-05-17",
+    "name": "PRIVATE-MARKER Person 156"
+  },
+  {
+    "hh_id": "HH-1077",
+    "person_no": 3,
+    "age": 67,
+    "income": 22433.82,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-18",
+    "name": "PRIVATE-MARKER Person 157"
+  },
+  {
+    "hh_id": "HH-1078",
+    "person_no": 4,
+    "age": 74,
+    "income": 67529.85,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-19",
+    "name": "PRIVATE-MARKER Person 158"
+  },
+  {
+    "hh_id": "HH-1079",
+    "person_no": 5,
+    "age": 81,
+    "income": 108065.11,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-20",
+    "name": "PRIVATE-MARKER Person 159"
+  },
+  {
+    "hh_id": "HH-1000",
+    "person_no": 1,
+    "age": 18,
+    "income": 97699.25,
+    "mode": "car",
+    "has_pass": true,
+    "trip_date": "2023-05-21",
+    "name": "PRIVATE-MARKER Person 160"
+  },
+  {
+    "hh_id": "HH-1001",
+    "person_no": 2,
+    "age": 25,
+    "income": 82657.71,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-22",
+    "name": "PRIVATE-MARKER Person 161"
+  },
+  {
+    "hh_id": "HH-1002",
+    "person_no": 3,
+    "age": 32,
+    "income": 43500.37,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-23",
+    "name": "PRIVATE-MARKER Person 162"
+  },
+  {
+    "hh_id": "HH-1003",
+    "person_no": 4,
+    "age": 39,
+    "income": 53002.98,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-24",
+    "name": "PRIVATE-MARKER Person 163"
+  },
+  {
+    "hh_id": "HH-1004",
+    "person_no": 5,
+    "age": 46,
+    "income": 35033.78,
+    "mode": "rail",
+    "has_pass": true,
+    "trip_date": "2023-05-25",
+    "name": "PRIVATE-MARKER Person 164"
+  },
+  {
+    "hh_id": "HH-1005",
+    "person_no": 1,
+    "age": 53,
+    "income": 89474.41,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-26",
+    "name": "PRIVATE-MARKER Person 165"
+  },
+  {
+    "hh_id": "HH-1006",
+    "person_no": 2,
+    "age": 60,
+    "income": 67933.32,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-27",
+    "name": "PRIVATE-MARKER Person 166"
+  },
+  {
+    "hh_id": "HH-1007",
+    "person_no": 3,
+    "age": 67,
+    "income": 90114.94,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-28",
+    "name": "PRIVATE-MARKER Person 167"
+  },
+  {
+    "hh_id": "HH-1008",
+    "person_no": 4,
+    "age": 74,
+    "income": 49669.85,
+    "mode": "bike",
+    "has_pass": true,
+    "trip_date": "2023-05-01",
+    "name": "PRIVATE-MARKER Person 168"
+  },
+  {
+    "hh_id": "HH-1009",
+    "person_no": 5,
+    "age": 81,
+    "income": 40073.75,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-02",
+    "name": "PRIVATE-MARKER Person 169"
+  },
+  {
+    "hh_id": "HH-1010",
+    "person_no": 1,
+    "age": 18,
+    "income": 93036.01,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-03",
+    "name": "PRIVATE-MARKER Person 170"
+  },
+  {
+    "hh_id": "HH-1011",
+    "person_no": 2,
+    "age": 25,
+    "income": 108643.34,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-04",
+    "name": "PRIVATE-MARKER Person 171"
+  },
+  {
+    "hh_id": "HH-1012",
+    "person_no": 3,
+    "age": 32,
+    "income": 96736.59,
+    "mode": "walk",
+    "has_pass": true,
+    "trip_date": "2023-05-05",
+    "name": "PRIVATE-MARKER Person 172"
+  },
+  {
+    "hh_id": "HH-1013",
+    "person_no": 4,
+    "age": 39,
+    "income": 92547.07,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-06",
+    "name": "PRIVATE-MARKER Person 173"
+  },
+  {
+    "hh_id": "HH-1014",
+    "person_no": 5,
+    "age": 46,
+    "income": 93649.96,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-07",
+    "name": "PRIVATE-MARKER Person 174"
+  },
+  {
+    "hh_id": "HH-1015",
+    "person_no": 1,
+    "age": 53,
+    "income": 86588.57,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-08",
+    "name": "PRIVATE-MARKER Person 175"
+  },
+  {
+    "hh_id": "HH-1016",
+    "person_no": 2,
+    "age": 60,
+    "income": 40406.55,
+    "mode": "bus",
+    "has_pass": true,
+    "trip_date": "2023-05-09",
+    "name": "PRIVATE-MARKER Person 176"
+  },
+  {
+    "hh_id": "HH-1017",
+    "person_no": 3,
+    "age": 67,
+    "income": 66587.49,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-10",
+    "name": "PRIVATE-MARKER Person 177"
+  },
+  {
+    "hh_id": "HH-1018",
+    "person_no": 4,
+    "age": 74,
+    "income": 52000.63,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-11",
+    "name": "PRIVATE-MARKER Person 178"
+  },
+  {
+    "hh_id": "HH-1019",
+    "person_no": 5,
+    "age": 81,
+    "income": 22608.21,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-12",
+    "name": "PRIVATE-MARKER Person 179"
+  },
+  {
+    "hh_id": "HH-1020",
+    "person_no": 1,
+    "age": 18,
+    "income": 22514.34,
+    "mode": "car",
+    "has_pass": true,
+    "trip_date": "2023-05-13",
+    "name": "PRIVATE-MARKER Person 180"
+  },
+  {
+    "hh_id": "HH-1021",
+    "person_no": 2,
+    "age": 25,
+    "income": 45147.67,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-14",
+    "name": "PRIVATE-MARKER Person 181"
+  },
+  {
+    "hh_id": "HH-1022",
+    "person_no": 3,
+    "age": 32,
+    "income": 43325.69,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-15",
+    "name": "PRIVATE-MARKER Person 182"
+  },
+  {
+    "hh_id": "HH-1023",
+    "person_no": 4,
+    "age": 39,
+    "income": 82326.97,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-16",
+    "name": "PRIVATE-MARKER Person 183"
+  },
+  {
+    "hh_id": "HH-1024",
+    "person_no": 5,
+    "age": 46,
+    "income": 106086.36,
+    "mode": "rail",
+    "has_pass": true,
+    "trip_date": "2023-05-17",
+    "name": "PRIVATE-MARKER Person 184"
+  },
+  {
+    "hh_id": "HH-1025",
+    "person_no": 1,
+    "age": 53,
+    "income": 60250.49,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-18",
+    "name": "PRIVATE-MARKER Person 185"
+  },
+  {
+    "hh_id": "HH-1026",
+    "person_no": 2,
+    "age": 60,
+    "income": 104331.91,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-19",
+    "name": "PRIVATE-MARKER Person 186"
+  },
+  {
+    "hh_id": "HH-1027",
+    "person_no": 3,
+    "age": 67,
+    "income": 108923.43,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-20",
+    "name": "PRIVATE-MARKER Person 187"
+  },
+  {
+    "hh_id": "HH-1028",
+    "person_no": 4,
+    "age": 74,
+    "income": 105950.06,
+    "mode": "bike",
+    "has_pass": true,
+    "trip_date": "2023-05-21",
+    "name": "PRIVATE-MARKER Person 188"
+  },
+  {
+    "hh_id": "HH-1029",
+    "person_no": 5,
+    "age": 81,
+    "income": 52817.23,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-22",
+    "name": "PRIVATE-MARKER Person 189"
+  },
+  {
+    "hh_id": "HH-1030",
+    "person_no": 1,
+    "age": 18,
+    "income": 39841.61,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-23",
+    "name": "PRIVATE-MARKER Person 190"
+  },
+  {
+    "hh_id": "HH-1031",
+    "person_no": 2,
+    "age": 25,
+    "income": 40416.12,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-24",
+    "name": "PRIVATE-MARKER Person 191"
+  },
+  {
+    "hh_id": "HH-1032",
+    "person_no": 3,
+    "age": 32,
+    "income": 37703.55,
+    "mode": "walk",
+    "has_pass": true,
+    "trip_date": "2023-05-25",
+    "name": "PRIVATE-MARKER Person 192"
+  },
+  {
+    "hh_id": "HH-1033",
+    "person_no": 4,
+    "age": 39,
+    "income": 38393.6,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-26",
+    "name": "PRIVATE-MARKER Person 193"
+  },
+  {
+    "hh_id": "HH-1034",
+    "person_no": 5,
+    "age": 46,
+    "income": 76165.98,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-27",
+    "name": "PRIVATE-MARKER Person 194"
+  },
+  {
+    "hh_id": "HH-1035",
+    "person_no": 1,
+    "age": 53,
+    "income": 101027.75,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-28",
+    "name": "PRIVATE-MARKER Person 195"
+  },
+  {
+    "hh_id": "HH-1036",
+    "person_no": 2,
+    "age": 60,
+    "income": 95639.2,
+    "mode": "bus",
+    "has_pass": true,
+    "trip_date": "2023-05-01",
+    "name": "PRIVATE-MARKER Person 196"
+  },
+  {
+    "hh_id": "HH-1037",
+    "person_no": 3,
+    "age": 67,
+    "income": 63152.61,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-02",
+    "name": "PRIVATE-MARKER Person 197"
+  },
+  {
+    "hh_id": "HH-1038",
+    "person_no": 4,
+    "age": 74,
+    "income": 78768.02,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-03",
+    "name": "PRIVATE-MARKER Person 198"
+  },
+  {
+    "hh_id": "HH-1039",
+    "person_no": 5,
+    "age": 81,
+    "income": 91967.94,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-04",
+    "name": "PRIVATE-MARKER Person 199"
+  },
+  {
+    "hh_id": "HH-1040",
+    "person_no": 1,
+    "age": 18,
+    "income": 27630.06,
+    "mode": "car",
+    "has_pass": true,
+    "trip_date": "2023-05-05",
+    "name": "PRIVATE-MARKER Person 200"
+  },
+  {
+    "hh_id": "HH-1041",
+    "person_no": 2,
+    "age": 25,
+    "income": 79452.71,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-06",
+    "name": "PRIVATE-MARKER Person 201"
+  },
+  {
+    "hh_id": "HH-1042",
+    "person_no": 3,
+    "age": 32,
+    "income": 101879.94,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-07",
+    "name": "PRIVATE-MARKER Person 202"
+  },
+  {
+    "hh_id": "HH-1043",
+    "person_no": 4,
+    "age": 39,
+    "income": 90407.26,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-08",
+    "name": "PRIVATE-MARKER Person 203"
+  },
+  {
+    "hh_id": "HH-1044",
+    "person_no": 5,
+    "age": 46,
+    "income": 87512.64,
+    "mode": "rail",
+    "has_pass": true,
+    "trip_date": "2023-05-09",
+    "name": "PRIVATE-MARKER Person 204"
+  },
+  {
+    "hh_id": "HH-1045",
+    "person_no": 1,
+    "age": 53,
+    "income": 63022.95,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-10",
+    "name": "PRIVATE-MARKER Person 205"
+  },
+  {
+    "hh_id": "HH-1046",
+    "person_no": 2,
+    "age": 60,
+    "income": 36066.95,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-11",
+    "name": "PRIVATE-MARKER Person 206"
+  },
+  {
+    "hh_id": "HH-1047",
+    "person_no": 3,
+    "age": 67,
+    "income": 91022.19,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-12",
+    "name": "PRIVATE-MARKER Person 207"
+  },
+  {
+    "hh_id": "HH-1048",
+    "person_no": 4,
+    "age": 74,
+    "income": 49926.55,
+    "mode": "bike",
+    "has_pass": true,
+    "trip_date": "2023-05-13",
+    "name": "PRIVATE-MARKER Person 208"
+  },
+  {
+    "hh_id": "HH-1049",
+    "person_no": 5,
+    "age": 81,
+    "income": 92074.12,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-14",
+    "name": "PRIVATE-MARKER Person 209"
+  },
+  {
+    "hh_id": "HH-1050",
+    "person_no": 1,
+    "age": 18,
+    "income": 107449.16,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-15",
+    "name": "PRIVATE-MARKER Person 210"
+  },
+  {
+    "hh_id": "HH-1051",
+    "person_no": 2,
+    "age": 25,
+    "income": 55625.46,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-16",
+    "name": "PRIVATE-MARKER Person 211"
+  },
+  {
+    "hh_id": "HH-1052",
+    "person_no": 3,
+    "age": 32,
+    "income": 56124.81,
+    "mode": "walk",
+    "has_pass": true,
+    "trip_date": "2023-05-17",
+    "name": "PRIVATE-MARKER Person 212"
+  },
+  {
+    "hh_id": "HH-1053",
+    "person_no": 4,
+    "age": 39,
+    "income": 105211.73,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-18",
+    "name": "PRIVATE-MARKER Person 213"
+  },
+  {
+    "hh_id": "HH-1054",
+    "person_no": 5,
+    "age": 46,
+    "income": 85231.88,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-19",
+    "name": "PRIVATE-MARKER Person 214"
+  },
+  {
+    "hh_id": "HH-1055",
+    "person_no": 1,
+    "age": 53,
+    "income": 35300.33,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-20",
+    "name": "PRIVATE-MARKER Person 215"
+  },
+  {
+    "hh_id": "HH-1056",
+    "person_no": 2,
+    "age": 60,
+    "income": 31433.45,
+    "mode": "bus",
+    "has_pass": true,
+    "trip_date": "2023-05-21",
+    "name": "PRIVATE-MARKER Person 216"
+  },
+  {
+    "hh_id": "HH-1057",
+    "person_no": 3,
+    "age": 67,
+    "income": 33603.56,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-22",
+    "name": "PRIVATE-MARKER Person 217"
+  },
+  {
+    "hh_id": "HH-1058",
+    "person_no": 4,
+    "age": 74,
+    "income": 101436.69,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-23",
+    "name": "PRIVATE-MARKER Person 218"
+  },
+  {
+    "hh_id": "HH-1059",
+    "person_no": 5,
+    "age": 81,
+    "income": 92585.18,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-24",
+    "name": "PRIVATE-MARKER Person 219"
+  },
+  {
+    "hh_id": "HH-1060",
+    "person_no": 1,
+    "age": 18,
+    "income": 33155.69,
+    "mode": "car",
+    "has_pass": true,
+    "trip_date": "2023-05-25",
+    "name": "PRIVATE-MARKER Person 220"
+  },
+  {
+    "hh_id": "HH-1061",
+    "person_no": 2,
+    "age": 25,
+    "income": 94385.94,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-26",
+    "name": "PRIVATE-MARKER Person 221"
+  },
+  {
+    "hh_id": "HH-1062",
+    "person_no": 3,
+    "age": 32,
+    "income": 108227.53,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-27",
+    "name": "PRIVATE-MARKER Person 222"
+  },
+  {
+    "hh_id": "HH-1063",
+    "person_no": 4,
+    "age": 39,
+    "income": 79154.15,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-28",
+    "name": "PRIVATE-MARKER Person 223"
+  },
+  {
+    "hh_id": "HH-1064",
+    "person_no": 5,
+    "age": 46,
+    "income": 51536.68,
+    "mode": "rail",
+    "has_pass": true,
+    "trip_date": "2023-05-01",
+    "name": "PRIVATE-MARKER Person 224"
+  },
+  {
+    "hh_id": "HH-1065",
+    "person_no": 1,
+    "age": 53,
+    "income": 69379.4,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-02",
+    "name": "PRIVATE-MARKER Person 225"
+  },
+  {
+    "hh_id": "HH-1066",
+    "person_no": 2,
+    "age": 60,
+    "income": 31788.55,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-03",
+    "name": "PRIVATE-MARKER Person 226"
+  },
+  {
+    "hh_id": "HH-1067",
+    "person_no": 3,
+    "age": 67,
+    "income": 21281.86,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-04",
+    "name": "PRIVATE-MARKER Person 227"
+  },
+  {
+    "hh_id": "HH-1068",
+    "person_no": 4,
+    "age": 74,
+    "income": 107380.12,
+    "mode": "bike",
+    "has_pass": true,
+    "trip_date": "2023-05-05",
+    "name": "PRIVATE-MARKER Person 228"
+  },
+  {
+    "hh_id": "HH-1069",
+    "person_no": 5,
+    "age": 81,
+    "income": 78470.72,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-06",
+    "name": "PRIVATE-MARKER Person 229"
+  },
+  {
+    "hh_id": "HH-1070",
+    "person_no": 1,
+    "age": 18,
+    "income": 67392.29,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-07",
+    "name": "PRIVATE-MARKER Person 230"
+  },
+  {
+    "hh_id": "HH-1071",
+    "person_no": 2,
+    "age": 25,
+    "income": 104026.23,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-08",
+    "name": "PRIVATE-MARKER Person 231"
+  },
+  {
+    "hh_id": "HH-1072",
+    "person_no": 3,
+    "age": 32,
+    "income": 59042.85,
+    "mode": "walk",
+    "has_pass": true,
+    "trip_date": "2023-05-09",
+    "name": "PRIVATE-MARKER Person 232"
+  },
+  {
+    "hh_id": "HH-1073",
+    "person_no": 4,
+    "age": 39,
+    "income": 98456.86,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-10",
+    "name": "PRIVATE-MARKER Person 233"
+  },
+  {
+    "hh_id": "HH-1074",
+    "person_no": 5,
+    "age": 46,
+    "income": 94353.97,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-11",
+    "name": "PRIVATE-MARKER Person 234"
+  },
+  {
+    "hh_id": "HH-1075",
+    "person_no": 1,
+    "age": 53,
+    "income": 38993.81,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-12",
+    "name": "PRIVATE-MARKER Person 235"
+  },
+  {
+    "hh_id": "HH-1076",
+    "person_no": 2,
+    "age": 60,
+    "income": 42665.13,
+    "mode": "bus",
+    "has_pass": true,
+    "trip_date": "2023-05-13",
+    "name": "PRIVATE-MARKER Person 236"
+  },
+  {
+    "hh_id": "HH-1077",
+    "person_no": 3,
+    "age": 67,
+    "income": 46367.0,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-14",
+    "name": "PRIVATE-MARKER Person 237"
+  },
+  {
+    "hh_id": "HH-1078",
+    "person_no": 4,
+    "age": 74,
+    "income": 41648.55,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-15",
+    "name": "PRIVATE-MARKER Person 238"
+  },
+  {
+    "hh_id": "HH-1079",
+    "person_no": 5,
+    "age": 81,
+    "income": 72779.35,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-16",
+    "name": "PRIVATE-MARKER Person 239"
+  },
+  {
+    "hh_id": "HH-1000",
+    "person_no": 1,
+    "age": 18,
+    "income": 43342.83,
+    "mode": "car",
+    "has_pass": true,
+    "trip_date": "2023-05-17",
+    "name": "PRIVATE-MARKER Person 240"
+  },
+  {
+    "hh_id": "HH-1001",
+    "person_no": 2,
+    "age": 25,
+    "income": 57711.13,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-18",
+    "name": "PRIVATE-MARKER Person 241"
+  },
+  {
+    "hh_id": "HH-1002",
+    "person_no": 3,
+    "age": 32,
+    "income": 31796.63,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-19",
+    "name": "PRIVATE-MARKER Person 242"
+  },
+  {
+    "hh_id": "HH-1003",
+    "person_no": 4,
+    "age": 39,
+    "income": 101901.54,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-20",
+    "name": "PRIVATE-MARKER Person 243"
+  },
+  {
+    "hh_id": "HH-1004",
+    "person_no": 5,
+    "age": 46,
+    "income": 51840.56,
+    "mode": "rail",
+    "has_pass": true,
+    "trip_date": "2023-05-21",
+    "name": "PRIVATE-MARKER Person 244"
+  },
+  {
+    "hh_id": "HH-1005",
+    "person_no": 1,
+    "age": 53,
+    "income": 61234.49,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-22",
+    "name": "PRIVATE-MARKER Person 245"
+  },
+  {
+    "hh_id": "HH-1006",
+    "person_no": 2,
+    "age": 60,
+    "income": 72501.39,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-23",
+    "name": "PRIVATE-MARKER Person 246"
+  },
+  {
+    "hh_id": "HH-1007",
+    "person_no": 3,
+    "age": 67,
+    "income": 101386.71,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-24",
+    "name": "PRIVATE-MARKER Person 247"
+  },
+  {
+    "hh_id": "HH-1008",
+    "person_no": 4,
+    "age": 74,
+    "income": 57856.54,
+    "mode": "bike",
+    "has_pass": true,
+    "trip_date": "2023-05-25",
+    "name": "PRIVATE-MARKER Person 248"
+  },
+  {
+    "hh_id": "HH-1009",
+    "person_no": 5,
+    "age": 81,
+    "income": 102594.9,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-26",
+    "name": "PRIVATE-MARKER Person 249"
+  },
+  {
+    "hh_id": "HH-1010",
+    "person_no": 1,
+    "age": 18,
+    "income": 65148.4,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-27",
+    "name": "PRIVATE-MARKER Person 250"
+  },
+  {
+    "hh_id": "HH-1011",
+    "person_no": 2,
+    "age": 25,
+    "income": 67864.25,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-28",
+    "name": "PRIVATE-MARKER Person 251"
+  },
+  {
+    "hh_id": "HH-1012",
+    "person_no": 3,
+    "age": 32,
+    "income": 67115.59,
+    "mode": "walk",
+    "has_pass": true,
+    "trip_date": "2023-05-01",
+    "name": "PRIVATE-MARKER Person 252"
+  },
+  {
+    "hh_id": "HH-1013",
+    "person_no": 4,
+    "age": 39,
+    "income": 21683.44,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-02",
+    "name": "PRIVATE-MARKER Person 253"
+  },
+  {
+    "hh_id": "HH-1014",
+    "person_no": 5,
+    "age": 46,
+    "income": 59611.24,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-03",
+    "name": "PRIVATE-MARKER Person 254"
+  },
+  {
+    "hh_id": "HH-1015",
+    "person_no": 1,
+    "age": 53,
+    "income": 36479.71,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-04",
+    "name": "PRIVATE-MARKER Person 255"
+  },
+  {
+    "hh_id": "HH-1016",
+    "person_no": 2,
+    "age": 60,
+    "income": 20353.92,
+    "mode": "bus",
+    "has_pass": true,
+    "trip_date": "2023-05-05",
+    "name": "PRIVATE-MARKER Person 256"
+  },
+  {
+    "hh_id": "HH-1017",
+    "person_no": 3,
+    "age": 67,
+    "income": 91925.34,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-06",
+    "name": "PRIVATE-MARKER Person 257"
+  },
+  {
+    "hh_id": "HH-1018",
+    "person_no": 4,
+    "age": 74,
+    "income": 35511.2,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-07",
+    "name": "PRIVATE-MARKER Person 258"
+  },
+  {
+    "hh_id": "HH-1019",
+    "person_no": 5,
+    "age": 81,
+    "income": 62614.36,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-08",
+    "name": "PRIVATE-MARKER Person 259"
+  },
+  {
+    "hh_id": "HH-1020",
+    "person_no": 1,
+    "age": 18,
+    "income": 85267.39,
+    "mode": "car",
+    "has_pass": true,
+    "trip_date": "2023-05-09",
+    "name": "PRIVATE-MARKER Person 260"
+  },
+  {
+    "hh_id": "HH-1021",
+    "person_no": 2,
+    "age": 25,
+    "income": 70082.81,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-10",
+    "name": "PRIVATE-MARKER Person 261"
+  },
+  {
+    "hh_id": "HH-1022",
+    "person_no": 3,
+    "age": 32,
+    "income": 49338.39,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-11",
+    "name": "PRIVATE-MARKER Person 262"
+  },
+  {
+    "hh_id": "HH-1023",
+    "person_no": 4,
+    "age": 39,
+    "income": 66651.38,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-12",
+    "name": "PRIVATE-MARKER Person 263"
+  },
+  {
+    "hh_id": "HH-1024",
+    "person_no": 5,
+    "age": 46,
+    "income": 69989.77,
+    "mode": "rail",
+    "has_pass": true,
+    "trip_date": "2023-05-13",
+    "name": "PRIVATE-MARKER Person 264"
+  },
+  {
+    "hh_id": "HH-1025",
+    "person_no": 1,
+    "age": 53,
+    "income": 90584.52,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-14",
+    "name": "PRIVATE-MARKER Person 265"
+  },
+  {
+    "hh_id": "HH-1026",
+    "person_no": 2,
+    "age": 60,
+    "income": 29549.85,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-15",
+    "name": "PRIVATE-MARKER Person 266"
+  },
+  {
+    "hh_id": "HH-1027",
+    "person_no": 3,
+    "age": 67,
+    "income": 70426.65,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-16",
+    "name": "PRIVATE-MARKER Person 267"
+  },
+  {
+    "hh_id": "HH-1028",
+    "person_no": 4,
+    "age": 74,
+    "income": 42364.49,
+    "mode": "bike",
+    "has_pass": true,
+    "trip_date": "2023-05-17",
+    "name": "PRIVATE-MARKER Person 268"
+  },
+  {
+    "hh_id": "HH-1029",
+    "person_no": 5,
+    "age": 81,
+    "income": 44922.54,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-18",
+    "name": "PRIVATE-MARKER Person 269"
+  },
+  {
+    "hh_id": "HH-1030",
+    "person_no": 1,
+    "age": 18,
+    "income": 89503.5,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-19",
+    "name": "PRIVATE-MARKER Person 270"
+  },
+  {
+    "hh_id": "HH-1031",
+    "person_no": 2,
+    "age": 25,
+    "income": 65694.26,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-20",
+    "name": "PRIVATE-MARKER Person 271"
+  },
+  {
+    "hh_id": "HH-1032",
+    "person_no": 3,
+    "age": 32,
+    "income": 70555.64,
+    "mode": "walk",
+    "has_pass": true,
+    "trip_date": "2023-05-21",
+    "name": "PRIVATE-MARKER Person 272"
+  },
+  {
+    "hh_id": "HH-1033",
+    "person_no": 4,
+    "age": 39,
+    "income": 88399.38,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-22",
+    "name": "PRIVATE-MARKER Person 273"
+  },
+  {
+    "hh_id": "HH-1034",
+    "person_no": 5,
+    "age": 46,
+    "income": 102123.92,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-23",
+    "name": "PRIVATE-MARKER Person 274"
+  },
+  {
+    "hh_id": "HH-1035",
+    "person_no": 1,
+    "age": 53,
+    "income": 59892.36,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-24",
+    "name": "PRIVATE-MARKER Person 275"
+  },
+  {
+    "hh_id": "HH-1036",
+    "person_no": 2,
+    "age": 60,
+    "income": 75127.51,
+    "mode": "bus",
+    "has_pass": true,
+    "trip_date": "2023-05-25",
+    "name": "PRIVATE-MARKER Person 276"
+  },
+  {
+    "hh_id": "HH-1037",
+    "person_no": 3,
+    "age": 67,
+    "income": 65499.78,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-26",
+    "name": "PRIVATE-MARKER Person 277"
+  },
+  {
+    "hh_id": "HH-1038",
+    "person_no": 4,
+    "age": 74,
+    "income": 66094.53,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-27",
+    "name": "PRIVATE-MARKER Person 278"
+  },
+  {
+    "hh_id": "HH-1039",
+    "person_no": 5,
+    "age": 81,
+    "income": 82345.79,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-28",
+    "name": "PRIVATE-MARKER Person 279"
+  },
+  {
+    "hh_id": "HH-1040",
+    "person_no": 1,
+    "age": 18,
+    "income": 60711.12,
+    "mode": "car",
+    "has_pass": true,
+    "trip_date": "2023-05-01",
+    "name": "PRIVATE-MARKER Person 280"
+  },
+  {
+    "hh_id": "HH-1041",
+    "person_no": 2,
+    "age": 25,
+    "income": 67995.69,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-02",
+    "name": "PRIVATE-MARKER Person 281"
+  },
+  {
+    "hh_id": "HH-1042",
+    "person_no": 3,
+    "age": 32,
+    "income": 63023.27,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-03",
+    "name": "PRIVATE-MARKER Person 282"
+  },
+  {
+    "hh_id": "HH-1043",
+    "person_no": 4,
+    "age": 39,
+    "income": 104735.1,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-04",
+    "name": "PRIVATE-MARKER Person 283"
+  },
+  {
+    "hh_id": "HH-1044",
+    "person_no": 5,
+    "age": 46,
+    "income": 82929.61,
+    "mode": "rail",
+    "has_pass": true,
+    "trip_date": "2023-05-05",
+    "name": "PRIVATE-MARKER Person 284"
+  },
+  {
+    "hh_id": "HH-1045",
+    "person_no": 1,
+    "age": 53,
+    "income": 98888.19,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-06",
+    "name": "PRIVATE-MARKER Person 285"
+  },
+  {
+    "hh_id": "HH-1046",
+    "person_no": 2,
+    "age": 60,
+    "income": 104796.25,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-07",
+    "name": "PRIVATE-MARKER Person 286"
+  },
+  {
+    "hh_id": "HH-1047",
+    "person_no": 3,
+    "age": 67,
+    "income": 43363.31,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-08",
+    "name": "PRIVATE-MARKER Person 287"
+  },
+  {
+    "hh_id": "HH-1048",
+    "person_no": 4,
+    "age": 74,
+    "income": 70356.24,
+    "mode": "bike",
+    "has_pass": true,
+    "trip_date": "2023-05-09",
+    "name": "PRIVATE-MARKER Person 288"
+  },
+  {
+    "hh_id": "HH-1049",
+    "person_no": 5,
+    "age": 81,
+    "income": 104894.03,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-10",
+    "name": "PRIVATE-MARKER Person 289"
+  },
+  {
+    "hh_id": "HH-1050",
+    "person_no": 1,
+    "age": 18,
+    "income": 95599.98,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-11",
+    "name": "PRIVATE-MARKER Person 290"
+  },
+  {
+    "hh_id": "HH-1051",
+    "person_no": 2,
+    "age": 25,
+    "income": 32342.1,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-12",
+    "name": "PRIVATE-MARKER Person 291"
+  },
+  {
+    "hh_id": "HH-1052",
+    "person_no": 3,
+    "age": 32,
+    "income": 30945.98,
+    "mode": "walk",
+    "has_pass": true,
+    "trip_date": "2023-05-13",
+    "name": "PRIVATE-MARKER Person 292"
+  },
+  {
+    "hh_id": "HH-1053",
+    "person_no": 4,
+    "age": 39,
+    "income": 59790.63,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-14",
+    "name": "PRIVATE-MARKER Person 293"
+  },
+  {
+    "hh_id": "HH-1054",
+    "person_no": 5,
+    "age": 46,
+    "income": 26529.15,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-15",
+    "name": "PRIVATE-MARKER Person 294"
+  },
+  {
+    "hh_id": "HH-1055",
+    "person_no": 1,
+    "age": 53,
+    "income": 41657.49,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-16",
+    "name": "PRIVATE-MARKER Person 295"
+  },
+  {
+    "hh_id": "HH-1056",
+    "person_no": 2,
+    "age": 60,
+    "income": 26580.87,
+    "mode": "bus",
+    "has_pass": true,
+    "trip_date": "2023-05-17",
+    "name": "PRIVATE-MARKER Person 296"
+  },
+  {
+    "hh_id": "HH-1057",
+    "person_no": 3,
+    "age": 67,
+    "income": 80252.49,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-18",
+    "name": "PRIVATE-MARKER Person 297"
+  },
+  {
+    "hh_id": "HH-1058",
+    "person_no": 4,
+    "age": 74,
+    "income": 90554.24,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-19",
+    "name": "PRIVATE-MARKER Person 298"
+  },
+  {
+    "hh_id": "HH-1059",
+    "person_no": 5,
+    "age": 81,
+    "income": 100732.38,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-20",
+    "name": "PRIVATE-MARKER Person 299"
+  },
+  {
+    "hh_id": "HH-1060",
+    "person_no": 1,
+    "age": 18,
+    "income": 33900.2,
+    "mode": "car",
+    "has_pass": true,
+    "trip_date": "2023-05-21",
+    "name": "PRIVATE-MARKER Person 300"
+  },
+  {
+    "hh_id": "HH-1061",
+    "person_no": 2,
+    "age": 25,
+    "income": 84450.79,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-22",
+    "name": "PRIVATE-MARKER Person 301"
+  },
+  {
+    "hh_id": "HH-1062",
+    "person_no": 3,
+    "age": 32,
+    "income": 79423.09,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-23",
+    "name": "PRIVATE-MARKER Person 302"
+  },
+  {
+    "hh_id": "HH-1063",
+    "person_no": 4,
+    "age": 39,
+    "income": 32868.11,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-24",
+    "name": "PRIVATE-MARKER Person 303"
+  },
+  {
+    "hh_id": "HH-1064",
+    "person_no": 5,
+    "age": 46,
+    "income": 99454.96,
+    "mode": "rail",
+    "has_pass": true,
+    "trip_date": "2023-05-25",
+    "name": "PRIVATE-MARKER Person 304"
+  },
+  {
+    "hh_id": "HH-1065",
+    "person_no": 1,
+    "age": 53,
+    "income": 107079.03,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-26",
+    "name": "PRIVATE-MARKER Person 305"
+  },
+  {
+    "hh_id": "HH-1066",
+    "person_no": 2,
+    "age": 60,
+    "income": 39762.9,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-27",
+    "name": "PRIVATE-MARKER Person 306"
+  },
+  {
+    "hh_id": "HH-1067",
+    "person_no": 3,
+    "age": 67,
+    "income": 105725.37,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-28",
+    "name": "PRIVATE-MARKER Person 307"
+  },
+  {
+    "hh_id": "HH-1068",
+    "person_no": 4,
+    "age": 74,
+    "income": 55843.12,
+    "mode": "bike",
+    "has_pass": true,
+    "trip_date": "2023-05-01",
+    "name": "PRIVATE-MARKER Person 308"
+  },
+  {
+    "hh_id": "HH-1069",
+    "person_no": 5,
+    "age": 81,
+    "income": 63853.47,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-02",
+    "name": "PRIVATE-MARKER Person 309"
+  },
+  {
+    "hh_id": "HH-1070",
+    "person_no": 1,
+    "age": 18,
+    "income": 109088.43,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-03",
+    "name": "PRIVATE-MARKER Person 310"
+  },
+  {
+    "hh_id": "HH-1071",
+    "person_no": 2,
+    "age": 25,
+    "income": 94920.02,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-04",
+    "name": "PRIVATE-MARKER Person 311"
+  },
+  {
+    "hh_id": "HH-1072",
+    "person_no": 3,
+    "age": 32,
+    "income": 34531.95,
+    "mode": "walk",
+    "has_pass": true,
+    "trip_date": "2023-05-05",
+    "name": "PRIVATE-MARKER Person 312"
+  },
+  {
+    "hh_id": "HH-1073",
+    "person_no": 4,
+    "age": 39,
+    "income": 58836.96,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-06",
+    "name": "PRIVATE-MARKER Person 313"
+  },
+  {
+    "hh_id": "HH-1074",
+    "person_no": 5,
+    "age": 46,
+    "income": 66404.46,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-07",
+    "name": "PRIVATE-MARKER Person 314"
+  },
+  {
+    "hh_id": "HH-1075",
+    "person_no": 1,
+    "age": 53,
+    "income": 50520.45,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-08",
+    "name": "PRIVATE-MARKER Person 315"
+  },
+  {
+    "hh_id": "HH-1076",
+    "person_no": 2,
+    "age": 60,
+    "income": 37617.02,
+    "mode": "bus",
+    "has_pass": true,
+    "trip_date": "2023-05-09",
+    "name": "PRIVATE-MARKER Person 316"
+  },
+  {
+    "hh_id": "HH-1077",
+    "person_no": 3,
+    "age": 67,
+    "income": 48667.3,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-10",
+    "name": "PRIVATE-MARKER Person 317"
+  },
+  {
+    "hh_id": "HH-1078",
+    "person_no": 4,
+    "age": 74,
+    "income": 84993.58,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-11",
+    "name": "PRIVATE-MARKER Person 318"
+  },
+  {
+    "hh_id": "HH-1079",
+    "person_no": 5,
+    "age": 81,
+    "income": 21753.46,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-12",
+    "name": "PRIVATE-MARKER Person 319"
+  },
+  {
+    "hh_id": "HH-1000",
+    "person_no": 1,
+    "age": 18,
+    "income": 69864.52,
+    "mode": "car",
+    "has_pass": true,
+    "trip_date": "2023-05-13",
+    "name": "PRIVATE-MARKER Person 320"
+  },
+  {
+    "hh_id": "HH-1001",
+    "person_no": 2,
+    "age": 25,
+    "income": 59641.23,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-14",
+    "name": "PRIVATE-MARKER Person 321"
+  },
+  {
+    "hh_id": "HH-1002",
+    "person_no": 3,
+    "age": 32,
+    "income": 21627.38,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-15",
+    "name": "PRIVATE-MARKER Person 322"
+  },
+  {
+    "hh_id": "HH-1003",
+    "person_no": 4,
+    "age": 39,
+    "income": 49834.81,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-16",
+    "name": "PRIVATE-MARKER Person 323"
+  },
+  {
+    "hh_id": "HH-1004",
+    "person_no": 5,
+    "age": 46,
+    "income": 76153.44,
+    "mode": "rail",
+    "has_pass": true,
+    "trip_date": "2023-05-17",
+    "name": "PRIVATE-MARKER Person 324"
+  },
+  {
+    "hh_id": "HH-1005",
+    "person_no": 1,
+    "age": 53,
+    "income": 66103.61,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-18",
+    "name": "PRIVATE-MARKER Person 325"
+  },
+  {
+    "hh_id": "HH-1006",
+    "person_no": 2,
+    "age": 60,
+    "income": 25786.17,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-19",
+    "name": "PRIVATE-MARKER Person 326"
+  },
+  {
+    "hh_id": "HH-1007",
+    "person_no": 3,
+    "age": 67,
+    "income": 108657.49,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-20",
+    "name": "PRIVATE-MARKER Person 327"
+  },
+  {
+    "hh_id": "HH-1008",
+    "person_no": 4,
+    "age": 74,
+    "income": 90952.68,
+    "mode": "bike",
+    "has_pass": true,
+    "trip_date": "2023-05-21",
+    "name": "PRIVATE-MARKER Person 328"
+  },
+  {
+    "hh_id": "HH-1009",
+    "person_no": 5,
+    "age": 81,
+    "income": 107452.64,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-22",
+    "name": "PRIVATE-MARKER Person 329"
+  },
+  {
+    "hh_id": "HH-1010",
+    "person_no": 1,
+    "age": 18,
+    "income": 29430.16,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-23",
+    "name": "PRIVATE-MARKER Person 330"
+  },
+  {
+    "hh_id": "HH-1011",
+    "person_no": 2,
+    "age": 25,
+    "income": 43900.78,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-24",
+    "name": "PRIVATE-MARKER Person 331"
+  },
+  {
+    "hh_id": "HH-1012",
+    "person_no": 3,
+    "age": 32,
+    "income": 23562.94,
+    "mode": "walk",
+    "has_pass": true,
+    "trip_date": "2023-05-25",
+    "name": "PRIVATE-MARKER Person 332"
+  },
+  {
+    "hh_id": "HH-1013",
+    "person_no": 4,
+    "age": 39,
+    "income": 90109.77,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-26",
+    "name": "PRIVATE-MARKER Person 333"
+  },
+  {
+    "hh_id": "HH-1014",
+    "person_no": 5,
+    "age": 46,
+    "income": 44340.15,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-27",
+    "name": "PRIVATE-MARKER Person 334"
+  },
+  {
+    "hh_id": "HH-1015",
+    "person_no": 1,
+    "age": 53,
+    "income": 31660.0,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-28",
+    "name": "PRIVATE-MARKER Person 335"
+  },
+  {
+    "hh_id": "HH-1016",
+    "person_no": 2,
+    "age": 60,
+    "income": 58002.88,
+    "mode": "bus",
+    "has_pass": true,
+    "trip_date": "2023-05-01",
+    "name": "PRIVATE-MARKER Person 336"
+  },
+  {
+    "hh_id": "HH-1017",
+    "person_no": 3,
+    "age": 67,
+    "income": 102027.24,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-02",
+    "name": "PRIVATE-MARKER Person 337"
+  },
+  {
+    "hh_id": "HH-1018",
+    "person_no": 4,
+    "age": 74,
+    "income": 93708.11,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-03",
+    "name": "PRIVATE-MARKER Person 338"
+  },
+  {
+    "hh_id": "HH-1019",
+    "person_no": 5,
+    "age": 81,
+    "income": 43274.81,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-04",
+    "name": "PRIVATE-MARKER Person 339"
+  },
+  {
+    "hh_id": "HH-1020",
+    "person_no": 1,
+    "age": 18,
+    "income": 33443.12,
+    "mode": "car",
+    "has_pass": true,
+    "trip_date": "2023-05-05",
+    "name": "PRIVATE-MARKER Person 340"
+  },
+  {
+    "hh_id": "HH-1021",
+    "person_no": 2,
+    "age": 25,
+    "income": 102725.44,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-06",
+    "name": "PRIVATE-MARKER Person 341"
+  },
+  {
+    "hh_id": "HH-1022",
+    "person_no": 3,
+    "age": 32,
+    "income": 71353.54,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-07",
+    "name": "PRIVATE-MARKER Person 342"
+  },
+  {
+    "hh_id": "HH-1023",
+    "person_no": 4,
+    "age": 39,
+    "income": 83037.57,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-08",
+    "name": "PRIVATE-MARKER Person 343"
+  },
+  {
+    "hh_id": "HH-1024",
+    "person_no": 5,
+    "age": 46,
+    "income": 28051.6,
+    "mode": "rail",
+    "has_pass": true,
+    "trip_date": "2023-05-09",
+    "name": "PRIVATE-MARKER Person 344"
+  },
+  {
+    "hh_id": "HH-1025",
+    "person_no": 1,
+    "age": 53,
+    "income": 25177.39,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-10",
+    "name": "PRIVATE-MARKER Person 345"
+  },
+  {
+    "hh_id": "HH-1026",
+    "person_no": 2,
+    "age": 60,
+    "income": 81938.5,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-11",
+    "name": "PRIVATE-MARKER Person 346"
+  },
+  {
+    "hh_id": "HH-1027",
+    "person_no": 3,
+    "age": 67,
+    "income": 58278.53,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-12",
+    "name": "PRIVATE-MARKER Person 347"
+  },
+  {
+    "hh_id": "HH-1028",
+    "person_no": 4,
+    "age": 74,
+    "income": 26517.27,
+    "mode": "bike",
+    "has_pass": true,
+    "trip_date": "2023-05-13",
+    "name": "PRIVATE-MARKER Person 348"
+  },
+  {
+    "hh_id": "HH-1029",
+    "person_no": 5,
+    "age": 81,
+    "income": 104451.47,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-14",
+    "name": "PRIVATE-MARKER Person 349"
+  },
+  {
+    "hh_id": "HH-1030",
+    "person_no": 1,
+    "age": 18,
+    "income": 77099.56,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-15",
+    "name": "PRIVATE-MARKER Person 350"
+  },
+  {
+    "hh_id": "HH-1031",
+    "person_no": 2,
+    "age": 25,
+    "income": 92146.57,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-16",
+    "name": "PRIVATE-MARKER Person 351"
+  },
+  {
+    "hh_id": "HH-1032",
+    "person_no": 3,
+    "age": 32,
+    "income": 27536.83,
+    "mode": "walk",
+    "has_pass": true,
+    "trip_date": "2023-05-17",
+    "name": "PRIVATE-MARKER Person 352"
+  },
+  {
+    "hh_id": "HH-1033",
+    "person_no": 4,
+    "age": 39,
+    "income": 97060.58,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-18",
+    "name": "PRIVATE-MARKER Person 353"
+  },
+  {
+    "hh_id": "HH-1034",
+    "person_no": 5,
+    "age": 46,
+    "income": 25996.03,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-19",
+    "name": "PRIVATE-MARKER Person 354"
+  },
+  {
+    "hh_id": "HH-1035",
+    "person_no": 1,
+    "age": 53,
+    "income": 97649.75,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-20",
+    "name": "PRIVATE-MARKER Person 355"
+  },
+  {
+    "hh_id": "HH-1036",
+    "person_no": 2,
+    "age": 60,
+    "income": 60839.62,
+    "mode": "bus",
+    "has_pass": true,
+    "trip_date": "2023-05-21",
+    "name": "PRIVATE-MARKER Person 356"
+  },
+  {
+    "hh_id": "HH-1037",
+    "person_no": 3,
+    "age": 67,
+    "income": 50523.66,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-22",
+    "name": "PRIVATE-MARKER Person 357"
+  },
+  {
+    "hh_id": "HH-1038",
+    "person_no": 4,
+    "age": 74,
+    "income": 69775.77,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-23",
+    "name": "PRIVATE-MARKER Person 358"
+  },
+  {
+    "hh_id": "HH-1039",
+    "person_no": 5,
+    "age": 81,
+    "income": 103400.24,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-24",
+    "name": "PRIVATE-MARKER Person 359"
+  },
+  {
+    "hh_id": "HH-1040",
+    "person_no": 1,
+    "age": 18,
+    "income": 44107.38,
+    "mode": "car",
+    "has_pass": true,
+    "trip_date": "2023-05-25",
+    "name": "PRIVATE-MARKER Person 360"
+  },
+  {
+    "hh_id": "HH-1041",
+    "person_no": 2,
+    "age": 25,
+    "income": 31630.23,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-26",
+    "name": "PRIVATE-MARKER Person 361"
+  },
+  {
+    "hh_id": "HH-1042",
+    "person_no": 3,
+    "age": 32,
+    "income": 67422.35,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-27",
+    "name": "PRIVATE-MARKER Person 362"
+  },
+  {
+    "hh_id": "HH-1043",
+    "person_no": 4,
+    "age": 39,
+    "income": 41459.26,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-28",
+    "name": "PRIVATE-MARKER Person 363"
+  },
+  {
+    "hh_id": "HH-1044",
+    "person_no": 5,
+    "age": 46,
+    "income": 29850.63,
+    "mode": "rail",
+    "has_pass": true,
+    "trip_date": "2023-05-01",
+    "name": "PRIVATE-MARKER Person 364"
+  },
+  {
+    "hh_id": "HH-1045",
+    "person_no": 1,
+    "age": 53,
+    "income": 34530.42,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-02",
+    "name": "PRIVATE-MARKER Person 365"
+  },
+  {
+    "hh_id": "HH-1046",
+    "person_no": 2,
+    "age": 60,
+    "income": 24534.17,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-03",
+    "name": "PRIVATE-MARKER Person 366"
+  },
+  {
+    "hh_id": "HH-1047",
+    "person_no": 3,
+    "age": 67,
+    "income": 38159.14,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-04",
+    "name": "PRIVATE-MARKER Person 367"
+  },
+  {
+    "hh_id": "HH-1048",
+    "person_no": 4,
+    "age": 74,
+    "income": 48079.32,
+    "mode": "bike",
+    "has_pass": true,
+    "trip_date": "2023-05-05",
+    "name": "PRIVATE-MARKER Person 368"
+  },
+  {
+    "hh_id": "HH-1049",
+    "person_no": 5,
+    "age": 81,
+    "income": 47450.49,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-06",
+    "name": "PRIVATE-MARKER Person 369"
+  },
+  {
+    "hh_id": "HH-1050",
+    "person_no": 1,
+    "age": 18,
+    "income": 88354.84,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-07",
+    "name": "PRIVATE-MARKER Person 370"
+  },
+  {
+    "hh_id": "HH-1051",
+    "person_no": 2,
+    "age": 25,
+    "income": 46096.48,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-08",
+    "name": "PRIVATE-MARKER Person 371"
+  },
+  {
+    "hh_id": "HH-1052",
+    "person_no": 3,
+    "age": 32,
+    "income": 65007.97,
+    "mode": "walk",
+    "has_pass": true,
+    "trip_date": "2023-05-09",
+    "name": "PRIVATE-MARKER Person 372"
+  },
+  {
+    "hh_id": "HH-1053",
+    "person_no": 4,
+    "age": 39,
+    "income": 36010.99,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-10",
+    "name": "PRIVATE-MARKER Person 373"
+  },
+  {
+    "hh_id": "HH-1054",
+    "person_no": 5,
+    "age": 46,
+    "income": 51230.09,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-11",
+    "name": "PRIVATE-MARKER Person 374"
+  },
+  {
+    "hh_id": "HH-1055",
+    "person_no": 1,
+    "age": 53,
+    "income": 21634.68,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-12",
+    "name": "PRIVATE-MARKER Person 375"
+  },
+  {
+    "hh_id": "HH-1056",
+    "person_no": 2,
+    "age": 60,
+    "income": 42540.39,
+    "mode": "bus",
+    "has_pass": true,
+    "trip_date": "2023-05-13",
+    "name": "PRIVATE-MARKER Person 376"
+  },
+  {
+    "hh_id": "HH-1057",
+    "person_no": 3,
+    "age": 67,
+    "income": 21381.15,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-14",
+    "name": "PRIVATE-MARKER Person 377"
+  },
+  {
+    "hh_id": "HH-1058",
+    "person_no": 4,
+    "age": 74,
+    "income": 85977.23,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-15",
+    "name": "PRIVATE-MARKER Person 378"
+  },
+  {
+    "hh_id": "HH-1059",
+    "person_no": 5,
+    "age": 81,
+    "income": 69594.42,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-16",
+    "name": "PRIVATE-MARKER Person 379"
+  },
+  {
+    "hh_id": "HH-1060",
+    "person_no": 1,
+    "age": 18,
+    "income": 37051.08,
+    "mode": "car",
+    "has_pass": true,
+    "trip_date": "2023-05-17",
+    "name": "PRIVATE-MARKER Person 380"
+  },
+  {
+    "hh_id": "HH-1061",
+    "person_no": 2,
+    "age": 25,
+    "income": 62728.46,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-18",
+    "name": "PRIVATE-MARKER Person 381"
+  },
+  {
+    "hh_id": "HH-1062",
+    "person_no": 3,
+    "age": 32,
+    "income": 104117.86,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-19",
+    "name": "PRIVATE-MARKER Person 382"
+  },
+  {
+    "hh_id": "HH-1063",
+    "person_no": 4,
+    "age": 39,
+    "income": 29565.32,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-20",
+    "name": "PRIVATE-MARKER Person 383"
+  },
+  {
+    "hh_id": "HH-1064",
+    "person_no": 5,
+    "age": 46,
+    "income": 93702.81,
+    "mode": "rail",
+    "has_pass": true,
+    "trip_date": "2023-05-21",
+    "name": "PRIVATE-MARKER Person 384"
+  },
+  {
+    "hh_id": "HH-1065",
+    "person_no": 1,
+    "age": 53,
+    "income": 58895.98,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-22",
+    "name": "PRIVATE-MARKER Person 385"
+  },
+  {
+    "hh_id": "HH-1066",
+    "person_no": 2,
+    "age": 60,
+    "income": 64550.14,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-23",
+    "name": "PRIVATE-MARKER Person 386"
+  },
+  {
+    "hh_id": "HH-1067",
+    "person_no": 3,
+    "age": 67,
+    "income": 95115.25,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-24",
+    "name": "PRIVATE-MARKER Person 387"
+  },
+  {
+    "hh_id": "HH-1068",
+    "person_no": 4,
+    "age": 74,
+    "income": 55377.75,
+    "mode": "bike",
+    "has_pass": true,
+    "trip_date": "2023-05-25",
+    "name": "PRIVATE-MARKER Person 388"
+  },
+  {
+    "hh_id": "HH-1069",
+    "person_no": 5,
+    "age": 81,
+    "income": 65601.74,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-26",
+    "name": "PRIVATE-MARKER Person 389"
+  },
+  {
+    "hh_id": "HH-1070",
+    "person_no": 1,
+    "age": 18,
+    "income": 81896.76,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-27",
+    "name": "PRIVATE-MARKER Person 390"
+  },
+  {
+    "hh_id": "HH-1071",
+    "person_no": 2,
+    "age": 25,
+    "income": 108419.65,
+    "mode": "bus",
+    "has_pass": false,
+    "trip_date": "2023-05-28",
+    "name": "PRIVATE-MARKER Person 391"
+  },
+  {
+    "hh_id": "HH-1072",
+    "person_no": 3,
+    "age": 32,
+    "income": 50843.42,
+    "mode": "walk",
+    "has_pass": true,
+    "trip_date": "2023-05-01",
+    "name": "PRIVATE-MARKER Person 392"
+  },
+  {
+    "hh_id": "HH-1073",
+    "person_no": 4,
+    "age": 39,
+    "income": 94905.79,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-02",
+    "name": "PRIVATE-MARKER Person 393"
+  },
+  {
+    "hh_id": "HH-1074",
+    "person_no": 5,
+    "age": 46,
+    "income": 83605.29,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-03",
+    "name": "PRIVATE-MARKER Person 394"
+  },
+  {
+    "hh_id": "HH-1075",
+    "person_no": 1,
+    "age": 53,
+    "income": 77237.93,
+    "mode": "car",
+    "has_pass": false,
+    "trip_date": "2023-05-04",
+    "name": "PRIVATE-MARKER Person 395"
+  },
+  {
+    "hh_id": "HH-1076",
+    "person_no": 2,
+    "age": 60,
+    "income": 56422.79,
+    "mode": "bus",
+    "has_pass": true,
+    "trip_date": "2023-05-05",
+    "name": "PRIVATE-MARKER Person 396"
+  },
+  {
+    "hh_id": "HH-1077",
+    "person_no": 3,
+    "age": 67,
+    "income": 51279.7,
+    "mode": "walk",
+    "has_pass": false,
+    "trip_date": "2023-05-06",
+    "name": "PRIVATE-MARKER Person 397"
+  },
+  {
+    "hh_id": "HH-1078",
+    "person_no": 4,
+    "age": 74,
+    "income": 24894.97,
+    "mode": "bike",
+    "has_pass": false,
+    "trip_date": "2023-05-07",
+    "name": "PRIVATE-MARKER Person 398"
+  },
+  {
+    "hh_id": "HH-1079",
+    "person_no": 5,
+    "age": 81,
+    "income": 31683.67,
+    "mode": "rail",
+    "has_pass": false,
+    "trip_date": "2023-05-08",
+    "name": "PRIVATE-MARKER Person 399"
+  }
+]

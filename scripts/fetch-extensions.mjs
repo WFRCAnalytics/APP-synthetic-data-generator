@@ -1,4 +1,4 @@
-// Fetches the DuckDB extensions the app needs (today: excel and parquet) from the official host into
+// Fetches the DuckDB extensions the app needs (today: excel, parquet and json) from the official host into
 // public/duckdb-ext/, so the site serves them itself (constitution Principle I and III: nothing is
 // fetched from outside at run time; this build step is the only moment anything is).
 //
@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const outDir = join(root, "public", "duckdb-ext");
 const HOST = process.env.DUCKDB_EXTENSION_HOST ?? "https://extensions.duckdb.org";
-const EXTENSIONS = ["excel", "parquet"];
+const EXTENSIONS = ["excel", "parquet", "json"];
 const PLATFORMS = ["wasm_eh", "wasm_mvp"]; // the two builds copied by copy-duckdb.mjs
 const MIN_BYTES = 50_000;
 
