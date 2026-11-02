@@ -8,8 +8,10 @@ import { AppError, sanitizeError, toWireError } from "../lib/errors";
 import { NET_CHANNEL } from "../lib/netChannel";
 import { installNetPatch } from "./netpatch";
 import type { ColumnOverrides, ColumnProfile, FileSettings } from "../lib/profile/types";
-import { createEngine, duckdb, loadExcelExtension, loadJsonExtension, loadParquetExtension, type Engine } from "../lib/duckdb/engine";
+import { createEngine, duckdb, loadExcelExtension, loadJsonExtension, loadParquetExtension, loadStatExtension, type Engine } from "../lib/duckdb/engine";
 import { detectJson } from "../lib/json/detect";
+import { csvNameOf, detectStat, hasStatExtension, type StatFormat } from "../lib/stat/detect";
+import { inspectStat, loadStat, type StatInfo } from "./profile/stat";
 import { inspectJson, loadJson, type JsonInfo } from "./profile/json";
 import { classifyParquet } from "../lib/parquet/detect";
 import { inspectParquet, loadParquet, type ParquetInfo } from "./profile/parquet";
@@ -60,6 +62,10 @@ let mixedFormatColumns = new Set<number>();
 let excelLoaded = false;
 let parquetLoaded = false;
 let jsonLoaded = false;
+let statLoaded = false;
+let statFile: string | null = null;
+let statInfo: StatInfo | null = null;
+let statFormat: StatFormat | null = null;
 /** The registered name and structure of the opened JSON file (null when the file is not JSON). */
 let jsonFile: string | null = null;
 let jsonInfo: JsonInfo | null = null;
@@ -164,6 +170,8 @@ async function open(chosen: File): Promise<void> {
   parquetInfo = null;
   jsonFile = null;
   jsonInfo = null;
+  statFile = null;
+  statInfo = null;
   const first = new Uint8Array(await chosen.slice(0, 8).arrayBuffer());
   const last = new Uint8Array(await chosen.slice(Math.max(0, size - 8)).arrayBuffer());
   const kind = classifyParquet(first, last);
@@ -174,6 +182,14 @@ async function open(chosen: File): Promise<void> {
     return;
   }
   if (/\.parquet$/i.test(chosen.name)) throw new AppError("parquet_not_parquet");
+
+  // An SPSS or Stata file is told by its first bytes (specs/017 FR-001).
+  const format = detectStat(new Uint8Array(await chosen.slice(0, 16).arrayBuffer()), chosen.name);
+  if (format) {
+    await openStat(chosen, format);
+    return;
+  }
+  if (hasStatExtension(chosen.name)) throw new AppError("stat_damaged");
 
   // A JSON file is told by its first character, not its name (specs/007 FR-001): [ for an array, { for records.
   const jsonHead = new Uint8Array(await chosen.slice(0, HEAD_BYTES).arrayBuffer());
@@ -239,6 +255,60 @@ async function openParquet(chosen: File): Promise<void> {
     fileSize: chosen.size,
     info: { rowCount: info.rowCount, rowGroups: info.rowGroups, expandedBytes: info.expandedBytes, columns: info.columns.map((c) => ({ name: c.name, type: c.type, unsupported: c.unsupported, renamed: c.renamed })) },
   });
+}
+
+/** Reads the structure of an SPSS or Stata file and tells the page; no value is shown (specs/017). */
+async function openStat(chosen: File, format: StatFormat): Promise<void> {
+  const runner = await ensureEngine();
+  if (!statLoaded) {
+    await loadStatExtension((q) => runner.run(q), EXTENSIONS);
+    statLoaded = true;
+  }
+  const virtual = `source_${Date.now()}.${format}`;
+  await (engine as Engine).db.registerFileHandle(virtual, chosen, duckdb.DuckDBDataProtocol.BROWSER_FILEREADER, true);
+  const info = await inspectStat(runner, virtual);
+  statFile = virtual;
+  statInfo = info;
+  statFormat = format;
+  settings = null;
+  cellFormats = [];
+  textCells = [];
+  mixedColumns = new Set();
+  mixedFormatColumns = new Set();
+  post({
+    type: "statInfo",
+    fileName: csvNameOf(chosen.name),
+    fileSize: chosen.size,
+    info: {
+      format,
+      sourceName: chosen.name,
+      rowCount: info.rowCount,
+      expandedBytes: info.expandedBytes,
+      columns: info.columns.map((c) => ({ name: c.name, kind: kindOf(c.type) })),
+    },
+  });
+}
+
+const kindOf = (type: string): "number" | "text" | "date" | "datetime" => {
+  const t = type.toUpperCase();
+  if (t === "VARCHAR") return "text";
+  if (t === "DATE") return "date";
+  if (t.startsWith("TIMESTAMP")) return "datetime";
+  return "number";
+};
+
+/** Loads the opened SPSS or Stata file into the all-text table; from here on it is a table like a CSV, written back as CSV. */
+async function loadStatFile(): Promise<void> {
+  if (!statFile || !statInfo || !statFormat) throw new AppError("file_unreadable");
+  const runner = await ensureEngine();
+  post({ type: "progress", job: "load", done: 0, total: 1 });
+  const loaded = await loadStat(runner, statFile, statInfo);
+  rowCount = loaded.rowCount;
+  columnNames = loaded.columnNames;
+  quoted = loaded.columnNames.map(() => false);
+  post({ type: "progress", job: "load", done: 1, total: 1 });
+  const csv: FileSettings = { encoding: "utf-8", bom: false, delimiter: ",", quote: '"', quoteStyle: "minimal", lineEnding: "lf", header: true, headerQuoted: false, trailingNewline: true };
+  post({ type: "loaded", rowCount, columnNames, settings: csv });
 }
 
 /** Reads the structure of a JSON file and tells the page; no value is read (specs/007 research R2). */
@@ -439,6 +509,9 @@ self.onmessage = async (event: MessageEvent<ProfileRequest>) => {
         break;
       case "loadParquet":
         await loadParquetFile();
+        break;
+      case "loadStat":
+        await loadStatFile();
         break;
       case "loadJson":
         await loadJsonFile();

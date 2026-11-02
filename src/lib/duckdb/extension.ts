@@ -3,7 +3,7 @@
 import { AppError } from "../errors";
 
 /** The extensions the app loads from its own folder. */
-export type SiteExtension = "excel" | "parquet" | "json";
+export type SiteExtension = "excel" | "parquet" | "json" | "stats_duck";
 
 /**
  * Loads an extension from the site's own folder (specs/003 research R2, specs/005 research R1).
@@ -29,6 +29,9 @@ export const loadExcelExtension = (run: (sql: string) => Promise<unknown>, repos
 
 /** The Parquet reader (specs/005). */
 export const loadParquetExtension = (run: (sql: string) => Promise<unknown>, repositoryUrl: string): Promise<void> => loadExtension(run, repositoryUrl, "parquet");
+
+/** The SPSS and Stata reader (specs/017): the stats_duck community extension, whose read_stat function reads the files. */
+export const loadStatExtension = (run: (sql: string) => Promise<unknown>, repositoryUrl: string): Promise<void> => loadExtension(run, repositoryUrl, "stats_duck");
 
 /** The JSON reader (specs/007). */
 export const loadJsonExtension = (run: (sql: string) => Promise<unknown>, repositoryUrl: string): Promise<void> => loadExtension(run, repositoryUrl, "json");

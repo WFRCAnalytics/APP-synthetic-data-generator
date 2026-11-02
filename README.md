@@ -16,7 +16,7 @@ lengths and patterns), never rows, ID lists, free text, personal identifiers or 
 
 ## How it works
 
-1. **Ingest** (or **Design**): pick a CSV, an Excel workbook (.xlsx), a Parquet file (.parquet) or a JSON file (.json, .ndjson, .jsonl), or start from scratch and describe the columns of a table yourself (numbers between limits, categories with weights, dates, IDs, invented personal details), written as a CSV, Excel, Parquet, JSON or JSON Lines file as you choose. For a CSV the app detects delimiter, encoding,
+1. **Ingest** (or **Design**): pick a CSV, an Excel workbook (.xlsx), a Parquet file (.parquet) a JSON file (.json, .ndjson, .jsonl), an SPSS file (.sav) or a Stata file (.dta; both are written back as CSV), or start from scratch and describe the columns of a table yourself (numbers between limits, categories with weights, dates, IDs, invented personal details), written as a CSV, Excel, Parquet, JSON or JSON Lines file as you choose. For a CSV the app detects delimiter, encoding,
    quoting and header; for a workbook it lists the sheet names and you choose a sheet, the rows to
    skip above the header and, if you like, a cell range. It shows the row count, column count and
    column names, never row values.
@@ -121,6 +121,7 @@ gives the same file checksums (file times come from the commit date, or `SOURCE_
   identifier, free text and short string columns
 - [`specs/003-excel-input-output/`](specs/003-excel-input-output/): Excel workbooks in and out
 - [`specs/005-parquet-input-output/`](specs/005-parquet-input-output/): Parquet files in and out
+- [`specs/017-spss-stata-input/`](specs/017-spss-stata-input/): SPSS and Stata files in (read with the `stats_duck` DuckDB extension)
 - [`specs/004-offline-zip-release/`](specs/004-offline-zip-release/): the offline zip release
 - [`specs/007-json-input-output/`](specs/007-json-input-output/): JSON files in and out
 

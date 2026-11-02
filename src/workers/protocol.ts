@@ -6,6 +6,7 @@ import type { SampleDescription } from "../lib/textgen/sample";
 import type { WireError } from "../lib/errors";
 import type { ColumnOverrides, ColumnProfile, FileSettings, SourceSettings } from "../lib/profile/types";
 import type { SheetHints, WorkbookInfo } from "../lib/xlsx/metadata";
+import type { StatFormat } from "../lib/stat/detect";
 import type { JsonKind, JsonLayout, JsonUnsupportedReason } from "../lib/json/types";
 import type { ParquetType, UnsupportedReason } from "../lib/parquet/types";
 import type { CheckRow } from "../lib/generate/checks";
@@ -18,6 +19,16 @@ export interface ParquetSummary {
   /** The size of the data once opened, in bytes, from the file's own sizes. */
   expandedBytes: number;
   columns: { name: string; type: ParquetType | null; unsupported: UnsupportedReason | null; renamed: boolean }[];
+}
+
+/** What the page may know of an SPSS or Stata file before it is profiled: structure only, never a value or a label (specs/017). */
+export interface StatSummary {
+  format: StatFormat;
+  /** The name of the file as chosen; the table itself is known by the CSV name made from it. */
+  sourceName: string;
+  rowCount: number;
+  expandedBytes: number;
+  columns: { name: string; kind: "number" | "text" | "date" | "datetime" }[];
 }
 
 /** What the page may know of a JSON file before it is profiled: structure only, never a value or a nested key name. */
@@ -41,6 +52,8 @@ export type ProfileRequest =
   | { type: "loadParquet" }
   /** Load the JSON file that was opened (specs/007). */
   | { type: "loadJson" }
+  /** Load the SPSS or Stata file that was opened (specs/017). */
+  | { type: "loadStat" }
   | { type: "profile"; threshold: number; overrides?: Record<string, ColumnOverrides> }
   | { type: "reprofile"; column: string; overrides: ColumnOverrides }
   | { type: "datePattern"; column: string; pattern: string }
@@ -65,6 +78,8 @@ export type ProfileResponse =
   | { type: "parquetInfo"; info: ParquetSummary; fileName: string; fileSize: number }
   /** The chosen file is a JSON file: its structure, never a value (specs/007). */
   | { type: "jsonInfo"; info: JsonSummary; fileName: string; fileSize: number }
+  /** The chosen file is an SPSS or Stata file: its structure, never a value (specs/017). */
+  | { type: "statInfo"; info: StatSummary; fileName: string; fileSize: number }
   | { type: "loaded"; rowCount: number; columnNames: string[]; settings: SourceSettings }
   | { type: "progress"; job: ProfileJob; done: number; total: number }
   | { type: "columnProfile"; profile: ColumnProfile }

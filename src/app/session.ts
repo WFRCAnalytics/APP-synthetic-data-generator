@@ -18,7 +18,7 @@ import { profilesFromSpec, settingsFromSource } from "../lib/spec/toProfiles";
 import type { SpecFile, SpecProblem } from "../lib/spec/types";
 import type { SampleDescription } from "../lib/textgen/sample";
 import type { SheetHints, WorkbookInfo } from "../lib/xlsx/metadata";
-import type { JsonSummary, ParquetSummary } from "../workers/protocol";
+import type { JsonSummary, ParquetSummary, StatSummary } from "../workers/protocol";
 import { readSpecFile } from "../features/spec/loadSpec";
 import { agentReadme, readmeFileNameFor } from "../lib/readme/agentReadme";
 import type { RuleSpec } from "../lib/rules/types";
@@ -40,6 +40,7 @@ export type Phase =
   | "workbook"
   | "parquet"
   | "json"
+  | "stat"
   | "loading"
   | "profiling"
   | "profiled"
@@ -95,6 +96,8 @@ export interface SessionState {
   parquet: ParquetSummary | null;
   /** Set when the chosen file is a JSON file: its structure, never a value or a nested key name. */
   json: JsonSummary | null;
+  /** Set when the chosen file is an SPSS or Stata file: its structure, never a value or a label. */
+  stat: StatSummary | null;
   error: string | null;
   fileName: string;
   fileSize: number;
@@ -142,6 +145,7 @@ export const initialSession: SessionState = {
   workbook: null,
   parquet: null,
   json: null,
+  stat: null,
   error: null,
   fileName: "",
   fileSize: 0,
@@ -284,6 +288,25 @@ export class Session {
     this.send({ type: "loadParquet" });
   }
 
+  /** Loads the SPSS or Stata file that was opened, then profiles it. */
+  confirmStat(): void {
+    if (!this.state.stat) return;
+    this.pending.clear();
+    this.base = [];
+    this.edits = {};
+    this.engine = {};
+    this.set({
+      phase: "loading",
+      error: null,
+      progress: null,
+      profiles: [],
+      busy: [],
+      reviewError: null,
+      datePatternChecks: {},
+    });
+    this.send({ type: "loadStat" });
+  }
+
   /** Loads the JSON file that was opened, then profiles it. */
   confirmJson(): void {
     if (!this.state.json) return;
@@ -423,6 +446,15 @@ export class Session {
           fileName: msg.fileName,
           fileSize: msg.fileSize,
           columnNames: msg.info.keys.map((k) => k.name),
+        });
+        break;
+      case "statInfo":
+        this.set({
+          phase: "stat",
+          stat: msg.info,
+          fileName: msg.fileName,
+          fileSize: msg.fileSize,
+          columnNames: msg.info.columns.map((c) => c.name),
         });
         break;
       case "sheetHints":

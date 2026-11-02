@@ -32,6 +32,8 @@ export const REQUIRED_FILES = [
   `${SITE}/duckdb-ext/*/wasm_mvp/parquet.duckdb_extension.wasm`,
   `${SITE}/duckdb-ext/*/wasm_eh/json.duckdb_extension.wasm`,
   `${SITE}/duckdb-ext/*/wasm_mvp/json.duckdb_extension.wasm`,
+  `${SITE}/duckdb-ext/*/wasm_eh/stats_duck.duckdb_extension.wasm`,
+  `${SITE}/duckdb-ext/*/wasm_mvp/stats_duck.duckdb_extension.wasm`,
 ];
 
 const FORBIDDEN = [/\.map$/, /(^|\/)\.env/, /(^|\/)node_modules\//, /(^|\/)(tests?|fixtures|test-results|\.fixtures)\//, /(^|\/)spike\.html$/, /\.(pem|key)$/];

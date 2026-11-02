@@ -14,6 +14,7 @@ import {
 import type { SessionState, WorkbookChoice } from "../../app/session";
 import { JsonSummary } from "./JsonSummary";
 import { ParquetSummary } from "./ParquetSummary";
+import { StatSummary } from "./StatSummary";
 import { WorkbookDialog } from "./WorkbookDialog";
 import { ProfileProgress } from "./ProfileProgress";
 import { SizeWarning } from "./SizeWarning";
@@ -26,6 +27,7 @@ export interface IngestScreenProps {
   onInspectSheet: (sheet: string) => void;
   onConfirmWorkbook: (choice: WorkbookChoice) => void;
   onConfirmParquet: () => void;
+  onConfirmStat: () => void;
   onConfirmJson: () => void;
   onEditSettings: (patch: Partial<FileSettings>) => void;
   onConfirm: () => void;
@@ -57,6 +59,7 @@ export function IngestScreen({
   onInspectSheet,
   onConfirmWorkbook,
   onConfirmParquet,
+  onConfirmStat,
   onConfirmJson,
   onEditSettings,
   onConfirm,
@@ -112,20 +115,23 @@ export function IngestScreen({
             <span>Excel</span>
             <span>Parquet</span>
             <span>JSON</span>
+            <span>SPSS</span>
+            <span>Stata</span>
           </div>
           <div className="field field--drop">
             <span className="label-row">
               <label htmlFor="file-input">CSV file</label>
               <InfoTip label="About the file">
                 Up to about 500 MB. The file stays on this device. An Excel workbook (.xlsx) asks
-                which sheet to read. One file at a time; a folder of Parquet files is not supported.
+                which sheet to read. SPSS (.sav) and Stata (.dta) files are read as tables and
+                written back as CSV. One file at a time; a folder of Parquet files is not supported.
               </InfoTip>
             </span>
             <input
               id="file-input"
               ref={input}
               type="file"
-              accept=".csv,.tsv,.txt,.xlsx,.parquet,.json,.ndjson,.jsonl,application/json,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.apache.parquet"
+              accept=".csv,.tsv,.txt,.xlsx,.parquet,.json,.ndjson,.jsonl,.sav,.zsav,.dta,application/json,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.apache.parquet"
               disabled={busy}
               onChange={(e) => {
                 const file = e.target.files?.[0];
@@ -205,7 +211,7 @@ export function IngestScreen({
       {phase === "idle" && !session.specProblems && (
         <EmptyState
           icon={FileUp}
-          message="Choose a CSV, Excel or Parquet file to begin."
+          message="Choose a CSV, Excel, Parquet, JSON, SPSS or Stata file to begin."
           hint="Nothing is uploaded; everything happens in this tab."
         />
       )}
@@ -329,6 +335,15 @@ export function IngestScreen({
           fileSize={session.fileSize}
           info={session.parquet}
           onConfirm={onConfirmParquet}
+          busy={busy}
+        />
+      )}
+
+      {phase === "stat" && session.stat && (
+        <StatSummary
+          fileSize={session.fileSize}
+          info={session.stat}
+          onConfirm={onConfirmStat}
           busy={busy}
         />
       )}

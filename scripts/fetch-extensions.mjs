@@ -16,13 +16,21 @@ import { fileURLToPath } from "node:url";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const outDir = join(root, "public", "duckdb-ext");
 const HOST = process.env.DUCKDB_EXTENSION_HOST ?? "https://extensions.duckdb.org";
-const EXTENSIONS = ["excel", "parquet", "json"];
+const COMMUNITY_HOST = process.env.DUCKDB_COMMUNITY_EXTENSION_HOST ?? "https://community-extensions.duckdb.org";
+// stats_duck brings read_stat (SPSS, Stata and SAS files); it is in DuckDB's community extension repository, not the core one.
+// DuckDB's separate read_stat extension loads in the browser but crashes when it reads a file, so it is not used.
+const EXTENSIONS = [
+  { name: "excel", host: HOST },
+  { name: "parquet", host: HOST },
+  { name: "json", host: HOST },
+  { name: "stats_duck", host: COMMUNITY_HOST },
+];
 const PLATFORMS = ["wasm_eh", "wasm_mvp"]; // the two builds copied by copy-duckdb.mjs
 const MIN_BYTES = 50_000;
 
 const require = createRequire(import.meta.url);
 
-/** The DuckDB engine version inside the pinned DuckDB-WASM, such as "v1.5.4". */
+/** The DuckDB engine version inside the pinned DuckDB-WASM, such as "v1.5.6". */
 async function engineVersion() {
   const duckdb = require("@duckdb/duckdb-wasm/dist/duckdb-node-blocking.cjs");
   const dist = dirname(require.resolve("@duckdb/duckdb-wasm/dist/duckdb-node-blocking.cjs"));
@@ -55,7 +63,7 @@ const previous = existsSync(versionFile) ? JSON.parse(readFileSync(versionFile, 
 const files = {};
 let fetched = 0;
 
-for (const ext of EXTENSIONS) {
+for (const { name: ext, host } of EXTENSIONS) {
   for (const platform of PLATFORMS) {
     const rel = `${version}/${platform}/${ext}.duckdb_extension.wasm`;
     const path = join(outDir, rel);
@@ -64,7 +72,7 @@ for (const ext of EXTENSIONS) {
       files[rel] = known;
       continue;
     }
-    const bytes = await download(`${HOST}/${rel}`);
+    const bytes = await download(`${host}/${rel}`);
     mkdirSync(dirname(path), { recursive: true });
     writeFileSync(path, bytes);
     files[rel] = sha256(bytes);

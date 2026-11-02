@@ -139,7 +139,7 @@ describe("the file chooser", () => {
   it("says it takes one file at a time and not a folder of Parquet files", async () => {
     const { IngestScreen } = await import("../../src/features/ingest/IngestScreen");
     const { initialSession } = await import("../../src/app/session");
-    render(<IngestScreen session={initialSession} onChooseFile={vi.fn()} onChooseSpec={vi.fn()} onInspectSheet={vi.fn()} onConfirmWorkbook={vi.fn()} onConfirmParquet={vi.fn()} onConfirmJson={vi.fn()} onEditSettings={vi.fn()} onConfirm={vi.fn()} onCancel={vi.fn()} />);
+    render(<IngestScreen session={initialSession} onChooseFile={vi.fn()} onChooseSpec={vi.fn()} onInspectSheet={vi.fn()} onConfirmWorkbook={vi.fn()} onConfirmParquet={vi.fn()} onConfirmStat={vi.fn()} onConfirmJson={vi.fn()} onEditSettings={vi.fn()} onConfirm={vi.fn()} onCancel={vi.fn()} />);
     expect(screen.getByText(/One file at a time; a folder of Parquet files is not supported/)).toBeInTheDocument();
     const input = document.getElementById("file-input") as HTMLInputElement;
     expect(input.multiple).toBe(false);

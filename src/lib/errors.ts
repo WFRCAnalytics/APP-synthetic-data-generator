@@ -29,6 +29,9 @@ export type ErrorCode =
   | "parquet_empty"
   | "parquet_encrypted"
   | "parquet_too_large"
+  | "stat_damaged"
+  | "stat_empty"
+  | "stat_too_large"
   | "json_empty"
   | "json_not_records"
   | "json_malformed"
@@ -95,6 +98,12 @@ export function describeError(code: ErrorCode, ctx: ErrorContext = {}): string {
       return "This Parquet file is encrypted. Save an unencrypted copy, then retry.";
     case "parquet_too_large":
       return "This Parquet file is too large to open in the browser.";
+    case "stat_damaged":
+      return "This SPSS or Stata file could not be read. It may be damaged, encrypted, or saved by a version this reader does not know.";
+    case "stat_empty":
+      return "This SPSS or Stata file has no rows or no variables.";
+    case "stat_too_large":
+      return "This SPSS or Stata file is too large to open in the browser.";
     case "json_empty":
       return "This JSON file has no records or no keys.";
     case "json_not_records":

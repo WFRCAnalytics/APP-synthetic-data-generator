@@ -99,6 +99,7 @@ export function App() {
               onInspectSheet={(sheet) => session.inspectSheet(sheet)}
               onConfirmWorkbook={(choice) => session.confirmWorkbook(choice)}
               onConfirmParquet={() => session.confirmParquet()}
+              onConfirmStat={() => session.confirmStat()}
               onConfirmJson={() => session.confirmJson()}
               onEditSettings={(patch) => session.editSettings(patch)}
               onConfirm={() => session.confirmAndProfile()}

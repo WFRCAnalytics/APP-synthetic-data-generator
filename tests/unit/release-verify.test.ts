@@ -31,12 +31,14 @@ function goodFiles(): Files {
     [`${SITE}/duckdb/duckdb-browser-eh.worker.js`]: "// worker",
     [`${SITE}/duckdb/duckdb-browser-mvp.worker.js`]: "// worker",
     [`${SITE}/duckdb-ext/VERSION.json`]: "{}",
-    [`${SITE}/duckdb-ext/v1.5.4/wasm_eh/excel.duckdb_extension.wasm`]: new Uint8Array([0, 97, 115, 109]),
-    [`${SITE}/duckdb-ext/v1.5.4/wasm_mvp/excel.duckdb_extension.wasm`]: new Uint8Array([0, 97, 115, 109]),
-    [`${SITE}/duckdb-ext/v1.5.4/wasm_eh/parquet.duckdb_extension.wasm`]: new Uint8Array([0, 97, 115, 109]),
-    [`${SITE}/duckdb-ext/v1.5.4/wasm_mvp/parquet.duckdb_extension.wasm`]: new Uint8Array([0, 97, 115, 109]),
-    [`${SITE}/duckdb-ext/v1.5.4/wasm_eh/json.duckdb_extension.wasm`]: new Uint8Array([0, 97, 115, 109]),
-    [`${SITE}/duckdb-ext/v1.5.4/wasm_mvp/json.duckdb_extension.wasm`]: new Uint8Array([0, 97, 115, 109]),
+    [`${SITE}/duckdb-ext/v1.5.6/wasm_eh/excel.duckdb_extension.wasm`]: new Uint8Array([0, 97, 115, 109]),
+    [`${SITE}/duckdb-ext/v1.5.6/wasm_mvp/excel.duckdb_extension.wasm`]: new Uint8Array([0, 97, 115, 109]),
+    [`${SITE}/duckdb-ext/v1.5.6/wasm_eh/parquet.duckdb_extension.wasm`]: new Uint8Array([0, 97, 115, 109]),
+    [`${SITE}/duckdb-ext/v1.5.6/wasm_mvp/parquet.duckdb_extension.wasm`]: new Uint8Array([0, 97, 115, 109]),
+    [`${SITE}/duckdb-ext/v1.5.6/wasm_eh/json.duckdb_extension.wasm`]: new Uint8Array([0, 97, 115, 109]),
+    [`${SITE}/duckdb-ext/v1.5.6/wasm_mvp/json.duckdb_extension.wasm`]: new Uint8Array([0, 97, 115, 109]),
+    [`${SITE}/duckdb-ext/v1.5.6/wasm_mvp/stats_duck.duckdb_extension.wasm`]: new Uint8Array([0, 97, 115, 109]),
+    [`${SITE}/duckdb-ext/v1.5.6/wasm_eh/stats_duck.duckdb_extension.wasm`]: new Uint8Array([0, 97, 115, 109]),
   };
   return files;
 }
@@ -98,13 +100,13 @@ describe("files that are missing", () => {
 
   it("fails when an engine build has no Parquet extension file", () => {
     const files = goodFiles();
-    delete files[`${SITE}/duckdb-ext/v1.5.4/wasm_eh/parquet.duckdb_extension.wasm`];
+    delete files[`${SITE}/duckdb-ext/v1.5.6/wasm_eh/parquet.duckdb_extension.wasm`];
     expect(build(files).some((p) => p.includes("wasm_eh") && p.includes("parquet"))).toBe(true);
   });
 
   it("fails when an engine build has no Excel extension file", () => {
     const files = goodFiles();
-    delete files[`${SITE}/duckdb-ext/v1.5.4/wasm_mvp/excel.duckdb_extension.wasm`];
+    delete files[`${SITE}/duckdb-ext/v1.5.6/wasm_mvp/excel.duckdb_extension.wasm`];
     expect(build(files).some((p) => p.includes("wasm_mvp") && p.includes("excel"))).toBe(true);
   });
 });

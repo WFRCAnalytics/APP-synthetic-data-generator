@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = join(root, ".fixtures", "corpus");
-const DUCKDB_TAG = "v1.5.4"; // the engine inside the pinned @duckdb/duckdb-wasm
+const DUCKDB_TAG = "v1.5.6"; // the engine inside the pinned @duckdb/duckdb-wasm
 const DUCKDB_RAW = `https://raw.githubusercontent.com/duckdb/duckdb/${DUCKDB_TAG}/data/csv`;
 const SPECTRUM_RAW = "https://raw.githubusercontent.com/max-mapper/csv-spectrum/master/csvs";
 
