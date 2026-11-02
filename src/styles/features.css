@@ -228,12 +228,11 @@ section[aria-labelledby="ingest-heading"] > .empty-state .empty-state-icon {
 
 .review-panes {
   /* Never squeezed below a usable list by the rows above it: the page scrolls instead. */
-  min-height: 26rem;
+  min-height: 34rem;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(22rem, 27rem);
   gap: var(--space-5);
   flex: 1;
-  min-height: 0;
 }
 
 .review-detail {
