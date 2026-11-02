@@ -4,8 +4,8 @@
 
 ## Phase 1: Safety net
 
-- [ ] T001 Add `tests/unit/golden-output.test.ts`: a fixed spec and seed for each format (CSV, Excel, Parquet, JSON) written through the same code the workers use, with the sha-256 of the bytes pinned in the test; record the hashes from the current tools
-- [ ] T002 Record the baseline in `research.md`: test counts, production bundle size (gzip), build time, `npm outdated`
+- [x] T001 Add `tests/unit/golden-output.test.ts`: a fixed spec and seed for each format (CSV, Excel, Parquet, JSON) written through the same code the workers use, with the sha-256 of the bytes pinned in the test; record the hashes from the current tools
+- [x] T002 Record the baseline in `research.md`: test counts, production bundle size (gzip), build time, `npm outdated`
 
 ## Phase 2: Groups (each its own commit, suite green at each)
 
