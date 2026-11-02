@@ -10,7 +10,7 @@ import { installNetPatch } from "./netpatch";
 import type { ColumnOverrides, ColumnProfile, FileSettings } from "../lib/profile/types";
 import { createEngine, duckdb, loadExcelExtension, loadJsonExtension, loadParquetExtension, loadStatExtension, type Engine } from "../lib/duckdb/engine";
 import { detectJson } from "../lib/json/detect";
-import { csvNameOf, detectStat, hasStatExtension, type StatFormat } from "../lib/stat/detect";
+import { csvNameOf, DETECT_BYTES, detectStat, hasStatExtension, type StatFormat } from "../lib/stat/detect";
 import { readStatLabels } from "../lib/stat/labels";
 import { inspectStat, loadStat, type StatInfo } from "./profile/stat";
 import { inspectJson, loadJson, type JsonInfo } from "./profile/json";
@@ -185,7 +185,7 @@ async function open(chosen: File): Promise<void> {
   if (/\.parquet$/i.test(chosen.name)) throw new AppError("parquet_not_parquet");
 
   // An SPSS or Stata file is told by its first bytes (specs/017 FR-001).
-  const format = detectStat(new Uint8Array(await chosen.slice(0, 16).arrayBuffer()), chosen.name);
+  const format = detectStat(new Uint8Array(await chosen.slice(0, DETECT_BYTES).arrayBuffer()), chosen.name);
   if (format) {
     await openStat(chosen, format);
     return;

@@ -4,6 +4,7 @@
 // the values the table really has, and shown on Review and in the README for agents.
 
 import type { CodebookEntry } from "../codebook/codebook";
+import type { StatFormat } from "./detect";
 import { MAX_ENTRIES, MAX_LABEL_LENGTH } from "../codebook/codebook";
 
 /** How much of an SPSS file is read: its dictionary comes before the data and is far smaller than this. */
@@ -197,7 +198,8 @@ export async function parseDtaLabels(read: (start: number, end: number) => Promi
 }
 
 /** The value labels of a chosen file, or none when it has none or they cannot be read. */
-export async function readStatLabels(file: File, format: "sav" | "dta"): Promise<CodebookEntry[]> {
+export async function readStatLabels(file: File, format: StatFormat): Promise<CodebookEntry[]> {
+  if (format !== "sav" && format !== "dta") return []; // a SAS file keeps its labels in a separate format catalog
   try {
     if (format === "sav") return parseSavLabels(new Uint8Array(await file.slice(0, SAV_DICTIONARY_BYTES).arrayBuffer()));
     return await parseDtaLabels(async (start, end) => new Uint8Array(await file.slice(start, end).arrayBuffer()));

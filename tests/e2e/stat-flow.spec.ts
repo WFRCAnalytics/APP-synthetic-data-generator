@@ -77,6 +77,34 @@ for (const [name, label, magic, readmeText] of [
   });
 }
 
+for (const [name, label] of [
+  ["survey.sas7bdat", "SAS"],
+  ["survey.xpt", "SAS transport"],
+] as const) {
+  test(`${name}: read like the others, and written as a CSV because SAS files are read only`, async ({ page }, testInfo) => {
+    await page.goto(APP);
+    await page.locator("#file-input").setInputFiles(join(FIX, name));
+    const summary = page.getByTestId("stat-summary");
+    await expect(summary).toBeVisible({ timeout: 60_000 });
+    await expect(summary.getByRole("heading", { name: `${label} file` })).toBeVisible();
+    await expect(summary).toContainText("120 rows, 6 variables");
+    expect(await page.locator("body").innerText()).not.toContain("H1000");
+    await page.getByRole("button", { name: "Profile this file" }).click();
+    await expect(page.getByRole("heading", { name: "Review columns" })).toBeVisible({ timeout: 180_000 });
+    await page.getByRole("button", { name: "Continue to Generate" }).click();
+    await generate(page);
+    // There is no "same as the file you opened" choice: the table is a CSV unless another type is picked.
+    await expect(page.locator("#output-kind")).toHaveValue("csv");
+    await expect(page.locator("#output-kind option")).toHaveCount(5);
+    const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Download survey_fake.csv" }).click()]);
+    const path = testInfo.outputPath("fake.csv");
+    await download.saveAs(path);
+    const lines = readFileSync(path, "utf8").trim().split("\n");
+    expect(lines[0]).toBe("hh_id,age,income,mode,has_pass,trip_date");
+    expect(lines).toHaveLength(121);
+  });
+}
+
 test("a file named .sav that is not an SPSS file is refused with a fixed message", async ({ page }) => {
   await page.goto(APP);
   await page.locator("#file-input").setInputFiles({ name: "fake.sav", mimeType: "application/octet-stream", buffer: Buffer.from("not an spss file at all") });

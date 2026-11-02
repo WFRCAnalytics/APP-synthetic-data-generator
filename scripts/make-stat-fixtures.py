@@ -18,4 +18,7 @@ df.loc[5, "income"] = None
 labels = {"mode": {1: "Car", 2: "Bus", 3: "Walk", 4: "Bike"}}
 pyreadstat.write_sav(df, os.path.join(out, "survey.sav"), column_labels=["Household", "Age", "Income", "Mode", "Pass", "Date"], variable_value_labels=labels)
 pyreadstat.write_dta(df, os.path.join(out, "survey.dta"), column_labels=["Household", "Age", "Income", "Mode", "Pass", "Date"], variable_value_labels=labels)
+# SAS transport (XPT version 8, which allows names longer than eight characters). The .sas7bdat fixture is made from the .sav in a
+# browser with the stats_duck writer (no Python library writes that format); see tests/e2e/make-sas-fixture.md.
+pyreadstat.write_xport(df, os.path.join(out, "survey.xpt"), file_format_version=8, column_labels=["Household", "Age", "Income", "Mode", "Pass", "Date"])
 print("ok")

@@ -17,6 +17,7 @@ import { DESIGN_OUTPUTS, extensionOf } from "../lib/design/types";
 import { matchCodebook } from "../lib/codebook/codebook";
 import { buildSpec } from "../lib/spec/build";
 import { outputKindOf, retarget, type OutputKind } from "../lib/spec/retarget";
+import { WRITABLE_FORMATS } from "../lib/stat/detect";
 import { writeDta, DTA_MAX_TEXT } from "../lib/stat/dta";
 import { writeSav, SAV_MAX_TEXT } from "../lib/stat/sav";
 import { tableFromCsv } from "../lib/stat/table";
@@ -460,6 +461,8 @@ export class Session {
       case "statInfo":
         this.set({
           phase: "stat",
+          // A SAS file is read only, so its fake table is a CSV unless another type is chosen.
+          outputKind: WRITABLE_FORMATS.includes(msg.info.format) ? "same" : "csv",
           stat: msg.info,
           fileName: msg.fileName,
           fileSize: msg.fileSize,
@@ -648,9 +651,11 @@ export class Session {
               : "json"
             : "csv";
     const labelOf = (kind: OutputKind) => DESIGN_OUTPUTS.find((o) => o.value === kind)?.label ?? kind;
+    const readOnly = stat !== null && !WRITABLE_FORMATS.includes(stat.format);
     const same = stat
       ? `${stat.format === "sav" ? "SPSS (.sav)" : "Stata (.dta)"}, same as the file you opened`
       : `${labelOf(own as OutputKind)}, same as the file you opened`;
+    if (readOnly) return DESIGN_OUTPUTS.map((o) => ({ value: o.value, label: `${o.label} (.${o.extension})` }));
     return [{ value: "same", label: same }, ...DESIGN_OUTPUTS.filter((o) => o.value !== own).map((o) => ({ value: o.value, label: `${o.label} (.${o.extension})` }))];
   }
 
@@ -777,7 +782,7 @@ export class Session {
   /** The kind of file the fake table is written as when the real one was an SPSS or Stata file, otherwise null. */
   statFormat(): "sav" | "dta" | null {
     const { stat, outputKind } = this.state;
-    return stat && outputKind === "same" ? stat.format : null;
+    return stat && outputKind === "same" && WRITABLE_FORMATS.includes(stat.format) ? (stat.format as "sav" | "dta") : null;
   }
 
   fakeFileName(): string {

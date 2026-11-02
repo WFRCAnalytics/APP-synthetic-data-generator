@@ -35,7 +35,7 @@ export function StatSummary({ fileSize, info, onConfirm, busy }: StatSummaryProp
         <h3>{name} file</h3>
         <InfoTip label="More information">
           {info.sourceName} ({(fileSize / 1048576).toFixed(1)} MB). Only the structure is read at
-          this point; no value is shown. The data is read as a plain table, and the fake file is the same kind of file by default (other file types are on the Generate screen). Value labels are kept beside the columns on Review (they are not written into the fake file); variable labels are not read.
+          this point; no value is shown. The data is read as a plain table, and the fake file is the same kind of file by default for SPSS and Stata, and a CSV for SAS (other file types are on the Generate screen). Value labels are kept beside the columns on Review (they are not written into the fake file); variable labels are not read.
         </InfoTip>
       </div>
       <p>

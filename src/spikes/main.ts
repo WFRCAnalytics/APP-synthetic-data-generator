@@ -201,6 +201,25 @@ const spike = {
     }
   },
 
+  /** Probe for specs/022: writes a file with the stats_duck writer and returns its bytes as base64. Never used by the app. */
+  async statWrite(query: string, out: string) {
+    const [file] = inputFiles();
+    const engine = await createEngine(BASE);
+    const conn = await engine.db.connect();
+    await conn.query("SET autoinstall_known_extensions = false");
+    await conn.query("SET autoload_known_extensions = false");
+    await conn.query(`SET custom_extension_repository = '${location.origin}${import.meta.env.BASE_URL}duckdb-ext'`);
+    await conn.query("LOAD stats_duck");
+    await engine.db.registerFileHandle(file.name, file, duckdb.DuckDBDataProtocol.BROWSER_FILEREADER, true);
+    await conn.query(query.replace("$FILE", file.name));
+    const bytes = await engine.db.copyFileToBuffer(out);
+    await conn.close();
+    await engine.dispose();
+    let text = "";
+    for (let i = 0; i < bytes.length; i += 8192) text += String.fromCharCode(...bytes.subarray(i, i + 8192));
+    return btoa(text);
+  },
+
   /** R14: can a large Blob be assembled from chunks and downloaded? */
   async download(megabytes: number) {
     const chunk = new Uint8Array(1024 * 1024).fill(97);
