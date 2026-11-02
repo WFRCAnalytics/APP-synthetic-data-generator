@@ -145,6 +145,35 @@ describe("from the design to Review and Generate", () => {
     expect(screen.getByRole("status")).toHaveTextContent(/Designed in this app/);
   });
 
+  it("offers a file type, CSV first, and names the file after it", async () => {
+    const user = userEvent.setup();
+    await toDesign(user);
+    await addKind(user, /Whole number/);
+    await user.click(screen.getByRole("button", { name: /Table settings/ }));
+    const type = screen.getByLabelText("File type") as HTMLSelectElement;
+    expect(type.value).toBe("csv");
+    expect(Array.from(type.options).map((o) => o.value)).toEqual(["csv", "xlsx", "parquet", "json", "ndjson"]);
+    await user.selectOptions(type, "parquet");
+    expect(screen.getByText(/my_table_fake\.parquet/)).toBeInTheDocument();
+    await user.selectOptions(type, "ndjson");
+    expect(screen.getByText(/my_table_fake\.ndjson/)).toBeInTheDocument();
+  });
+
+  it("builds a spec of the chosen format and keeps the choice when going back to Design", async () => {
+    const user = userEvent.setup();
+    await toDesign(user);
+    await addKind(user, /Whole number/);
+    await user.click(screen.getByRole("button", { name: /Table settings/ }));
+    await user.selectOptions(screen.getByLabelText("File type"), "parquet");
+    await user.click(screen.getByRole("button", { name: "Continue to Review" }));
+    await screen.findByRole("heading", { name: "Review columns" });
+    expect(screen.getByText(/my_table\.parquet: 1,000 rows/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Design/ }));
+    await screen.findByRole("heading", { name: "Design a table" });
+    await user.click(screen.getByRole("button", { name: /Table settings/ }));
+    expect((screen.getByLabelText("File type") as HTMLSelectElement).value).toBe("parquet");
+  });
+
   it("goes back to Design with the columns kept, and Start over clears them", async () => {
     const user = userEvent.setup();
     await toDesign(user);

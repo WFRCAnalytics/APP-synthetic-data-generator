@@ -9,11 +9,11 @@
 
 ## Phase 2: Screen
 
-- [ ] T005 [US1][US2] `DesignScreen.tsx`: File type select with a tooltip in Table settings, the file-name hint follows it, the choice survives going back; component tests
-- [ ] T006 [P] [US1] `tests/e2e/design-flow.spec.ts`: choose each file type, generate, download, read it back, and a spec round trip for Parquet
+- [x] T005 [US1][US2] `DesignScreen.tsx`: File type select with a tooltip in Table settings, the file-name hint follows it, the choice survives going back; component tests
+- [x] T006 [P] [US1] `tests/e2e/design-flow.spec.ts`: choose each file type, generate, download, read it back, and a spec round trip for Parquet
 
 ## Phase 3: Polish
 
-- [ ] T007 [P] Help guide, README and the designed-table banner say that a designed table can be written in each format
+- [x] T007 [P] Help guide, README and the designed-table banner say that a designed table can be written in each format
 - [ ] T008 Run the browser matrix and the offline zip; record results in `research.md`
 - [ ] T009 Run `/speckit-converge` and mark the slice complete

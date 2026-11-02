@@ -135,3 +135,66 @@ test("a designed table never sends anything or stores anything", async ({ page }
   expect(await page.evaluate(() => localStorage.length + sessionStorage.length)).toBe(0);
   expect(errors).toEqual([]);
 });
+
+// Slice 9: the same designed table, written as each other file type.
+const downloadBytes = async (page: Page, name: RegExp) => {
+  const [d] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name }).click()]);
+  return readFileSync(await d.path());
+};
+
+async function chooseFileType(page: Page, value: string) {
+  // Table settings is open from design(); the select keeps the choice while columns are added.
+  await page.getByRole("button", { name: /Table settings/ }).click();
+  await page.getByLabel("File type").selectOption(value);
+}
+
+test("a designed table is written as JSON, with numbers, text and nulls as designed", async ({ page }) => {
+  await design(page);
+  await chooseFileType(page, "json");
+  await reviewAndGenerate(page);
+  await expect(page.getByTestId("json-layout")).toContainText("a list of records, indented by 2 spaces");
+  const records = JSON.parse((await downloadBytes(page, /Download trips_fake\.json/)).toString("utf8")) as Record<string, unknown>[];
+  expect(records).toHaveLength(1200);
+  expect(Object.keys(records[0])).toEqual(["age", "mode", "day", "pid"]);
+  expect(records.filter((r) => r.age === null)).toHaveLength(60);
+  for (const r of records) if (r.age !== null) expect(typeof r.age).toBe("number");
+  for (const r of records) expect(r.day).toMatch(/^2023-\d{2}-\d{2}$/);
+});
+
+test("a designed table is written as JSON Lines, one record per line", async ({ page }) => {
+  await design(page);
+  await chooseFileType(page, "ndjson");
+  await reviewAndGenerate(page);
+  const text = (await downloadBytes(page, /Download trips_fake\.ndjson/)).toString("utf8");
+  const lines = text.split("\n").filter((l) => l.length > 0);
+  expect(lines).toHaveLength(1200);
+  expect(Object.keys(JSON.parse(lines[0]))).toEqual(["age", "mode", "day", "pid"]);
+});
+
+test("a designed table is written as Parquet and as a workbook, and the Parquet spec loads again", async ({ page, browser }) => {
+  await design(page);
+  await chooseFileType(page, "parquet");
+  await reviewAndGenerate(page);
+  const parquet = await downloadBytes(page, /Download trips_fake\.parquet/);
+  expect(parquet.subarray(0, 4).toString("latin1")).toBe("PAR1");
+  expect(parquet.subarray(parquet.length - 4).toString("latin1")).toBe("PAR1");
+  const spec = await downloadBytes(page, /Download spec \(JSON\)/);
+  expect(JSON.parse(spec.toString("utf8")).source).toMatchObject({ format: "parquet", file_name: "trips.parquet" });
+
+  const fresh = await (await browser.newContext({ acceptDownloads: true })).newPage();
+  await fresh.goto(APP);
+  await fresh.getByLabel("Load existing spec").setInputFiles({ name: "trips_spec.json", mimeType: "application/json", buffer: spec });
+  await expect(fresh.getByRole("heading", { name: "Review columns" })).toBeVisible({ timeout: 30_000 });
+  await fresh.getByRole("button", { name: "Continue to Generate" }).click();
+  await fresh.getByRole("region", { name: "Generate the fake table" }).getByRole("button", { name: /^Generate( again)?$/ }).click();
+  await expect(fresh.getByText(/checks passed\./)).toBeVisible({ timeout: 60_000 });
+  const again = await downloadBytes(fresh, /Download trips_fake\.parquet/);
+  expect(again.equals(parquet)).toBe(true);
+
+  await page.goto(APP);
+  await design(page);
+  await chooseFileType(page, "xlsx");
+  await reviewAndGenerate(page);
+  const book = await downloadBytes(page, /Download trips_fake\.xlsx/);
+  expect(book.subarray(0, 2).toString("latin1")).toBe("PK");
+});

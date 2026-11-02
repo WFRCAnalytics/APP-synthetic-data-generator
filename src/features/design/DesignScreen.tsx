@@ -19,13 +19,16 @@ import {
   type Design,
   type DesignColumn,
   type DesignKind,
+  type DesignOutput,
+  DESIGN_OUTPUTS,
+  extensionOf,
   type DesignProblem,
 } from "../../lib/design/types";
 import { validateDesign } from "../../lib/design/validate";
 import type { SpecFile } from "../../lib/spec/types";
 import { ColumnForm } from "./ColumnForm";
 import { DesignNav, type DesignView } from "./DesignNav";
-import { NumberField, TextField } from "./fields";
+import { ChoiceField, NumberField, TextField } from "./fields";
 import { kindLook } from "./kindLooks";
 
 export interface DesignScreenProps {
@@ -248,7 +251,14 @@ export function DesignScreen({ design, onChange, onBuild }: DesignScreenProps) {
                   value={design.tableName}
                   onChange={(tableName) => onChange({ ...design, tableName })}
                   problems={tableProblems.filter((p) => p.field === "tableName")}
-                  hint={`The file is called ${design.tableName.trim() || "table"}_fake.csv.`}
+                  hint={`The file is called ${design.tableName.trim() || "table"}_fake.${extensionOf(design.output)}.`}
+                />
+                <ChoiceField<DesignOutput>
+                  label="File type"
+                  value={design.output}
+                  options={DESIGN_OUTPUTS}
+                  onChange={(output) => onChange({ ...design, output })}
+                  hint="The kind of file the fake table is written as. Numbers and dates keep their kind in Excel, Parquet and JSON."
                 />
                 <NumberField
                   label="Number of rows"
