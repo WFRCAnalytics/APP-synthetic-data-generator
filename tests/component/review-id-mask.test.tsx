@@ -65,7 +65,7 @@ describe("the ID pattern editor", () => {
     const user = userEvent.setup();
     render(<App />);
     await toReview(user);
-    let e = await editor(user);
+    const e = await editor(user);
     // Four digits with a lowest and highest number allow far fewer than the 500 IDs needed.
     await user.click(within(e).getByRole("button", { name: "Remove position 1" }));
     await user.clear(within(e).getByLabelText("Highest number"));
@@ -80,7 +80,7 @@ describe("the ID pattern editor", () => {
 
     // Leaving the column out lifts the block.
     await user.click(screen.getByRole("button", { name: /^2\. Review|Review/ }));
-    e = await editor(user);
+    await editor(user);
     await user.selectOptions(within(card("hh_id")).getByLabelText("In the fake file"), "drop");
     await user.click(screen.getByRole("button", { name: "Continue to Generate" }));
     expect(within(screen.getByRole("region", { name: "Generate the fake table" })).getByRole("button", { name: "Generate" })).toBeEnabled();

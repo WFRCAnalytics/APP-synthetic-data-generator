@@ -285,7 +285,7 @@ export async function profileColumn(
   }
 
   const where = dataCondition(c, [...naList, ...extraTokens], sentinelKeys);
-  let summary: ColumnSummary = { kind: "unsupported" };
+  let summary: ColumnSummary;
   let mode: ColumnProfile["mode"];
 
   switch (type) {

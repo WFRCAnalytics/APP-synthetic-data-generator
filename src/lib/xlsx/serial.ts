@@ -27,7 +27,7 @@ function secondsOfDay(h: number, mi: number, s: number): number | null {
 
 /** The serial number of ISO text, or null when the text is not a date or time that exists in the system. */
 export function isoToSerial(iso: string, date1904: boolean): number | null {
-  let day: number | null = null;
+  let day: number;
   let secs = 0;
 
   const t = ISO_TIME.exec(iso);

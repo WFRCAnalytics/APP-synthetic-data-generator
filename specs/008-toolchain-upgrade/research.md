@@ -20,3 +20,13 @@
 - Build: 280 ms (was 2.2 s). Production assets 1,880,168 bytes (was 1,884,615); gzip index 110,575, generate worker
   186,140, profile worker 68,332 (were 113,307, 187,204, 69,853). No source maps.
 - Whole Chromium end-to-end suite: 103 passed; offline zip and guard: 15 passed; golden bytes unchanged.
+
+## R3: Group B (ESLint 10, typescript-eslint 8, react-hooks 7, react-refresh 0.5, eslint-config-prettier 10)
+
+- `.eslintrc.cjs` and `.eslintignore` are replaced by `eslint.config.js` (flat config) with the same rules: the recommended
+  JavaScript and TypeScript sets, the two classic hooks rules, the fast-refresh warning, Prettier last, and the faker import
+  ban with its exceptions. The newer compiler-based rules of `eslint-plugin-react-hooks` 7 are left out of this check.
+- ESLint 10's recommended set adds `no-useless-assignment`; it found three assignments that were never read (an unused
+  initial value in `serial.ts` and `profiler.ts`, and one in a test). Each was removed; behaviour is unchanged. Lint: 0 errors,
+  the same 2 fast-refresh warnings as before. Tests: 1,883 pass.
+- `typescript-eslint` 8 supports TypeScript up to below 6.1, which bears on group C (see R4).

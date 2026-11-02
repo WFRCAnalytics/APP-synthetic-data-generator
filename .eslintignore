@@ -1,9 +1,0 @@
-node_modules
-dist
-coverage
-public/duckdb
-.fixtures
-*.min.js
-dist-spike
-test-results
-playwright-report
