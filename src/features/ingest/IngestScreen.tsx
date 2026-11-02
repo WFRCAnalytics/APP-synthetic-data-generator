@@ -14,6 +14,7 @@ import {
 import type { SessionState, WorkbookChoice } from "../../app/session";
 import { JsonSummary } from "./JsonSummary";
 import { ParquetSummary } from "./ParquetSummary";
+import { BatchPanel } from "./BatchPanel";
 import { StatSummary } from "./StatSummary";
 import { WorkbookDialog } from "./WorkbookDialog";
 import { ProfileProgress } from "./ProfileProgress";
@@ -192,6 +193,8 @@ export function IngestScreen({
           }}
         />
       </div>
+
+      {phase === "idle" && !compact && <BatchPanel />}
 
       {session.specProblems && <SpecErrors problems={session.specProblems} />}
 

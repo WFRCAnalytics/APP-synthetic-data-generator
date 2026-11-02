@@ -128,12 +128,13 @@ export function HelpGuideModal({ open, onClose }: HelpGuideModalProps) {
             conditions return plausible counts, not realistic ones.
           </li>
           <li>
-            <strong>Tables are made one at a time.</strong> IDs are invented for each table, so keys in
+            <strong>Tables are made one at a time, or together from their specs.</strong> IDs are invented for each table, so keys in
             separately generated tables will not match, unless you link an ID column to the other
             table&apos;s saved spec (Review, the column&apos;s &ldquo;IDs from another table&rdquo;). A
             whole-number column of the first table can then count the other table&apos;s rows for
             each ID (&ldquo;Number of rows in another table&rdquo;), so a household&apos;s size
-            matches its persons. A designed table can link an ID column the same way, with a range of rows per
+            matches its persons. To make several tables at once, choose their saved specs under
+            &ldquo;Make several tables at once&rdquo; on the first screen and download them in one zip. A designed table can link an ID column the same way, with a range of rows per
             ID. Other columns are not linked.
           </li>
           <li>

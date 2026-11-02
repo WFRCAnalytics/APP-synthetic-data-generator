@@ -1,6 +1,7 @@
 // Two tables whose ID columns match (specs/019), in a real browser: the first table is made and its spec saved; the second
 // table uses that spec's ID column; every ID of the second fake table exists in the first, and the spec holds no ID.
 import { readFileSync } from "node:fs";
+import { readEntryText, readZipDirectory } from "../../src/lib/xlsx/zip";
 import { expect, test, type Page } from "@playwright/test";
 import { shownCard } from "../helpers/review";
 
@@ -120,4 +121,45 @@ test("a designed table can use the IDs of a table made from a file", async ({ pa
   for (const id of ids) sizes.set(id, (sizes.get(id) ?? 0) + 1);
   expect(Math.min(...sizes.values())).toBeGreaterThanOrEqual(1);
   expect(Math.max(...sizes.values())).toBeLessThanOrEqual(4);
+});
+
+test("several tables are made together from their specs, and the zip joins", async ({ page }) => {
+  await makeTable(page, "households.csv", households);
+  const first = await generate(page, /Download households_fake\.csv/);
+  await makeTable(page, "persons.csv", persons);
+  const card = await shownCard(page, "hh_id");
+  await card.getByLabel("Spec of the other table").setInputFiles(first.specPath);
+  await card.getByRole("button", { name: "Use these IDs" }).click();
+  const second = await generate(page, /Download persons_fake\.csv/);
+
+  await page.goto(APP);
+  const panel = page.getByTestId("batch-panel");
+  await panel.getByLabel("Specs of the tables").setInputFiles([second.specPath, first.specPath]);
+  await expect(panel.getByTestId("batch-table")).toContainText("persons_fake.csv");
+  await expect(panel.getByTestId("batch-warning")).toHaveCount(0); // the two tables fit together
+  await panel.getByRole("button", { name: "Make all tables" }).click();
+  await expect(panel.getByText(/Done, \d+ checks passed/)).toHaveCount(2, { timeout: 120_000 });
+
+  const [zip] = await Promise.all([page.waitForEvent("download"), panel.getByRole("button", { name: "Download all (zip)" }).click()]);
+  expect(zip.suggestedFilename()).toBe("tables.zip");
+  const bytes = readFileSync(await zip.path());
+  const blob = new Blob([bytes as BlobPart]);
+  const entries = await readZipDirectory(blob);
+  const names = entries.map((e) => e.name).sort();
+  expect(names).toEqual([
+    "households_fake/households_fake.csv",
+    "households_fake/households_fake_README.md",
+    "households_fake/households_spec.json",
+    "persons_fake/persons_fake.csv",
+    "persons_fake/persons_fake_README.md",
+    "persons_fake/persons_spec.json",
+  ]);
+  const read = (name: string) => readEntryText(blob, entries.find((e) => e.name === name)!);
+  const parentIds = new Set(column(await read("households_fake/households_fake.csv"), 0));
+  const childIds = column(await read("persons_fake/persons_fake.csv"), 0);
+  expect(childIds.length).toBe(300);
+  expect(childIds.every((id) => parentIds.has(id))).toBe(true);
+  // The same tables as when each is made on its own screen.
+  expect(await read("households_fake/households_fake.csv")).toBe(first.csv);
+  expect(await read("persons_fake/persons_fake.csv")).toBe(second.csv);
 });
