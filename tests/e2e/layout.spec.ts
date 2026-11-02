@@ -58,7 +58,7 @@ test("a tooltip near the right edge opens inside the window", async ({ page }) =
 // open, nothing in the right-hand panel may reach past its right edge, at any width or text size.
 const NL = String.fromCharCode(10);
 const codes = ["id,tracking_code,reference_number_for_the_household_interview"]
-  .concat(Array.from({ length: 300 }, (_, i) => `H${100000 + i},AB${1000 + i}-CD${5000 + i}-EF${(i * 7) % 90}-G${i % 10},REF${String(i).padStart(24, "0")}`))
+  .concat(Array.from({ length: 300 }, (_, i) => `H${100000 + i},ab${1000 + i}x${(i * 7919).toString(36).padStart(11, "k")}${String.fromCharCode(65 + (i % 26))}9,REF${String(i).padStart(24, "0")}`))
   .join(NL) + NL;
 
 for (const [width, text] of [[1280, 100], [1000, 100], [1280, 150]] as [number, number][]) {
