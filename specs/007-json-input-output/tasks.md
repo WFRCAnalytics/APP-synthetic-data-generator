@@ -46,14 +46,14 @@
 
 **Independent Test**: `npx playwright test json-flow` and `npx vitest run json-load json-readback`.
 
-- [ ] T012 [P] [US1] Integration test `tests/integration/json-load.test.ts` (Node engine): registering `survey.json`, `inspectJson` returns record count, key names in first-seen order and kinds, and `loadJson` builds the all-text table (numbers as text with a trailing `.0` removed from whole doubles, `true` and `false`, empty text token, NULL); no value is in the inspect result
+- [x] T012 [P] [US1] Integration test `tests/integration/json-load.test.ts` (Node engine): registering `survey.json`, `inspectJson` returns record count, key names in first-seen order and kinds, and `loadJson` builds the all-text table (numbers as text with a trailing `.0` removed from whole doubles, `true` and `false`, empty text token, NULL); no value is in the inspect result
 - [ ] T013 [P] [US1] Read-back test `tests/integration/json-readback.test.ts`: write a file with `writeJson` from a synthetic spec and read it with Python-equivalent strict parsing (`JSON.parse`) and with the Node engine (`read_json`); keys, order and value kinds match the spec
-- [ ] T014 [US1] Implement `src/workers/profile/json.ts`: `inspectJson` (queries of research R2 only; refuses a non-record item, a repeated key, an empty file) and `loadJson` (the typed to all-text conversion of research R3, nested keys as all-NULL, mixed keys as text)
-- [ ] T015 [US1] Worker and protocol: detect JSON by content in `src/workers/profile.worker.ts` (the first non-space character, never the extension), add `inspectJson`/`jsonInfo` messages to `src/workers/protocol.ts`, map every failure to the fixed messages of T010, discard the engine's message, load the extension before reading
-- [ ] T016 [US1] Generation: `src/lib/generate/json.ts` (`jsonLayoutOf(spec)`, `writeJson(spec, seed, chunkRows, observe, between)` using the CSV path's rendering and `convert.ts`), the JSON branch in `src/lib/generate/table.ts` and `src/workers/generate.worker.ts` streaming chunks
-- [ ] T017 [US1] App: `src/app/session.ts` (file kind, `fakeBlob` mime `application/json`, the file name with `_fake` keeping `.json`, `.ndjson` or `.jsonl`), `src/features/ingest/IngestScreen.tsx` accepts `.json`, `.ndjson` and `.jsonl` and tells the user "One file at a time", a `JsonSummary` card in `src/features/ingest/` (record count, form, keys with kinds, no value) using the tooltip component for notes, the size warning in `sizeWarnings.ts` (research R7)
+- [x] T014 [US1] Implement `src/workers/profile/json.ts`: `inspectJson` (queries of research R2 only; refuses a non-record item, a repeated key, an empty file) and `loadJson` (the typed to all-text conversion of research R3, nested keys as all-NULL, mixed keys as text)
+- [x] T015 [US1] Worker and protocol: detect JSON by content in `src/workers/profile.worker.ts` (the first non-space character, never the extension), add `inspectJson`/`jsonInfo` messages to `src/workers/protocol.ts`, map every failure to the fixed messages of T010, discard the engine's message, load the extension before reading
+- [x] T016 [US1] Generation: `src/lib/generate/json.ts` (`jsonLayoutOf(spec)`, `writeJson(spec, seed, chunkRows, observe, between)` using the CSV path's rendering and `convert.ts`), the JSON branch in `src/lib/generate/table.ts` and `src/workers/generate.worker.ts` streaming chunks
+- [x] T017 [US1] App: `src/app/session.ts` (file kind, `fakeBlob` mime `application/json`, the file name with `_fake` keeping `.json`, `.ndjson` or `.jsonl`), `src/features/ingest/IngestScreen.tsx` accepts `.json`, `.ndjson` and `.jsonl` and tells the user "One file at a time", a `JsonSummary` card in `src/features/ingest/` (record count, form, keys with kinds, no value) using the tooltip component for notes, the size warning in `sizeWarnings.ts` (research R7)
 - [ ] T018 [P] [US1] Component test `tests/component/json-ingest.test.tsx`: the card shows names, kinds and counts and no value; the size warning and stop; refused files show the fixed messages
-- [ ] T019 [P] [US1] End-to-end test `tests/e2e/json-flow.spec.ts`: choose `survey.json`, review, generate, download, then read the download with the same code as the real file (`JSON.parse`) and the app's own engine, and compare keys, order and value kinds; check the file name is `survey_fake.json`
+- [x] T019 [P] [US1] End-to-end test `tests/e2e/json-flow.spec.ts`: choose `survey.json`, review, generate, download, then read the download with the same code as the real file (`JSON.parse`) and the app's own engine, and compare keys, order and value kinds; check the file name is `survey_fake.json`
 
 **Checkpoint**: an array round trip works through the app.
 
@@ -66,7 +66,7 @@
 **Independent Test**: `npx playwright test json-flow -g lines` and `npx vitest run json-load json-readback`.
 
 - [ ] T020 [P] [US2] Extend `tests/integration/json-load.test.ts` and `json-readback.test.ts` to `survey.ndjson` and `survey_crlf_bom.json`: form detected by content whatever the extension, CRLF and the byte-order mark recorded and reproduced, blank lines tolerated on read
-- [ ] T021 [P] [US2] Extend `tests/e2e/json-flow.spec.ts` with the lines file: the download has one complete record per line, no brackets, no commas between records, the extension kept (`.ndjson`, `.jsonl`)
+- [x] T021 [P] [US2] Extend `tests/e2e/json-flow.spec.ts` with the lines file: the download has one complete record per line, no brackets, no commas between records, the extension kept (`.ndjson`, `.jsonl`)
 - [ ] T022 [US2] Make the form follow the spec: an array spec writes an array and a lines spec writes lines, in `src/lib/generate/json.ts` and the Generate screen note that states the form and layout; a `.json` file with one record per line is a lines file
 
 **Checkpoint**: both forms round trip.
@@ -97,7 +97,7 @@
 - [ ] T027 [P] [US4] Spy test `tests/integration/json-privacy.test.ts`: a runner that records every row the engine returns to the caller while `markers.json` is inspected, loaded and profiled; fails if any marker (in values, nested values or nested key names) appears in any returned row except inside the table load that stays in the worker
 - [ ] T028 [P] [US4] Output test in `tests/unit/json-writer.test.ts` and `tests/integration/json-readback.test.ts`: the fake file holds no marker, no nested key name, an unsupported key is omitted by default and `null` in every record when kept
 - [ ] T029 [P] [US4] End-to-end leak test `tests/e2e/json-privacy.spec.ts`: run the whole flow on `markers.json` and search page text, spec JSON, preview, the downloaded file's bytes, console messages, local and session storage and every error message for any marker; assert zero outside requests (SC-002, SC-003)
-- [ ] T030 [P] [US4] Refusal tests: `damaged.json`, `scalar.json`, `items.json`, `dup.json`, `empty.json`, `geojson.json` and `comments.json` each end in the fixed message with no file content (`tests/integration/json-load.test.ts`, `tests/e2e/json-flow.spec.ts`)
+- [x] T030 [P] [US4] Refusal tests: `damaged.json`, `scalar.json`, `items.json`, `dup.json`, `empty.json`, `geojson.json` and `comments.json` each end in the fixed message with no file content (`tests/integration/json-load.test.ts`, `tests/e2e/json-flow.spec.ts`)
 - [ ] T031 [US4] Reason codes `nested_object` and `nested_array` in `src/lib/profile/types.ts` with fixed texts in `src/features/review/summary.ts`; the kept-as-null handling in the writer and spec validation (an unsupported key holds no `json_nulls` count from inside the value); make T027 to T030 pass
 
 **Checkpoint**: the privacy claim is tested at the query, the file and the browser levels.

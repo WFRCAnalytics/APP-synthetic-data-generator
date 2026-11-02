@@ -10,12 +10,12 @@ import { profilesFromSpec, settingsFromSource } from "../lib/spec/toProfiles";
 import type { SpecFile, SpecProblem } from "../lib/spec/types";
 import type { SampleDescription } from "../lib/textgen/sample";
 import type { SheetHints, WorkbookInfo } from "../lib/xlsx/metadata";
-import type { ParquetSummary } from "../workers/protocol";
+import type { JsonSummary, ParquetSummary } from "../workers/protocol";
 import { readSpecFile } from "../features/spec/loadSpec";
 import { specBlobOf, specFileNameFor } from "../features/spec/saveSpec";
 import type { GenerateRequest, GenerateResponse, ProfileJob, ProfileRequest, ProfileResponse } from "../workers/protocol";
 
-export type Phase = "idle" | "opening" | "opened" | "workbook" | "parquet" | "loading" | "profiling" | "profiled" | "error";
+export type Phase = "idle" | "opening" | "opened" | "workbook" | "parquet" | "json" | "loading" | "profiling" | "profiled" | "error";
 
 export interface Progress {
   job: ProfileJob | "generate";
@@ -65,6 +65,8 @@ export interface SessionState {
   workbook: WorkbookState | null;
   /** Set when the chosen file is a Parquet file: its structure, never a value or any of its metadata text. */
   parquet: ParquetSummary | null;
+  /** Set when the chosen file is a JSON file: its structure, never a value or a nested key name. */
+  json: JsonSummary | null;
   error: string | null;
   fileName: string;
   fileSize: number;
@@ -100,6 +102,7 @@ export const initialSession: SessionState = {
   phase: "idle",
   workbook: null,
   parquet: null,
+  json: null,
   error: null,
   fileName: "",
   fileSize: 0,
@@ -125,6 +128,8 @@ export const initialSession: SessionState = {
 export const MAX_SEED = 4294967295;
 export const XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 export const PARQUET_MIME = "application/vnd.apache.parquet";
+export const JSON_MIME = "application/json";
+export const NDJSON_MIME = "application/x-ndjson";
 
 /** A valid seed (0 to 4,294,967,295), or null for blank, fractional or out-of-range text. */
 export function parseSeed(text: string): number | null {
@@ -217,6 +222,17 @@ export class Session {
     this.send({ type: "loadParquet" });
   }
 
+  /** Loads the JSON file that was opened, then profiles it. */
+  confirmJson(): void {
+    if (!this.state.json) return;
+    this.pending.clear();
+    this.base = [];
+    this.edits = {};
+    this.engine = {};
+    this.set({ phase: "loading", error: null, progress: null, profiles: [], busy: [], reviewError: null, datePatternChecks: {} });
+    this.send({ type: "loadJson" });
+  }
+
   /** Asks for the hints of a sheet (rows to skip, width, formats) while the load dialog is open. */
   inspectSheet(sheet: string): void {
     if (this.state.workbook?.hints[sheet]) return;
@@ -303,6 +319,9 @@ export class Session {
         break;
       case "parquetInfo":
         this.set({ phase: "parquet", parquet: msg.info, fileName: msg.fileName, fileSize: msg.fileSize, columnNames: msg.info.columns.map((c) => c.name) });
+        break;
+      case "jsonInfo":
+        this.set({ phase: "json", json: msg.info, fileName: msg.fileName, fileSize: msg.fileSize, columnNames: msg.info.keys.map((k) => k.name) });
         break;
       case "sheetHints":
         if (this.state.workbook) this.set({ workbook: { ...this.state.workbook, hints: { ...this.state.workbook.hints, [msg.sheet]: msg.hints } } });
@@ -480,7 +499,7 @@ export class Session {
   /** The fake CSV as a Blob, or null before a run has finished. */
   fakeBlob(): Blob | null {
     const settings = this.state.settings;
-    const type = settings && isExcelSettings(settings) ? XLSX_MIME : settings && isParquetSettings(settings) ? PARQUET_MIME : "text/csv";
+    const type = settings && isExcelSettings(settings) ? XLSX_MIME : settings && isParquetSettings(settings) ? PARQUET_MIME : settings && isJsonSettings(settings) ? (settings.layout.form === "lines" ? NDJSON_MIME : JSON_MIME) : "text/csv";
     return this.state.gen.status === "done" ? new Blob(this.parts as BlobPart[], { type }) : null;
   }
 

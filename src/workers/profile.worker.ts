@@ -8,7 +8,9 @@ import { AppError, sanitizeError, toWireError } from "../lib/errors";
 import { NET_CHANNEL } from "../lib/netChannel";
 import { installNetPatch } from "./netpatch";
 import type { ColumnOverrides, ColumnProfile, FileSettings } from "../lib/profile/types";
-import { createEngine, duckdb, loadExcelExtension, loadParquetExtension, type Engine } from "../lib/duckdb/engine";
+import { createEngine, duckdb, loadExcelExtension, loadJsonExtension, loadParquetExtension, type Engine } from "../lib/duckdb/engine";
+import { detectJson } from "../lib/json/detect";
+import { inspectJson, loadJson, type JsonInfo } from "./profile/json";
 import { classifyParquet } from "../lib/parquet/detect";
 import { inspectParquet, loadParquet, type ParquetInfo } from "./profile/parquet";
 import { workbookTooLarge } from "../features/ingest/sizeWarnings";
@@ -57,6 +59,10 @@ let mixedColumns = new Set<string>();
 let mixedFormatColumns = new Set<number>();
 let excelLoaded = false;
 let parquetLoaded = false;
+let jsonLoaded = false;
+/** The registered name and structure of the opened JSON file (null when the file is not JSON). */
+let jsonFile: string | null = null;
+let jsonInfo: JsonInfo | null = null;
 /** The registered name and structure of the opened Parquet file (null when the file is not Parquet). */
 let parquetFile: string | null = null;
 let parquetInfo: ParquetInfo | null = null;
@@ -92,17 +98,37 @@ function markParquet(p: ColumnProfile, index: number): void {
   }
 }
 
-/** Overrides that make the unsupported columns of a Parquet file stay unsupported, whatever else is asked. */
+/** Notes what is known of a column from its file: its JSON kind, how often it is missing, and why it cannot be faked. */
+function markJson(p: ColumnProfile, index: number): void {
+  const key = jsonInfo?.keys[index];
+  if (!key) return;
+  p.jsonKind = key.kind;
+  p.jsonMissing = key.missing;
+  const add = (reason: ColumnProfile["attentionReasons"][number]) => {
+    if (!p.attentionReasons.includes(reason)) p.attentionReasons = [...p.attentionReasons, reason];
+  };
+  if (key.unsupported) {
+    p.unsupportedReason = key.unsupported;
+    add("unsupported_type");
+  } else if (key.mixed) {
+    add("mixed_kinds");
+    if (p.status === "ok") p.status = "needs_attention";
+  }
+}
+
+/** Overrides that make the unsupported columns of a Parquet or JSON file stay unsupported, whatever else is asked. */
 function withParquetLocks(overrides: Record<string, ColumnOverrides>): Record<string, ColumnOverrides> {
-  if (!parquetInfo) return overrides;
+  if (!parquetInfo && !jsonInfo) return overrides;
   const out = { ...overrides };
-  for (const c of parquetInfo.columns) if (c.unsupported) out[c.name] = { ...out[c.name], type: "unsupported" };
+  for (const c of parquetInfo?.columns ?? []) if (c.unsupported) out[c.name] = { ...out[c.name], type: "unsupported" };
+  for (const k of jsonInfo?.keys ?? []) if (k.unsupported) out[k.name] = { ...out[k.name], type: "unsupported" };
   return out;
 }
 
 /** Notes how the real cells of a workbook column were stored: its number format, and whether they held text. */
 function markCells(p: ColumnProfile, index: number): void {
   markParquet(p, index);
+  markJson(p, index);
   const format = cellFormats[index];
   if (format && !/^general$/i.test(format)) p.cellFormat = format;
   // Text cells that read as numbers or dates are written back as text cells, not numbers.
@@ -136,6 +162,8 @@ async function open(chosen: File): Promise<void> {
   // A Parquet file is told by its first and last bytes, not its name (specs/005 FR-001, FR-015).
   parquetFile = null;
   parquetInfo = null;
+  jsonFile = null;
+  jsonInfo = null;
   const first = new Uint8Array(await chosen.slice(0, 8).arrayBuffer());
   const last = new Uint8Array(await chosen.slice(Math.max(0, size - 8)).arrayBuffer());
   const kind = classifyParquet(first, last);
@@ -146,6 +174,16 @@ async function open(chosen: File): Promise<void> {
     return;
   }
   if (/\.parquet$/i.test(chosen.name)) throw new AppError("parquet_not_parquet");
+
+  // A JSON file is told by its first character, not its name (specs/007 FR-001): [ for an array, { for records.
+  const jsonHead = new Uint8Array(await chosen.slice(0, HEAD_BYTES).arrayBuffer());
+  const jsonTail = new Uint8Array(await chosen.slice(Math.max(0, size - TAIL_BYTES)).arrayBuffer());
+  const detected = detectJson(jsonHead, jsonTail);
+  if (detected.form !== null) {
+    await openJson(chosen, detected.layout);
+    return;
+  }
+  if (/\.(json|ndjson|jsonl)$/i.test(chosen.name) && !(await looksLikeWorkbook(chosen))) throw new AppError("json_malformed");
 
   if (await looksLikeWorkbook(chosen)) {
     const info = await inspectWorkbook(chosen); // refuses damaged, old, encrypted and non-workbook files
@@ -201,6 +239,49 @@ async function openParquet(chosen: File): Promise<void> {
     fileSize: chosen.size,
     info: { rowCount: info.rowCount, rowGroups: info.rowGroups, expandedBytes: info.expandedBytes, columns: info.columns.map((c) => ({ name: c.name, type: c.type, unsupported: c.unsupported, renamed: c.renamed })) },
   });
+}
+
+/** Reads the structure of a JSON file and tells the page; no value is read (specs/007 research R2). */
+async function openJson(chosen: File, layout: ReturnType<typeof detectJson>["layout"]): Promise<void> {
+  const runner = await ensureEngine();
+  if (!jsonLoaded) {
+    await loadJsonExtension((q) => runner.run(q), EXTENSIONS);
+    jsonLoaded = true;
+  }
+  const virtual = `source_${Date.now()}.json`;
+  await (engine as Engine).db.registerFileHandle(virtual, chosen, duckdb.DuckDBDataProtocol.BROWSER_FILEREADER, true);
+  const info = await inspectJson(runner, virtual, layout, chosen.size);
+  jsonFile = virtual;
+  jsonInfo = info;
+  settings = null;
+  cellFormats = [];
+  textCells = [];
+  mixedColumns = new Set();
+  mixedFormatColumns = new Set();
+  post({
+    type: "jsonInfo",
+    fileName: chosen.name,
+    fileSize: chosen.size,
+    info: {
+      rowCount: info.rowCount,
+      layout: info.layout,
+      expandedBytes: info.expandedBytes,
+      keys: info.keys.map((k) => ({ name: k.name, kind: k.kind, nulls: k.nulls, missing: k.missing, mixed: k.mixed, unsupported: k.unsupported, renamed: k.renamed })),
+    },
+  });
+}
+
+/** Loads the opened JSON file into the all-text table. */
+async function loadJsonFile(): Promise<void> {
+  if (!jsonFile || !jsonInfo) throw new AppError("file_unreadable");
+  const runner = await ensureEngine();
+  post({ type: "progress", job: "load", done: 0, total: 1 });
+  const loaded = await loadJson(runner, jsonFile, jsonInfo);
+  rowCount = loaded.rowCount;
+  columnNames = loaded.columnNames;
+  quoted = loaded.columnNames.map(() => false);
+  post({ type: "progress", job: "load", done: 1, total: 1 });
+  post({ type: "loaded", rowCount, columnNames, settings: { json: true, layout: jsonInfo.layout } });
 }
 
 /** Loads the opened Parquet file into the all-text table. */
@@ -358,6 +439,9 @@ self.onmessage = async (event: MessageEvent<ProfileRequest>) => {
         break;
       case "loadParquet":
         await loadParquetFile();
+        break;
+      case "loadJson":
+        await loadJsonFile();
         break;
       case "profile":
         await profile(msg.threshold, msg.overrides);

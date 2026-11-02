@@ -37,6 +37,7 @@ const TYPE_LABELS: Record<string, string> = {
 export const typeLabel = (type: string): string => TYPE_LABELS[type] ?? type;
 
 const REASON_TEXT: Record<ReasonCode, string> = {
+  mixed_kinds: "This key holds more than one kind of value (numbers and text, say), so every value is read and written as text.",
   possible_sentinel: "Some values look like codes for “don't know” or “refused”. They are kept with their exact counts and left out of min, max, mean and spread.",
   possible_identifier: "This looks like personal data, so none of its values are used.",
   near_categorical_threshold: "The number of distinct values is close to the limit between coded and numeric columns.",

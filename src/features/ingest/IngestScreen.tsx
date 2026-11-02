@@ -5,8 +5,14 @@ import { FileUp, PencilRuler, Upload } from "lucide-react";
 import { useRef } from "react";
 import { InfoTip } from "../../components/InfoTip";
 import { EmptyState } from "../../components/EmptyState";
-import { isExcelSettings, isJsonSettings, isParquetSettings, type FileSettings } from "../../lib/profile/types";
+import {
+  isExcelSettings,
+  isJsonSettings,
+  isParquetSettings,
+  type FileSettings,
+} from "../../lib/profile/types";
 import type { SessionState, WorkbookChoice } from "../../app/session";
+import { JsonSummary } from "./JsonSummary";
 import { ParquetSummary } from "./ParquetSummary";
 import { WorkbookDialog } from "./WorkbookDialog";
 import { ProfileProgress } from "./ProfileProgress";
@@ -20,6 +26,7 @@ export interface IngestScreenProps {
   onInspectSheet: (sheet: string) => void;
   onConfirmWorkbook: (choice: WorkbookChoice) => void;
   onConfirmParquet: () => void;
+  onConfirmJson: () => void;
   onEditSettings: (patch: Partial<FileSettings>) => void;
   onConfirm: () => void;
   onCancel: () => void;
@@ -50,6 +57,7 @@ export function IngestScreen({
   onInspectSheet,
   onConfirmWorkbook,
   onConfirmParquet,
+  onConfirmJson,
   onEditSettings,
   onConfirm,
   onCancel,
@@ -59,7 +67,10 @@ export function IngestScreen({
   const { phase } = session;
   // The CSV panel is for CSV files; a workbook has its own dialog, and a Parquet file its own summary.
   const settings =
-    session.settings && !isExcelSettings(session.settings) && !isParquetSettings(session.settings) && !isJsonSettings(session.settings)
+    session.settings &&
+    !isExcelSettings(session.settings) &&
+    !isParquetSettings(session.settings) &&
+    !isJsonSettings(session.settings)
       ? session.settings
       : null;
   const busy = phase === "opening" || phase === "loading" || phase === "profiling";
@@ -113,7 +124,7 @@ export function IngestScreen({
               id="file-input"
               ref={input}
               type="file"
-              accept=".csv,.tsv,.txt,.xlsx,.parquet,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.apache.parquet"
+              accept=".csv,.tsv,.txt,.xlsx,.parquet,.json,.ndjson,.jsonl,application/json,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.apache.parquet"
               disabled={busy}
               onChange={(e) => {
                 const file = e.target.files?.[0];
@@ -317,6 +328,16 @@ export function IngestScreen({
           fileSize={session.fileSize}
           info={session.parquet}
           onConfirm={onConfirmParquet}
+          busy={busy}
+        />
+      )}
+
+      {phase === "json" && session.json && (
+        <JsonSummary
+          fileName={session.fileName}
+          fileSize={session.fileSize}
+          info={session.json}
+          onConfirm={onConfirmJson}
           busy={busy}
         />
       )}

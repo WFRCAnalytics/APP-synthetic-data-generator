@@ -54,6 +54,7 @@ export const isJsonSettings = (s: SourceSettings): s is JsonSettings => "json" i
 export type ColumnStatus = "ok" | "needs_attention" | "unsupported";
 
 export type ReasonCode =
+  | "mixed_kinds"
   | "possible_identifier"
   | "possible_sentinel"
   | "near_categorical_threshold"

@@ -9,6 +9,7 @@ import { installNetPatch } from "./netpatch";
 import { CheckAccumulator } from "../lib/generate/checks";
 import { renderChunks } from "../lib/generate/render";
 import { planTable, rowValues, type TablePlan } from "../lib/generate/table";
+import { writeJson } from "../lib/generate/json";
 import { writeParquet } from "../lib/generate/parquet";
 import { previewCells, writeWorkbook } from "../lib/generate/xlsx";
 import { chooseCodec, CREATED_BY_PREFIX } from "../lib/parquet/writer";
@@ -43,6 +44,7 @@ async function generate(request: Extract<GenerateRequest, { type: "generate" }>)
   }
   if (validated.spec.source.format === "xlsx") return generateWorkbook(validated.spec, plan, request);
   if (validated.spec.source.format === "parquet") return generateParquet(validated.spec, plan, request);
+  if (validated.spec.source.format === "json") return generateJson(validated.spec, plan, request);
 
   // The preview is fake data, so showing it is safe.
   const rows: string[][] = [];
@@ -93,6 +95,34 @@ async function generateParquet(spec: SpecFile, plan: TablePlan, request: Extract
   }
   post({ type: "checks", checks: [...checks.finish(), ...run.extraChecks()] });
   post({ type: "done", totalBytes, replaced: 0, codec: run.codec });
+}
+
+/** A spec for a JSON file: the same table, written as records and streamed in chunks (specs/007). */
+async function generateJson(spec: SpecFile, plan: TablePlan, request: Extract<GenerateRequest, { type: "generate" }>): Promise<void> {
+  const rows: string[][] = [];
+  for (let r = 0; r < Math.min(PREVIEW_ROWS, plan.nRows); r++) rows.push(previewCells(rowValues(plan, r)));
+  post({ type: "preview", header: plan.header, rows });
+
+  const checks = new CheckAccumulator(plan);
+  let totalBytes = 0;
+  const run = writeJson(
+    spec,
+    request.seed,
+    request.chunkRows,
+    (values) => checks.observeRow(values),
+    async (rowsDone) => {
+      post({ type: "progress", rowsDone, rowsTotal: plan.nRows });
+      await tick(); // lets a queued "cancel" message run between chunks
+      if (cancelled) throw new AppError("cancelled");
+    },
+  );
+  for await (const chunk of run.chunks) {
+    totalBytes += chunk.length;
+    const own = chunk.byteOffset === 0 && chunk.byteLength === chunk.buffer.byteLength ? chunk : chunk.slice();
+    post({ type: "chunk", bytes: own.buffer as ArrayBuffer }, [own.buffer]);
+  }
+  post({ type: "checks", checks: [...checks.finish(), ...run.extraChecks()] });
+  post({ type: "done", totalBytes, replaced: 0 });
 }
 
 /** A spec for a sheet: the same table, written as a workbook streamed in chunks (specs/003). */
