@@ -13,6 +13,7 @@ import {
   type CoordinateAxis,
 } from "../classify/coordinate";
 import { JSON_KINDS } from "../json/types";
+import { MAX_RULES, sourceOf, type RuleSpec } from "../rules/types";
 import { LOCALES } from "../textgen/locales";
 import { typeConflict, validateParquetType, type ParquetType } from "../parquet/types";
 import { describeFormat } from "../xlsx/formats";
@@ -22,6 +23,7 @@ import {
   MAX_TEXT_LENGTH,
   READABLE_SPEC_VERSIONS,
   SPEC_VERSION,
+  type CategoricalColumn,
   type ColumnSpec,
   type SpecFile,
   type SpecProblem,
@@ -257,6 +259,28 @@ const SourceSchema = v.variant("format", [
   JsonSourceSchema,
 ]);
 
+const gap = v.pipe(v.number(), v.integer(), v.minValue(-1_000_000_000), v.maxValue(1_000_000_000));
+const columnName = v.pipe(v.string(), v.minLength(1));
+const shortValue = v.pipe(v.string(), v.maxLength(200));
+
+const RuleSchema = v.variant("kind", [
+  v.strictObject({
+    kind: v.literal("follows"),
+    column: columnName,
+    after: columnName,
+    min: gap,
+    max: gap,
+  }),
+  v.strictObject({ kind: v.literal("blank_with"), column: columnName, with: columnName }),
+  v.strictObject({
+    kind: v.literal("set_when"),
+    column: columnName,
+    when_column: columnName,
+    when_value: shortValue,
+    value: shortValue,
+  }),
+]);
+
 const SpecSchema = v.strictObject({
   spec_version: v.picklist(READABLE_SPEC_VERSIONS as [number, ...number[]]),
   source: SourceSchema,
@@ -264,6 +288,7 @@ const SpecSchema = v.strictObject({
   seed: v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(4294967295)),
   keep_original_name: v.optional(v.boolean()),
   categorical_threshold: v.optional(v.pipe(v.number(), v.integer(), v.minValue(2))),
+  rules: v.optional(v.pipe(v.array(RuleSchema), v.maxLength(MAX_RULES))),
   columns: v.pipe(v.array(ColumnSchema), v.minLength(1)),
 });
 
@@ -361,6 +386,54 @@ function checkJsonKind(col: ColumnSpec, problem: (path: string, message: string)
       : 0;
     if (col.json_missing > missingCells)
       problem("json_missing", "The records without the key cannot outnumber the missing values.");
+  }
+}
+
+const isDateLike = (c: ColumnSpec) =>
+  c.type === "date" || c.type === "datetime" || c.type === "time";
+const isNumber = (c: ColumnSpec) => c.type === "integer" || c.type === "float";
+const isLabelled = (c: ColumnSpec) => c.type === "categorical" || c.type === "boolean";
+
+/** A rule must name columns of the table that suit it, and must not chain onto another rule (specs/015 FR-003). */
+function checkRule(rule: RuleSpec, index: number, spec: SpecFile, out: SpecProblem[]): void {
+  const problem = (message: string): void => {
+    out.push({ column: rule.column, path: `rules[${index}]`, message });
+  };
+  const target = spec.columns.find((c) => c.name === rule.column);
+  const sourceName = sourceOf(rule);
+  const source = spec.columns.find((c) => c.name === sourceName);
+  if (!target) return problem("The rule names a column the table does not have.");
+  if (!source) return problem("The rule names a column the table does not have.");
+  if (target === source) return problem("A column cannot follow itself.");
+  const rules = spec.rules ?? [];
+  if (rules.some((r, j) => j !== index && r.column === rule.column))
+    problem("A column can be the target of only one rule.");
+  if (rules.some((r) => r.column === sourceName))
+    problem("A rule cannot use a column that another rule changes.");
+  if (rules.some((r) => sourceOf(r) === rule.column))
+    problem("A rule cannot change a column that another rule uses.");
+  if (target.type === "unsupported" || source.type === "unsupported")
+    return problem("A rule cannot use a column that is not supported.");
+
+  switch (rule.kind) {
+    case "follows":
+      if (rule.min > rule.max) problem("The smallest gap is larger than the largest.");
+      if (!((isDateLike(target) && isDateLike(source)) || (isNumber(target) && isNumber(source))))
+        problem("Both columns of a follows rule must be dates or times, or both numbers.");
+      break;
+    case "blank_with":
+      break;
+    case "set_when": {
+      if (!isLabelled(target) || !isLabelled(source))
+        return problem("A set-value rule needs two category or yes-or-no columns.");
+      const sourceLabels = Object.keys((source as CategoricalColumn).counts);
+      const targetLabels = Object.keys((target as CategoricalColumn).counts);
+      if (!sourceLabels.includes(rule.when_value))
+        problem("The value to look for is not one the first column holds.");
+      if (!targetLabels.includes(rule.value) && !(target.na?.tokens ?? []).includes(rule.value))
+        problem("The value to set is not one the target column holds.");
+      break;
+    }
   }
 }
 
@@ -710,6 +783,8 @@ export function validateSpec(input: unknown): SpecResult {
         });
     }
   }
+
+  for (const [i, rule] of (spec.rules ?? []).entries()) checkRule(rule, i, spec, problems);
 
   const seen = new Set<string>();
   for (const col of spec.columns) {

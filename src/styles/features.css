@@ -1322,3 +1322,42 @@ section[aria-labelledby="ingest-heading"] > .empty-state {
 .codebook-panel {
   margin-top: var(--space-5);
 }
+
+/* ---- Rules between columns ---- */
+.rules-panel {
+  margin-top: var(--space-5);
+}
+
+.rule-list {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  list-style: none;
+}
+
+.rule-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+  font-size: var(--text-sm);
+}
+
+.rule-form {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.rule-form > summary {
+  margin-bottom: var(--space-3);
+  font-weight: var(--font-weight-semibold);
+}
+
+.rule-form .field {
+  margin-bottom: var(--space-3);
+}

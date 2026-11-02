@@ -95,6 +95,8 @@ export function App() {
                 requestSamples: (name, description) => session.requestSamples(name, description),
                 setThreshold: (n) => session.setThreshold(n),
                 applyCodebook: (labels) => session.applyCodebook(labels),
+              addRule: (rule) => session.addRule(rule),
+              removeRule: (index) => session.removeRule(index),
                 onContinue: () => dispatch({ type: "goTo", step: "generate" }),
                 onSaveSpec: () => {
                   const blob = session.specBlob();

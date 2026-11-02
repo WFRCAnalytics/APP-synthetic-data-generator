@@ -4,6 +4,7 @@
 // never a row of the real file. Pure code, tested in Node.
 
 import { AXIS_LABELS } from "../classify/coordinate";
+import { describeRule } from "../rules/types";
 import { localeLabel } from "../textgen/locales";
 import { EMPTY_TEXT_TOKEN, type ColumnSpec, type SpecFile } from "../spec/types";
 
@@ -198,6 +199,13 @@ export function agentReadme(spec: SpecFile, options: AgentReadmeOptions): string
       `${left} ${left === 1 ? "column of the real table is" : "columns of the real table are"} not in this file.`,
       "",
     );
+
+  if (spec.rules && spec.rules.length > 0) {
+    add("## Rules between columns", "");
+    add("These relations were stated by the person who made the file and hold in every row:", "");
+    for (const r of spec.rules) add(`- ${describeRule(r)}`);
+    add("");
+  }
 
   add("## How to use it", "");
   add(

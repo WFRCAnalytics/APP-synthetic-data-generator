@@ -6,10 +6,12 @@ import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { SessionState } from "../../app/session";
 import type { LocalEdits } from "../../lib/profile/edits";
+import type { RuleSpec } from "../../lib/rules/types";
 import { isExcelSettings, type ColumnOverrides } from "../../lib/profile/types";
 import type { SampleDescription } from "../../lib/textgen/sample";
 import { AttentionBanner } from "./AttentionBanner";
 import { CodebookPanel } from "./CodebookPanel";
+import { RulesPanel } from "./RulesPanel";
 import { ProfileProgress } from "../ingest/ProfileProgress";
 import { ColumnCard } from "./ColumnCard";
 import { ColumnNav } from "./ColumnNav";
@@ -26,6 +28,8 @@ export interface ReviewActions {
   requestSamples: (name: string, description: SampleDescription) => void;
   setThreshold: (threshold: number) => void;
   applyCodebook: (labels: Record<string, Record<string, string>>) => void;
+  addRule: (rule: RuleSpec) => string | null;
+  removeRule: (index: number) => void;
   onContinue: () => void;
   onSaveSpec: () => void;
 }
@@ -239,6 +243,13 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
                 hint="Raising it turns more whole-number columns into coded values; lowering it does the opposite."
                 onChange={setThresholdText}
                 onApply={(text) => actions.setThreshold(Number(text))}
+              />
+
+              <RulesPanel
+                profiles={profiles}
+                rules={session.rules}
+                onAdd={actions.addRule}
+                onRemove={actions.removeRule}
               />
 
               <CodebookPanel profiles={profiles} onApply={actions.applyCodebook} />

@@ -251,3 +251,39 @@ test("a latitude and a longitude keep only their bounding box, and the person ca
   await again.getByLabel("Coordinate").selectOption("");
   await expect(again.getByLabel("Numeric mode")).toBeVisible();
 });
+
+test("a rule between two columns holds in every row of the file, is checked, and is kept in the spec and the README", async ({ page }) => {
+  let csv = "id,start,end,age\n";
+  const day = (n: number) => new Date(Date.UTC(2023, 0, 1) + n * 86400000).toISOString().slice(0, 10);
+  for (let i = 0; i < 400; i++) csv += `${i},${day((i * 7) % 300)},${day(((i * 11) % 300) + 5)},${18 + (i % 60)}\n`;
+  await page.goto(APP);
+  await page.locator("#file-input").setInputFiles({ name: "stays.csv", mimeType: "text/csv", buffer: Buffer.from(csv) });
+  await page.getByRole("button", { name: /profile this file/i }).click();
+  await expect(page.getByRole("heading", { name: "Review columns" })).toBeVisible({ timeout: 120_000 });
+
+  await page.getByRole("button", { name: "Overview" }).click();
+  await page.getByText("Add a rule", { exact: true }).click();
+  await page.getByLabel("Column that changes").selectOption("end");
+  await page.getByLabel("Comes after").selectOption("start");
+  await page.getByLabel("Gap from").fill("3");
+  await page.getByLabel("to", { exact: true }).fill("9");
+  await page.getByRole("button", { name: "Add the rule" }).click();
+  await expect(page.getByRole("list", { name: "Rules" })).toContainText("end comes 3 to 9 after start");
+
+  await page.getByRole("button", { name: "Continue to Generate" }).click();
+  await page.getByRole("region", { name: "Generate the fake table" }).getByRole("button", { name: /^Generate( again)?$/ }).click();
+  await expect(page.getByText(/checks passed\./)).toBeVisible({ timeout: 120_000 });
+  await expect(page.getByRole("cell", { name: "end comes 3 to 9 after start" }).first()).toBeVisible();
+  const [fake] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: /Download stays_fake\.csv/ }).click()]);
+  const { rows } = parseCsv(readFileSync(await fake.path(), "utf8"));
+  const ms = (t: string) => Date.parse(`${t}T00:00:00Z`) / 86400000;
+  for (const r of rows.slice(1)) {
+    const gap = ms(r[2]) - ms(r[1]);
+    expect(gap).toBeGreaterThanOrEqual(3);
+    expect(gap).toBeLessThanOrEqual(9);
+  }
+  const [spec] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Download spec (JSON)" }).click()]);
+  expect(JSON.parse(readFileSync(await spec.path(), "utf8")).rules).toEqual([{ kind: "follows", column: "end", after: "start", min: 3, max: 9 }]);
+  const [readme] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Download README for agents" }).click()]);
+  expect(readFileSync(await readme.path(), "utf8")).toContain("- end comes 3 to 9 after start");
+});

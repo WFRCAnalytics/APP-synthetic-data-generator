@@ -4,6 +4,7 @@
 // personal identifiers or coordinates (constitution Principle II).
 
 import type { CoordinateAxis } from "../classify/coordinate";
+import type { RuleSpec } from "../rules/types";
 import type { PersonalLocale } from "../textgen/locales";
 import type { JsonForm, JsonIndent, JsonKind, JsonLineEnding } from "../json/types";
 import type { ParquetType } from "../parquet/types";
@@ -247,6 +248,8 @@ export interface SpecFile {
   seed: number;
   keep_original_name?: boolean;
   categorical_threshold?: number;
+  /** Relations between columns that the person stated (specs/015). */
+  rules?: RuleSpec[];
   columns: ColumnSpec[];
 }
 

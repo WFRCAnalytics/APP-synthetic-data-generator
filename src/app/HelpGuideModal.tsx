@@ -134,7 +134,7 @@ export function HelpGuideModal({ open, onClose }: HelpGuideModalProps) {
           </li>
           <li>
             <strong>Not in this version.</strong> Nested JSON, GeoJSON, combined coordinates and
-            shapes, several tables at once.
+            shapes, relations between more than two columns, and several tables at once.
           </li>
           <li>
             <strong>Browsers.</strong> Chrome and Edge are fully supported; Firefox and Safari work

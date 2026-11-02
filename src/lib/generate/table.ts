@@ -4,6 +4,8 @@
 import { DEFAULT_DIALECT, formatRow, type CsvDialect } from "../csv/writer";
 import type { Encoding } from "../encoding/detect";
 import type { ColumnSpec, SourceSpec, SpecFile } from "../spec/types";
+import { applyRules } from "../rules/apply";
+import type { RuleSpec } from "../rules/types";
 import { createColumnGen, naTokenOf, type ColumnGen } from "./column";
 
 export interface TablePlan {
@@ -16,6 +18,8 @@ export interface TablePlan {
   headerQuoted: boolean;
   encoding: Encoding;
   bom: boolean;
+  /** The rules between columns, for the check table. */
+  rules: RuleSpec[];
 }
 
 /** The CSV dialect recorded in the spec, with defaults for fields it leaves out. */
@@ -44,21 +48,30 @@ export function planTable(spec: SpecFile, seed: number = spec.seed): TablePlan {
     const mode = col.exclude ?? "include";
     if (mode === "drop") continue;
     if (mode === "keep_as_na") {
-      const asNa = { name: col.name, output_name: col.output_name, quoted: col.quoted, type: "empty", na: { tokens: [naTokenOf(col)], count: spec.n_rows } } as ColumnSpec;
+      const asNa = {
+        name: col.name,
+        output_name: col.output_name,
+        quoted: col.quoted,
+        type: "empty",
+        na: { tokens: [naTokenOf(col)], count: spec.n_rows },
+      } as ColumnSpec;
       columns.push(createColumnGen(asNa, ctx));
     } else columns.push(createColumnGen(col, ctx));
   }
 
+  const withRules = applyRules(spec, columns, ctx);
+
   return {
     nRows: spec.n_rows,
     seed,
-    header: columns.map((c) => c.outputName),
-    columns,
-    quotedFlags: columns.map((c) => c.quoted),
+    header: withRules.map((c) => c.outputName),
+    columns: withRules,
+    quotedFlags: withRules.map((c) => c.quoted),
     dialect: dialectOf(spec.source),
     headerQuoted: spec.source.format === "csv" ? (spec.source.header_quoted ?? false) : false,
     encoding: spec.source.format === "csv" ? spec.source.encoding : "utf-8",
     bom: spec.source.format === "csv" ? (spec.source.bom ?? false) : false,
+    rules: spec.rules ?? [],
   };
 }
 
@@ -72,14 +85,23 @@ export function rowValues(plan: TablePlan, row: number): string[] {
 /** The header line, or an empty string for a file without a header. */
 export function formatHeader(plan: TablePlan): string {
   if (!plan.dialect.header) return "";
-  return formatRow(plan.header, plan.dialect, plan.header.map(() => plan.headerQuoted));
+  return formatRow(
+    plan.header,
+    plan.dialect,
+    plan.header.map(() => plan.headerQuoted),
+  );
 }
 
 /**
  * Data rows [start, end) as CSV text, each ending in the file's line ending. `observe` sees each
  * row's cell texts, so the check table can be measured while the rows are produced.
  */
-export function formatRows(plan: TablePlan, start: number, end: number, observe?: (values: string[]) => void): string {
+export function formatRows(
+  plan: TablePlan,
+  start: number,
+  end: number,
+  observe?: (values: string[]) => void,
+): string {
   let text = "";
   const last = Math.min(end, plan.nRows);
   for (let row = start; row < last; row++) {

@@ -21,6 +21,8 @@ import type { SheetHints, WorkbookInfo } from "../lib/xlsx/metadata";
 import type { JsonSummary, ParquetSummary } from "../workers/protocol";
 import { readSpecFile } from "../features/spec/loadSpec";
 import { agentReadme, readmeFileNameFor } from "../lib/readme/agentReadme";
+import type { RuleSpec } from "../lib/rules/types";
+import { validateSpec } from "../lib/spec/validate";
 import { APP_VERSION } from "./version";
 import { specBlobOf, specFileNameFor } from "../features/spec/saveSpec";
 import type {
@@ -110,6 +112,8 @@ export interface SessionState {
   reviewError: string | null;
   datePatternChecks: Record<string, DatePatternCheck>;
   seedText: string;
+  /** Relations between columns that the person stated (specs/015). */
+  rules: RuleSpec[];
   keepOriginalName: boolean;
   gen: GenState;
   /** Columns came from a saved spec: there is no source file, so nothing can be profiled again. */
@@ -152,6 +156,7 @@ export const initialSession: SessionState = {
   reviewError: null,
   datePatternChecks: {},
   seedText: "42",
+  rules: [],
   keepOriginalName: false,
   gen: emptyGen,
   specOnly: false,
@@ -359,6 +364,7 @@ export class Session {
       threshold: spec.categorical_threshold ?? initialSession.threshold,
       seedText: String(spec.seed),
       keepOriginalName: spec.keep_original_name ?? false,
+      rules: spec.rules ? [...spec.rules] : [],
       profiles,
     });
     this.onSpecLoaded(
@@ -588,6 +594,40 @@ export class Session {
       keepOriginalName: this.state.keepOriginalName,
       threshold: this.state.threshold,
       profiles,
+      rules: this.state.rules,
+    });
+  }
+
+  /** Adds a rule between two columns; a rule that would not be valid is not added, and the reason is returned. */
+  addRule(rule: RuleSpec): string | null {
+    const spec = this.buildSpecWith([...this.state.rules, rule]);
+    if (!spec) return "There is no table to add a rule to.";
+    const checked = validateSpec(JSON.parse(JSON.stringify(spec)));
+    if (!checked.ok)
+      return (
+        checked.problems.find((p) => p.path.startsWith("rules"))?.message ??
+        "This rule does not fit the table."
+      );
+    this.set({ rules: [...this.state.rules, rule] });
+    return null;
+  }
+
+  removeRule(index: number): void {
+    this.set({ rules: this.state.rules.filter((_, i) => i !== index) });
+  }
+
+  private buildSpecWith(rules: RuleSpec[]): SpecFile | null {
+    const { settings, profiles } = this.state;
+    if (!settings || profiles.length === 0) return null;
+    return buildSpec({
+      fileName: this.state.fileName,
+      settings,
+      rowCount: this.state.rowCount,
+      seed: parseSeed(this.state.seedText) ?? 42,
+      keepOriginalName: this.state.keepOriginalName,
+      threshold: this.state.threshold,
+      profiles,
+      rules,
     });
   }
 

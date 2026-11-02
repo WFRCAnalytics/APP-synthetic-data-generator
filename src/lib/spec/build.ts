@@ -4,6 +4,7 @@
 // the user's choice, so none of its values can leak (constitution Principle II).
 
 import { fitKind } from "../json/kinds";
+import { sourceOf, type RuleSpec } from "../rules/types";
 import {
   isExcelSettings,
   isJsonSettings,
@@ -27,6 +28,8 @@ export interface BuildInput {
   keepOriginalName: boolean;
   threshold: number;
   profiles: readonly ColumnProfile[];
+  /** Relations between columns the person stated; only those whose columns are still in the table are kept. */
+  rules?: readonly RuleSpec[];
 }
 
 export function buildSource(fileName: string, s: SourceSettings): SourceSpec {
@@ -219,6 +222,13 @@ function baseColumnSpec(p: ColumnProfile): ColumnSpec {
   }
 }
 
+/** The rules whose columns are all in the table and not left out of it as unsupported. */
+function rulesFor(input: BuildInput): RuleSpec[] | undefined {
+  const names = new Set(input.profiles.filter((p) => p.type !== "unsupported").map((p) => p.name));
+  const kept = (input.rules ?? []).filter((r) => names.has(r.column) && names.has(sourceOf(r)));
+  return kept.length > 0 ? [...kept] : undefined;
+}
+
 export function buildSpec(input: BuildInput): SpecFile {
   return {
     spec_version: SPEC_VERSION,
@@ -227,6 +237,7 @@ export function buildSpec(input: BuildInput): SpecFile {
     seed: input.seed,
     keep_original_name: input.keepOriginalName,
     categorical_threshold: input.threshold,
+    ...(rulesFor(input) ? { rules: rulesFor(input) } : {}),
     columns: input.profiles.map(columnSpecOf),
   };
 }
