@@ -100,14 +100,31 @@ nested = [
     for i in range(80)
 ]
 write("nested.json", array_text(nested, indent=2))
-write("markers.json", array_text([{"id": f"{MARK}-{i}", "n": i, "note": f"{MARK} note {i}", "inner": {f"{NESTED}-k": f"{NESTED}-v"}, "list": [f"{NESTED}-l"]} for i in range(120)], indent=2))
+write(
+    "markers.json",
+    array_text(
+        [
+            {
+                "n": i,
+                "amount": round(rng.random() * 1000, 2),
+                "note": f"{MARK} free text note number {i} " + "x" * (i % 17),
+                "who": f"{MARK} Person Name {i}",
+                "inner": {f"{NESTED}-key": f"{NESTED}-value"},
+                "list": [f"{NESTED}-item"],
+            }
+            for i in range(120)
+        ],
+        indent=2,
+    ),
+)
 
 # Numbers written several ways.
 write("numbers.json", '[{"a": 1.50, "b": 1e5, "c": 12345678901234567890, "d": -0.25, "e": 7}, {"a": 2.25, "b": 2.5E-3, "c": 1, "d": 3, "e": 8}]\n')
 
 # Files that must be refused.
 write("damaged.json", '[{"id": "SECRET-DAMAGED", "x": }]')
-write("scalar.json", '{"id": "SECRET-SCALAR"}')
+write("scalar.json", "{" + chr(10) + '  "id": "SECRET-SCALAR",' + chr(10) + '  "n": 1' + chr(10) + "}" + chr(10))
+write("one_record.ndjson", '{"id": "A1", "n": 1}' + chr(10))
 write("items.json", '[1, 2, {"a": "SECRET-ITEM"}]')
 write("dup.json", '[{"a": 1, "a": "SECRET-DUP"}]')
 write("empty.json", "[]")

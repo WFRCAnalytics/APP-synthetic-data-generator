@@ -3,6 +3,7 @@
 // masks and repeat structures, and format settings. An unsupported column keeps only its name and
 // the user's choice, so none of its values can leak (constitution Principle II).
 
+import { fitKind } from "../json/kinds";
 import { isExcelSettings, isJsonSettings, isParquetSettings, type ColumnProfile, type SourceSettings } from "../profile/types";
 import { SPEC_VERSION, type ColumnSpec, type NumericFields, type SourceSpec, type SpecFile } from "./types";
 
@@ -57,6 +58,15 @@ function numericFields(p: ColumnProfile): NumericFields | null {
 
 /** One profile as a spec column. */
 export function columnSpecOf(p: ColumnProfile): ColumnSpec {
+  const c = baseColumnSpec(p);
+  if (c.json_kind === undefined) return c;
+  // The kind the file had, made to suit the type the user chose; the absent keys cannot outnumber the missing cells.
+  const token = c.na?.tokens[0] ?? "";
+  const missingCells = c.na ? (c.na.by_token ? (c.na.by_token[token] ?? 0) : c.na.count) : 0;
+  return { ...c, json_kind: fitKind(c.json_kind, c.type), json_missing: Math.min(c.json_missing ?? 0, missingCells) };
+}
+
+function baseColumnSpec(p: ColumnProfile): ColumnSpec {
   const common = {
     name: p.name,
     ...(p.cellFormat ? { cell_format: p.cellFormat } : {}),

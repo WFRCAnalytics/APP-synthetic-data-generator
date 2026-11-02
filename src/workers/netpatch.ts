@@ -43,5 +43,8 @@ export function installNetPatch(channelName: string, pageOrigin: string): void {
  * (DuckDB's worker). `scriptUrl` must be absolute: a blob worker has no base to resolve against.
  */
 export function patchedWorkerSource(scriptUrl: string, channelName: string, pageOrigin: string): string {
-  return `(${installNetPatch.toString()})(${JSON.stringify(channelName)}, ${JSON.stringify(pageOrigin)});\nimportScripts(${JSON.stringify(scriptUrl)});`;
+  // The engine's worker logs the errors it raises, and for some files (JSON) such a line can name a position in the
+  // file; none of it may reach the console, so its console is silenced before its own script runs.
+  const silence = `for (const k of ["log", "info", "warn", "error", "debug", "trace"]) console[k] = function () {};`;
+  return `${silence}\n(${installNetPatch.toString()})(${JSON.stringify(channelName)}, ${JSON.stringify(pageOrigin)});\nimportScripts(${JSON.stringify(scriptUrl)});`;
 }

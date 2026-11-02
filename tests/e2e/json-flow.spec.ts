@@ -136,6 +136,7 @@ test("object and list keys are marked unsupported and left out", async ({ page }
 for (const [name, text] of [
   ["damaged.json", /not plain JSON|damaged/],
   ["items.json", /list of records/],
+  ["scalar.json", /not plain JSON|damaged/],
   ["dup.json", /repeats a key/],
   ["empty.json", /no records or no keys/],
   ["comments.json", /not plain JSON|damaged/],

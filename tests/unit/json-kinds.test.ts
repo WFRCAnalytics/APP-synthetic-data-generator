@@ -39,3 +39,27 @@ describe("describeKey", () => {
     expect(counts({ VARCHAR: 5 }, 3).missing).toBe(0);
   });
 });
+
+import { fitKind } from "../../src/lib/json/kinds";
+
+describe("fitKind", () => {
+  it("keeps a kind that suits the type", () => {
+    expect(fitKind("number", "integer")).toBe("number");
+    expect(fitKind("number", "categorical")).toBe("number");
+    expect(fitKind("boolean", "boolean")).toBe("boolean");
+    expect(fitKind("string", "date")).toBe("string");
+  });
+
+  it("writes as text a key whose chosen type cannot hold its kind", () => {
+    expect(fitKind("number", "date")).toBe("string");
+    expect(fitKind("number", "personal")).toBe("string");
+    expect(fitKind("boolean", "integer")).toBe("string");
+    expect(fitKind("null", "categorical")).toBe("string");
+  });
+
+  it("writes an empty column as null, and keeps nested kinds on unsupported columns", () => {
+    expect(fitKind("string", "empty")).toBe("null");
+    expect(fitKind("array", "unsupported")).toBe("array");
+    expect(fitKind("number", "unsupported")).toBe("object");
+  });
+});

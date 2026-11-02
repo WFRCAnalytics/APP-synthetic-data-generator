@@ -52,3 +52,18 @@ export function describeKey({ types, records }: KeyCounts): KeyDescription {
   if (kinds > 1) return { kind: "string", nulls, missing, mixed: true };
   return { kind: numbers > 0 ? "number" : booleans > 0 ? "boolean" : "string", nulls, missing, mixed: false };
 }
+
+/**
+ * The kind a key is written as, given the type of column the user chose for it. A key of numbers made a date, a
+ * personal or a free-text column is written as text; a key of true and false made anything but a yes or no or a
+ * category is written as text; a null-only key that was given a type is written as text.
+ */
+export function fitKind(kind: JsonKind, type: string): JsonKind {
+  if (type === "unsupported") return kind === "array" ? "array" : "object";
+  if (kind === "object" || kind === "array") return "string";
+  if (kind === "number" && (type === "date" || type === "datetime" || type === "time" || type === "free_text" || type === "personal")) return "string";
+  if (kind === "boolean" && type !== "boolean" && type !== "categorical") return "string";
+  if (kind === "null" && type !== "empty") return "string";
+  if (type === "empty") return "null";
+  return kind;
+}

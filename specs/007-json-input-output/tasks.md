@@ -81,8 +81,8 @@
 
 - [x] T023 [P] [US3] Integration tests: `nulls_missing.json` gives the recorded `json_nulls` and `json_missing` per key, and the written file has exactly those counts of `null` and absent keys (SC-005); `mixed.json` loads as text with the `mixed_kinds` reason
 - [ ] T024 [P] [US3] Component test: the review card shows the mixed warning as a tooltip, a null-only key reads as an all-missing column, and the type shown for each kind matches the spec's `json_kind`
-- [ ] T025 [US3] Carry kinds and counts through profiling and the spec: `src/lib/spec/build.ts` and `toProfiles.ts` write and read `json_kind`, `json_nulls`, `json_missing`; `src/workers/profile.worker.ts` keeps them through re-profiling and type overrides; the writer follows the recorded kind when the user changes a column's profiled type (a numeric key changed to category still writes numbers; a text key changed to number is refused with a plain message)
-- [ ] T026 [US3] The `mixed_kinds` reason in `src/lib/profile/types.ts` with its fixed text in `src/features/review/summary.ts`, shown on the card and in the attention list
+- [x] T025 [US3] Carry kinds and counts through profiling and the spec: `src/lib/spec/build.ts` and `toProfiles.ts` write and read `json_kind`, `json_nulls`, `json_missing`; `src/workers/profile.worker.ts` keeps them through re-profiling and type overrides; the writer follows the recorded kind when the user changes a column's profiled type (a numeric key changed to category still writes numbers; a text key changed to number is refused with a plain message)
+- [x] T026 [US3] The `mixed_kinds` reason in `src/lib/profile/types.ts` with its fixed text in `src/features/review/summary.ts`, shown on the card and in the attention list
 
 **Checkpoint**: null, missing and mixed behave as specified.
 
@@ -94,11 +94,11 @@
 
 **Independent Test**: `npx vitest run json-privacy` and `npx playwright test json-privacy`.
 
-- [ ] T027 [P] [US4] Spy test `tests/integration/json-privacy.test.ts`: a runner that records every row the engine returns to the caller while `markers.json` is inspected, loaded and profiled; fails if any marker (in values, nested values or nested key names) appears in any returned row except inside the table load that stays in the worker
+- [x] T027 [P] [US4] Spy test `tests/integration/json-privacy.test.ts`: a runner that records every row the engine returns to the caller while `markers.json` is inspected, loaded and profiled; fails if any marker (in values, nested values or nested key names) appears in any returned row except inside the table load that stays in the worker
 - [x] T028 [P] [US4] Output test in `tests/unit/json-writer.test.ts` and `tests/integration/json-readback.test.ts`: the fake file holds no marker, no nested key name, an unsupported key is omitted by default and `null` in every record when kept
-- [ ] T029 [P] [US4] End-to-end leak test `tests/e2e/json-privacy.spec.ts`: run the whole flow on `markers.json` and search page text, spec JSON, preview, the downloaded file's bytes, console messages, local and session storage and every error message for any marker; assert zero outside requests (SC-002, SC-003)
+- [x] T029 [P] [US4] End-to-end leak test `tests/e2e/json-privacy.spec.ts`: run the whole flow on `markers.json` and search page text, spec JSON, preview, the downloaded file's bytes, console messages, local and session storage and every error message for any marker; assert zero outside requests (SC-002, SC-003)
 - [x] T030 [P] [US4] Refusal tests: `damaged.json`, `scalar.json`, `items.json`, `dup.json`, `empty.json`, `geojson.json` and `comments.json` each end in the fixed message with no file content (`tests/integration/json-load.test.ts`, `tests/e2e/json-flow.spec.ts`)
-- [ ] T031 [US4] Reason codes `nested_object` and `nested_array` in `src/lib/profile/types.ts` with fixed texts in `src/features/review/summary.ts`; the kept-as-null handling in the writer and spec validation (an unsupported key holds no `json_nulls` count from inside the value); make T027 to T030 pass
+- [x] T031 [US4] Reason codes `nested_object` and `nested_array` in `src/lib/profile/types.ts` with fixed texts in `src/features/review/summary.ts`; the kept-as-null handling in the writer and spec validation (an unsupported key holds no `json_nulls` count from inside the value); make T027 to T030 pass
 
 **Checkpoint**: the privacy claim is tested at the query, the file and the browser levels.
 
