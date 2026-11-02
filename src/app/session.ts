@@ -4,7 +4,15 @@
 
 import type { CheckRow } from "../lib/generate/checks";
 import { applyAllEdits, type LocalEdits } from "../lib/profile/edits";
-import { isExcelSettings, isJsonSettings, isParquetSettings, type ColumnOverrides, type ColumnProfile, type FileSettings, type SourceSettings } from "../lib/profile/types";
+import {
+  isExcelSettings,
+  isJsonSettings,
+  isParquetSettings,
+  type ColumnOverrides,
+  type ColumnProfile,
+  type FileSettings,
+  type SourceSettings,
+} from "../lib/profile/types";
 import { buildSpec } from "../lib/spec/build";
 import { profilesFromSpec, settingsFromSource } from "../lib/spec/toProfiles";
 import type { SpecFile, SpecProblem } from "../lib/spec/types";
@@ -12,10 +20,28 @@ import type { SampleDescription } from "../lib/textgen/sample";
 import type { SheetHints, WorkbookInfo } from "../lib/xlsx/metadata";
 import type { JsonSummary, ParquetSummary } from "../workers/protocol";
 import { readSpecFile } from "../features/spec/loadSpec";
+import { agentReadme, readmeFileNameFor } from "../lib/readme/agentReadme";
+import { APP_VERSION } from "./version";
 import { specBlobOf, specFileNameFor } from "../features/spec/saveSpec";
-import type { GenerateRequest, GenerateResponse, ProfileJob, ProfileRequest, ProfileResponse } from "../workers/protocol";
+import type {
+  GenerateRequest,
+  GenerateResponse,
+  ProfileJob,
+  ProfileRequest,
+  ProfileResponse,
+} from "../workers/protocol";
 
-export type Phase = "idle" | "opening" | "opened" | "workbook" | "parquet" | "json" | "loading" | "profiling" | "profiled" | "error";
+export type Phase =
+  | "idle"
+  | "opening"
+  | "opened"
+  | "workbook"
+  | "parquet"
+  | "json"
+  | "loading"
+  | "profiling"
+  | "profiled"
+  | "error";
 
 export interface Progress {
   job: ProfileJob | "generate";
@@ -96,7 +122,16 @@ export interface SessionState {
   samples: Record<string, string[]>;
 }
 
-const emptyGen: GenState = { status: "idle", progress: null, header: [], preview: [], checks: [], error: null, totalBytes: 0, replaced: 0 };
+const emptyGen: GenState = {
+  status: "idle",
+  progress: null,
+  header: [],
+  preview: [],
+  checks: [],
+  error: null,
+  totalBytes: 0,
+  replaced: 0,
+};
 
 export const initialSession: SessionState = {
   phase: "idle",
@@ -202,12 +237,26 @@ export class Session {
   /** Loads the file with the confirmed settings, then profiles it. */
   confirmAndProfile(): void {
     const settings = this.state.settings;
-    if (!settings || isExcelSettings(settings) || isParquetSettings(settings) || isJsonSettings(settings)) return;
+    if (
+      !settings ||
+      isExcelSettings(settings) ||
+      isParquetSettings(settings) ||
+      isJsonSettings(settings)
+    )
+      return;
     this.pending.clear();
     this.base = [];
     this.edits = {};
     this.engine = {};
-    this.set({ phase: "loading", error: null, progress: null, profiles: [], busy: [], reviewError: null, datePatternChecks: {} });
+    this.set({
+      phase: "loading",
+      error: null,
+      progress: null,
+      profiles: [],
+      busy: [],
+      reviewError: null,
+      datePatternChecks: {},
+    });
     this.send({ type: "load", settings });
   }
 
@@ -218,7 +267,15 @@ export class Session {
     this.base = [];
     this.edits = {};
     this.engine = {};
-    this.set({ phase: "loading", error: null, progress: null, profiles: [], busy: [], reviewError: null, datePatternChecks: {} });
+    this.set({
+      phase: "loading",
+      error: null,
+      progress: null,
+      profiles: [],
+      busy: [],
+      reviewError: null,
+      datePatternChecks: {},
+    });
     this.send({ type: "loadParquet" });
   }
 
@@ -229,7 +286,15 @@ export class Session {
     this.base = [];
     this.edits = {};
     this.engine = {};
-    this.set({ phase: "loading", error: null, progress: null, profiles: [], busy: [], reviewError: null, datePatternChecks: {} });
+    this.set({
+      phase: "loading",
+      error: null,
+      progress: null,
+      profiles: [],
+      busy: [],
+      reviewError: null,
+      datePatternChecks: {},
+    });
     this.send({ type: "loadJson" });
   }
 
@@ -247,7 +312,15 @@ export class Session {
     this.base = [];
     this.edits = {};
     this.engine = {};
-    this.set({ phase: "loading", error: null, progress: null, profiles: [], busy: [], reviewError: null, datePatternChecks: {} });
+    this.set({
+      phase: "loading",
+      error: null,
+      progress: null,
+      profiles: [],
+      busy: [],
+      reviewError: null,
+      datePatternChecks: {},
+    });
     this.send({ type: "loadSheet", ...choice, date1904: workbook.info.date1904 });
   }
 
@@ -288,13 +361,19 @@ export class Session {
       keepOriginalName: spec.keep_original_name ?? false,
       profiles,
     });
-    this.onSpecLoaded(profiles.map((p) => ({ name: p.name, type: p.type })), designed);
+    this.onSpecLoaded(
+      profiles.map((p) => ({ name: p.name, type: p.type })),
+      designed,
+    );
   }
 
   private makeProfileWorker(): Worker {
-    const worker = new Worker(new URL("../workers/profile.worker.ts", import.meta.url), { type: "module" });
+    const worker = new Worker(new URL("../workers/profile.worker.ts", import.meta.url), {
+      type: "module",
+    });
     worker.onmessage = (e: MessageEvent<ProfileResponse>) => this.onProfileMessage(e.data);
-    worker.onerror = () => this.set({ phase: "error", error: "The profiling worker stopped unexpectedly." });
+    worker.onerror = () =>
+      this.set({ phase: "error", error: "The profiling worker stopped unexpectedly." });
     return worker;
   }
 
@@ -315,42 +394,86 @@ export class Session {
         });
         break;
       case "workbookInfo":
-        this.set({ phase: "workbook", workbook: { info: msg.info, hints: {} }, fileName: msg.fileName, fileSize: msg.fileSize });
+        this.set({
+          phase: "workbook",
+          workbook: { info: msg.info, hints: {} },
+          fileName: msg.fileName,
+          fileSize: msg.fileSize,
+        });
         break;
       case "parquetInfo":
-        this.set({ phase: "parquet", parquet: msg.info, fileName: msg.fileName, fileSize: msg.fileSize, columnNames: msg.info.columns.map((c) => c.name) });
+        this.set({
+          phase: "parquet",
+          parquet: msg.info,
+          fileName: msg.fileName,
+          fileSize: msg.fileSize,
+          columnNames: msg.info.columns.map((c) => c.name),
+        });
         break;
       case "jsonInfo":
-        this.set({ phase: "json", json: msg.info, fileName: msg.fileName, fileSize: msg.fileSize, columnNames: msg.info.keys.map((k) => k.name) });
+        this.set({
+          phase: "json",
+          json: msg.info,
+          fileName: msg.fileName,
+          fileSize: msg.fileSize,
+          columnNames: msg.info.keys.map((k) => k.name),
+        });
         break;
       case "sheetHints":
-        if (this.state.workbook) this.set({ workbook: { ...this.state.workbook, hints: { ...this.state.workbook.hints, [msg.sheet]: msg.hints } } });
+        if (this.state.workbook)
+          this.set({
+            workbook: {
+              ...this.state.workbook,
+              hints: { ...this.state.workbook.hints, [msg.sheet]: msg.hints },
+            },
+          });
         break;
       case "loaded":
-        this.set({ phase: "profiling", rowCount: msg.rowCount, columnNames: msg.columnNames, settings: msg.settings, progress: null });
+        this.set({
+          phase: "profiling",
+          rowCount: msg.rowCount,
+          columnNames: msg.columnNames,
+          settings: msg.settings,
+          progress: null,
+        });
         this.send({ type: "profile", threshold: this.state.threshold, overrides: this.engine });
         break;
       case "progress":
         this.set({ progress: { job: msg.job, done: msg.done, total: msg.total } });
         break;
       case "columnProfile":
-        if (this.state.phase === "profiled") this.replaceBase(msg.profile); // one column profiled again
+        if (this.state.phase === "profiled")
+          this.replaceBase(msg.profile); // one column profiled again
         else this.pending.set(msg.profile.name, msg.profile);
         break;
       case "profiled": {
-        this.base = this.state.columnNames.map((n) => this.pending.get(n)).filter((p): p is ColumnProfile => p !== undefined);
-        this.set({ phase: "profiled", profiles: applyAllEdits(this.base, this.edits), progress: null, busy: [] });
+        this.base = this.state.columnNames
+          .map((n) => this.pending.get(n))
+          .filter((p): p is ColumnProfile => p !== undefined);
+        this.set({
+          phase: "profiled",
+          profiles: applyAllEdits(this.base, this.edits),
+          progress: null,
+          busy: [],
+        });
         this.onProfiled(this.base.map((p) => ({ name: p.name, type: p.type })));
         break;
       }
       case "error":
         // Before the review exists a problem blocks everything; after it, the screen stays usable.
-        if (this.state.phase === "profiled" || this.base.length > 0) this.set({ reviewError: msg.error.message, busy: [], progress: null, phase: "profiled" });
+        if (this.state.phase === "profiled" || this.base.length > 0)
+          this.set({ reviewError: msg.error.message, busy: [], progress: null, phase: "profiled" });
         else this.set({ phase: "error", error: msg.error.message, progress: null });
         break;
       case "datePatternResult": {
         const check = this.state.datePatternChecks[msg.column];
-        if (check) this.set({ datePatternChecks: { ...this.state.datePatternChecks, [msg.column]: { ...check, parsed: msg.parsed, total: msg.total } } });
+        if (check)
+          this.set({
+            datePatternChecks: {
+              ...this.state.datePatternChecks,
+              [msg.column]: { ...check, parsed: msg.parsed, total: msg.total },
+            },
+          });
         break;
       }
     }
@@ -360,7 +483,11 @@ export class Session {
 
   private replaceBase(profile: ColumnProfile): void {
     this.base = this.base.map((p) => (p.name === profile.name ? profile : p));
-    this.set({ profiles: applyAllEdits(this.base, this.edits), busy: this.state.busy.filter((n) => n !== profile.name), reviewError: null });
+    this.set({
+      profiles: applyAllEdits(this.base, this.edits),
+      busy: this.state.busy.filter((n) => n !== profile.name),
+      reviewError: null,
+    });
   }
 
   private needSourceFile(): void {
@@ -381,7 +508,8 @@ export class Session {
   overrideColumn(name: string, patch: Partial<ColumnOverrides>): void {
     if (this.state.specOnly) return this.needSourceFile();
     const next: ColumnOverrides = { ...this.engine[name], ...patch };
-    for (const key of Object.keys(patch) as (keyof ColumnOverrides)[]) if (patch[key] === undefined) delete next[key];
+    for (const key of Object.keys(patch) as (keyof ColumnOverrides)[])
+      if (patch[key] === undefined) delete next[key];
     this.engine = { ...this.engine, [name]: next };
     this.set({ busy: [...new Set([...this.state.busy, name])], reviewError: null });
     this.send({ type: "reprofile", column: name, overrides: next });
@@ -399,7 +527,12 @@ export class Session {
   /** Asks the worker how many values a typed date pattern parses (FR-005a). */
   checkDatePattern(name: string, pattern: string): void {
     if (this.state.specOnly) return this.needSourceFile();
-    this.set({ datePatternChecks: { ...this.state.datePatternChecks, [name]: { pattern, parsed: null, total: null } } });
+    this.set({
+      datePatternChecks: {
+        ...this.state.datePatternChecks,
+        [name]: { pattern, parsed: null, total: null },
+      },
+    });
     this.send({ type: "datePattern", column: name, pattern });
   }
 
@@ -408,7 +541,9 @@ export class Session {
   /** Asks the generating worker for a few invented values to show on a card. */
   requestSamples(name: string, description: SampleDescription): void {
     if (!this.sampleWorker) {
-      const worker = new Worker(new URL("../workers/generate.worker.ts", import.meta.url), { type: "module" });
+      const worker = new Worker(new URL("../workers/generate.worker.ts", import.meta.url), {
+        type: "module",
+      });
       worker.onmessage = (e: MessageEvent<GenerateResponse>) => {
         const msg = e.data;
         if (msg.type !== "samples") return;
@@ -422,7 +557,13 @@ export class Session {
     const id = ++this.sampleSeq;
     this.sampleRequests.set(id, name);
     this.sampleLatest.set(name, id);
-    this.sampleWorker.postMessage({ type: "sample", id, description, count: 5, seed: parseSeed(this.state.seedText) ?? 42 } satisfies GenerateRequest);
+    this.sampleWorker.postMessage({
+      type: "sample",
+      id,
+      description,
+      count: 5,
+      seed: parseSeed(this.state.seedText) ?? 42,
+    } satisfies GenerateRequest);
   }
 
   // ---- Generate -----------------------------------------------------------------------------
@@ -453,7 +594,11 @@ export class Session {
   generate(): void {
     const seed = parseSeed(this.state.seedText);
     if (seed === null) {
-      this.setGen({ ...emptyGen, status: "error", error: "Enter a whole number from 0 to 4,294,967,295 as the seed." });
+      this.setGen({
+        ...emptyGen,
+        status: "error",
+        error: "Enter a whole number from 0 to 4,294,967,295 as the seed.",
+      });
       return;
     }
     const spec = this.buildSpec();
@@ -463,10 +608,13 @@ export class Session {
     this.parts = [];
     this.setGen({ ...emptyGen, status: "running" });
 
-    const worker = new Worker(new URL("../workers/generate.worker.ts", import.meta.url), { type: "module" });
+    const worker = new Worker(new URL("../workers/generate.worker.ts", import.meta.url), {
+      type: "module",
+    });
     this.generateWorker = worker;
     worker.onmessage = (e: MessageEvent<GenerateResponse>) => this.onGenerateMessage(e.data);
-    worker.onerror = () => this.setGen({ status: "error", error: "The generating worker stopped unexpectedly." });
+    worker.onerror = () =>
+      this.setGen({ status: "error", error: "The generating worker stopped unexpectedly." });
     worker.postMessage({ type: "generate", spec, seed, chunkRows: 5000 } satisfies GenerateRequest);
   }
 
@@ -485,11 +633,19 @@ export class Session {
         this.setGen({ checks: msg.checks });
         break;
       case "done":
-        this.setGen({ status: "done", totalBytes: msg.totalBytes, replaced: msg.replaced, codec: msg.codec });
+        this.setGen({
+          status: "done",
+          totalBytes: msg.totalBytes,
+          replaced: msg.replaced,
+          codec: msg.codec,
+        });
         break;
       case "error":
         this.parts = [];
-        this.setGen({ status: msg.error.code === "cancelled" ? "cancelled" : "error", error: msg.error.message });
+        this.setGen({
+          status: msg.error.code === "cancelled" ? "cancelled" : "error",
+          error: msg.error.message,
+        });
         break;
     }
   }
@@ -499,7 +655,16 @@ export class Session {
   /** The fake CSV as a Blob, or null before a run has finished. */
   fakeBlob(): Blob | null {
     const settings = this.state.settings;
-    const type = settings && isExcelSettings(settings) ? XLSX_MIME : settings && isParquetSettings(settings) ? PARQUET_MIME : settings && isJsonSettings(settings) ? (settings.layout.form === "lines" ? NDJSON_MIME : JSON_MIME) : "text/csv";
+    const type =
+      settings && isExcelSettings(settings)
+        ? XLSX_MIME
+        : settings && isParquetSettings(settings)
+          ? PARQUET_MIME
+          : settings && isJsonSettings(settings)
+            ? settings.layout.form === "lines"
+              ? NDJSON_MIME
+              : JSON_MIME
+            : "text/csv";
     return this.state.gen.status === "done" ? new Blob(this.parts as BlobPart[], { type }) : null;
   }
 
@@ -510,6 +675,23 @@ export class Session {
   specBlob(): Blob | null {
     const spec = this.buildSpec();
     return spec ? specBlobOf(spec) : null;
+  }
+
+  /** The README that goes with the fake file, as a Markdown Blob, or null before a spec can be built. */
+  readmeBlob(): Blob | null {
+    const spec = this.buildSpec();
+    if (!spec) return null;
+    const text = agentReadme(spec, {
+      fakeFileName: this.fakeFileName(),
+      specFileName: this.specFileName(),
+      seed: parseSeed(this.state.seedText) ?? spec.seed,
+      appVersion: APP_VERSION,
+    });
+    return new Blob([text], { type: "text/markdown" });
+  }
+
+  readmeFileName(): string {
+    return readmeFileNameFor(this.fakeFileName());
   }
 
   specFileName(): string {

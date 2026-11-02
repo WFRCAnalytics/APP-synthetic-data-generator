@@ -21,7 +21,8 @@ export function App() {
   const session = useMemo(() => {
     const s = new Session();
     s.onProfiled = (columns) => dispatch({ type: "columnsProfiled", columns });
-    s.onSpecLoaded = (columns, designed) => dispatch({ type: designed ? "designBuilt" : "specLoaded", columns });
+    s.onSpecLoaded = (columns, designed) =>
+      dispatch({ type: designed ? "designBuilt" : "specLoaded", columns });
     return s;
   }, []);
   const [data, setData] = useState(session.state);
@@ -48,69 +49,83 @@ export function App() {
     <div className="shell">
       <AppHeader
         onOpenHelp={() => setHelpOpen(true)}
-        steps={<Stepper state={state} onGoTo={(step) => dispatch({ type: "goTo", step })} onStartOver={state.columnsReady ? startOver : undefined} />}
+        steps={
+          <Stepper
+            state={state}
+            onGoTo={(step) => dispatch({ type: "goTo", step })}
+            onStartOver={state.columnsReady ? startOver : undefined}
+          />
+        }
       >
         <NetworkCounter counter={netCounter} />
       </AppHeader>
       <div className="shell-body">
-      <main className="shell-main">
+        <main className="shell-main">
+          {state.step === "ingest" && state.designing && (
+            <DesignScreen
+              design={design}
+              onChange={setDesign}
+              onBuild={(spec) => session.loadSpec(spec, true)}
+            />
+          )}
 
-        {state.step === "ingest" && state.designing && <DesignScreen design={design} onChange={setDesign} onBuild={(spec) => session.loadSpec(spec, true)} />}
+          {state.step === "ingest" && !state.designing && (
+            <IngestScreen
+              onStartDesign={() => dispatch({ type: "startDesign" })}
+              session={data}
+              onChooseFile={(file) => session.openFile(file)}
+              onChooseSpec={(file) => void session.loadSpecFile(file)}
+              onInspectSheet={(sheet) => session.inspectSheet(sheet)}
+              onConfirmWorkbook={(choice) => session.confirmWorkbook(choice)}
+              onConfirmParquet={() => session.confirmParquet()}
+              onConfirmJson={() => session.confirmJson()}
+              onEditSettings={(patch) => session.editSettings(patch)}
+              onConfirm={() => session.confirmAndProfile()}
+              onCancel={() => session.cancel()}
+            />
+          )}
 
-        {state.step === "ingest" && !state.designing && (
-          <IngestScreen
-            onStartDesign={() => dispatch({ type: "startDesign" })}
-            session={data}
-            onChooseFile={(file) => session.openFile(file)}
-            onChooseSpec={(file) => void session.loadSpecFile(file)}
-            onInspectSheet={(sheet) => session.inspectSheet(sheet)}
-            onConfirmWorkbook={(choice) => session.confirmWorkbook(choice)}
-            onConfirmParquet={() => session.confirmParquet()}
-            onConfirmJson={() => session.confirmJson()}
-            onEditSettings={(patch) => session.editSettings(patch)}
-            onConfirm={() => session.confirmAndProfile()}
-            onCancel={() => session.cancel()}
-          />
-        )}
+          {state.step === "review" && (
+            <ReviewScreen
+              session={data}
+              actions={{
+                editColumn: (name, patch) => session.editColumn(name, patch),
+                overrideColumn: (name, patch) => session.overrideColumn(name, patch),
+                checkDatePattern: (name, pattern) => session.checkDatePattern(name, pattern),
+                requestSamples: (name, description) => session.requestSamples(name, description),
+                setThreshold: (n) => session.setThreshold(n),
+                onContinue: () => dispatch({ type: "goTo", step: "generate" }),
+                onSaveSpec: () => {
+                  const blob = session.specBlob();
+                  if (blob) downloadBlob(blob, session.specFileName());
+                },
+              }}
+            />
+          )}
 
-        {state.step === "review" && (
-          <ReviewScreen
-            session={data}
-            actions={{
-              editColumn: (name, patch) => session.editColumn(name, patch),
-              overrideColumn: (name, patch) => session.overrideColumn(name, patch),
-              checkDatePattern: (name, pattern) => session.checkDatePattern(name, pattern),
-              requestSamples: (name, description) => session.requestSamples(name, description),
-              setThreshold: (n) => session.setThreshold(n),
-              onContinue: () => dispatch({ type: "goTo", step: "generate" }),
-              onSaveSpec: () => {
+          {state.step === "generate" && (
+            <GenerateScreen
+              session={data}
+              fakeFileName={session.fakeFileName()}
+              onSeedChange={(text) => session.setSeedText(text)}
+              onKeepNameChange={(keep) => session.setKeepOriginalName(keep)}
+              onGenerate={() => session.generate()}
+              onCancel={() => session.cancel()}
+              onDownloadFake={() => {
+                const blob = session.fakeBlob();
+                if (blob) downloadBlob(blob, session.fakeFileName());
+              }}
+              onDownloadReadme={() => {
+                const blob = session.readmeBlob();
+                if (blob) downloadBlob(blob, session.readmeFileName());
+              }}
+              onDownloadSpec={() => {
                 const blob = session.specBlob();
                 if (blob) downloadBlob(blob, session.specFileName());
-              },
-            }}
-          />
-        )}
-
-        {state.step === "generate" && (
-          <GenerateScreen
-            session={data}
-            fakeFileName={session.fakeFileName()}
-            onSeedChange={(text) => session.setSeedText(text)}
-            onKeepNameChange={(keep) => session.setKeepOriginalName(keep)}
-            onGenerate={() => session.generate()}
-            onCancel={() => session.cancel()}
-            onDownloadFake={() => {
-              const blob = session.fakeBlob();
-              if (blob) downloadBlob(blob, session.fakeFileName());
-            }}
-            onDownloadSpec={() => {
-              const blob = session.specBlob();
-              if (blob) downloadBlob(blob, session.specFileName());
-            }}
-          />
-        )}
-
-      </main>
+              }}
+            />
+          )}
+        </main>
       </div>
       <LocalNotice />
       <HelpGuideModal open={helpOpen} onClose={() => setHelpOpen(false)} />

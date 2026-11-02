@@ -61,6 +61,8 @@ download the fake file and the spec.
   keys in the same order, each written as the same JSON kind (number, text, true or false), exactly as many nulls
   and as many absent keys as the real file, and the same indent, line ending and trailing newline. A key that mixes
   numbers and text is read and written as text; keys that hold objects or lists are not read or faked.
+- **README for agents**: next to the fake file and the spec, a Markdown page that says the data is not real, how the file is laid
+  out, what each column holds and how to use it. It is built from the spec alone.
 - **Spec files**: save, load (the current version only while the app is in beta), and generate from a spec alone.
   A workbook spec makes a workbook, a Parquet spec a Parquet file and a JSON spec a JSON file.
 - **Privacy**: a live request counter and a strict Content-Security-Policy. Tests prove that no

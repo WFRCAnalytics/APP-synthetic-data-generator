@@ -151,3 +151,19 @@ for (const [name, text] of [
     expect(await page.locator("body").innerText()).not.toContain("SECRET");
   });
 }
+
+test("a README for agents comes with the fake file and says what is in it", async ({ page }, testInfo) => {
+  await chooseJson(page, "survey.json");
+  await review(page);
+  await generateAndDownload(page, /Download survey_fake\.json/);
+  const [readme] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Download README for agents" }).click()]);
+  expect(readme.suggestedFilename()).toBe("survey_fake_README.md");
+  const path = testInfo.outputPath("readme.md");
+  await readme.saveAs(path);
+  const text = readFileSync(path, "utf8");
+  expect(text).toContain("This data is not real");
+  expect(text).toContain("**Rows**: 400");
+  expect(text).toContain("A list of records, indented by 2 spaces");
+  for (const key of ["hh_id", "person_no", "income", "has_pass"]) expect(text).toContain(`\`${key}\``);
+  expect(text).not.toContain("PRIVATE-MARKER");
+});

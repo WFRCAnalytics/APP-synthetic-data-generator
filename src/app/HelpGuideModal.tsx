@@ -34,7 +34,7 @@ export function HelpGuideModal({ open, onClose }: HelpGuideModalProps) {
             <strong>Review.</strong> The columns are listed on the left; search them, filter by type (each type has its own icon) or show only those that need attention. Pick one to see how it will be faked and to change what the app decided: its type, missing-value markers, codes such as 999 for &ldquo;refused&rdquo;, and more.
           </li>
           <li>
-            <strong>Generate.</strong> Choose a seed, generate, read the check table, then download the fake file and the spec.
+            <strong>Generate.</strong> Choose a seed, generate, read the check table, then download the fake file, the spec, and a README for agents that says what the file is and what each column holds.
           </li>
         </ol>
 

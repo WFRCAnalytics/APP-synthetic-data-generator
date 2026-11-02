@@ -18,6 +18,7 @@ export interface GenerateScreenProps {
   onCancel: () => void;
   onDownloadFake: () => void;
   onDownloadSpec: () => void;
+  onDownloadReadme: () => void;
   fakeFileName: string;
 }
 
@@ -209,6 +210,14 @@ export function GenerateScreen(props: GenerateScreenProps) {
                   onClick={props.onDownloadSpec}
                 >
                   <Download size={16} strokeWidth={1.75} aria-hidden="true" /> Download spec (JSON)
+                </button>
+                <button
+                  type="button"
+                  className="button button-secondary"
+                  onClick={props.onDownloadReadme}
+                >
+                  <Download size={16} strokeWidth={1.75} aria-hidden="true" /> Download README for
+                  agents
                 </button>
               </div>
               <p className="field-hint">
