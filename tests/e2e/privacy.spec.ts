@@ -52,6 +52,18 @@ test.describe("the network counter", () => {
     await expect(counter).toHaveAttribute("aria-label", /0 outside this site/);
   });
 
+  test("explains itself when clicked", async ({ page }) => {
+    await page.goto(APP);
+    await page.getByRole("button", { name: "Stays on this device" }).click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toContainText("Your data stays on this device");
+    await expect(dialog).toContainText("To other websites");
+    await expect(dialog.getByText("This should always be 0.")).toBeVisible();
+    await page.screenshot({ path: "test-results/net-dialog.png" });
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+  });
+
   test("counts what the workers fetch, including DuckDB's own module", async ({ page }) => {
     await watchWorkerRequests(page);
     await runFlow(page);

@@ -19,10 +19,44 @@
   background: var(--banner-error-background);
 }
 
-/* On narrow screens only the icon and the outside count remain, so the header does not crowd. */
+/* On narrow screens only the icon remains, so the header does not crowd. */
 @media (max-width: 640px) {
   .net-counter-text {
-    max-width: 8ch;
-    overflow: hidden;
+    display: none;
   }
+}
+.net-counter-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.net-dialog {
+  white-space: normal;
+  font-size: var(--text-sm);
+}
+
+.net-dialog h2 {
+  margin-top: 0;
+}
+
+.net-dialog-list {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-2) var(--space-4);
+  margin: var(--space-4) 0;
+}
+
+.net-dialog-list dt {
+  font-weight: 600;
+}
+
+.net-dialog-list dd {
+  margin: 0;
 }
