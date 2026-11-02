@@ -30,3 +30,11 @@
   initial value in `serial.ts` and `profiler.ts`, and one in a test). Each was removed; behaviour is unchanged. Lint: 0 errors,
   the same 2 fast-refresh warnings as before. Tests: 1,883 pass.
 - `typescript-eslint` 8 supports TypeScript up to below 6.1, which bears on group C (see R4).
+
+## R4: Group C (TypeScript 6.0.3, not 7)
+
+- TypeScript 7 (the native compiler) is not used: `typescript-eslint` 8.72 supports TypeScript below 6.1 and reads the
+  compiler's JavaScript API, which the native version does not offer, so linting would break. The spec's assumption covers
+  this: a tool whose newest major does not work with the rest stays on its last working version, and this is recorded.
+  TypeScript 6.0.3 is the newest version the linter supports. To move to 7, wait for `typescript-eslint` to support it.
+- `tsc --noEmit` shows no new error; lint 0 errors; tests 1,883 pass; the build works.
