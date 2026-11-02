@@ -163,3 +163,34 @@ test("several tables are made together from their specs, and the zip joins", asy
   expect(await read("households_fake/households_fake.csv")).toBe(first.csv);
   expect(await read("persons_fake/persons_fake.csv")).toBe(second.csv);
 });
+
+test("a set of tables can be written as another file type", async ({ page }) => {
+  await makeTable(page, "households.csv", households);
+  const first = await generate(page, /Download households_fake\.csv/);
+  await makeTable(page, "persons.csv", persons);
+  const card = await shownCard(page, "hh_id");
+  await card.getByLabel("Spec of the other table").setInputFiles(first.specPath);
+  await card.getByRole("button", { name: "Use these IDs" }).click();
+  const second = await generate(page, /Download persons_fake\.csv/);
+
+  await page.goto(APP);
+  const panel = page.getByTestId("batch-panel");
+  await panel.getByLabel("Specs of the tables").setInputFiles([first.specPath, second.specPath]);
+  await panel.getByLabel("File type").selectOption("sav");
+  await expect(panel.getByTestId("batch-table")).toContainText("persons_fake.sav");
+  await panel.getByRole("button", { name: "Make all tables" }).click();
+  await expect(panel.getByText(/Done, \d+ checks passed/)).toHaveCount(2, { timeout: 120_000 });
+  const [zip] = await Promise.all([page.waitForEvent("download"), panel.getByRole("button", { name: "Download all (zip)" }).click()]);
+  const blob = new Blob([readFileSync(await zip.path()) as BlobPart]);
+  const entries = await readZipDirectory(blob);
+  expect(entries.map((e) => e.name).sort()).toEqual([
+    "households_fake/households_fake.sav",
+    "households_fake/households_fake_README.md",
+    "households_fake/households_spec.json",
+    "persons_fake/persons_fake.sav",
+    "persons_fake/persons_fake_README.md",
+    "persons_fake/persons_spec.json",
+  ]);
+  const sav = await readEntryText(blob, entries.find((e) => e.name === "persons_fake/persons_fake.sav")!);
+  expect(sav.startsWith("$FL2")).toBe(true);
+});

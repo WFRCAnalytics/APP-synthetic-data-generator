@@ -134,7 +134,7 @@ export function HelpGuideModal({ open, onClose }: HelpGuideModalProps) {
             whole-number column of the first table can then count the other table&apos;s rows for
             each ID (&ldquo;Number of rows in another table&rdquo;), so a household&apos;s size
             matches its persons. To make several tables at once, choose their saved specs under
-            &ldquo;Make several tables at once&rdquo; on the first screen and download them in one zip. A designed table can link an ID column the same way, with a range of rows per
+            &ldquo;Make several tables at once&rdquo; on the first screen and download them in one zip, as their own file type or all as one type you choose. A designed table can link an ID column the same way, with a range of rows per
             ID. Other columns are not linked.
           </li>
           <li>

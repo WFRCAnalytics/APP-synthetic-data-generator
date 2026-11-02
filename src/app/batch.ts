@@ -8,6 +8,9 @@ import type { SpecFile, SurveyIdColumn } from "../lib/spec/types";
 import { specBlobOf, specFileNameFor } from "../features/spec/saveSpec";
 import { parseSpecText } from "../features/spec/loadSpec";
 import type { GenerateRequest, GenerateResponse } from "../workers/protocol";
+import { retarget, type OutputKind } from "../lib/spec/retarget";
+import { statFileFromCsv } from "../lib/stat/convert";
+import { isConvertKind, type ConvertKind } from "../lib/stat/detect";
 import { APP_VERSION } from "./version";
 import { exportName } from "./session";
 import type { NamedBlob } from "./saveAll";
@@ -24,8 +27,15 @@ export interface BatchRejected {
   reason: string;
 }
 
+/** The file type every table of a set is written as; "same" keeps what each spec says. */
+export type BatchOutput = "same" | OutputKind | ConvertKind;
+
 export interface BatchResult {
   parts: Uint8Array[];
+  /** With an SPSS, Stata or SAS transport output: the finished file (the run itself is a CSV). */
+  converted?: Uint8Array;
+  /** Text values cut to fit that file type. */
+  truncated?: number;
   totalBytes: number;
   checks: CheckRow[];
   passed: number;
@@ -76,11 +86,27 @@ export function batchWarnings(tables: readonly BatchTable[]): string[] {
   return out;
 }
 
+/** The spec a table is run and saved with for this output; the statistical file types are written from a CSV run. */
+export const specForOutput = (spec: SpecFile, output: BatchOutput): SpecFile =>
+  output === "same" ? spec : retarget(spec, isConvertKind(output) ? "csv" : output);
+
 /** The name the fake file of a table is written under. */
-export const batchFileName = (spec: SpecFile): string => exportName(spec.source.file_name, spec.keep_original_name ?? false);
+export function batchFileName(spec: SpecFile, output: BatchOutput = "same"): string {
+  const keep = spec.keep_original_name ?? false;
+  if (isConvertKind(output)) return exportName(`${spec.source.file_name.replace(/\.[^.]*$/, "")}.${output}`, keep);
+  return exportName(specForOutput(spec, output).source.file_name, keep);
+}
 
 /** Makes one table in the generating worker. `onProgress` gets the share done, 0 to 1. */
-export function runTable(spec: SpecFile, onProgress: (share: number) => void, register: (cancel: () => void) => void): Promise<BatchResult> {
+export async function runTable(spec: SpecFile, onProgress: (share: number) => void, register: (cancel: () => void) => void, output: BatchOutput = "same"): Promise<BatchResult> {
+  const run = specForOutput(spec, output);
+  const result = await runSpec(run, onProgress, register);
+  if (!isConvertKind(output)) return result;
+  const { bytes, truncated } = statFileFromCsv(await new Blob(result.parts as BlobPart[]).text(), run, output);
+  return { ...result, converted: bytes, truncated };
+}
+
+function runSpec(spec: SpecFile, onProgress: (share: number) => void, register: (cancel: () => void) => void): Promise<BatchResult> {
   return new Promise((resolve, reject) => {
     const worker = new Worker(new URL("../workers/generate.worker.ts", import.meta.url), { type: "module" });
     const parts: Uint8Array[] = [];
@@ -112,21 +138,22 @@ export function runTable(spec: SpecFile, onProgress: (share: number) => void, re
 }
 
 /** Every table's fake file, spec and README, each table in a folder of its own (two tables may have the same file name). */
-export function batchFiles(tables: readonly BatchTable[], results: ReadonlyMap<number, BatchResult>): NamedBlob[] {
+export function batchFiles(tables: readonly BatchTable[], results: ReadonlyMap<number, BatchResult>, output: BatchOutput = "same"): NamedBlob[] {
   const files: NamedBlob[] = [];
   const used = new Set<string>();
   for (const t of tables) {
     const r = results.get(t.id);
     if (!r) continue;
-    const fake = batchFileName(t.spec);
+    const fake = batchFileName(t.spec, output);
+    const saved = specForOutput(t.spec, output);
     const base = fake.replace(/\.[^.]*$/, "");
     let folder = base;
     for (let n = 2; used.has(folder); n++) folder = `${base}_${n}`;
     used.add(folder);
     const specName = specFileNameFor(t.spec.source.file_name);
-    files.push({ name: `${folder}/${fake}`, blob: new Blob(r.parts as BlobPart[]) });
-    files.push({ name: `${folder}/${specName}`, blob: specBlobOf(t.spec) });
-    files.push({ name: `${folder}/${readmeFileNameFor(fake)}`, blob: new Blob([agentReadme(t.spec, { fakeFileName: fake, specFileName: specName, seed: t.spec.seed, appVersion: APP_VERSION })], { type: "text/markdown" }) });
+    files.push({ name: `${folder}/${fake}`, blob: r.converted ? new Blob([r.converted as BlobPart], { type: "application/octet-stream" }) : new Blob(r.parts as BlobPart[]) });
+    files.push({ name: `${folder}/${specName}`, blob: specBlobOf(saved) });
+    files.push({ name: `${folder}/${readmeFileNameFor(fake)}`, blob: new Blob([agentReadme(saved, { fakeFileName: fake, specFileName: specName, seed: t.spec.seed, appVersion: APP_VERSION, statFormat: isConvertKind(output) ? output : undefined })], { type: "text/markdown" }) });
   }
   return files;
 }

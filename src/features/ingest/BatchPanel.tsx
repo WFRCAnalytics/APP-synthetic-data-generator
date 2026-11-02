@@ -8,6 +8,7 @@ import { zipOf } from "../../app/saveAll";
 import {
   batchFileName,
   batchFiles,
+  type BatchOutput,
   batchWarnings,
   loadBatch,
   MAX_BATCH_TABLES,
@@ -17,6 +18,8 @@ import {
   type BatchTable,
 } from "../../app/batch";
 import { InfoTip } from "../../components/InfoTip";
+import { DESIGN_OUTPUTS } from "../../lib/design/types";
+import { CONVERT_KINDS } from "../../lib/stat/detect";
 
 type Status = { state: "waiting" } | { state: "running"; share: number } | { state: "done"; result: BatchResult } | { state: "error"; message: string };
 
@@ -25,6 +28,7 @@ export function BatchPanel() {
   const [rejected, setRejected] = useState<BatchRejected[]>([]);
   const [status, setStatus] = useState<Record<number, Status>>({});
   const [busy, setBusy] = useState(false);
+  const [output, setOutput] = useState<BatchOutput>("same");
   const cancel = useRef<(() => void) | null>(null);
   const stopped = useRef(false);
 
@@ -51,6 +55,7 @@ export function BatchPanel() {
           (c) => {
             cancel.current = c;
           },
+          output,
         );
         setStatus((s) => ({ ...s, [t.id]: { state: "done", result } }));
       } catch (err) {
@@ -91,6 +96,25 @@ export function BatchPanel() {
           });
         }}
       />
+      <div className="field">
+        <label htmlFor="batch-output">File type</label>
+        <select
+          id="batch-output"
+          value={output}
+          disabled={busy}
+          onChange={(e) => {
+            setOutput(e.target.value as BatchOutput);
+            setStatus(Object.fromEntries(tables.map((t) => [t.id, { state: "waiting" } as Status])));
+          }}
+        >
+          <option value="same">As each spec says</option>
+          {[...DESIGN_OUTPUTS, ...CONVERT_KINDS].map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label} (.{o.extension})
+            </option>
+          ))}
+        </select>
+      </div>
       {rejected.map((r) => (
         <p key={r.specName} className="field-hint" role="alert">
           {r.specName}: {r.reason}
@@ -112,7 +136,7 @@ export function BatchPanel() {
                 const st = status[t.id];
                 return (
                   <tr key={t.id}>
-                    <td>{batchFileName(t.spec)}</td>
+                    <td>{batchFileName(t.spec, output)}</td>
                     <td>{t.spec.n_rows.toLocaleString("en-US")}</td>
                     <td>{t.spec.seed}</td>
                     <td data-testid={`batch-status-${t.spec.source.file_name}`}>
@@ -122,9 +146,11 @@ export function BatchPanel() {
                           ? `Making ${Math.round(st.share * 100)}%`
                           : st.state === "error"
                             ? st.message
-                            : st.result.failed === 0
-                              ? `Done, ${st.result.passed} checks passed`
-                              : `Done, ${st.result.failed} of ${st.result.checks.length} checks did not pass`}
+                            : `${
+                                st.result.failed === 0
+                                  ? `Done, ${st.result.passed} checks passed`
+                                  : `Done, ${st.result.failed} of ${st.result.checks.length} checks did not pass`
+                              }${st.result.truncated ? `; ${st.result.truncated.toLocaleString("en-US")} long text values were cut to fit the file type` : ""}`}
                     </td>
                   </tr>
                 );
@@ -156,7 +182,7 @@ export function BatchPanel() {
               type="button"
               className="button button-secondary"
               disabled={busy || results.size === 0}
-              onClick={() => void zipOf(batchFiles(tables, results)).then((zip) => downloadBlob(zip, "tables.zip"))}
+              onClick={() => void zipOf(batchFiles(tables, results, output)).then((zip) => downloadBlob(zip, "tables.zip"))}
             >
               <Download size={16} strokeWidth={1.75} aria-hidden="true" /> Download all (zip)
             </button>

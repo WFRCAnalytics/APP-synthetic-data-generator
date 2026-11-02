@@ -1,7 +1,7 @@
 // @vitest-environment node
 // Several tables from their saved specs (specs/028): which links fit together, how the files are named and kept apart.
 import { describe, expect, it } from "vitest";
-import { batchFileName, batchFiles, batchWarnings, loadBatch, type BatchResult, type BatchTable } from "../../src/app/batch";
+import { batchFileName, batchFiles, batchWarnings, loadBatch, specForOutput, type BatchResult, type BatchTable } from "../../src/app/batch";
 import { linkTo } from "../../src/lib/ids/link";
 import { SPEC_VERSION, type ColumnSpec, type SpecFile, type SurveyIdColumn } from "../../src/lib/spec/types";
 
@@ -69,5 +69,23 @@ describe("loadBatch", () => {
     const { tables, rejected } = await loadBatch([good, bad]);
     expect(tables.map((t) => t.specName)).toEqual(["households_spec.json"]);
     expect(rejected).toEqual([{ specName: "broken.json", reason: "This is not a valid spec." }]);
+  });
+});
+
+describe("a file type for the whole set", () => {
+  const result: BatchResult = { parts: [new TextEncoder().encode("a1")], totalBytes: 4, checks: [], passed: 0, failed: 0 };
+  it("names each fake file and spec for the chosen type", () => {
+    expect(batchFileName(households, "parquet")).toBe("households_fake.parquet");
+    expect(batchFileName(households, "sav")).toBe("households_fake.sav");
+    expect(batchFileName(households, "xpt")).toBe("households_fake.xpt");
+    expect(specForOutput(households, "same")).toBe(households);
+    expect(specForOutput(households, "sav").source.format).toBe("csv");
+    expect(specForOutput(households, "json").source.format).toBe("json");
+  });
+  it("writes the converted bytes and a spec and README for the type", () => {
+    const bytes = new Uint8Array([1, 2, 3]);
+    const files = batchFiles([table(1, households)], new Map([[1, { ...result, converted: bytes }]]), "sav");
+    expect(files.map((f) => f.name)).toEqual(["households_fake/households_fake.sav", "households_fake/households_spec.json", "households_fake/households_fake_README.md"]);
+    expect(files[0].blob.size).toBe(3);
   });
 });

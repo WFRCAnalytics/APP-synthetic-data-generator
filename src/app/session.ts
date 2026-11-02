@@ -18,10 +18,7 @@ import { matchCodebook } from "../lib/codebook/codebook";
 import { buildSpec } from "../lib/spec/build";
 import { outputKindOf, retarget, type OutputKind } from "../lib/spec/retarget";
 import { CONVERT_KINDS, isConvertKind, type ConvertKind } from "../lib/stat/detect";
-import { writeDta, DTA_MAX_TEXT } from "../lib/stat/dta";
-import { writeSav, SAV_MAX_TEXT } from "../lib/stat/sav";
-import { writeXpt, XPT_MAX_TEXT } from "../lib/stat/xpt";
-import { tableFromCsv, type ColumnMeta } from "../lib/stat/table";
+import { statFileFromCsv } from "../lib/stat/convert";
 import { profilesFromSpec, settingsFromSource } from "../lib/spec/toProfiles";
 import type { SpecFile, SpecProblem } from "../lib/spec/types";
 import type { SampleDescription } from "../lib/textgen/sample";
@@ -810,16 +807,8 @@ export class Session {
     const blob = this.fakeBlob();
     const format = this.statFormat();
     if (!blob || !format) return blob ? { blob, text: { truncated: 0 } } : null;
-    const spec = this.buildSpec();
-    const hints: Record<string, string> = {};
-    const meta: Record<string, ColumnMeta> = {};
-    for (const c of spec?.columns ?? []) {
-      hints[c.output_name ?? c.name] = c.type;
-      meta[c.output_name ?? c.name] = { description: c.description, valueLabels: c.value_labels };
-    }
-    const table = tableFromCsv(await blob.text(), hints, format === "sav" ? SAV_MAX_TEXT : format === "dta" ? DTA_MAX_TEXT : XPT_MAX_TEXT, meta);
-    const bytes = format === "sav" ? writeSav(table) : format === "dta" ? writeDta(table) : writeXpt(table);
-    return { blob: new Blob([bytes as BlobPart], { type: "application/octet-stream" }), text: { truncated: table.truncated } };
+    const { bytes, truncated } = statFileFromCsv(await blob.text(), this.buildSpec(), format);
+    return { blob: new Blob([bytes as BlobPart], { type: "application/octet-stream" }), text: { truncated } };
   }
 
   specBlob(): Blob | null {
