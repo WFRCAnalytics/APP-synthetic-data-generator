@@ -24,6 +24,7 @@ export function dialectOf(source: SourceSpec): CsvDialect {
   // `header` is read from it (the workbook writer decides everything else).
   if (source.format === "xlsx") return { ...DEFAULT_DIALECT, header: source.header };
   if (source.format === "parquet") return { ...DEFAULT_DIALECT, header: true }; // a Parquet file always names its columns
+  if (source.format === "json") return { ...DEFAULT_DIALECT, header: true }; // a JSON file always names its keys
   return {
     delimiter: source.delimiter,
     quote: source.quote === undefined ? DEFAULT_DIALECT.quote : source.quote,

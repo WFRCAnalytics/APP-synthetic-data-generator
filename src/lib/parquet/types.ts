@@ -31,9 +31,9 @@ export const MAX_DECIMAL_PRECISION = 38;
 const UNITS: readonly string[] = ["ms", "us", "ns"];
 
 /** Why a column cannot be faked. The texts are fixed and name only the kind (FR-008). */
-export type UnsupportedReason = "nested_list" | "nested_struct" | "nested_map" | "nested_union" | "binary" | "uuid" | "interval" | "other";
+export type UnsupportedReason = "nested_list" | "nested_struct" | "nested_map" | "nested_union" | "binary" | "uuid" | "interval" | "other" | "nested_object" | "nested_array";
 
-export const UNSUPPORTED_REASONS: readonly UnsupportedReason[] = ["nested_list", "nested_struct", "nested_map", "nested_union", "binary", "uuid", "interval", "other"];
+export const UNSUPPORTED_REASONS: readonly UnsupportedReason[] = ["nested_list", "nested_struct", "nested_map", "nested_union", "binary", "uuid", "interval", "other", "nested_object", "nested_array"];
 
 export const UNSUPPORTED_TEXT: Record<UnsupportedReason, string> = {
   nested_list: "A list column. Lists hold real values of unknown shape, so the column is not read or faked.",
@@ -44,6 +44,8 @@ export const UNSUPPORTED_TEXT: Record<UnsupportedReason, string> = {
   uuid: "A UUID column. Identifiers of this kind are not faked, so the column is not read or faked.",
   interval: "An interval column. This kind of value is not supported, so the column is not read or faked.",
   other: "A column of a kind this app does not support, so it is not read or faked.",
+  nested_object: "An object key. Objects hold real values of unknown shape, so the key is not read or faked.",
+  nested_array: "A list key. Lists hold real values of unknown shape, so the key is not read or faked.",
 };
 
 const ALLOWED_FIELDS: Record<ParquetKind, readonly string[]> = {

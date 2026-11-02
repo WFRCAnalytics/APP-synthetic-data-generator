@@ -3,6 +3,7 @@
 // ID pattern masks and repeat structures, and format settings. Never rows, ID lists, free text,
 // personal identifiers or coordinates (constitution Principle II).
 
+import type { JsonForm, JsonIndent, JsonKind, JsonLineEnding } from "../json/types";
 import type { ParquetType } from "../parquet/types";
 
 /** The version this app writes. Version 2 added the personal, free_text and short_string types; version 3 the xlsx source; version 4 the parquet source; version 5 the json source (no older version is read while the app is in beta). */
@@ -80,7 +81,20 @@ export interface ParquetSourceSpec {
   row_groups: number;
 }
 
-export type SourceSpec = CsvSourceSpec | XlsxSourceSpec | ParquetSourceSpec;
+/** A JSON file (specs/007). Structure only: the form and layout, never a value or a nested key name. */
+export interface JsonSourceSpec {
+  format: "json";
+  file_name: string;
+  /** An array of records, or one record per line. */
+  form: JsonForm;
+  /** Arrays only. */
+  indent: JsonIndent;
+  line_ending: JsonLineEnding;
+  trailing_newline: boolean;
+  bom: boolean;
+}
+
+export type SourceSpec = CsvSourceSpec | XlsxSourceSpec | ParquetSourceSpec | JsonSourceSpec;
 
 export interface NaSpec {
   tokens: string[];
@@ -102,6 +116,10 @@ export interface ColumnBase {
   stored_as_text?: boolean;
   /** The column's logical type in a Parquet file, enough to write the same schema back. Never a value. */
   parquet_type?: ParquetType;
+  /** The JSON kind of the key in a JSON file, enough to write it back as the same kind. Never a value. */
+  json_kind?: JsonKind;
+  /** In how many records the key is absent (the rest of its missing values are null). Never a value. */
+  json_missing?: number;
   na?: NaSpec;
   /** Sentinel code to exact count. */
   sentinels?: Record<string, number>;

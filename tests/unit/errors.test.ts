@@ -25,6 +25,12 @@ describe("AppError messages", () => {
     "parquet_empty",
     "parquet_encrypted",
     "parquet_too_large",
+    "json_empty",
+    "json_not_records",
+    "json_malformed",
+    "json_duplicate_key",
+    "json_too_large",
+    "json_unsupported_form",
     "internal_error",
   ];
 
@@ -122,5 +128,22 @@ describe("sanitizeError never leaks a value", () => {
 
   it("recognizes cancellation", () => {
     expect(sanitizeError(new Error("The operation was aborted")).code).toBe("cancelled");
+  });
+});
+
+describe("JSON errors", () => {
+  it("say what is wrong in fixed words, none of them from the file or the engine", () => {
+    expect(describeError("json_empty")).toMatch(/no records or no keys/);
+    expect(describeError("json_not_records")).toMatch(/list of records/);
+    expect(describeError("json_malformed")).toMatch(/not plain JSON/);
+    expect(describeError("json_duplicate_key")).toMatch(/repeats a key/);
+    expect(describeError("json_too_large")).toMatch(/too large/);
+    expect(describeError("json_unsupported_form")).toMatch(/GeoJSON/);
+  });
+
+  it("keeps a code from the worker and drops any other message", () => {
+    const wire = { code: "json_malformed", message: "Malformed JSON in file \"a.json\", first character is '{' SECRET" };
+    expect(sanitizeError(wire).message).not.toContain("SECRET");
+    expect(sanitizeError(wire).code).toBe("json_malformed");
   });
 });

@@ -6,6 +6,7 @@
 import * as v from "valibot";
 import { isSupportedPattern, patternGranularity, patternKind } from "../datefmt/directives";
 import { maskCapacity } from "../mask/mask";
+import { JSON_KINDS } from "../json/types";
 import { typeConflict, validateParquetType, type ParquetType } from "../parquet/types";
 import { describeFormat } from "../xlsx/formats";
 import { isValidSheetName, parseRange } from "../xlsx/names";
@@ -41,6 +42,8 @@ const base = {
   sentinels: v.optional(SentinelsSchema),
   stored_as_text: v.optional(v.boolean()),
   parquet_type: v.optional(v.unknown()),
+  json_kind: v.optional(v.picklist(JSON_KINDS as unknown as [string, ...string[]])),
+  json_missing: v.optional(count),
   cell_format: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(255), v.check((text) => ![...text].some((ch) => ch.charCodeAt(0) < 32), "A cell format may not hold control characters."))),
 };
 
@@ -182,7 +185,17 @@ const ParquetSourceSchema = v.strictObject({
   row_groups: v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(10_000_000)),
 });
 
-const SourceSchema = v.variant("format", [CsvSourceSchema, XlsxSourceSchema, ParquetSourceSchema]);
+const JsonSourceSchema = v.strictObject({
+  format: v.literal("json"),
+  file_name: v.pipe(v.string(), v.minLength(1)),
+  form: v.picklist(["array", "lines"]),
+  indent: v.picklist(["compact", "2", "4", "tab"]),
+  line_ending: v.picklist(["lf", "crlf"]),
+  trailing_newline: v.boolean(),
+  bom: v.boolean(),
+});
+
+const SourceSchema = v.variant("format", [CsvSourceSchema, XlsxSourceSchema, ParquetSourceSchema, JsonSourceSchema]);
 
 const SpecSchema = v.strictObject({
   spec_version: v.picklist(READABLE_SPEC_VERSIONS as [number, ...number[]]),
@@ -243,6 +256,25 @@ function checkParquetType(col: ColumnSpec, problem: (path: string, message: stri
   if (conflict) problem("parquet_type", conflict);
 }
 
+/** A JSON kind must suit its column's type (specs/007 data-model.md). */
+function checkJsonKind(col: ColumnSpec, problem: (path: string, message: string) => void): void {
+  const kind = col.json_kind;
+  if (kind === undefined) return;
+  const t = col.type;
+  if (kind === "object" || kind === "array") {
+    if (t !== "unsupported") problem("json_kind", "A key that holds an object or a list is not supported, so it is not given a type.");
+    return;
+  }
+  if (t === "unsupported") {
+    problem("json_kind", "A key that is not supported must be an object or a list.");
+    return;
+  }
+  if (kind === "number" && (t === "date" || t === "datetime" || t === "time" || t === "free_text" || t === "personal")) problem("json_kind", "A key of numbers cannot be a date, personal or free-text column.");
+  if (kind === "boolean" && t !== "boolean" && t !== "categorical") problem("json_kind", "A key of true and false must be a yes or no, or a category.");
+  if (kind === "null" && t !== "empty") problem("json_kind", "A key that was always null must be an empty column.");
+  if (col.json_missing !== undefined && col.json_missing > (col.na?.count ?? 0)) problem("json_missing", "The records without the key cannot outnumber the missing values.");
+}
+
 /** Checks a repeat structure and returns the distinct count, or null after reporting a problem. */
 function checkRepeat(structure: Record<string, number>, remaining: number, problem: (path: string, message: string) => void): number | null {
   const keys = Object.keys(structure);
@@ -280,6 +312,7 @@ function checkColumn(col: ColumnSpec, rows: number, out: SpecProblem[]): void {
 
   if (col.cell_format !== undefined) checkCellFormat(col, problem);
   if (col.parquet_type !== undefined) checkParquetType(col, problem);
+  checkJsonKind(col, problem);
 
   switch (col.type) {
     case "categorical":
@@ -431,6 +464,17 @@ export function validateSpec(input: unknown): SpecResult {
   } else {
     for (const col of spec.columns) {
       if (col.parquet_type !== undefined) problems.push({ column: col.name, path: "parquet_type", message: "Only a spec for a Parquet file may give a Parquet type." });
+    }
+  }
+
+  if (spec.source.format === "json") {
+    for (const col of spec.columns) {
+      if (col.json_kind === undefined) problems.push({ column: col.name, path: "json_kind", message: "A column of a JSON spec needs its JSON kind (json_kind)." });
+      if (col.cell_format !== undefined || col.stored_as_text !== undefined) problems.push({ column: col.name, path: "cell_format", message: "A JSON spec has no cell formats." });
+    }
+  } else {
+    for (const col of spec.columns) {
+      if (col.json_kind !== undefined || col.json_missing !== undefined) problems.push({ column: col.name, path: "json_kind", message: "Only a spec for a JSON file may give a JSON kind." });
     }
   }
 

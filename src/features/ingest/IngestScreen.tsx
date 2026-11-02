@@ -5,7 +5,7 @@ import { FileUp, PencilRuler, Upload } from "lucide-react";
 import { useRef } from "react";
 import { InfoTip } from "../../components/InfoTip";
 import { EmptyState } from "../../components/EmptyState";
-import { isExcelSettings, isParquetSettings, type FileSettings } from "../../lib/profile/types";
+import { isExcelSettings, isJsonSettings, isParquetSettings, type FileSettings } from "../../lib/profile/types";
 import type { SessionState, WorkbookChoice } from "../../app/session";
 import { ParquetSummary } from "./ParquetSummary";
 import { WorkbookDialog } from "./WorkbookDialog";
@@ -59,7 +59,7 @@ export function IngestScreen({
   const { phase } = session;
   // The CSV panel is for CSV files; a workbook has its own dialog, and a Parquet file its own summary.
   const settings =
-    session.settings && !isExcelSettings(session.settings) && !isParquetSettings(session.settings)
+    session.settings && !isExcelSettings(session.settings) && !isParquetSettings(session.settings) && !isJsonSettings(session.settings)
       ? session.settings
       : null;
   const busy = phase === "opening" || phase === "loading" || phase === "profiling";

@@ -29,6 +29,12 @@ export type ErrorCode =
   | "parquet_empty"
   | "parquet_encrypted"
   | "parquet_too_large"
+  | "json_empty"
+  | "json_not_records"
+  | "json_malformed"
+  | "json_duplicate_key"
+  | "json_too_large"
+  | "json_unsupported_form"
   | "internal_error";
 
 export interface ErrorContext {
@@ -89,6 +95,18 @@ export function describeError(code: ErrorCode, ctx: ErrorContext = {}): string {
       return "This Parquet file is encrypted. Save an unencrypted copy, then retry.";
     case "parquet_too_large":
       return "This Parquet file is too large to open in the browser.";
+    case "json_empty":
+      return "This JSON file has no records or no keys.";
+    case "json_not_records":
+      return "This JSON file must be a list of records, such as [{...}, {...}], or one record per line. Every item must be a record.";
+    case "json_malformed":
+      return "This is not plain JSON, or it is damaged or incomplete. GeoJSON, JSON5 and files with comments are not supported.";
+    case "json_duplicate_key":
+      return "A record in this JSON file repeats a key, so it cannot be read safely.";
+    case "json_too_large":
+      return "This JSON file is too large to open in the browser.";
+    case "json_unsupported_form":
+      return "This JSON file is not a list of records. GeoJSON, JSON5 and files with comments are not supported.";
     case "internal_error":
       return "An unexpected error occurred.";
   }
@@ -132,7 +150,7 @@ export function sanitizeError(err: unknown): AppError {
   if (err instanceof AppError) return err;
   // A workbook problem already carries one of the fixed codes (see src/lib/xlsx/metadata.ts).
   const code = typeof err === "object" && err !== null ? (err as { code?: unknown }).code : undefined;
-  if (typeof code === "string" && (code.startsWith("xlsx_") || code.startsWith("parquet_"))) return new AppError(code as ErrorCode);
+  if (typeof code === "string" && (code.startsWith("xlsx_") || code.startsWith("parquet_") || code.startsWith("json_"))) return new AppError(code as ErrorCode);
   const raw = err instanceof Error ? err.message : typeof err === "string" ? err : "";
 
   // The engine's reply to a file that is cut short or not Parquet at all; it names the file, so only the code is kept.

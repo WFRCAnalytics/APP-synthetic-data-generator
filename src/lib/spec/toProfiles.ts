@@ -24,6 +24,7 @@ const linearQuantiles = (min: number, max: number): number[] => Array.from({ len
 
 export function settingsFromSource(s: SourceSpec): SourceSettings {
   if (s.format === "parquet") return { parquet: true, rowGroups: s.row_groups };
+  if (s.format === "json") return { json: true, layout: { form: s.form, indent: s.indent, lineEnding: s.line_ending, trailingNewline: s.trailing_newline, bom: s.bom } };
   if (s.format === "xlsx") return { sheet: s.sheet, ...(s.range ? { range: s.range } : {}), skipRows: s.skip_rows, header: s.header, date1904: s.date1904 };
   return {
     encoding: s.encoding,
@@ -66,6 +67,7 @@ export function profileFromSpec(c: ColumnSpec): ColumnProfile {
     ...(c.cell_format ? { cellFormat: c.cell_format } : {}),
     ...(c.stored_as_text ? { storedAsText: true } : {}),
     ...(c.parquet_type ? { parquetType: c.parquet_type } : {}),
+    ...(c.json_kind ? { jsonKind: c.json_kind, jsonMissing: c.json_missing ?? 0 } : {}),
     attentionReasons: [] as ReasonCode[],
   };
 

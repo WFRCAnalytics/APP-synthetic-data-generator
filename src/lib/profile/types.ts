@@ -3,6 +3,7 @@
 
 import type { ColumnType, ExcludeMode, Granularity, MaskToken, NumericMode, PersonalFormat, PersonalKind } from "../spec/types";
 import type { Encoding } from "../encoding/detect";
+import type { JsonKind, JsonLayout } from "../json/types";
 import type { ParquetType, UnsupportedReason } from "../parquet/types";
 import type { QuoteStyle, LineEnding } from "../csv/writer";
 
@@ -38,10 +39,17 @@ export interface ParquetSettings {
   rowGroups: number;
 }
 
-/** What a file is read with: CSV settings, the settings of one worksheet, or those of a Parquet file. */
-export type SourceSettings = FileSettings | ExcelSettings | ParquetSettings;
+/** A JSON file (specs/007): its form and layout, structure only. */
+export interface JsonSettings {
+  json: true;
+  layout: JsonLayout;
+}
+
+/** What a file is read with: CSV settings, the settings of one worksheet, those of a Parquet file, or those of a JSON file. */
+export type SourceSettings = FileSettings | ExcelSettings | ParquetSettings | JsonSettings;
 export const isExcelSettings = (s: SourceSettings): s is ExcelSettings => "sheet" in s;
 export const isParquetSettings = (s: SourceSettings): s is ParquetSettings => "parquet" in s;
+export const isJsonSettings = (s: SourceSettings): s is JsonSettings => "json" in s;
 
 export type ColumnStatus = "ok" | "needs_attention" | "unsupported";
 
@@ -165,7 +173,11 @@ export interface ColumnProfile {
   storedAsText?: boolean;
   /** The column's logical type in a Parquet file. */
   parquetType?: ParquetType;
-  /** Why a Parquet column cannot be faked (list, struct, map and so on). */
+  /** The JSON kind of the key in a JSON file. */
+  jsonKind?: JsonKind;
+  /** In how many records the key is absent from a JSON file. */
+  jsonMissing?: number;
+  /** Why a Parquet column or a JSON key cannot be faked (list, struct, map, object and so on). */
   unsupportedReason?: UnsupportedReason;
   summary: ColumnSummary;
 }

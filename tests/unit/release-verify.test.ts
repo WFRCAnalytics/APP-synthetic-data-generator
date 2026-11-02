@@ -35,6 +35,8 @@ function goodFiles(): Files {
     [`${SITE}/duckdb-ext/v1.5.4/wasm_mvp/excel.duckdb_extension.wasm`]: new Uint8Array([0, 97, 115, 109]),
     [`${SITE}/duckdb-ext/v1.5.4/wasm_eh/parquet.duckdb_extension.wasm`]: new Uint8Array([0, 97, 115, 109]),
     [`${SITE}/duckdb-ext/v1.5.4/wasm_mvp/parquet.duckdb_extension.wasm`]: new Uint8Array([0, 97, 115, 109]),
+    [`${SITE}/duckdb-ext/v1.5.4/wasm_eh/json.duckdb_extension.wasm`]: new Uint8Array([0, 97, 115, 109]),
+    [`${SITE}/duckdb-ext/v1.5.4/wasm_mvp/json.duckdb_extension.wasm`]: new Uint8Array([0, 97, 115, 109]),
   };
   return files;
 }
