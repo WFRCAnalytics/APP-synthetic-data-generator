@@ -33,7 +33,7 @@ jobs:
       - run: npx vitest run tests/unit/bundle-wordlists.test.ts
       # The self-hosted Excel extension must load under the strict policy and read a workbook (FR-017)
       - run: npx playwright install --with-deps chromium
-      - run: npx playwright test --project=chromium excel-extension parquet-extension json-extension
+      - run: npx playwright test --project=chromium excel-extension parquet-extension json-extension stat-extension
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
