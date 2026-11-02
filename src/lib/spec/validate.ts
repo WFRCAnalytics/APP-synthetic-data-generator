@@ -44,6 +44,7 @@ const SentinelsSchema = v.record(v.string(), positiveCount);
 
 const base = {
   name: v.pipe(v.string(), v.minLength(1)),
+  description: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(200))),
   output_name: v.optional(v.pipe(v.string(), v.minLength(1))),
   exclude: v.optional(v.picklist(["drop", "keep_as_na", "include"])),
   quoted: v.optional(v.boolean()),

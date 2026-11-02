@@ -39,6 +39,7 @@ for (const [name, label, magic, readmeText] of [
     // The labels of the codes are beside the column, taken from the file.
     await shownCard(page, "mode");
     await expect(page.getByLabel("Value labels of mode")).toContainText("Bus");
+    await expect(page.getByTestId("column-description")).toHaveText("Mode"); // the variable label
     await page.getByRole("button", { name: "Continue to Generate" }).click();
     await generate(page);
 
@@ -57,6 +58,8 @@ for (const [name, label, magic, readmeText] of [
     const readmeBody = readFileSync(readmePath, "utf8");
     expect(readmeBody).toContain(readmeText);
     expect(readmeBody).toContain("(Bus)");
+    expect(readmeBody).toContain("| Column | Meaning |");
+    expect(readmeBody).toContain("| Household |");
 
     // CSV is the other choice.
     await page.locator("#output-kind").selectOption("csv");
@@ -104,6 +107,19 @@ for (const [name, label] of [
     expect(lines).toHaveLength(121);
   });
 }
+
+test("codes an SPSS file declares as missing are read as blanks, and the summary says so", async ({ page }) => {
+  await page.goto(APP);
+  await page.locator("#file-input").setInputFiles(join(FIX, "survey_missing.sav"));
+  const summary = page.getByTestId("stat-summary");
+  await expect(summary).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByTestId("stat-missing")).toContainText("2 variables declare codes as missing, such as 98, 99 for attitude");
+  await page.getByRole("button", { name: "Profile this file" }).click();
+  await expect(page.getByRole("heading", { name: "Review columns" })).toBeVisible({ timeout: 180_000 });
+  // 9 of the 60 values of attitude are the declared codes: they are blanks, not categories 98 and 99.
+  await shownCard(page, "attitude");
+  await expect(page.locator('[data-column="attitude"]')).not.toContainText("98");
+});
 
 test("a file named .sav that is not an SPSS file is refused with a fixed message", async ({ page }) => {
   await page.goto(APP);

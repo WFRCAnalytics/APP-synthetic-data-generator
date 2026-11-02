@@ -8,6 +8,7 @@ import type { ColumnOverrides, ColumnProfile, FileSettings, SourceSettings } fro
 import type { SheetHints, WorkbookInfo } from "../lib/xlsx/metadata";
 import type { CodebookEntry } from "../lib/codebook/codebook";
 import type { StatFormat } from "../lib/stat/detect";
+import type { DeclaredMissing } from "../lib/stat/labels";
 import type { JsonKind, JsonLayout, JsonUnsupportedReason } from "../lib/json/types";
 import type { ParquetType, UnsupportedReason } from "../lib/parquet/types";
 import type { CheckRow } from "../lib/generate/checks";
@@ -32,6 +33,10 @@ export interface StatSummary {
   columns: { name: string; kind: "number" | "text" | "date" | "datetime" }[];
   /** What the codes of the file mean ("1 is Car"), from its value labels; kept beside the columns once the table is profiled. */
   labels: CodebookEntry[];
+  /** The codes the file declares as missing (SPSS); the reader already turns them into blanks. */
+  missing: DeclaredMissing[];
+  /** What each variable means, from the file's variable labels. */
+  descriptions: Record<string, string>;
 }
 
 /** What the page may know of a JSON file before it is profiled: structure only, never a value or a nested key name. */

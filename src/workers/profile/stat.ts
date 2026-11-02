@@ -13,7 +13,12 @@ export interface StatInfo {
   columns: ColumnType[];
   /** An estimate of the data once opened, from the counts (never a value). */
   expandedBytes: number;
+  /** What each variable means, from the file's variable labels (only the ones the file has). */
+  descriptions: Record<string, string>;
 }
+
+/** A variable label as a description: one line, no control characters, at most 200 characters. */
+const oneLine = (text: string): string => [...text].filter((ch) => ch.charCodeAt(0) >= 32).join("").trim().slice(0, 200);
 
 export const readSql = (virtualName: string): string => `read_stat(${lit(virtualName)})`;
 
@@ -27,12 +32,27 @@ export async function inspectStat(sql: SqlRunner, virtualName: string): Promise<
     const [counts] = await sql.all(`SELECT count(*) AS n FROM ${readSql(virtualName)}`);
     const rowCount = toNumber(counts.n);
     if (rowCount === 0 || columns.length === 0) throw new AppError("stat_empty");
-    const info = { rowCount, columns, expandedBytes: rowCount * columns.length * 12 };
+    const info = { rowCount, columns, expandedBytes: rowCount * columns.length * 12, descriptions: await variableLabels(sql, virtualName) };
     if (workbookTooLarge(info.expandedBytes)) throw new AppError("stat_too_large");
     return info;
   } catch (err) {
     if (err instanceof AppError) throw err;
     throw new AppError("stat_damaged"); // the engine's text can quote the file, so it is never shown
+  }
+}
+
+/** The variable labels the file has; none when it has none or the engine cannot say. */
+async function variableLabels(sql: SqlRunner, virtualName: string): Promise<Record<string, string>> {
+  try {
+    const rows = await sql.all(`SELECT column_name, label FROM read_stat_metadata(${lit(virtualName)})`);
+    const out: Record<string, string> = {};
+    for (const r of rows) {
+      const text = oneLine(String(r.label ?? ""));
+      if (text !== "") out[String(r.column_name)] = text;
+    }
+    return out;
+  } catch {
+    return {};
   }
 }
 

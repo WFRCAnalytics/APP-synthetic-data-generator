@@ -22,11 +22,23 @@ const clean = (text: string): string => text.replace(/\0+$/, "").replace(/\s+$/,
 interface SavVariable {
   name: string;
   isString: boolean;
+  /** The codes the file declares as missing, as text such as "98" or "90 to 99". */
+  missing: string[];
+}
+
+/** The codes a variable of the file declares as missing (the reader turns them into blanks). */
+export interface DeclaredMissing {
+  column: string;
+  codes: string[];
 }
 
 /** The labels in the dictionary of an SPSS file (its first bytes), or none when the file does not say. */
-export function parseSavLabels(bytes: Uint8Array): CodebookEntry[] {
-  if (bytes.length < 180 || !(latin1.decode(bytes.subarray(0, 3)) === "$FL")) return [];
+export const parseSavLabels = (bytes: Uint8Array): CodebookEntry[] => parseSavDictionary(bytes).labels;
+
+/** The value labels and the declared missing codes in the dictionary of an SPSS file. */
+export function parseSavDictionary(bytes: Uint8Array): { labels: CodebookEntry[]; missing: DeclaredMissing[] } {
+  const none = { labels: [], missing: [] };
+  if (bytes.length < 180 || !(latin1.decode(bytes.subarray(0, 3)) === "$FL")) return none;
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const layout = view.getInt32(64, true);
   const little = layout === 2 || layout === 3;
@@ -55,8 +67,18 @@ export function parseSavLabels(bytes: Uint8Array): CodebookEntry[] {
         const length = i32(at);
         at += 4 + Math.ceil(length / 4) * 4;
       }
-      at += Math.abs(missing) * 8;
-      variables.push(width === -1 ? null : { name, isString: width > 0 });
+      const codes: string[] = [];
+      const count = missing === -2 ? 2 : missing === -3 ? 3 : Math.max(0, missing);
+      const isString = width > 0;
+      if (!room(count * 8)) break;
+      const code = (k: number) => (isString ? clean(decoder.decode(bytes.subarray(at + k * 8, at + k * 8 + 8))) : numberText(f64(at + k * 8)));
+      if (missing > 0) for (let k = 0; k < missing; k++) codes.push(code(k));
+      else if (missing < 0) {
+        codes.push(`${code(0)} to ${code(1)}`);
+        if (missing === -3) codes.push(code(2));
+      }
+      at += count * 8;
+      variables.push(width === -1 ? null : { name, isString, missing: codes });
     } else if (type === 3) {
       if (!room(4)) break;
       const count = i32(at);
@@ -64,11 +86,11 @@ export function parseSavLabels(bytes: Uint8Array): CodebookEntry[] {
       const values: string[] = [];
       const labels: string[] = [];
       for (let k = 0; k < count; k++) {
-        if (!room(9)) return collect();
+        if (!room(9)) return { labels: collect(), missing: declared() };
         const valueAt = at;
         const length = bytes[at + 8];
         const padded = Math.ceil((length + 1) / 8) * 8;
-        if (!room(8 + padded)) return collect();
+        if (!room(8 + padded)) return { labels: collect(), missing: declared() };
         values.push(`${valueAt}`); // resolved once the variables it belongs to are known
         labels.push(clean(decoder.decode(bytes.subarray(at + 9, at + 9 + length))));
         at += 8 + padded;
@@ -110,7 +132,13 @@ export function parseSavLabels(bytes: Uint8Array): CodebookEntry[] {
       break; // 999 ends the dictionary; anything else is not understood
     }
   }
-  return collect();
+  return { labels: collect(), missing: declared() };
+
+  function declared(): DeclaredMissing[] {
+    return variables
+      .filter((v): v is SavVariable => v !== null && v.missing.length > 0)
+      .map((v) => ({ column: longNames.get(v.name) ?? v.name, codes: v.missing }));
+  }
 
   function collect(): CodebookEntry[] {
     const out: CodebookEntry[] = [];
@@ -197,13 +225,17 @@ export async function parseDtaLabels(read: (start: number, end: number) => Promi
   return out;
 }
 
-/** The value labels of a chosen file, or none when it has none or they cannot be read. */
-export async function readStatLabels(file: File, format: StatFormat): Promise<CodebookEntry[]> {
-  if (format !== "sav" && format !== "dta") return []; // a SAS file keeps its labels in a separate format catalog
+/**
+ * The value labels of a chosen file and the codes it declares as missing, or none when it has none or they cannot be read.
+ * (Only SPSS declares codes as missing; Stata and SAS missing values are already blanks to the reader.)
+ */
+export async function readStatDictionary(file: File, format: StatFormat): Promise<{ labels: CodebookEntry[]; missing: DeclaredMissing[] }> {
+  const none = { labels: [], missing: [] };
+  if (format !== "sav" && format !== "dta") return none; // a SAS file keeps its labels in a separate format catalog
   try {
-    if (format === "sav") return parseSavLabels(new Uint8Array(await file.slice(0, SAV_DICTIONARY_BYTES).arrayBuffer()));
-    return await parseDtaLabels(async (start, end) => new Uint8Array(await file.slice(start, end).arrayBuffer()));
+    if (format === "sav") return parseSavDictionary(new Uint8Array(await file.slice(0, SAV_DICTIONARY_BYTES).arrayBuffer()));
+    return { labels: await parseDtaLabels(async (start, end) => new Uint8Array(await file.slice(start, end).arrayBuffer())), missing: [] };
   } catch {
-    return [];
+    return none;
   }
 }

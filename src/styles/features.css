@@ -669,6 +669,12 @@ section[aria-labelledby="ingest-heading"] > .empty-state .empty-state-icon {
   overflow-wrap: anywhere;
 }
 
+.column-card-description {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-foreground);
+}
+
 .column-card-renamed {
   margin: var(--space-1) 0 0;
   font-size: var(--text-sm);

@@ -50,6 +50,13 @@ export function StatSummary({ fileSize, info, onConfirm, busy }: StatSummaryProp
           </span>
         )}
       </p>
+      {info.missing.length > 0 && (
+        <p className="field-hint" data-testid="stat-missing">
+          {info.missing.length === 1 ? "One variable declares" : `${info.missing.length} variables declare`} codes as
+          missing, such as {info.missing[0].codes.join(", ")} for {info.missing[0].column}. They are read as blank, so they count as
+          missing values here.
+        </p>
+      )}
       {warnings.map((w) => (
         <div key={w} className="banner banner-warning" role="note" data-testid="size-warning">
           {w}

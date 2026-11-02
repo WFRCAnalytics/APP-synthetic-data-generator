@@ -507,6 +507,8 @@ export class Session {
           busy: [],
         });
         // The labels an SPSS or Stata file carries go beside the columns they belong to, as a codebook would.
+        for (const [name, description] of Object.entries(this.state.stat?.descriptions ?? {}))
+          if (this.base.some((p) => p.name === name)) this.editColumn(name, { description });
         const fileLabels = this.state.stat?.labels ?? [];
         if (fileLabels.length > 0) {
           const match = matchCodebook(fileLabels, this.base);

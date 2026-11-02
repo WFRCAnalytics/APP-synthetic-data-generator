@@ -194,10 +194,11 @@ export function agentReadme(spec: SpecFile, options: AgentReadmeOptions): string
   add("");
 
   add("## The columns", "");
-  add("| Column | Kind | Holds | Missing |", "| --- | --- | --- | --- |");
+  const meanings = written.some((c) => c.description);
+  add(meanings ? "| Column | Meaning | Kind | Holds | Missing |" : "| Column | Kind | Holds | Missing |", meanings ? "| --- | --- | --- | --- | --- |" : "| --- | --- | --- | --- |");
   for (const c of written)
     add(
-      `| ${tick(c.output_name ?? c.name)} | ${kindOf(c)} | ${cell(describe(c))} | ${cell(missingText(c, rows))} |`,
+      `| ${tick(c.output_name ?? c.name)} | ${meanings ? `${cell(c.description ?? "")} | ` : ""}${kindOf(c)} | ${cell(describe(c))} | ${cell(missingText(c, rows))} |`,
     );
   add("");
   const left = spec.columns.length - written.length;

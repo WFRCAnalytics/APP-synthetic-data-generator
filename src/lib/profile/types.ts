@@ -193,6 +193,8 @@ export interface ColumnProfile {
   storedAsText?: boolean;
   /** The column's logical type in a Parquet file. */
   parquetType?: ParquetType;
+  /** What the column means, from a variable label (specs/023). Documentation, never data. */
+  description?: string;
   /** What the codes of the column mean, from a codebook: value to label. Documentation, never data. */
   valueLabels?: Record<string, string>;
   /** The region the invented personal values come from (en_US when absent). */

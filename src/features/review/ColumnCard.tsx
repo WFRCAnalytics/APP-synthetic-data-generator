@@ -67,6 +67,11 @@ export function ColumnCard({
           <h3 id="column-detail-name" className="column-card-name">
             {profile.name}
           </h3>
+          {profile.description && (
+            <p className="column-card-description" data-testid="column-description">
+              {profile.description}
+            </p>
+          )}
           {profile.outputName !== profile.name && (
             <p className="column-card-renamed">Written as {profile.outputName}</p>
           )}

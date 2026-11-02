@@ -46,6 +46,8 @@ export interface LocalEdits {
   locale?: PersonalLocale;
   /** Treat a decimal column as a coordinate of this axis; null says it is not one. */
   coordinate?: CoordinateAxis | null;
+  /** What the column means (a variable label); null removes it. */
+  description?: string | null;
   /** Use the IDs of another table's column; null goes back to making new ones (specs/019). */
   idLink?: IdLink | null;
   /** What the codes of the column mean (a codebook); null removes them. */
@@ -75,6 +77,11 @@ export function applyEdits(p: ColumnProfile, e: LocalEdits | undefined): ColumnP
   }
 
   if (e.outputName !== undefined && e.outputName.trim() !== "") out.outputName = e.outputName;
+
+  if (e.description !== undefined) {
+    if (e.description === null || e.description.trim() === "") delete out.description;
+    else out.description = e.description.trim();
+  }
 
   if (e.valueLabels !== undefined) {
     if (e.valueLabels === null || Object.keys(e.valueLabels).length === 0) delete out.valueLabels;

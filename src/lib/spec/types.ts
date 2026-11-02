@@ -109,6 +109,8 @@ export interface NaSpec {
 
 export interface ColumnBase {
   name: string;
+  /** What the column means, in a few words (a variable label from an SPSS, Stata or SAS file). Documentation: never a value. */
+  description?: string;
   output_name?: string;
   exclude?: ExcludeMode;
   /** Whether the source quoted this column's non-empty fields (used by per_column quoting). */

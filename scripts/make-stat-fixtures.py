@@ -18,6 +18,15 @@ df.loc[5, "income"] = None
 labels = {"mode": {1: "Car", 2: "Bus", 3: "Walk", 4: "Bike"}}
 pyreadstat.write_sav(df, os.path.join(out, "survey.sav"), column_labels=["Household", "Age", "Income", "Mode", "Pass", "Date"], variable_value_labels=labels)
 pyreadstat.write_dta(df, os.path.join(out, "survey.dta"), column_labels=["Household", "Age", "Income", "Mode", "Pass", "Date"], variable_value_labels=labels)
+# An SPSS file that declares codes as missing (98 and 99 are user-defined missing values of "attitude", 90 to 99 a range of "score").
+miss = pd.DataFrame({
+    "pid": [f"P{i:03d}" for i in range(60)],
+    "attitude": [1 + i % 5 if i % 7 else (98 if i % 2 else 99) for i in range(60)],
+    "score": [10 + i if i % 9 else 95 for i in range(60)],
+    "age": [20 + i for i in range(60)],
+})
+pyreadstat.write_sav(miss, os.path.join(out, "survey_missing.sav"), missing_ranges={"attitude": [98, 99], "score": [{"lo": 90, "hi": 99}]})
+
 # SAS transport (XPT version 8, which allows names longer than eight characters). The .sas7bdat fixture is made from the .sav in a
 # browser with the stats_duck writer (no Python library writes that format); see tests/e2e/make-sas-fixture.md.
 pyreadstat.write_xport(df, os.path.join(out, "survey.xpt"), file_format_version=8, column_labels=["Household", "Age", "Income", "Mode", "Pass", "Date"])

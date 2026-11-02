@@ -5,7 +5,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { parseDtaLabels, parseSavLabels } from "../../src/lib/stat/labels";
+import { parseDtaLabels, parseSavDictionary, parseSavLabels } from "../../src/lib/stat/labels";
 
 const dir = join(process.cwd(), "tests/fixtures/stat");
 const bytes = (name: string) => new Uint8Array(readFileSync(join(dir, name)));
@@ -25,6 +25,18 @@ describe("SPSS labels", () => {
   it("finds nothing in a file that is not SPSS, or is cut short", () => {
     expect(parseSavLabels(new Uint8Array(500))).toEqual([]);
     expect(parseSavLabels(bytes("survey.sav").subarray(0, 300))).toEqual([]);
+  });
+});
+
+describe("SPSS declared missing codes", () => {
+  it("lists the discrete codes and the ranges a file declares as missing", () => {
+    expect(parseSavDictionary(bytes("survey_missing.sav")).missing).toEqual([
+      { column: "attitude", codes: ["98", "99"] },
+      { column: "score", codes: ["90 to 99"] },
+    ]);
+  });
+  it("lists none for a file that declares none", () => {
+    expect(parseSavDictionary(bytes("survey.sav")).missing).toEqual([]);
   });
 });
 

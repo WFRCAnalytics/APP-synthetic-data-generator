@@ -108,6 +108,7 @@ export function columnSpecOf(p: ColumnProfile): ColumnSpec {
 function baseColumnSpec(p: ColumnProfile): ColumnSpec {
   const common = {
     name: p.name,
+    ...(p.description ? { description: p.description } : {}),
     ...(p.cellFormat ? { cell_format: p.cellFormat } : {}),
     ...(p.storedAsText ? { stored_as_text: true } : {}),
     ...(p.parquetType ? { parquet_type: p.parquetType } : {}),
