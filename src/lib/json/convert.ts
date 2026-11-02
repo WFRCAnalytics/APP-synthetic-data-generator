@@ -47,7 +47,7 @@ export function jsonString(text: string): string {
 export function jsonNumber(text: string): string | null {
   const t = text.trim();
   if (NUMBER.test(t)) return t;
-  if (t === "" || /[^0-9eE+.\-]/.test(t)) return null;
+  if (t === "" || /[^0-9eE+.-]/.test(t)) return null;
   const n = Number(t);
   return Number.isFinite(n) ? String(n) : null;
 }

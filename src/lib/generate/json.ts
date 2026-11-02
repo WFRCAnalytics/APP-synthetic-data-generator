@@ -27,12 +27,15 @@ export function jsonColumnsOf(spec: SpecFile, plan: TablePlan): JsonColumn[] {
     const original = spec.columns.find((c) => c.name === gen.spec.name);
     const written = original !== undefined && original.type !== "unsupported" && original.type !== "empty" && (original.exclude ?? "include") === "include";
     const kind = written ? (original.json_kind ?? "string") : "null";
+    const naText = original ? naTokenOf(original) : "";
+    // Only cells of the missing-value text are nulls or absent keys; a cell of empty text is an empty string.
+    const naTotal = !written ? plan.nRows : original.na ? (original.na.by_token ? (original.na.by_token[naText] ?? 0) : original.na.count) : 0;
     return {
       name: gen.outputName,
       kind,
-      naText: original ? naTokenOf(original) : "",
-      naTotal: written ? (original.na?.count ?? 0) : plan.nRows,
-      missing: written ? Math.min(original.json_missing ?? 0, original.na?.count ?? 0) : 0,
+      naText,
+      naTotal,
+      missing: written ? Math.min(original.json_missing ?? 0, naTotal) : 0,
       key: subSeed(plan.seed, gen.spec.name),
     };
   });

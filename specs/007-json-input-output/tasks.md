@@ -47,7 +47,7 @@
 **Independent Test**: `npx playwright test json-flow` and `npx vitest run json-load json-readback`.
 
 - [x] T012 [P] [US1] Integration test `tests/integration/json-load.test.ts` (Node engine): registering `survey.json`, `inspectJson` returns record count, key names in first-seen order and kinds, and `loadJson` builds the all-text table (numbers as text with a trailing `.0` removed from whole doubles, `true` and `false`, empty text token, NULL); no value is in the inspect result
-- [ ] T013 [P] [US1] Read-back test `tests/integration/json-readback.test.ts`: write a file with `writeJson` from a synthetic spec and read it with Python-equivalent strict parsing (`JSON.parse`) and with the Node engine (`read_json`); keys, order and value kinds match the spec
+- [x] T013 [P] [US1] Read-back test `tests/integration/json-readback.test.ts`: write a file with `writeJson` from a synthetic spec and read it with Python-equivalent strict parsing (`JSON.parse`) and with the Node engine (`read_json`); keys, order and value kinds match the spec
 - [x] T014 [US1] Implement `src/workers/profile/json.ts`: `inspectJson` (queries of research R2 only; refuses a non-record item, a repeated key, an empty file) and `loadJson` (the typed to all-text conversion of research R3, nested keys as all-NULL, mixed keys as text)
 - [x] T015 [US1] Worker and protocol: detect JSON by content in `src/workers/profile.worker.ts` (the first non-space character, never the extension), add `inspectJson`/`jsonInfo` messages to `src/workers/protocol.ts`, map every failure to the fixed messages of T010, discard the engine's message, load the extension before reading
 - [x] T016 [US1] Generation: `src/lib/generate/json.ts` (`jsonLayoutOf(spec)`, `writeJson(spec, seed, chunkRows, observe, between)` using the CSV path's rendering and `convert.ts`), the JSON branch in `src/lib/generate/table.ts` and `src/workers/generate.worker.ts` streaming chunks
@@ -65,7 +65,7 @@
 
 **Independent Test**: `npx playwright test json-flow -g lines` and `npx vitest run json-load json-readback`.
 
-- [ ] T020 [P] [US2] Extend `tests/integration/json-load.test.ts` and `json-readback.test.ts` to `survey.ndjson` and `survey_crlf_bom.json`: form detected by content whatever the extension, CRLF and the byte-order mark recorded and reproduced, blank lines tolerated on read
+- [x] T020 [P] [US2] Extend `tests/integration/json-load.test.ts` and `json-readback.test.ts` to `survey.ndjson` and `survey_crlf_bom.json`: form detected by content whatever the extension, CRLF and the byte-order mark recorded and reproduced, blank lines tolerated on read
 - [x] T021 [P] [US2] Extend `tests/e2e/json-flow.spec.ts` with the lines file: the download has one complete record per line, no brackets, no commas between records, the extension kept (`.ndjson`, `.jsonl`)
 - [ ] T022 [US2] Make the form follow the spec: an array spec writes an array and a lines spec writes lines, in `src/lib/generate/json.ts` and the Generate screen note that states the form and layout; a `.json` file with one record per line is a lines file
 
@@ -79,7 +79,7 @@
 
 **Independent Test**: `npx vitest run json-load json-readback` with `nulls_missing.json` and `mixed.json`, and the keys in `json-flow`.
 
-- [ ] T023 [P] [US3] Integration tests: `nulls_missing.json` gives the recorded `json_nulls` and `json_missing` per key, and the written file has exactly those counts of `null` and absent keys (SC-005); `mixed.json` loads as text with the `mixed_kinds` reason
+- [x] T023 [P] [US3] Integration tests: `nulls_missing.json` gives the recorded `json_nulls` and `json_missing` per key, and the written file has exactly those counts of `null` and absent keys (SC-005); `mixed.json` loads as text with the `mixed_kinds` reason
 - [ ] T024 [P] [US3] Component test: the review card shows the mixed warning as a tooltip, a null-only key reads as an all-missing column, and the type shown for each kind matches the spec's `json_kind`
 - [ ] T025 [US3] Carry kinds and counts through profiling and the spec: `src/lib/spec/build.ts` and `toProfiles.ts` write and read `json_kind`, `json_nulls`, `json_missing`; `src/workers/profile.worker.ts` keeps them through re-profiling and type overrides; the writer follows the recorded kind when the user changes a column's profiled type (a numeric key changed to category still writes numbers; a text key changed to number is refused with a plain message)
 - [ ] T026 [US3] The `mixed_kinds` reason in `src/lib/profile/types.ts` with its fixed text in `src/features/review/summary.ts`, shown on the card and in the attention list
@@ -95,7 +95,7 @@
 **Independent Test**: `npx vitest run json-privacy` and `npx playwright test json-privacy`.
 
 - [ ] T027 [P] [US4] Spy test `tests/integration/json-privacy.test.ts`: a runner that records every row the engine returns to the caller while `markers.json` is inspected, loaded and profiled; fails if any marker (in values, nested values or nested key names) appears in any returned row except inside the table load that stays in the worker
-- [ ] T028 [P] [US4] Output test in `tests/unit/json-writer.test.ts` and `tests/integration/json-readback.test.ts`: the fake file holds no marker, no nested key name, an unsupported key is omitted by default and `null` in every record when kept
+- [x] T028 [P] [US4] Output test in `tests/unit/json-writer.test.ts` and `tests/integration/json-readback.test.ts`: the fake file holds no marker, no nested key name, an unsupported key is omitted by default and `null` in every record when kept
 - [ ] T029 [P] [US4] End-to-end leak test `tests/e2e/json-privacy.spec.ts`: run the whole flow on `markers.json` and search page text, spec JSON, preview, the downloaded file's bytes, console messages, local and session storage and every error message for any marker; assert zero outside requests (SC-002, SC-003)
 - [x] T030 [P] [US4] Refusal tests: `damaged.json`, `scalar.json`, `items.json`, `dup.json`, `empty.json`, `geojson.json` and `comments.json` each end in the fixed message with no file content (`tests/integration/json-load.test.ts`, `tests/e2e/json-flow.spec.ts`)
 - [ ] T031 [US4] Reason codes `nested_object` and `nested_array` in `src/lib/profile/types.ts` with fixed texts in `src/features/review/summary.ts`; the kept-as-null handling in the writer and spec validation (an unsupported key holds no `json_nulls` count from inside the value); make T027 to T030 pass

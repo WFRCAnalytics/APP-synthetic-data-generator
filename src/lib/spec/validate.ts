@@ -272,7 +272,11 @@ function checkJsonKind(col: ColumnSpec, problem: (path: string, message: string)
   if (kind === "number" && (t === "date" || t === "datetime" || t === "time" || t === "free_text" || t === "personal")) problem("json_kind", "A key of numbers cannot be a date, personal or free-text column.");
   if (kind === "boolean" && t !== "boolean" && t !== "categorical") problem("json_kind", "A key of true and false must be a yes or no, or a category.");
   if (kind === "null" && t !== "empty") problem("json_kind", "A key that was always null must be an empty column.");
-  if (col.json_missing !== undefined && col.json_missing > (col.na?.count ?? 0)) problem("json_missing", "The records without the key cannot outnumber the missing values.");
+  if (col.json_missing !== undefined) {
+    const token = col.na?.tokens[0] ?? "";
+    const missingCells = col.na ? (col.na.by_token ? (col.na.by_token[token] ?? 0) : col.na.count) : 0;
+    if (col.json_missing > missingCells) problem("json_missing", "The records without the key cannot outnumber the missing values.");
+  }
 }
 
 /** Checks a repeat structure and returns the distinct count, or null after reporting a problem. */
