@@ -19,6 +19,10 @@ export interface GenerateScreenProps {
   onDownloadFake: () => void;
   onDownloadSpec: () => void;
   onDownloadReadme: () => void;
+  onDownloadAll: () => void;
+  /** Absent when the browser cannot write to a folder. */
+  onSaveToFolder?: () => void;
+  savedTo?: string | null;
   fakeFileName: string;
 }
 
@@ -219,7 +223,29 @@ export function GenerateScreen(props: GenerateScreenProps) {
                   <Download size={16} strokeWidth={1.75} aria-hidden="true" /> Download README for
                   agents
                 </button>
+                <button
+                  type="button"
+                  className="button button-secondary"
+                  onClick={props.onDownloadAll}
+                >
+                  <Download size={16} strokeWidth={1.75} aria-hidden="true" /> Download all (zip)
+                </button>
+                {props.onSaveToFolder && (
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    onClick={props.onSaveToFolder}
+                  >
+                    <Download size={16} strokeWidth={1.75} aria-hidden="true" /> Save to a folder
+                  </button>
+                )}
               </div>
+              {props.savedTo && (
+                <p className="field-hint" role="status" data-testid="saved-to">
+                  Saved the fake file, the spec and the README to the folder &ldquo;{props.savedTo}
+                  &rdquo;.
+                </p>
+              )}
               <p className="field-hint">
                 {(gen.totalBytes / 1048576).toFixed(2)} MB. Single-file download.
                 {session.settings && isJsonSettings(session.settings) && (

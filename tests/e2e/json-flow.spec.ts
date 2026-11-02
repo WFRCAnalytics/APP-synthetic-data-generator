@@ -167,3 +167,15 @@ test("a README for agents comes with the fake file and says what is in it", asyn
   for (const key of ["hh_id", "person_no", "income", "has_pass"]) expect(text).toContain(`\`${key}\``);
   expect(text).not.toContain("PRIVATE-MARKER");
 });
+
+test("Download all gives one zip with the fake file, the spec and the README", async ({ page }, testInfo) => {
+  await chooseJson(page, "survey.json");
+  await review(page);
+  await generateAndDownload(page, /Download survey_fake\.json/);
+  const [zip] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Download all (zip)" }).click()]);
+  expect(zip.suggestedFilename()).toBe("survey_fake_files.zip");
+  const path = testInfo.outputPath("all.zip");
+  await zip.saveAs(path);
+  const bytes = readFileSync(path);
+  for (const name of ["survey_fake.json", "survey_spec.json", "survey_fake_README.md"]) expect(bytes.includes(Buffer.from(name))).toBe(true);
+});

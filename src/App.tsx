@@ -4,6 +4,13 @@ import { HelpGuideModal } from "./app/HelpGuideModal";
 import { NetworkCounter } from "./app/NetworkCounter";
 import { netCounter } from "./app/netMonitor";
 import { downloadBlob } from "./app/download";
+import {
+  canSaveToFolder,
+  saveToFolder,
+  zipFileNameFor,
+  zipOf,
+  type NamedBlob,
+} from "./app/saveAll";
 import { LocalNotice } from "./app/LocalNotice";
 import { Session } from "./app/session";
 import { Stepper } from "./app/Stepper";
@@ -13,6 +20,19 @@ import { DesignScreen } from "./features/design/DesignScreen";
 import { GenerateScreen } from "./features/generate/GenerateScreen";
 import { IngestScreen } from "./features/ingest/IngestScreen";
 import { ReviewScreen } from "./features/review/ReviewScreen";
+
+/** The fake file, the spec and the README, or null when the run is not finished. */
+function allFilesOf(session: Session): NamedBlob[] | null {
+  const fake = session.fakeBlob();
+  const spec = session.specBlob();
+  const readme = session.readmeBlob();
+  if (!fake || !spec || !readme) return null;
+  return [
+    { name: session.fakeFileName(), blob: fake },
+    { name: session.specFileName(), blob: spec },
+    { name: session.readmeFileName(), blob: readme },
+  ];
+}
 
 export function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
@@ -27,6 +47,7 @@ export function App() {
   }, []);
   const [data, setData] = useState(session.state);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [savedTo, setSavedTo] = useState<string | null>(null);
   const [design, setDesign] = useState(emptyDesign);
 
   useEffect(() => {
@@ -95,8 +116,8 @@ export function App() {
                 requestSamples: (name, description) => session.requestSamples(name, description),
                 setThreshold: (n) => session.setThreshold(n),
                 applyCodebook: (labels) => session.applyCodebook(labels),
-              addRule: (rule) => session.addRule(rule),
-              removeRule: (index) => session.removeRule(index),
+                addRule: (rule) => session.addRule(rule),
+                removeRule: (index) => session.removeRule(index),
                 onContinue: () => dispatch({ type: "goTo", step: "generate" }),
                 onSaveSpec: () => {
                   const blob = session.specBlob();
@@ -126,6 +147,23 @@ export function App() {
                 const blob = session.specBlob();
                 if (blob) downloadBlob(blob, session.specFileName());
               }}
+              onDownloadAll={() => {
+                const files = allFilesOf(session);
+                if (files)
+                  void zipOf(files).then((zip) =>
+                    downloadBlob(zip, zipFileNameFor(session.fakeFileName())),
+                  );
+              }}
+              onSaveToFolder={
+                canSaveToFolder()
+                  ? () => {
+                      const files = allFilesOf(session);
+                      if (!files) return;
+                      saveToFolder(files).then(setSavedTo, () => {});
+                    }
+                  : undefined
+              }
+              savedTo={savedTo}
             />
           )}
         </main>

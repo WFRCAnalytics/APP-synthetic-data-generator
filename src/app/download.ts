@@ -1,5 +1,4 @@
-// Saves a Blob as a file through a temporary link. Works in every browser; folder output in
-// Chrome and Edge is a later feature.
+// Saves a Blob as a file through a temporary link. Works in every browser. Saving into a chosen folder is in saveAll.ts.
 
 export function downloadBlob(blob: Blob, fileName: string): void {
   const url = URL.createObjectURL(blob);
