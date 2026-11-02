@@ -261,3 +261,32 @@ test("a trip's zone is the zone of its person's household", async ({ page }) => 
   for (const [pid, , z] of rows) expect(z).toBe(zoneOf.get(householdOf.get(pid) as string));
   expect(new Set(rows.map((r) => r[2])).size).toBe(4);
 });
+
+test("a person's income and survey day are those of their household", async ({ page }) => {
+  const nl = String.fromCharCode(10);
+  const rowsOf = (csv: string) => csv.trim().split(nl).slice(1).map((l) => l.split(","));
+  const homes = ["hh_id,income,day"].concat(Array.from({ length: 300 }, (_, i) => `H${1000 + i},${20000 + ((i * 977) % 90000)},2025-03-${String(1 + (i % 28)).padStart(2, "0")}`)).join(nl) + nl;
+  await makeTable(page, "households.csv", homes);
+  const first = await generate(page, /Download households_fake\.csv/);
+  const parent = new Map(rowsOf(first.csv).map((r) => [r[0], r] as [string, string[]]));
+
+  const people = Array.from({ length: 120 }, (_, h) => Array.from({ length: 1 + (h % 4) }, (_, k) => `H${1000 + h},${25000 + ((h * 131 + k * 17) % 60000)},2025-04-${String(1 + ((h + k) % 28)).padStart(2, "0")},${20 + ((h * 7 + k * 13) % 60)}`)).flat();
+  await makeTable(page, "persons.csv", ["hh_id,income,day,age"].concat(people).join(nl) + nl);
+  const idCard = await shownCard(page, "hh_id");
+  await idCard.getByLabel("Spec of the other table").setInputFiles(first.specPath);
+  await idCard.getByRole("button", { name: "Use these IDs" }).click();
+  for (const name of ["income", "day"]) {
+    const card = await shownCard(page, name);
+    await card.getByLabel("Spec of the table to take the value from").setInputFiles(first.specPath);
+    await card.getByLabel("Column of the other table").selectOption(name);
+    await card.getByRole("button", { name: "Take its value" }).click();
+    await expect(card.getByTestId("parent-value-summary")).toContainText("households.csv");
+  }
+  const second = await generate(page, /Download persons_fake\.csv/);
+  const rows = rowsOf(second.csv);
+  expect(rows.length).toBe(people.length);
+  for (const [hh, income, day] of rows) {
+    expect(income).toBe(parent.get(hh)![1]);
+    expect(day).toBe(parent.get(hh)![2]);
+  }
+});

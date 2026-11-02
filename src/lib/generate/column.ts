@@ -6,7 +6,7 @@
 import { effectiveCounts } from "../protections";
 import { makePermutation } from "../rng/permute";
 import { subSeed } from "../rng/subseed";
-import type { CategoricalColumn, ChildCount, ColumnSpec, IdLink, NumericColumn, ParentValue, SurveyIdColumn } from "../spec/types";
+import { FOLLOWABLE_TYPES, type ChildCount, type ColumnSpec, type IdLink, type NumericColumn, type ParentValue, type SurveyIdColumn } from "../spec/types";
 import { makeLabelLookup } from "./categorical";
 import { makeDateFormatter } from "./datetime";
 import { formatNumber, makeNumericSource, withRescale, type NumericPlan } from "./numeric";
@@ -24,6 +24,8 @@ export interface ColumnContext {
   nRows: number;
   /** The columns of the table, for a column that needs another one beside it. */
   columns?: readonly ColumnSpec[];
+  /** How many tables deep a value taken from another table has gone. */
+  depth?: number;
 }
 
 export interface ColumnGen {
@@ -82,18 +84,18 @@ function childCountColumn(col: NumericColumn, cc: ChildCount, ctx: ColumnContext
 }
 
 /**
- * A categorical column that takes the value the other table's column has in the row with the same ID (specs/030). This table's ID
- * column (`via`) sends each of its groups to a group of the other table's IDs; the other table's ID column holds one new ID per
- * row, placed by a keyed permutation, so the row of a group is the inverse of that permutation. The value of that row is made again
- * from the other table's seed and the labels and counts kept in the spec.
+ * A column that takes the value the other table's column has in the row with the same ID (specs/030). This table's ID column
+ * (`via`) sends each of its groups to a group of the other table's IDs; the other table's ID column holds one new ID per row,
+ * placed by a keyed permutation, so the row of a group is the inverse of that permutation. The value of that row is made again by the
+ * other table's own generator for that column, from its seed and its spec; when that column follows a third table, it goes on from there.
  */
-function parentValueColumn(col: CategoricalColumn, fp: ParentValue, ctx: ColumnContext, gen: (valueAt: (row: number) => string) => ColumnGen): ColumnGen {
+function parentValueColumn(col: ColumnSpec, fp: ParentValue, ctx: ColumnContext, gen: (valueAt: (row: number) => string) => ColumnGen): ColumnGen {
   const via = ctx.columns?.find((c) => c.name === fp.via);
   if (!via || via.type !== "survey_id") throw new GenerationError(`Column "${col.name}": "${fp.via}" does not use another table's IDs.`);
-  return gen(parentValueFn(col.name, fp, via, ctx.seed, ctx.nRows, 0));
+  return gen(parentValueFn(col.name, fp, via, ctx.seed, ctx.nRows, ctx.depth ?? 0));
 }
 
-/** The value of each row of a table that takes its value from another table through the ID column `via`; a chain of tables goes one step at a time. */
+/** The value of each row of a table that takes its value from another table through the ID column `via`. */
 function parentValueFn(name: string, fp: ParentValue, via: SurveyIdColumn, seed: number, nRows: number, depth: number): (row: number) => string {
   if (depth > 6) throw new GenerationError(`Column "${name}": a value cannot be taken through more than six tables.`);
   const { link } = via;
@@ -110,18 +112,7 @@ function parentValueFn(name: string, fp: ParentValue, via: SurveyIdColumn, seed:
   const idPlace = makePermutation(parent.rows, mix32((subSeed(parent.seed, parent.id_column) ^ 0xa5a5a5a5) >>> 0));
   const rowOf = new Int32Array(parent.rows);
   for (let r = 0; r < parent.rows; r++) rowOf[idPlace(r)] = r;
-  let theirs: (row: number) => string;
-  if (parent.from_parent && parent.via_column) {
-    theirs = parentValueFn(name, parent.from_parent, parent.via_column, parent.seed, parent.rows, depth + 1);
-  } else {
-    const theirPlacer = makePlacer(parent.rows, subSeed(parent.seed, parent.column), parent.na, parent.sentinels);
-    const lookup = makeLabelLookup(parent.counts);
-    if (lookup.total !== theirPlacer.valueTotal) throw new GenerationError(`Column "${name}": the other table's counts (${lookup.total}) do not match its ${theirPlacer.valueTotal} rows left after NA and sentinels.`);
-    theirs = (r) => {
-      const q = theirPlacer(r);
-      return q.kind === "value" ? lookup.at(q.index) : q.token;
-    };
-  }
+  const theirs = createColumnGen(parent.spec, { seed: parent.seed, nRows: parent.rows, columns: parent.via_column ? [parent.via_column] : [], depth: depth + 1 }).valueAt;
   return (row) => {
     const p = placer(row);
     return p.kind === "value" ? theirs(rowOf[pick(own(p.index))]) : p.token;
@@ -156,6 +147,8 @@ export function createColumnGen(col: ColumnSpec, ctx: ColumnContext): ColumnGen 
   const base = { name: col.name, outputName: col.output_name ?? col.name, quoted: col.quoted ?? false, spec: col };
   const gen = (valueAt: (row: number) => string): ColumnGen => ({ ...base, valueAt });
 
+  if (col.from_parent && FOLLOWABLE_TYPES.has(col.type)) return parentValueColumn(col, col.from_parent, ctx, gen);
+
   switch (col.type) {
     case "empty":
     case "unsupported": {
@@ -166,7 +159,6 @@ export function createColumnGen(col: ColumnSpec, ctx: ColumnContext): ColumnGen 
 
     case "categorical":
     case "boolean": {
-      if (col.from_parent) return parentValueColumn(col, col.from_parent, ctx, gen);
       const placer = makePlacer(ctx.nRows, key, col.na, col.sentinels);
       const lookup = makeLabelLookup(effectiveCounts(col.counts, col));
       if (lookup.total !== placer.valueTotal) {

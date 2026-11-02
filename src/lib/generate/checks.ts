@@ -152,13 +152,16 @@ export class CheckAccumulator {
     );
     // A column that counts another table's rows is checked by what the counts add up to, not by its own summaries.
     plan.columns.forEach((c, i) => {
-      const fp = c.spec.type === "categorical" || c.spec.type === "boolean" ? c.spec.from_parent : undefined;
+      const fp = c.spec.from_parent;
       if (fp) {
         this.derived.add(i);
-        let leaf = fp.parent; // through a chain of tables the values are those of the last one
-        while (leaf.from_parent) leaf = leaf.from_parent.parent;
-        const allowed = new Set([...Object.keys(leaf.counts), ...(leaf.na?.tokens ?? []), ...Object.keys(leaf.sentinels ?? {})]);
-        this.followers.push({ column: c.outputName, index: i, allowed, table: fp.parent.table, outside: 0 });
+        let leaf = fp.parent.spec; // through a chain of tables the values are those of the last one
+        while (leaf.from_parent) leaf = leaf.from_parent.parent.spec;
+        const allowed = new Set<string>();
+        let range: { min: number; max: number; parse?: (text: string) => number | null } | undefined;
+        if (leaf.type === "categorical" || leaf.type === "boolean") for (const label of Object.keys(effectiveCounts(leaf.counts, leaf))) allowed.add(label);
+        else if ("min" in leaf && "max" in leaf && typeof leaf.min === "number" && typeof leaf.max === "number") range = { min: leaf.min, max: leaf.max, parse: this.accs[i].parse ?? undefined };
+        this.followers.push({ column: c.outputName, index: i, allowed, range, naTokens: new Set([...(leaf.na?.tokens ?? []), ...Object.keys(leaf.sentinels ?? {})]), table: fp.parent.table, outside: 0 });
       }
       const cc = c.spec.type === "integer" ? c.spec.child_count : undefined;
       if (!cc) return;
@@ -168,7 +171,7 @@ export class CheckAccumulator {
   }
 
   /** Columns that take another table's value: the values they may hold, and how many rows hold something else. */
-  private readonly followers: { column: string; index: number; allowed: Set<string>; table?: string; outside: number }[] = [];
+  private readonly followers: { column: string; index: number; allowed: Set<string>; range?: { min: number; max: number; parse?: (text: string) => number | null }; naTokens: Set<string>; table?: string; outside: number }[] = [];
 
   /** Columns that count another table's rows: what they should add up to, and what they do. */
   private readonly counts: { column: string; index: number; expected: number; table?: string; total: number }[] = [];
@@ -176,7 +179,14 @@ export class CheckAccumulator {
   observeRow(values: readonly string[]): void {
     for (const r of this.rules) r.observe(values);
     for (const k of this.counts) k.total += Number(values[k.index]) || 0;
-    for (const f of this.followers) if (!f.allowed.has(values[f.index])) f.outside++;
+    for (const f of this.followers) {
+      const text = values[f.index];
+      if (f.range) {
+        const x = f.naTokens.has(text) ? null : (f.range.parse?.(text) ?? null);
+        if (x !== null && (x < f.range.min || x > f.range.max)) f.outside++;
+        else if (x === null && !f.naTokens.has(text)) f.outside++;
+      } else if (!f.allowed.has(text)) f.outside++;
+    }
     for (let c = 0; c < this.accs.length; c++) {
       const a = this.accs[c];
       if (this.derived.has(c)) continue;

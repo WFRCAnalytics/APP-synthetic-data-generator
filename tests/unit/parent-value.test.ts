@@ -96,3 +96,47 @@ describe("a value taken through two tables", () => {
     expect(validateSpec(JSON.parse(JSON.stringify(cut))).ok).toBe(false);
   });
 });
+
+describe("numbers and dates follow the other table too", () => {
+  const quantiles = Array.from({ length: 101 }, (_, i) => 10_000 + i * 900);
+  const income: ColumnSpec = { name: "income", type: "integer", mode: "uniform", min: 10_000, max: 100_000, mean: 55_000, sd: 25_000, decimals: 0, quantiles };
+  const day: ColumnSpec = { name: "survey_day", type: "date", mode: "uniform", min: 19000, max: 19100, mean: 19050, sd: 30, quantiles: Array.from({ length: 101 }, (_, i) => 19000 + i), format: "%Y-%m-%d", granularity: "day" } as ColumnSpec;
+  const homes = specOf("households.csv", 11, [id("hh_id", { "1": 200 }), income, day], 200);
+  const homesLink = linkTo(homes, homes.columns[0] as SurveyIdColumn);
+  const parentIncome = new Map(table(homes, 11).map(([hh, inc]) => [hh, inc]));
+  const parentDay = new Map(table(homes, 11).map(([hh, , d]) => [hh, d]));
+  const people = (): SpecFile =>
+    specOf(
+      "persons.csv",
+      99,
+      [
+        id("hh_id", repeat, { link: homesLink }),
+        { ...income, from_parent: parentValueFrom(homes, income, "hh_id", homesLink) } as ColumnSpec,
+        { ...day, from_parent: parentValueFrom(homes, day, "hh_id", homesLink) } as ColumnSpec,
+      ],
+      210,
+    );
+
+  it("gives a person the income and the day of their household", () => {
+    const rows = table(people(), 99);
+    expect(rows.length).toBe(210);
+    for (const [hh, inc, d] of rows) {
+      expect(inc).toBe(parentIncome.get(hh));
+      expect(d).toBe(parentDay.get(hh));
+    }
+    expect(new Set(rows.map((r) => r[1])).size).toBeGreaterThan(20);
+  });
+
+  it("offers only columns of the same kind", () => {
+    expect(parentColumnsOf(homes, homesLink, "integer").map((c) => c.name)).toEqual(["income"]);
+    expect(parentColumnsOf(homes, homesLink, "date").map((c) => c.name)).toEqual(["survey_day"]);
+    expect(parentColumnsOf(homes, homesLink).map((c) => c.name)).toEqual(["income", "survey_day"]);
+  });
+
+  it("is a valid spec, refused when the kinds differ", () => {
+    expect(validateSpec(JSON.parse(JSON.stringify(people()))).ok).toBe(true);
+    const wrong = people();
+    (wrong.columns[1] as { type: string }).type = "float";
+    expect(validateSpec(JSON.parse(JSON.stringify(wrong))).ok).toBe(false);
+  });
+});

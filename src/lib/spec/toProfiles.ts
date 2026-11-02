@@ -88,6 +88,7 @@ export function profileFromSpec(c: ColumnSpec): ColumnProfile {
       : {},
     sentinels: { ...(c.sentinels ?? {}) },
     quoted: c.quoted ?? false,
+    ...(c.from_parent ? { fromParent: c.from_parent } : {}),
     ...(c.description ? { description: c.description } : {}),
     ...(c.value_labels ? { valueLabels: { ...c.value_labels } } : {}),
     ...(c.cell_format ? { cellFormat: c.cell_format } : {}),
@@ -131,7 +132,6 @@ export function profileFromSpec(c: ColumnSpec): ColumnProfile {
         exclude: c.exclude ?? "include",
         mergeUnderK: c.merge_under_k ?? null,
         labelCodes: c.label_codes ?? false,
-        ...(c.from_parent ? { fromParent: c.from_parent } : {}),
         summary: { kind: "categorical", storage, counts: { ...c.counts } },
       };
     }

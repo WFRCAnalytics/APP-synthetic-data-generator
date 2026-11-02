@@ -87,7 +87,7 @@ export function applyEdits(p: ColumnProfile, e: LocalEdits | undefined): ColumnP
     else out.childCount = e.childCount;
   }
 
-  if (p.summary.kind === "categorical" && e.fromParent !== undefined) {
+  if ((p.summary.kind === "categorical" || p.summary.kind === "numeric" || p.summary.kind === "datetime") && e.fromParent !== undefined) {
     if (e.fromParent === null) delete out.fromParent;
     else out.fromParent = e.fromParent;
   }

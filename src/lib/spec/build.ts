@@ -142,6 +142,7 @@ function baseColumnSpec(p: ColumnProfile): ColumnSpec {
         }
       : {}),
     ...(Object.keys(p.sentinels).length > 0 ? { sentinels: p.sentinels } : {}),
+    ...(p.fromParent ? { from_parent: p.fromParent } : {}),
   };
 
   switch (s.kind) {
@@ -155,7 +156,6 @@ function baseColumnSpec(p: ColumnProfile): ColumnSpec {
         counts: s.counts,
         ...(p.mergeUnderK ? { merge_under_k: p.mergeUnderK } : {}),
         ...(p.labelCodes ? { label_codes: true } : {}),
-        ...(p.fromParent ? { from_parent: p.fromParent } : {}),
       };
     case "numeric":
       return {

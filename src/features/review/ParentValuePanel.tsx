@@ -1,4 +1,4 @@
-// Making a category column take its value from the other table's row with the same ID (specs/030): the person chooses the other
+// Making a category, number or date column take its value from the other table's row with the same ID (specs/030): the person chooses the other
 // table's saved spec and which of its categories to follow. Only that column's labels, counts and the seed are copied.
 
 import { useState } from "react";
@@ -20,14 +20,14 @@ export function ParentValuePanel({ profile, table, onEdit }: ParentValuePanelPro
   const [other, setOther] = useState<SpecFile | null>(null);
   const [choice, setChoice] = useState("");
   const [problem, setProblem] = useState<string | null>(null);
-  if (profile.summary.kind !== "categorical") return null;
+  if (profile.summary.kind !== "categorical" && profile.summary.kind !== "numeric" && profile.summary.kind !== "datetime") return null;
   if (profile.naCount > 0 || Object.keys(profile.sentinels).length > 0) return null; // the value comes whole from the other table
   const linked = table.linkedIds ?? [];
   if (linked.length === 0 && !profile.fromParent) return null;
 
   /** The columns of the other table this table's linked ID columns can reach. */
   const candidates = other
-    ? linked.flatMap((l) => parentColumnsOf(other, l.link).map((column) => ({ via: l.name, link: l.link, column })))
+    ? linked.flatMap((l) => parentColumnsOf(other, l.link, profile.type).map((column) => ({ via: l.name, link: l.link, column })))
     : [];
 
   const choose = async (file: File | undefined) => {
@@ -36,8 +36,8 @@ export function ParentValuePanel({ profile, table, onEdit }: ParentValuePanelPro
     if (!file) return;
     const result = await readSpecFile(file);
     if (!result.ok) return setProblem("That file is not a valid spec.");
-    const found = linked.flatMap((l) => parentColumnsOf(result.spec, l.link));
-    if (found.length === 0) return setProblem("No category column of that spec can be followed: this table needs an ID column that uses its IDs, with one new ID per row.");
+    const found = linked.flatMap((l) => parentColumnsOf(result.spec, l.link, profile.type));
+    if (found.length === 0) return setProblem("No column of that spec of the same kind can be followed: this table needs an ID column that uses its IDs, with one new ID per row.");
     setOther(result.spec);
     setChoice(found[0].name);
   };
@@ -55,9 +55,9 @@ export function ParentValuePanel({ profile, table, onEdit }: ParentValuePanelPro
       <span className="label-row">
         <label htmlFor={`parent-value-${profile.name}`}>Value from another table</label>
         <InfoTip label="About taking a value from another table">
-          Make this column, in each row, the value the other table has in the row with the same ID, such as a person&apos;s zone from their
-          household. Choose the saved spec of the other table. This table needs an ID column that uses that table&apos;s IDs. The column then
-          replaces its own summary; the check table says whether every value is one of the other table&apos;s.
+          Make this column, in each row, the value the other table has in the row with the same ID, such as a person&apos;s zone or income from
+          their household. Choose the saved spec of the other table. This table needs an ID column that uses that table&apos;s IDs. The column then
+          replaces its own summary; the check table says whether every value is one the other table&apos;s column can hold.
         </InfoTip>
       </span>
       {profile.fromParent ? (

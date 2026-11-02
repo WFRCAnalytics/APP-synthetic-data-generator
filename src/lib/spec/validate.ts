@@ -23,6 +23,7 @@ import {
   MAX_TEXT_LENGTH,
   READABLE_SPEC_VERSIONS,
   SPEC_VERSION,
+  FOLLOWABLE_TYPES,
   type CategoricalColumn,
   type ParentValue,
   type ColumnSpec,
@@ -51,6 +52,7 @@ const base = {
   quoted: v.optional(v.boolean()),
   na: v.optional(NaSchema),
   sentinels: v.optional(SentinelsSchema),
+  from_parent: v.optional(v.lazy(() => ParentValueSchema)),
   coordinate: v.optional(v.picklist(COORDINATE_AXES as unknown as [string, ...string[]])),
   value_labels: v.optional(
     v.pipe(
@@ -198,10 +200,7 @@ const ParentValueSchema: v.GenericSchema<ParentValue> = v.strictObject({
     id_column: v.pipe(v.string(), v.minLength(1)),
     seed: v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(4294967295)),
     rows: positiveCount,
-    counts: v.record(v.string(), positiveCount),
-    na: v.optional(NaSchema),
-    sentinels: v.optional(SentinelsSchema),
-    from_parent: v.optional(v.lazy(() => ParentValueSchema)),
+    spec: v.lazy(() => ColumnSchema),
     via_column: v.optional(SurveyIdSchema),
   }),
 }) as unknown as v.GenericSchema<ParentValue>;
@@ -214,7 +213,6 @@ const CategoricalSchema = (type: "categorical" | "boolean") =>
     counts: v.record(v.string(), positiveCount),
     merge_under_k: v.optional(v.nullable(v.pipe(v.number(), v.integer(), v.minValue(2)))),
     label_codes: v.optional(v.boolean()),
-    from_parent: v.optional(ParentValueSchema),
   });
 
 const ChildCountSchema = v.strictObject({
@@ -459,34 +457,35 @@ function checkChildCount(col: ColumnSpec, spec: SpecFile, out: SpecProblem[]): v
 }
 
 /** Why a value taken from another table does not fit the ID column it goes through, or null when it does. `via` is that ID column. */
-function parentValueProblem(fp: ParentValue, via: ColumnSpec | undefined, depth = 0): string | null {
+function parentValueProblem(col: ColumnSpec, fp: ParentValue, via: ColumnSpec | undefined, depth = 0): string | null {
   if (depth > 6) return "A value cannot be taken through more than six tables.";
+  if (!FOLLOWABLE_TYPES.has(col.type)) return "Only a category, yes/no, number or date column can take its value from another table.";
+  if (col.na || col.sentinels) return "A column that takes the other table's value has no missing values or sentinel codes of its own.";
+  if ((col.type === "integer" || col.type === "float") && col.child_count) return "A column cannot both count another table's rows and take its value from another table.";
   if (!via || via.type !== "survey_id" || !via.link) return `"${fp.via}" is not an ID column of this table that uses another table's IDs.`;
   if (via.na || via.sentinels) return `"${fp.via}" must have no missing values for every row to find the other table's row.`;
   const { link } = via;
   const p = fp.parent;
   if (link.seed !== p.seed || link.column !== p.id_column || link.groups !== p.rows)
     return `"${fp.via}" uses other IDs than the ID column ${p.id_column} of the table this value comes from.`;
-  const total = Object.values(p.counts).reduce((a, b) => a + b, 0) + (p.na?.count ?? 0) + Object.values(p.sentinels ?? {}).reduce((a, b) => a + b, 0);
-  if (total !== p.rows) return "The labels and counts of the other table's column do not add up to its rows.";
-  if (p.from_parent) {
-    if (!p.via_column || p.via_column.name !== p.from_parent.via) return "The other table's column takes its value from a third table, but the ID column it goes through is missing.";
-    return parentValueProblem(p.from_parent, p.via_column, depth + 1);
+  if (p.spec.type !== col.type) return "The other table's column is not the same kind of column as this one.";
+  if (p.spec.name !== p.column) return "The other table's column is not the one named.";
+  const inner: SpecProblem[] = [];
+  checkColumn(p.spec, p.rows, inner);
+  if (inner.length > 0) return `The other table's column does not fit its rows: ${inner[0].message}`;
+  if (p.spec.from_parent) {
+    if (!p.via_column || p.via_column.name !== p.spec.from_parent.via) return "The other table's column takes its value from a third table, but the ID column it goes through is missing.";
+    return parentValueProblem(p.spec, p.spec.from_parent, p.via_column, depth + 1);
   }
   return p.via_column ? "An ID column is named for a value the other table's column does not take from a third table." : null;
 }
 
 /** A column that takes the other table's value: it must stand beside an ID column that uses that table's IDs, and fit it. */
 function checkParentValue(col: ColumnSpec, spec: SpecFile, out: SpecProblem[]): void {
-  if (col.type !== "categorical" && col.type !== "boolean") return;
   const fp = col.from_parent;
   if (!fp) return;
-  const problem = (message: string): void => {
-    out.push({ column: col.name, path: "from_parent", message });
-  };
-  if (col.na || col.sentinels) return problem("A column that takes the other table's value has no missing values or sentinel codes of its own.");
-  const found = parentValueProblem(fp, spec.columns.find((c) => c.name === fp.via));
-  if (found) problem(found);
+  const found = parentValueProblem(col, fp, spec.columns.find((c) => c.name === fp.via));
+  if (found) out.push({ column: col.name, path: "from_parent", message: found });
 }
 
 function checkRule(rule: RuleSpec, index: number, spec: SpecFile, out: SpecProblem[]): void {

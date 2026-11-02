@@ -130,6 +130,8 @@ export interface ColumnBase {
   sentinels?: Record<string, number>;
   /** A coordinate (number columns only): the spec keeps only its bounding box and decimals, no mean, spread or percentiles, and values are spread evenly. */
   coordinate?: CoordinateAxis;
+  /** Take each row's value from the other table's row that has the same ID (category, yes/no, number and date columns; specs/030). */
+  from_parent?: ParentValue;
   /** What the codes of the column mean, from a codebook (value to short label). Documentation: the file still holds the codes. */
   value_labels?: Record<string, string>;
 }
@@ -157,16 +159,17 @@ export interface CategoricalColumn extends ColumnBase {
   counts: Record<string, number>;
   merge_under_k?: number | null;
   label_codes?: boolean;
-  /** Take each row's value from the other table's row that has the same ID (specs/030). */
-  from_parent?: ParentValue;
 }
 
 /**
- * A categorical column whose value, in each row, is the value the other table's column has in the row with the same ID: a
- * person's zone is the zone of the household they belong to. It is worked out from the other table's seed and the summary of its
- * column (labels and counts, which the spec holds anyway), together with this table's ID column that uses the other table's
- * IDs. Holds no ID and no row.
+ * A column whose value, in each row, is the value the other table's column has in the row with the same ID (specs/030): a person's
+ * zone or household income is that of the household they belong to. It is worked out from the other table's seed and its column's
+ * own spec (a summary the other table's spec holds anyway), together with this table's ID column that uses the other table's IDs.
+ * Holds no ID and no row.
  */
+/** The column types that can take their value from another table. */
+export const FOLLOWABLE_TYPES: ReadonlySet<string> = new Set(["categorical", "boolean", "integer", "float", "date", "datetime", "time"]);
+
 export interface ParentValue {
   /** The ID column of this table that uses the other table's IDs. */
   via: string;
@@ -179,15 +182,8 @@ export interface ParentValue {
     id_column: string;
     seed: number;
     rows: number;
-    /** The labels the other table's column writes, as it writes them (after the protections), and how many rows each has. */
-    counts: Record<string, number>;
-    na?: ColumnBase["na"];
-    sentinels?: Record<string, number>;
-    /**
-     * When that column itself takes its value from a third table (a trip's zone through its person to their household): how it
-     * does, and the ID column of the other table it does so through. Nothing but structure.
-     */
-    from_parent?: ParentValue;
+    /** That column as the other table makes it. It may itself take its value from a third table, through `via_column`. */
+    spec: ColumnSpec;
     via_column?: SurveyIdColumn;
   };
 }
