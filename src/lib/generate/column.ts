@@ -6,7 +6,7 @@
 import { effectiveCounts } from "../protections";
 import { makePermutation } from "../rng/permute";
 import { subSeed } from "../rng/subseed";
-import type { ChildCount, ColumnSpec, IdLink, NumericColumn, SurveyIdColumn } from "../spec/types";
+import type { CategoricalColumn, ChildCount, ColumnSpec, IdLink, NumericColumn, ParentValue, SurveyIdColumn } from "../spec/types";
 import { makeLabelLookup } from "./categorical";
 import { makeDateFormatter } from "./datetime";
 import { formatNumber, makeNumericSource, withRescale, type NumericPlan } from "./numeric";
@@ -22,6 +22,8 @@ import { IdPatternError, makeIdGenerator, rowsCovered } from "./survey-id";
 export interface ColumnContext {
   seed: number;
   nRows: number;
+  /** The columns of the table, for a column that needs another one beside it. */
+  columns?: readonly ColumnSpec[];
 }
 
 export interface ColumnGen {
@@ -79,6 +81,38 @@ function childCountColumn(col: NumericColumn, cc: ChildCount, ctx: ColumnContext
   });
 }
 
+/**
+ * A categorical column that takes the value the other table's column has in the row with the same ID (specs/030). This table's ID
+ * column (`via`) sends each of its groups to a group of the other table's IDs; the other table's ID column holds one new ID per
+ * row, placed by a keyed permutation, so the row of a group is the inverse of that permutation. The value of that row is made again
+ * from the other table's seed and the labels and counts kept in the spec.
+ */
+function parentValueColumn(col: CategoricalColumn, fp: ParentValue, ctx: ColumnContext, gen: (valueAt: (row: number) => string) => ColumnGen): ColumnGen {
+  const via = ctx.columns?.find((c) => c.name === fp.via);
+  if (!via || via.type !== "survey_id" || !via.link) throw new GenerationError(`Column "${col.name}": "${fp.via}" does not use another table's IDs.`);
+  const { link, parent } = { link: via.link, parent: fp.parent };
+  if (link.groups !== parent.rows) throw new GenerationError(`Column "${col.name}": the other table has ${parent.rows} rows but "${via.name}" draws from ${link.groups} IDs.`);
+  const viaKey = subSeed(ctx.seed, via.name);
+  const placer = makePlacer(ctx.nRows, viaKey, via.na, via.sentinels);
+  if (rowsCovered(via.repeat_structure) !== placer.valueTotal) throw new GenerationError(`Column "${col.name}": the repeat structure of "${via.name}" does not cover its rows.`);
+  const own = makeGroupMapper(via.repeat_structure);
+  if (own.groups > link.groups) throw new GenerationError(`Column "${col.name}": "${via.name}" has more distinct IDs than the other table makes.`);
+  const pick = makePermutation(link.groups, mix32((viaKey ^ 0x1ced1ced) >>> 0));
+  // The other table's ID column places its rows by this keyed permutation; the row of a group is found by inverting it.
+  const idPlace = makePermutation(parent.rows, mix32((subSeed(parent.seed, parent.id_column) ^ 0xa5a5a5a5) >>> 0));
+  const rowOf = new Int32Array(parent.rows);
+  for (let r = 0; r < parent.rows; r++) rowOf[idPlace(r)] = r;
+  const theirPlacer = makePlacer(parent.rows, subSeed(parent.seed, parent.column), parent.na, parent.sentinels);
+  const lookup = makeLabelLookup(parent.counts);
+  if (lookup.total !== theirPlacer.valueTotal) throw new GenerationError(`Column "${col.name}": the other table's counts (${lookup.total}) do not match its ${theirPlacer.valueTotal} rows left after NA and sentinels.`);
+  return gen((row) => {
+    const p = placer(row);
+    if (p.kind !== "value") return p.token;
+    const q = theirPlacer(rowOf[pick(own(p.index))]);
+    return q.kind === "value" ? lookup.at(q.index) : q.token;
+  });
+}
+
 function linkedIdColumn(col: SurveyIdColumn, link: IdLink, ctx: ColumnContext, key: number, gen: (valueAt: (row: number) => string) => ColumnGen): ColumnGen {
   const placer = makePlacer(ctx.nRows, key, col.na, col.sentinels);
   if (rowsCovered(col.repeat_structure) !== placer.valueTotal) {
@@ -117,6 +151,7 @@ export function createColumnGen(col: ColumnSpec, ctx: ColumnContext): ColumnGen 
 
     case "categorical":
     case "boolean": {
+      if (col.from_parent) return parentValueColumn(col, col.from_parent, ctx, gen);
       const placer = makePlacer(ctx.nRows, key, col.na, col.sentinels);
       const lookup = makeLabelLookup(effectiveCounts(col.counts, col));
       if (lookup.total !== placer.valueTotal) {

@@ -74,6 +74,11 @@ export function batchWarnings(tables: readonly BatchTable[]): string[] {
         );
         if (!found) out.push(`${t.specName}: "${c.name}" uses the IDs of "${link.column}"${link.table ? ` in ${link.table}` : ""} (seed ${link.seed}), which no table in this set makes, so a join will not match.`);
       }
+      if ((c.type === "categorical" || c.type === "boolean") && c.from_parent) {
+        const fp = c.from_parent;
+        const found = tables.some((o) => o !== t && o.spec.seed === fp.parent.seed && o.spec.columns.some((x) => x.name === fp.parent.column));
+        if (!found) out.push(`${t.specName}: "${c.name}" takes its value from "${fp.parent.column}" in ${fp.parent.table ?? "another table"} (seed ${fp.parent.seed}), which is not in this set, so a join will not match.`);
+      }
       if (c.type === "integer" && c.child_count) {
         const cc = c.child_count;
         const found = tables.some(

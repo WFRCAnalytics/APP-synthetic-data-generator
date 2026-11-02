@@ -157,6 +157,33 @@ export interface CategoricalColumn extends ColumnBase {
   counts: Record<string, number>;
   merge_under_k?: number | null;
   label_codes?: boolean;
+  /** Take each row's value from the other table's row that has the same ID (specs/030). */
+  from_parent?: ParentValue;
+}
+
+/**
+ * A categorical column whose value, in each row, is the value the other table's column has in the row with the same ID: a
+ * person's zone is the zone of the household they belong to. It is worked out from the other table's seed and the summary of its
+ * column (labels and counts, which the spec holds anyway), together with this table's ID column that uses the other table's
+ * IDs. Holds no ID and no row.
+ */
+export interface ParentValue {
+  /** The ID column of this table that uses the other table's IDs. */
+  via: string;
+  parent: {
+    /** The other table's name, for people to read; never used to make anything. */
+    table?: string;
+    /** The column of the other table whose value is taken. */
+    column: string;
+    /** The ID column of the other table (one new ID per row, none missing) that `via` uses. */
+    id_column: string;
+    seed: number;
+    rows: number;
+    /** The labels the other table's column writes, as it writes them (after the protections), and how many rows each has. */
+    counts: Record<string, number>;
+    na?: ColumnBase["na"];
+    sentinels?: Record<string, number>;
+  };
 }
 
 /**

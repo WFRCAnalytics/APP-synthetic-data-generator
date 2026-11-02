@@ -2,7 +2,8 @@
 // pattern, the seed, the column's name and how many IDs it makes) and nothing else: no ID value, no other column.
 
 import { idCapacity } from "../mask/mask";
-import type { ChildCount, IdLink, SpecFile, SurveyIdColumn } from "../spec/types";
+import { effectiveCounts } from "../protections";
+import type { CategoricalColumn, ChildCount, IdLink, ParentValue, SpecFile, SurveyIdColumn } from "../spec/types";
 
 /** The survey ID columns of a spec that can be linked to: written, with their own IDs. */
 export function linkableColumns(spec: SpecFile): SurveyIdColumn[] {
@@ -55,3 +56,29 @@ export function childCountFrom(child: SpecFile, column: SurveyIdColumn): ChildCo
 }
 
 export const describeLink = (link: IdLink): string => `${link.table ? `${link.table}, ` : ""}column ${link.column} (${link.groups.toLocaleString("en-US")} IDs, seed ${link.seed})`;
+
+/** The columns of a table whose value another table can take (specs/030): categories as they are written, not changed by a rule or taken from a third table. */
+export function parentColumnsOf(spec: SpecFile, link: IdLink): CategoricalColumn[] {
+  const id = spec.columns.find((c): c is SurveyIdColumn => c.type === "survey_id" && c.name === link.column);
+  const once = id !== undefined && id.link === undefined && Object.keys(id.repeat_structure).length === 1 && id.repeat_structure["1"] === spec.n_rows && !id.na && !id.sentinels;
+  if (!once || spec.seed !== link.seed || link.groups !== spec.n_rows) return [];
+  const ruled = new Set((spec.rules ?? []).map((r) => r.column));
+  return spec.columns.filter((c): c is CategoricalColumn => (c.type === "categorical" || c.type === "boolean") && (c.exclude ?? "include") === "include" && !c.from_parent && !ruled.has(c.name));
+}
+
+/** What a column needs to take the value another table's column has in the row with the same ID: only that column's labels, counts and seed. */
+export function parentValueFrom(spec: SpecFile, column: CategoricalColumn, via: string, link: IdLink): ParentValue {
+  return {
+    via,
+    parent: {
+      table: spec.source.file_name,
+      column: column.name,
+      id_column: link.column,
+      seed: spec.seed,
+      rows: spec.n_rows,
+      counts: effectiveCounts(column.counts, column),
+      ...(column.na ? { na: column.na } : {}),
+      ...(column.sentinels ? { sentinels: column.sentinels } : {}),
+    },
+  };
+}

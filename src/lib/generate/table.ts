@@ -41,7 +41,7 @@ export function dialectOf(source: SourceSpec): CsvDialect {
 
 /** Plans the output table. `seed` overrides the spec's seed (the Generate screen's seed field). */
 export function planTable(spec: SpecFile, seed: number = spec.seed): TablePlan {
-  const ctx = { seed, nRows: spec.n_rows };
+  const ctx = { seed, nRows: spec.n_rows, columns: spec.columns };
   const columns: ColumnGen[] = [];
 
   for (const col of spec.columns) {

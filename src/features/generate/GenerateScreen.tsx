@@ -70,7 +70,7 @@ function CheckTable({ checks }: { checks: CheckRow[] }) {
             {ordered.map((c, i) => (
               <tr key={`${c.column}-${c.metric}-${i}`} data-pass={c.pass}>
                 <td>{c.column}</td>
-                <td>{c.metric === "children" ? "rows of the other table" : c.metric.replace("_", " ")}</td>
+                <td>{c.metric === "children" ? "rows of the other table" : c.metric === "parent_values" ? "values of the other table" : c.metric.replace("_", " ")}</td>
                 <td title={c.target}>{formatCheckValue(c.target)}</td>
                 <td title={c.achieved}>{formatCheckValue(c.achieved)}</td>
                 <td className="check-result">

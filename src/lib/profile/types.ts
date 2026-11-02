@@ -13,7 +13,7 @@ import type {
 import type { Encoding } from "../encoding/detect";
 import type { CoordinateAxis } from "../classify/coordinate";
 import type { PersonalLocale } from "../textgen/locales";
-import type { ChildCount, IdLink } from "../spec/types";
+import type { ChildCount, IdLink, ParentValue } from "../spec/types";
 import type { JsonKind, JsonLayout } from "../json/types";
 import type { ParquetType, UnsupportedReason } from "../parquet/types";
 import type { QuoteStyle, LineEnding } from "../csv/writer";
@@ -203,6 +203,8 @@ export interface ColumnProfile {
   idLink?: IdLink;
   /** A whole-number column that counts the rows another table has for each ID (specs/026). Holds no value. */
   childCount?: ChildCount;
+  /** A categorical column that takes its value from the other table's row with the same ID (specs/030). Holds no value. */
+  fromParent?: ParentValue;
   /** The column holds a coordinate: only its bounding box and decimal places are kept, and values are spread evenly inside it. */
   coordinate?: CoordinateAxis;
   /** The JSON kind of the key in a JSON file. */

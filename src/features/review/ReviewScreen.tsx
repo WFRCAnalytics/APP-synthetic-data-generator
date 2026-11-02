@@ -69,6 +69,7 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
     idColumns: profiles
       .filter((p) => p.summary.kind === "survey_id" && p.exclude === "include" && !p.idLink && p.naCount === 0 && Object.keys(p.sentinels).length === 0 && p.summary.distinct === rowCount)
       .map((p) => p.name),
+    linkedIds: profiles.flatMap((p) => (p.summary.kind === "survey_id" && p.exclude === "include" && p.idLink && p.naCount === 0 && Object.keys(p.sentinels).length === 0 ? [{ name: p.name, link: p.idLink }] : [])),
     setSeed: actions.setSeedText ? (seed) => actions.setSeedText?.(String(seed)) : undefined,
   };
   const reprofiling = phase === "profiling";

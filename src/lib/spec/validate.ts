@@ -178,6 +178,20 @@ const ShortStringSchema = v.strictObject({
   repeat_structure: RepeatStructureSchema,
 });
 
+const ParentValueSchema = v.strictObject({
+  via: v.pipe(v.string(), v.minLength(1)),
+  parent: v.strictObject({
+    table: v.optional(v.string()),
+    column: v.pipe(v.string(), v.minLength(1)),
+    id_column: v.pipe(v.string(), v.minLength(1)),
+    seed: v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(4294967295)),
+    rows: positiveCount,
+    counts: v.record(v.string(), positiveCount),
+    na: v.optional(NaSchema),
+    sentinels: v.optional(SentinelsSchema),
+  }),
+});
+
 const CategoricalSchema = (type: "categorical" | "boolean") =>
   v.strictObject({
     ...base,
@@ -186,6 +200,7 @@ const CategoricalSchema = (type: "categorical" | "boolean") =>
     counts: v.record(v.string(), positiveCount),
     merge_under_k: v.optional(v.nullable(v.pipe(v.number(), v.integer(), v.minValue(2)))),
     label_codes: v.optional(v.boolean()),
+    from_parent: v.optional(ParentValueSchema),
   });
 
 const ChildCountSchema = v.strictObject({
@@ -436,6 +451,25 @@ function checkChildCount(col: ColumnSpec, spec: SpecFile, out: SpecProblem[]): v
   if (cc.child.groups !== spec.n_rows) problem(`The other table draws from ${cc.child.groups} IDs but this table has ${spec.n_rows} rows.`);
   const needed = Object.values(cc.child.repeat_structure).reduce((a, b) => a + b, 0);
   if (needed > spec.n_rows) problem("The other table has more distinct IDs than this table has rows.");
+}
+
+/** A column that takes the other table's value: it must stand beside an ID column that uses that table's IDs, and fit it. */
+function checkParentValue(col: ColumnSpec, spec: SpecFile, out: SpecProblem[]): void {
+  if (col.type !== "categorical" && col.type !== "boolean") return;
+  const fp = col.from_parent;
+  if (!fp) return;
+  const problem = (message: string): void => {
+    out.push({ column: col.name, path: "from_parent", message });
+  };
+  if (col.na || col.sentinels) return problem("A column that takes the other table's value has no missing values or sentinel codes of its own.");
+  const via = spec.columns.find((c) => c.name === fp.via);
+  if (!via || via.type !== "survey_id" || !via.link) return problem(`"${fp.via}" is not an ID column of this table that uses another table's IDs.`);
+  if (via.na || via.sentinels) return problem(`"${fp.via}" must have no missing values for every row to find the other table's row.`);
+  const link = via.link;
+  if (link.seed !== fp.parent.seed || link.column !== fp.parent.id_column || link.groups !== fp.parent.rows)
+    return problem(`"${fp.via}" uses other IDs than the ID column ${fp.parent.id_column} of the table this value comes from.`);
+  const total = Object.values(fp.parent.counts).reduce((a, b) => a + b, 0) + (fp.parent.na?.count ?? 0) + Object.values(fp.parent.sentinels ?? {}).reduce((a, b) => a + b, 0);
+  if (total !== fp.parent.rows) problem("The labels and counts of the other table's column do not add up to its rows.");
 }
 
 function checkRule(rule: RuleSpec, index: number, spec: SpecFile, out: SpecProblem[]): void {
@@ -842,6 +876,7 @@ export function validateSpec(input: unknown): SpecResult {
 
   for (const [i, rule] of (spec.rules ?? []).entries()) checkRule(rule, i, spec, problems);
   for (const col of spec.columns) checkChildCount(col, spec, problems);
+  for (const col of spec.columns) checkParentValue(col, spec, problems);
 
   const seen = new Set<string>();
   for (const col of spec.columns) {

@@ -5,7 +5,7 @@
 
 import type { CoordinateAxis } from "../classify/coordinate";
 import type { PersonalLocale } from "../textgen/locales";
-import type { ChildCount, IdLink } from "../spec/types";
+import type { ChildCount, IdLink, ParentValue } from "../spec/types";
 import { idFit, shortStringFit } from "./idCapacity";
 import type {
   ColumnProfile,
@@ -48,6 +48,8 @@ export interface LocalEdits {
   coordinate?: CoordinateAxis | null;
   /** Count the rows another table has for each ID; null goes back to a column made from its own summaries (specs/026). */
   childCount?: ChildCount | null;
+  /** Take the value from the other table's row with the same ID; null goes back to the column's own summary. */
+  fromParent?: ParentValue | null;
   /** What the column means (a variable label); null removes it. */
   description?: string | null;
   /** Use the IDs of another table's column; null goes back to making new ones (specs/019). */
@@ -83,6 +85,11 @@ export function applyEdits(p: ColumnProfile, e: LocalEdits | undefined): ColumnP
   if (p.summary.kind === "numeric" && p.type === "integer" && e.childCount !== undefined) {
     if (e.childCount === null) delete out.childCount;
     else out.childCount = e.childCount;
+  }
+
+  if (p.summary.kind === "categorical" && e.fromParent !== undefined) {
+    if (e.fromParent === null) delete out.fromParent;
+    else out.fromParent = e.fromParent;
   }
 
   if (e.description !== undefined) {

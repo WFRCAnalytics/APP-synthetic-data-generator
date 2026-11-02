@@ -194,3 +194,31 @@ test("a set of tables can be written as another file type", async ({ page }) => 
   const sav = await readEntryText(blob, entries.find((e) => e.name === "persons_fake/persons_fake.sav")!);
   expect(sav.startsWith("$FL2")).toBe(true);
 });
+
+const zoned = ["hh_id,zone"].concat(Array.from({ length: 300 }, (_, i) => `H${1000 + i},${["north", "south", "east", "west"][i % 4]}`)).join("\n") + "\n";
+const zonedPersons =
+  ["hh_id,zone,age"]
+    .concat(Array.from({ length: 120 }, (_, h) => Array.from({ length: 1 + (h % 4) }, (_, k) => `H${1000 + h},${["north", "south"][(h + k) % 2]},${20 + ((h * 7 + k * 13) % 60)}`)).flat())
+    .join("\n") + "\n";
+
+test("a person's zone is the zone of their household", async ({ page }) => {
+  await makeTable(page, "households.csv", zoned);
+  const first = await generate(page, /Download households_fake\.csv/);
+  const parent = new Map(first.csv.trim().split(String.fromCharCode(10)).slice(1).map((l) => l.split(",") as [string, string]));
+
+  await makeTable(page, "persons.csv", zonedPersons);
+  const idCard = await shownCard(page, "hh_id");
+  await idCard.getByLabel("Spec of the other table").setInputFiles(first.specPath);
+  await idCard.getByRole("button", { name: "Use these IDs" }).click();
+  const zone = await shownCard(page, "zone");
+  await zone.getByLabel("Spec of the table to take the value from").setInputFiles(first.specPath);
+  await zone.getByRole("button", { name: "Take its value" }).click();
+  await expect(zone.getByTestId("parent-value-summary")).toContainText("households.csv");
+
+  const second = await generate(page, /Download persons_fake\.csv/);
+  await expect(page.getByText(/values of the other table/)).toBeVisible();
+  const rows = second.csv.trim().split(String.fromCharCode(10)).slice(1).map((l) => l.split(","));
+  expect(rows.length).toBe(300);
+  for (const [hh, z] of rows) expect(z).toBe(parent.get(hh));
+  expect(new Set(rows.map((r) => r[1])).size).toBe(4);
+});

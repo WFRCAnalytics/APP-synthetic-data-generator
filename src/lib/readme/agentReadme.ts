@@ -103,6 +103,8 @@ function describeValues(c: ColumnSpec): string {
       return `format ${tick(c.format)}`;
     case "categorical":
     case "boolean": {
+      if (c.from_parent)
+        return `the value of ${tick(c.from_parent.parent.column)} in ${tick(c.from_parent.parent.table ?? "another table")} for the row with the same ${tick(c.from_parent.parent.id_column)} (joining on ${tick(c.from_parent.via)} gives the same value)`;
       const labels = Object.keys(c.counts);
       const shown = labels
         .slice(0, MAX_LABELS_SHOWN)

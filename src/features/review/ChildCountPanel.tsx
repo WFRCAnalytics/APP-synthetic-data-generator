@@ -6,7 +6,7 @@ import { InfoTip } from "../../components/InfoTip";
 import { childColumnsOf, childCountFrom } from "../../lib/ids/link";
 import type { LocalEdits } from "../../lib/profile/edits";
 import type { ColumnProfile } from "../../lib/profile/types";
-import type { SpecFile } from "../../lib/spec/types";
+import type { IdLink, SpecFile } from "../../lib/spec/types";
 import { readSpecFile } from "../spec/loadSpec";
 
 /** What this table is, so a table that uses its IDs can be matched to it. */
@@ -15,6 +15,8 @@ export interface TableInfo {
   rows: number;
   /** ID columns that hold one new ID per row, none missing. */
   idColumns: string[];
+  /** ID columns of this table that use another table's IDs, none missing: a category can follow the other table's through them. */
+  linkedIds?: { name: string; link: IdLink }[];
   /** Changes the seed of this table: the other table was linked to IDs made with one seed, and the counts only match when this one is made with it. */
   setSeed?: (seed: number) => void;
 }

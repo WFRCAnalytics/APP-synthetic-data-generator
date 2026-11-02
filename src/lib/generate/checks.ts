@@ -22,6 +22,7 @@ export interface CheckRow {
   metric:
     | "rule"
     | "children"
+    | "parent_values"
     | "label_counts"
     | "na_count"
     | "sentinel_counts"
@@ -151,6 +152,12 @@ export class CheckAccumulator {
     );
     // A column that counts another table's rows is checked by what the counts add up to, not by its own summaries.
     plan.columns.forEach((c, i) => {
+      const fp = c.spec.type === "categorical" || c.spec.type === "boolean" ? c.spec.from_parent : undefined;
+      if (fp) {
+        this.derived.add(i);
+        const allowed = new Set([...Object.keys(fp.parent.counts), ...(fp.parent.na?.tokens ?? []), ...Object.keys(fp.parent.sentinels ?? {})]);
+        this.followers.push({ column: c.outputName, index: i, allowed, table: fp.parent.table, outside: 0 });
+      }
       const cc = c.spec.type === "integer" ? c.spec.child_count : undefined;
       if (!cc) return;
       this.derived.add(i);
@@ -158,12 +165,16 @@ export class CheckAccumulator {
     });
   }
 
+  /** Columns that take another table's value: the values they may hold, and how many rows hold something else. */
+  private readonly followers: { column: string; index: number; allowed: Set<string>; table?: string; outside: number }[] = [];
+
   /** Columns that count another table's rows: what they should add up to, and what they do. */
   private readonly counts: { column: string; index: number; expected: number; table?: string; total: number }[] = [];
 
   observeRow(values: readonly string[]): void {
     for (const r of this.rules) r.observe(values);
     for (const k of this.counts) k.total += Number(values[k.index]) || 0;
+    for (const f of this.followers) if (!f.allowed.has(values[f.index])) f.outside++;
     for (let c = 0; c < this.accs.length; c++) {
       const a = this.accs[c];
       if (this.derived.has(c)) continue;
@@ -299,6 +310,14 @@ export class CheckAccumulator {
       }
     }
     for (const r of this.rules) rows.push(r.row());
+    for (const f of this.followers)
+      rows.push({
+        column: f.column,
+        metric: "parent_values",
+        target: `only values of ${f.table ?? "the other table"}`,
+        achieved: `${f.outside.toLocaleString("en-US")} other`,
+        pass: f.outside === 0,
+      });
     for (const k of this.counts)
       rows.push({
         column: k.column,

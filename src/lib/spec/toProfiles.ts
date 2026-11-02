@@ -131,6 +131,7 @@ export function profileFromSpec(c: ColumnSpec): ColumnProfile {
         exclude: c.exclude ?? "include",
         mergeUnderK: c.merge_under_k ?? null,
         labelCodes: c.label_codes ?? false,
+        ...(c.from_parent ? { fromParent: c.from_parent } : {}),
         summary: { kind: "categorical", storage, counts: { ...c.counts } },
       };
     }
