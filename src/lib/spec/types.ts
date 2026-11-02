@@ -123,6 +123,8 @@ export interface ColumnBase {
   na?: NaSpec;
   /** Sentinel code to exact count. */
   sentinels?: Record<string, number>;
+  /** What the codes of the column mean, from a codebook (value to short label). Documentation: the file still holds the codes. */
+  value_labels?: Record<string, string>;
 }
 
 export interface NumericFields {
@@ -170,7 +172,8 @@ export interface SurveyIdColumn extends ColumnBase {
   repeat_structure: Record<string, number>;
 }
 
-export type PersonalKind = "full_name" | "first_name" | "last_name" | "email" | "phone" | "address" | "url" | "ip" | "ssn";
+export type PersonalKind =
+  "full_name" | "first_name" | "last_name" | "email" | "phone" | "address" | "url" | "ip" | "ssn";
 
 /** Format classes kept from the real column. Shapes hold 9 for a digit and A for a letter; never a value. */
 export interface PersonalFormat {
@@ -193,7 +196,8 @@ export interface PersonalColumn extends ColumnBase {
 }
 
 /** Free text: only the length distribution, in characters. */
-export interface FreeTextColumn extends ColumnBase, Omit<NumericFields, "thousands" | "scientific"> {
+export interface FreeTextColumn
+  extends ColumnBase, Omit<NumericFields, "thousands" | "scientific"> {
   type: "free_text";
   line_breaks?: boolean;
 }

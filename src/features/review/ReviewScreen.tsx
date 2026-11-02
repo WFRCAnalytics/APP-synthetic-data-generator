@@ -9,6 +9,7 @@ import type { LocalEdits } from "../../lib/profile/edits";
 import { isExcelSettings, type ColumnOverrides } from "../../lib/profile/types";
 import type { SampleDescription } from "../../lib/textgen/sample";
 import { AttentionBanner } from "./AttentionBanner";
+import { CodebookPanel } from "./CodebookPanel";
 import { ProfileProgress } from "../ingest/ProfileProgress";
 import { ColumnCard } from "./ColumnCard";
 import { ColumnNav } from "./ColumnNav";
@@ -24,6 +25,7 @@ export interface ReviewActions {
   checkDatePattern: (name: string, pattern: string) => void;
   requestSamples: (name: string, description: SampleDescription) => void;
   setThreshold: (threshold: number) => void;
+  applyCodebook: (labels: Record<string, Record<string, string>>) => void;
   onContinue: () => void;
   onSaveSpec: () => void;
 }
@@ -37,7 +39,17 @@ const MIN_THRESHOLD = 2;
 const MAX_THRESHOLD = 2000;
 
 export function ReviewScreen({ session, actions }: ReviewScreenProps) {
-  const { profiles, rowCount, fileName, phase, progress, busy, reviewError, threshold, datePatternChecks } = session;
+  const {
+    profiles,
+    rowCount,
+    fileName,
+    phase,
+    progress,
+    busy,
+    reviewError,
+    threshold,
+    datePatternChecks,
+  } = session;
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   const [thresholdText, setThresholdText] = useState(String(threshold));
   const [selected, setSelected] = useState<string | null>(null);
@@ -56,7 +68,10 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
 
   const typedThreshold = Number(thresholdText);
   const thresholdError =
-    thresholdText.trim() === "" || !Number.isInteger(typedThreshold) || typedThreshold < MIN_THRESHOLD || typedThreshold > MAX_THRESHOLD
+    thresholdText.trim() === "" ||
+    !Number.isInteger(typedThreshold) ||
+    typedThreshold < MIN_THRESHOLD ||
+    typedThreshold > MAX_THRESHOLD
       ? `Enter a whole number from ${MIN_THRESHOLD} to ${MAX_THRESHOLD.toLocaleString("en-US")}.`
       : null;
 
@@ -73,7 +88,12 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
           <button type="button" className="button button-secondary" onClick={actions.onSaveSpec}>
             Save spec (JSON)
           </button>
-          <button type="button" className="button button-primary" onClick={actions.onContinue} disabled={reprofiling || conflicts > 0}>
+          <button
+            type="button"
+            className="button button-primary"
+            onClick={actions.onContinue}
+            disabled={reprofiling || conflicts > 0}
+          >
             Continue to Generate
           </button>
         </div>
@@ -97,12 +117,22 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
 
       {conflicts > 0 && (
         <div className="banner banner-error" role="alert" data-testid="parquet-conflicts">
-          {conflicts} {conflicts === 1 ? "column has" : "columns have"} a type that its Parquet column cannot hold. Fix {conflicts === 1 ? "it" : "them"} before generating.
+          {conflicts} {conflicts === 1 ? "column has" : "columns have"} a type that its Parquet
+          column cannot hold. Fix {conflicts === 1 ? "it" : "them"} before generating.
         </div>
       )}
 
       <div className="review-panes">
-        <ColumnNav shown={shown} total={profiles.length} rowCount={rowCount} filters={filters} onFilters={setFilters} typeCounts={typeCounts} selected={current ? current.name : null} onSelect={setSelected} />
+        <ColumnNav
+          shown={shown}
+          total={profiles.length}
+          rowCount={rowCount}
+          filters={filters}
+          onFilters={setFilters}
+          typeCounts={typeCounts}
+          selected={current ? current.name : null}
+          onSelect={setSelected}
+        />
 
         <div className="review-detail">
           {current ? (
@@ -110,25 +140,41 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
               <ColumnCard
                 key={current.name}
                 profile={current}
-                otherNames={profiles.filter((q) => q.name !== current.name).map((q) => q.outputName)}
+                otherNames={profiles
+                  .filter((q) => q.name !== current.name)
+                  .map((q) => q.outputName)}
                 busy={busy.includes(current.name)}
                 dateCheck={datePatternChecks[current.name]}
                 onEdit={(patch) => actions.editColumn(current.name, patch)}
                 onOverride={(patch) => actions.overrideColumn(current.name, patch)}
                 onCheckDate={(pattern) => actions.checkDatePattern(current.name, pattern)}
                 samples={session.samples[current.name]}
-                onRequestSamples={(description) => actions.requestSamples(current.name, description)}
+                onRequestSamples={(description) =>
+                  actions.requestSamples(current.name, description)
+                }
                 specOnly={specOnly}
                 workbook={workbook}
               />
               <div className="detail-nav">
-                <button type="button" className="button button-secondary" disabled={index <= 0} onClick={() => setSelected(shown[index - 1].name)}>
+                <button
+                  type="button"
+                  className="button button-secondary"
+                  disabled={index <= 0}
+                  onClick={() => setSelected(shown[index - 1].name)}
+                >
                   <ChevronLeft size={16} strokeWidth={1.75} aria-hidden="true" /> Previous column
                 </button>
-                <button type="button" className="button button-secondary" disabled={index < 0 || index >= shown.length - 1} onClick={() => setSelected(shown[index + 1].name)}>
+                <button
+                  type="button"
+                  className="button button-secondary"
+                  disabled={index < 0 || index >= shown.length - 1}
+                  onClick={() => setSelected(shown[index + 1].name)}
+                >
                   Next column <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" />
                 </button>
-                {index < 0 && <span className="field-hint">This column is hidden by the filters.</span>}
+                {index < 0 && (
+                  <span className="field-hint">This column is hidden by the filters.</span>
+                )}
               </div>
             </>
           ) : (
@@ -164,7 +210,12 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
                     return (
                       <li key={t}>
                         <button type="button" onClick={() => setFilters({ ...filters, type: t })}>
-                          <Icon size={16} strokeWidth={1.75} style={{ color: look.color }} aria-hidden="true" />
+                          <Icon
+                            size={16}
+                            strokeWidth={1.75}
+                            style={{ color: look.color }}
+                            aria-hidden="true"
+                          />
                           <span>{typeLabel(t)}</span>
                           <span className="type-legend-count">{typeCounts[t]}</span>
                         </button>
@@ -173,7 +224,11 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
                   })}
               </ul>
 
-              <AttentionBanner profiles={profiles} onlyAttention={filters.attentionOnly} onToggle={() => setFilters({ ...filters, attentionOnly: !filters.attentionOnly })} />
+              <AttentionBanner
+                profiles={profiles}
+                onlyAttention={filters.attentionOnly}
+                onToggle={() => setFilters({ ...filters, attentionOnly: !filters.attentionOnly })}
+              />
 
               <TextApply
                 label="Treat columns with up to this many distinct values as categories"
@@ -185,6 +240,8 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
                 onChange={setThresholdText}
                 onApply={(text) => actions.setThreshold(Number(text))}
               />
+
+              <CodebookPanel profiles={profiles} onApply={actions.applyCodebook} />
 
               <SpecContentsNotice />
             </div>

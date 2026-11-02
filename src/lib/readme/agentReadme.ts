@@ -75,6 +75,15 @@ const maskText = (mask: readonly (string | { literal: string })[]): string =>
 
 /** What a column holds, from the spec's own numbers and labels. */
 function describe(c: ColumnSpec): string {
+  const text = describeValues(c);
+  // Codes kept apart from the numbers (such as -9 for refused) read better with what they mean.
+  const codes = Object.keys(c.sentinels ?? {}).map(
+    (k) => `${tick(k)}${c.value_labels?.[k] ? ` (${c.value_labels[k]})` : ""}`,
+  );
+  return codes.length > 0 ? `${text}; codes: ${codes.join(", ")}` : text;
+}
+
+function describeValues(c: ColumnSpec): string {
   switch (c.type) {
     case "integer":
     case "float":
@@ -86,7 +95,13 @@ function describe(c: ColumnSpec): string {
     case "categorical":
     case "boolean": {
       const labels = Object.keys(c.counts);
-      const shown = labels.slice(0, MAX_LABELS_SHOWN).map((l) => (l === "" ? "(blank)" : tick(l)));
+      const shown = labels
+        .slice(0, MAX_LABELS_SHOWN)
+        .map(
+          (l) =>
+            (l === "" ? "(blank)" : tick(l)) +
+            (c.value_labels?.[l] ? ` (${c.value_labels[l]})` : ""),
+        );
       return `${labels.length} ${labels.length === 1 ? "value" : "values"}: ${shown.join(", ")}${labels.length > MAX_LABELS_SHOWN ? ", ..." : ""}`;
     }
     case "survey_id":

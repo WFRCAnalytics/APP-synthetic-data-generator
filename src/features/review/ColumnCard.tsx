@@ -112,6 +112,31 @@ export function ColumnCard({
         </ul>
       )}
 
+      {profile.valueLabels && Object.keys(profile.valueLabels).length > 0 && (
+        <section className="value-labels" aria-label={`Value labels of ${profile.name}`}>
+          <h4 className="column-card-settings-title">Value labels</h4>
+          <ul>
+            {Object.entries(profile.valueLabels)
+              .slice(0, 12)
+              .map(([value, label]) => (
+                <li key={value}>
+                  <code>{value}</code> {label}
+                </li>
+              ))}
+          </ul>
+          {Object.keys(profile.valueLabels).length > 12 && (
+            <p className="field-hint">and {Object.keys(profile.valueLabels).length - 12} more</p>
+          )}
+          <button
+            type="button"
+            className="button-link"
+            onClick={() => onEdit({ valueLabels: null })}
+          >
+            Remove the labels
+          </button>
+        </section>
+      )}
+
       <section className="column-card-settings" aria-label={`Settings for ${profile.name}`}>
         <h4 className="column-card-settings-title">Settings</h4>
         <ColumnEditors

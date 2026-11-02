@@ -76,7 +76,8 @@ export function summaryLines(p: ColumnProfile): string[] {
     case "categorical": {
       const entries = Object.entries(s.counts);
       lines.push(`${entries.length} ${entries.length === 1 ? "value" : "values"}`);
-      const top = entries.slice(0, 3).map(([label, n]) => `${label === "" ? "(blank)" : label}: ${n.toLocaleString("en-US")}`);
+      const named = (label: string) => `${label === "" ? "(blank)" : label}${p.valueLabels?.[label] ? ` (${p.valueLabels[label]})` : ""}`;
+      const top = entries.slice(0, 3).map(([label, n]) => `${named(label)}: ${n.toLocaleString("en-US")}`);
       if (top.length > 0) lines.push(top.join(" · ") + (entries.length > 3 ? " · …" : ""));
       break;
     }
@@ -115,7 +116,7 @@ export function summaryLines(p: ColumnProfile): string[] {
 
   if (p.naCount > 0) lines.push(`Missing: ${p.naCount.toLocaleString("en-US")}`);
   const sentinels = Object.entries(p.sentinels).sort((a, b) => Number(a[0]) - Number(b[0]));
-  if (sentinels.length > 0) lines.push(`Codes kept: ${sentinels.map(([v, n]) => `${v} (${n.toLocaleString("en-US")})`).join(", ")}`);
+  if (sentinels.length > 0) lines.push(`Codes kept: ${sentinels.map(([v, n]) => `${v}${p.valueLabels?.[v] ? ` ${p.valueLabels[v]}` : ""} (${n.toLocaleString("en-US")})`).join(", ")}`);
   if (p.parquetType) lines.push(`File type: ${describeParquetType(p.parquetType)}${p.parquetType.nullable ? "" : ", required"}`);
   return lines;
 }

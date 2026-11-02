@@ -192,3 +192,25 @@ test("no real value appears in the settings panels", async ({ page }) => {
   }
   expect(leaks).toEqual([]);
 });
+
+test("a codebook puts labels beside the codes, in the card, the spec and the README, and leaves the file's values alone", async ({ page }) => {
+  await toReview(page);
+  await page.getByRole("button", { name: "Overview" }).click();
+  const book = JSON.stringify({ cat_str_5: { Central: "Central district", South: "South district", Nowhere: "Not in the table" }, cat_int_codes: { "3": "Three wheels", "97": "Refused" }, not_a_column: { "1": "x" } });
+  await page.getByLabel("Add a codebook").setInputFiles({ name: "codebook.json", mimeType: "application/json", buffer: Buffer.from(book) });
+  await expect(page.getByRole("status").filter({ hasText: "Added 4 labels to 2 columns." })).toContainText("2 entries matched nothing");
+
+  await shownCard(page, "cat_str_5");
+  await expect(page.getByLabel("Value labels of cat_str_5")).toContainText("South district");
+
+  await page.getByRole("button", { name: "Continue to Generate" }).click();
+  await page.getByRole("region", { name: "Generate the fake table" }).getByRole("button", { name: /^Generate( again)?$/ }).click();
+  await expect(page.getByText(/checks (passed|did not pass)/)).toBeVisible({ timeout: 120_000 });
+  const [csv] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: /Download zoo_small_fake\.csv/ }).click()]);
+  expect(readFileSync(await csv.path(), "utf8")).not.toContain("Central district");
+  const [spec] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Download spec (JSON)" }).click()]);
+  const json = JSON.parse(readFileSync(await spec.path(), "utf8"));
+  expect(json.columns.find((c: { name: string }) => c.name === "cat_str_5").value_labels).toEqual({ Central: "Central district", South: "South district" });
+  const [readme] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Download README for agents" }).click()]);
+  expect(readFileSync(await readme.path(), "utf8")).toContain("`Central` (Central district)");
+});

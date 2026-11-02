@@ -4,8 +4,20 @@
 // the user's choice, so none of its values can leak (constitution Principle II).
 
 import { fitKind } from "../json/kinds";
-import { isExcelSettings, isJsonSettings, isParquetSettings, type ColumnProfile, type SourceSettings } from "../profile/types";
-import { SPEC_VERSION, type ColumnSpec, type NumericFields, type SourceSpec, type SpecFile } from "./types";
+import {
+  isExcelSettings,
+  isJsonSettings,
+  isParquetSettings,
+  type ColumnProfile,
+  type SourceSettings,
+} from "../profile/types";
+import {
+  SPEC_VERSION,
+  type ColumnSpec,
+  type NumericFields,
+  type SourceSpec,
+  type SpecFile,
+} from "./types";
 
 export interface BuildInput {
   fileName: string;
@@ -18,13 +30,30 @@ export interface BuildInput {
 }
 
 export function buildSource(fileName: string, s: SourceSettings): SourceSpec {
-  if (isParquetSettings(s)) return { format: "parquet", file_name: fileName, row_groups: s.rowGroups };
+  if (isParquetSettings(s))
+    return { format: "parquet", file_name: fileName, row_groups: s.rowGroups };
   if (isJsonSettings(s)) {
     const l = s.layout;
-    return { format: "json", file_name: fileName, form: l.form, indent: l.indent, line_ending: l.lineEnding, trailing_newline: l.trailingNewline, bom: l.bom };
+    return {
+      format: "json",
+      file_name: fileName,
+      form: l.form,
+      indent: l.indent,
+      line_ending: l.lineEnding,
+      trailing_newline: l.trailingNewline,
+      bom: l.bom,
+    };
   }
   if (isExcelSettings(s)) {
-    return { format: "xlsx", file_name: fileName, sheet: s.sheet, ...(s.range ? { range: s.range } : {}), skip_rows: s.skipRows, header: s.header, date1904: s.date1904 };
+    return {
+      format: "xlsx",
+      file_name: fileName,
+      sheet: s.sheet,
+      ...(s.range ? { range: s.range } : {}),
+      skip_rows: s.skipRows,
+      header: s.header,
+      date1904: s.date1904,
+    };
   }
   return {
     format: "csv",
@@ -63,7 +92,11 @@ export function columnSpecOf(p: ColumnProfile): ColumnSpec {
   // The kind the file had, made to suit the type the user chose; the absent keys cannot outnumber the missing cells.
   const token = c.na?.tokens[0] ?? "";
   const missingCells = c.na ? (c.na.by_token ? (c.na.by_token[token] ?? 0) : c.na.count) : 0;
-  return { ...c, json_kind: fitKind(c.json_kind, c.type), json_missing: Math.min(c.json_missing ?? 0, missingCells) };
+  return {
+    ...c,
+    json_kind: fitKind(c.json_kind, c.type),
+    json_missing: Math.min(c.json_missing ?? 0, missingCells),
+  };
 }
 
 function baseColumnSpec(p: ColumnProfile): ColumnSpec {
@@ -73,6 +106,9 @@ function baseColumnSpec(p: ColumnProfile): ColumnSpec {
     ...(p.storedAsText ? { stored_as_text: true } : {}),
     ...(p.parquetType ? { parquet_type: p.parquetType } : {}),
     ...(p.jsonKind ? { json_kind: p.jsonKind, json_missing: p.jsonMissing ?? 0 } : {}),
+    ...(p.valueLabels && Object.keys(p.valueLabels).length > 0
+      ? { value_labels: p.valueLabels }
+      : {}),
     ...(p.outputName !== p.name ? { output_name: p.outputName } : {}),
     ...(p.exclude !== "include" ? { exclude: p.exclude } : {}),
   };
@@ -80,9 +116,11 @@ function baseColumnSpec(p: ColumnProfile): ColumnSpec {
   const s = p.summary;
 
   // Unsupported columns: a name and a choice, nothing else.
-  if (p.type === "unsupported" || s.kind === "unsupported") return { ...common, type: "unsupported" };
+  if (p.type === "unsupported" || s.kind === "unsupported")
+    return { ...common, type: "unsupported" };
   // Survey IDs without a mask yet (until ID patterns land) are held back the same way.
-  if (p.type === "survey_id" && s.kind === "survey_id" && s.mask.length === 0) return { ...common, type: "unsupported" };
+  if (p.type === "survey_id" && s.kind === "survey_id" && s.mask.length === 0)
+    return { ...common, type: "unsupported" };
 
   const detail = {
     ...common,
@@ -112,7 +150,13 @@ function baseColumnSpec(p: ColumnProfile): ColumnSpec {
         ...(p.labelCodes ? { label_codes: true } : {}),
       };
     case "numeric":
-      return { ...detail, type: p.type as "integer" | "float", ...(numericFields(p) as NumericFields), ...(s.thousands ? { thousands: true } : {}), ...(s.scientific ? { scientific: true } : {}) };
+      return {
+        ...detail,
+        type: p.type as "integer" | "float",
+        ...(numericFields(p) as NumericFields),
+        ...(s.thousands ? { thousands: true } : {}),
+        ...(s.scientific ? { scientific: true } : {}),
+      };
     case "datetime":
       return {
         ...detail,
@@ -148,7 +192,13 @@ function baseColumnSpec(p: ColumnProfile): ColumnSpec {
       };
     }
     case "short_string":
-      return { ...detail, type: "short_string", pattern: s.pattern, length_groups: s.lengthGroups, repeat_structure: s.repeatStructure };
+      return {
+        ...detail,
+        type: "short_string",
+        pattern: s.pattern,
+        length_groups: s.lengthGroups,
+        repeat_structure: s.repeatStructure,
+      };
     case "survey_id":
       return {
         ...detail,

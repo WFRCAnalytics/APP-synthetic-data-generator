@@ -32,6 +32,8 @@ export interface LocalEdits {
   mergeUnderK?: number | null;
   labelCodes?: boolean;
   outputName?: string;
+  /** What the codes of the column mean (a codebook); null removes them. */
+  valueLabels?: Record<string, string> | null;
   /** The number format code of the column in an Excel output; "General" means none. */
   cellFormat?: string;
 }
@@ -56,6 +58,11 @@ export function applyEdits(p: ColumnProfile, e: LocalEdits | undefined): ColumnP
   }
 
   if (e.outputName !== undefined && e.outputName.trim() !== "") out.outputName = e.outputName;
+
+  if (e.valueLabels !== undefined) {
+    if (e.valueLabels === null || Object.keys(e.valueLabels).length === 0) delete out.valueLabels;
+    else out.valueLabels = { ...e.valueLabels };
+  }
 
   if (e.cellFormat !== undefined) {
     if (/^general$/i.test(e.cellFormat.trim())) delete out.cellFormat;

@@ -677,6 +677,12 @@ export class Session {
     return spec ? specBlobOf(spec) : null;
   }
 
+  /** Keeps the labels of a codebook beside the columns they belong to (Review shows them; the README lists them). */
+  applyCodebook(labels: Record<string, Record<string, string>>): void {
+    for (const [name, values] of Object.entries(labels))
+      this.editColumn(name, { valueLabels: values });
+  }
+
   /** The README that goes with the fake file, as a Markdown Blob, or null before a spec can be built. */
   readmeBlob(): Blob | null {
     const spec = this.buildSpec();

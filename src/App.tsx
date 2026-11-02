@@ -94,6 +94,7 @@ export function App() {
                 checkDatePattern: (name, pattern) => session.checkDatePattern(name, pattern),
                 requestSamples: (name, description) => session.requestSamples(name, description),
                 setThreshold: (n) => session.setThreshold(n),
+                applyCodebook: (labels) => session.applyCodebook(labels),
                 onContinue: () => dispatch({ type: "goTo", step: "generate" }),
                 onSaveSpec: () => {
                   const blob = session.specBlob();

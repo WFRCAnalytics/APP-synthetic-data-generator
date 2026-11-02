@@ -174,6 +174,8 @@ export interface ColumnProfile {
   storedAsText?: boolean;
   /** The column's logical type in a Parquet file. */
   parquetType?: ParquetType;
+  /** What the codes of the column mean, from a codebook: value to label. Documentation, never data. */
+  valueLabels?: Record<string, string>;
   /** The JSON kind of the key in a JSON file. */
   jsonKind?: JsonKind;
   /** In how many records the key is absent from a JSON file. */

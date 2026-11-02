@@ -1302,3 +1302,23 @@ section[aria-labelledby="ingest-heading"] > .empty-state {
 .check-table tr[data-pass="false"] .check-result svg {
   color: var(--color-danger-text);
 }
+
+/* ---- Value labels from a codebook ---- */
+.value-labels ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: var(--space-1) var(--space-3);
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-sm);
+}
+
+.value-labels code {
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-semibold);
+}
+
+.codebook-panel {
+  margin-top: var(--space-5);
+}
