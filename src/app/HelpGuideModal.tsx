@@ -130,8 +130,10 @@ export function HelpGuideModal({ open, onClose }: HelpGuideModalProps) {
           <li>
             <strong>Tables are made one at a time.</strong> IDs are invented for each table, so keys in
             separately generated tables will not match, unless you link an ID column to the other
-            table&apos;s saved spec (Review, the column&apos;s &ldquo;IDs from another table&rdquo;).
-            Other columns are not linked, and there is no cascade between tables.
+            table&apos;s saved spec (Review, the column&apos;s &ldquo;IDs from another table&rdquo;). A
+            whole-number column of the first table can then count the other table&apos;s rows for
+            each ID (&ldquo;Number of rows in another table&rdquo;), so a household&apos;s size
+            matches its persons. Other columns are not linked.
           </li>
           <li>
             <strong>Mean and spread can shift slightly after rounding.</strong> The optional

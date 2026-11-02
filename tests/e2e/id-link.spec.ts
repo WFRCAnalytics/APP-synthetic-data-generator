@@ -7,7 +7,7 @@ import { shownCard } from "../helpers/review";
 const APP = "/APP-synthetic-data-generator/";
 const region = (page: Page) => page.getByRole("region", { name: "Generate the fake table" });
 
-const households = ["hh_id,size"].concat(Array.from({ length: 300 }, (_, i) => `H${1000 + i},${1 + (i % 5)}`)).join("\n") + "\n";
+const households = ["hh_id,size,members"].concat(Array.from({ length: 300 }, (_, i) => `H${1000 + i},${1 + (i % 5)},${5 + ((i * 37) % 900)}`)).join("\n") + "\n";
 // Households have between one and four people each; 120 of the 300 households appear.
 const persons =
   ["hh_id,age"]
@@ -63,4 +63,30 @@ test("a second table uses the IDs of the first, so every row joins", async ({ pa
   expect(JSON.parse(spec).columns[0].link.column).toBe("hh_id");
   for (const id of parentIds) expect(spec).not.toContain(`"${id}"`);
   testInfo.annotations.push({ type: "ids", description: `${parentIds.size} parent IDs, ${new Set(childIds).size} used` });
+});
+
+test("a household's size follows the rows the persons table has for it", async ({ page }) => {
+  await makeTable(page, "households.csv", households);
+  const first = await generate(page, /Download households_fake\.csv/);
+  await makeTable(page, "persons.csv", persons);
+  const personCard = await shownCard(page, "hh_id");
+  await personCard.getByLabel("Spec of the other table").setInputFiles(first.specPath);
+  await personCard.getByRole("button", { name: "Use these IDs" }).click();
+  const second = await generate(page, /Download persons_fake\.csv/);
+
+  // Back to the households: the members column now counts the persons rows.
+  await makeTable(page, "households.csv", households);
+  const members = await shownCard(page, "members");
+  await members.getByLabel("Spec of the other table").setInputFiles(second.specPath);
+  await members.getByRole("button", { name: "Count its rows" }).click();
+  await expect(members.getByTestId("child-count-summary")).toContainText("persons.csv");
+  const again = await generate(page, /Download households_fake\.csv/);
+  await expect(page.getByText(/rows of the other table/)).toBeVisible();
+
+  const counts = new Map<string, number>();
+  for (const id of column(second.csv, 0)) counts.set(id, (counts.get(id) ?? 0) + 1);
+  const rows = again.csv.trim().split(String.fromCharCode(10)).slice(1).map((line) => line.split(","));
+  expect(rows.length).toBe(300);
+  for (const [id, , membersText] of rows) expect(Number(membersText)).toBe(counts.get(id) ?? 0);
+  expect(rows.reduce((n, r) => n + Number(r[2]), 0)).toBe(column(second.csv, 0).length);
 });

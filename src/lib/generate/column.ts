@@ -6,7 +6,7 @@
 import { effectiveCounts } from "../protections";
 import { makePermutation } from "../rng/permute";
 import { subSeed } from "../rng/subseed";
-import type { ColumnSpec, IdLink, SurveyIdColumn } from "../spec/types";
+import type { ChildCount, ColumnSpec, IdLink, NumericColumn, SurveyIdColumn } from "../spec/types";
 import { makeLabelLookup } from "./categorical";
 import { makeDateFormatter } from "./datetime";
 import { formatNumber, makeNumericSource, withRescale, type NumericPlan } from "./numeric";
@@ -15,7 +15,7 @@ import { makeUniqueSpace } from "../textgen/compose";
 import { loremText } from "../textgen/lorem";
 import { makeShortStringGenerator, ShortStringError } from "../textgen/shortstring";
 import { makePersonalComposer } from "../textgen/personal";
-import { makeGroupMapper } from "./groups";
+import { groupSizes, makeGroupMapper } from "./groups";
 import { makePlacer } from "./placement";
 import { IdPatternError, makeIdGenerator, rowsCovered } from "./survey-id";
 
@@ -57,6 +57,28 @@ function numericSourceFor(col: NumericPlan & { rescale?: boolean }, key: number,
  * repeat structure (how many rows share an ID); each of its groups is sent to a different group of the other table, so every
  * ID written exists there and no two groups of this column share one.
  */
+/**
+ * A whole-number column that is, for each ID of this table, how many rows another table has for that ID (specs/026). The other
+ * table sends each of its groups of equal IDs to a different row of this one (the keyed bijection it uses for linked IDs), so the
+ * count of a row is the size of the group sent there, or none when no group is.
+ */
+function childCountColumn(col: NumericColumn, cc: ChildCount, ctx: ColumnContext, gen: (valueAt: (row: number) => string) => ColumnGen): ColumnGen {
+  const rows = ctx.nRows;
+  if (cc.child.groups !== rows) throw new GenerationError(`Column "${col.name}": the other table draws from ${cc.child.groups} IDs but this table has ${rows} rows.`);
+  const sizes = groupSizes(cc.child.repeat_structure);
+  if (sizes.length > rows) throw new GenerationError(`Column "${col.name}": the other table has more distinct IDs than this table has rows.`);
+  const pick = makePermutation(rows, mix32((subSeed(cc.child.seed, cc.child.column) ^ 0x1ced1ced) >>> 0));
+  const sentTo = new Int32Array(rows).fill(-1);
+  for (let k = 0; k < sizes.length; k++) sentTo[pick(k)] = k;
+  // Rows are placed by a keyed permutation, so the ID of a row is found through the same placement the ID column uses.
+  const place = makePlacer(rows, subSeed(ctx.seed, cc.column), undefined, undefined);
+  return gen((row) => {
+    const p = place(row);
+    const group = p.kind === "value" ? sentTo[p.index] : -1;
+    return String(group >= 0 ? sizes[group] : 0);
+  });
+}
+
 function linkedIdColumn(col: SurveyIdColumn, link: IdLink, ctx: ColumnContext, key: number, gen: (valueAt: (row: number) => string) => ColumnGen): ColumnGen {
   const placer = makePlacer(ctx.nRows, key, col.na, col.sentinels);
   if (rowsCovered(col.repeat_structure) !== placer.valueTotal) {
@@ -108,6 +130,7 @@ export function createColumnGen(col: ColumnSpec, ctx: ColumnContext): ColumnGen 
 
     case "integer":
     case "float": {
+      if (col.child_count) return childCountColumn(col, col.child_count, ctx, gen);
       const placer = makePlacer(ctx.nRows, key, col.na, col.sentinels);
       const source = numericSourceFor(col, key, placer, ctx.nRows);
       const format = { integer: col.type === "integer", decimals: col.decimals ?? 0, thousands: col.thousands ?? false, scientific: col.scientific ?? false };

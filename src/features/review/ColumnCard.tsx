@@ -9,6 +9,7 @@ import type { LocalEdits } from "../../lib/profile/edits";
 import type { ColumnOverrides, ColumnProfile } from "../../lib/profile/types";
 import type { SampleDescription } from "../../lib/textgen/sample";
 import { UNSUPPORTED_TEXT } from "../../lib/parquet/types";
+import type { TableInfo } from "./ChildCountPanel";
 import { ColumnEditors } from "./ColumnEditors";
 import { Sparkline } from "./Sparkline";
 import { parquetConflict, reasonText, sparkBars, summaryLines, typeLabel } from "./summary";
@@ -21,6 +22,7 @@ export interface ColumnCardProps {
   busy?: boolean;
   dateCheck?: DatePatternCheck;
   onEdit?: (patch: LocalEdits) => void;
+  table?: TableInfo;
   onOverride?: (patch: Partial<ColumnOverrides>) => void;
   onCheckDate?: (pattern: string) => void;
   samples?: string[];
@@ -37,6 +39,7 @@ export function ColumnCard({
   busy = false,
   dateCheck,
   onEdit = noop,
+  table,
   onOverride = noop,
   onCheckDate = noop,
   samples,
@@ -150,6 +153,7 @@ export function ColumnCard({
           busy={busy}
           dateCheck={dateCheck}
           onEdit={onEdit}
+          table={table}
           onOverride={onOverride}
           onCheckDate={onCheckDate}
           samples={samples}

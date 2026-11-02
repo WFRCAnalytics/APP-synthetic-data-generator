@@ -94,3 +94,54 @@ describe("the profile and the README", () => {
     expect(text).toContain("the IDs of column `hh_id`");
   });
 });
+
+describe("counts that follow the other table", () => {
+  const sizeColumn = (): ColumnSpec => ({
+    name: "size",
+    type: "integer",
+    mode: "uniform",
+    min: 0,
+    max: 3,
+    mean: 1.5,
+    sd: 1,
+    decimals: 0,
+    quantiles: Array.from({ length: 101 }, (_, i) => (3 * i) / 100),
+    child_count: { column: "hh_id", child: { table: "persons.csv", column: "hh_id", seed: 99, repeat_structure: personsRepeat, groups: 200 } },
+  });
+  const withSize = specOf("households.csv", 11, [idColumn("hh_id", { "1": 200 }), sizeColumn()], 200);
+
+  const tables = () => {
+    const parent = planTable(withSize, 11);
+    const child = planTable(persons(), 99);
+    const countOf = new Map<string, number>();
+    for (let r = 0; r < persons().n_rows; r++) {
+      const id = rowValues(child, r)[0];
+      countOf.set(id, (countOf.get(id) ?? 0) + 1);
+    }
+    return { parent, countOf };
+  };
+
+  it("makes each ID's number the number of rows the other table has for it", () => {
+    const { parent, countOf } = tables();
+    let total = 0;
+    for (let r = 0; r < withSize.n_rows; r++) {
+      const [id, size] = rowValues(parent, r);
+      expect(Number(size)).toBe(countOf.get(id) ?? 0);
+      total += Number(size);
+    }
+    expect(total).toBe(persons().n_rows);
+  });
+
+  it("is a valid spec, and refused when it does not fit", () => {
+    expect(validateSpec(JSON.parse(JSON.stringify(withSize))).ok).toBe(true);
+    const wrong = JSON.parse(JSON.stringify(withSize));
+    wrong.columns[1].child_count.child.groups = 150;
+    expect(validateSpec(wrong).ok).toBe(false);
+    const noId = JSON.parse(JSON.stringify(withSize));
+    noId.columns[1].child_count.column = "missing";
+    expect(validateSpec(noId).ok).toBe(false);
+    const withNa = JSON.parse(JSON.stringify(withSize));
+    withNa.columns[1].na = { tokens: [""], count: 1 };
+    expect(validateSpec(withNa).ok).toBe(false);
+  });
+});

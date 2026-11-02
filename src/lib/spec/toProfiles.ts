@@ -139,6 +139,7 @@ export function profileFromSpec(c: ColumnSpec): ColumnProfile {
       return {
         ...base,
         ...(c.coordinate ? { coordinate: c.coordinate } : {}),
+        ...(c.child_count ? { childCount: c.child_count } : {}),
         detectedType: c.type,
         type: c.type,
         status: "ok",

@@ -41,7 +41,7 @@ const FORMAT_NAMES: Record<SpecFile["source"]["format"], string> = {
 function kindOf(c: ColumnSpec): string {
   switch (c.type) {
     case "integer":
-      return "whole number";
+      return c.child_count ? "whole number (a count)" : "whole number";
     case "float":
       return "decimal number";
     case "categorical":
@@ -92,6 +92,8 @@ function describeValues(c: ColumnSpec): string {
   switch (c.type) {
     case "integer":
     case "float":
+      if (c.type === "integer" && c.child_count)
+        return `how many rows ${tick(c.child_count.child.table ?? "another table")} has for each ${tick(c.child_count.column)} (${n(Object.entries(c.child_count.child.repeat_structure).reduce((t, [size, groups]) => t + Number(size) * groups, 0))} rows in all); joining on ${tick(c.child_count.column)} gives the same counts`;
       if (c.coordinate)
         return `${AXIS_LABELS[c.coordinate].toLowerCase()} inside the box ${num(c.min)} to ${num(c.max)}, ${c.decimals ?? 0} decimal places, spread evenly`;
       return `${num(c.min)} to ${num(c.max)}${c.type === "float" ? `, ${c.decimals ?? 0} decimal places` : ""}`;

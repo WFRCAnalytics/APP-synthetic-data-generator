@@ -159,8 +159,32 @@ export interface CategoricalColumn extends ColumnBase {
   label_codes?: boolean;
 }
 
+/**
+ * A whole-number column that is, for each ID of this table, how many rows another table has for that ID (specs/026): a household's
+ * size follows the persons table. It is worked out from the other table's repeat structure and seed, so the two tables agree. Holds
+ * no value.
+ */
+export interface ChildCount {
+  /** The ID column of this table the other table's IDs come from (one row per ID, none missing). */
+  column: string;
+  child: {
+    /** The other table's name, for people to read; never used to make anything. */
+    table?: string;
+    /** The ID column of the other table, which uses this table's IDs. */
+    column: string;
+    /** The seed the other table is generated with. */
+    seed: number;
+    /** How many of its rows share an ID (group size as a string key to how many IDs have that size). */
+    repeat_structure: Record<string, number>;
+    /** How many IDs of this table it can draw from: the rows of this table. */
+    groups: number;
+  };
+}
+
 export interface NumericColumn extends ColumnBase, NumericFields {
   type: "integer" | "float";
+  /** Only for a whole-number column: the number of rows another table has for each ID. */
+  child_count?: ChildCount;
 }
 
 export interface DateColumn extends ColumnBase, NumericFields {

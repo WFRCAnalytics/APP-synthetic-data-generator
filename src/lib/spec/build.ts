@@ -161,6 +161,7 @@ function baseColumnSpec(p: ColumnProfile): ColumnSpec {
         ...detail,
         type: p.type as "integer" | "float",
         ...(p.coordinate ? { coordinate: p.coordinate } : {}),
+        ...(p.childCount && p.type === "integer" ? { child_count: p.childCount } : {}),
         ...(numericFields(p) as NumericFields),
         ...(s.thousands ? { thousands: true } : {}),
         ...(s.scientific ? { scientific: true } : {}),

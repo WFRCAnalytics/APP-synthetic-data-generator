@@ -21,6 +21,7 @@ export interface CheckRow {
   column: string;
   metric:
     | "rule"
+    | "children"
     | "label_counts"
     | "na_count"
     | "sentinel_counts"
@@ -148,10 +149,21 @@ export class CheckAccumulator {
     this.derived = new Set(
       plan.rules.map((r) => index.get(r.column)).filter((i): i is number => i !== undefined),
     );
+    // A column that counts another table's rows is checked by what the counts add up to, not by its own summaries.
+    plan.columns.forEach((c, i) => {
+      const cc = c.spec.type === "integer" ? c.spec.child_count : undefined;
+      if (!cc) return;
+      this.derived.add(i);
+      this.counts.push({ column: c.outputName, index: i, expected: Object.entries(cc.child.repeat_structure).reduce((n, [size, groups]) => n + Number(size) * groups, 0), table: cc.child.table, total: 0 });
+    });
   }
+
+  /** Columns that count another table's rows: what they should add up to, and what they do. */
+  private readonly counts: { column: string; index: number; expected: number; table?: string; total: number }[] = [];
 
   observeRow(values: readonly string[]): void {
     for (const r of this.rules) r.observe(values);
+    for (const k of this.counts) k.total += Number(values[k.index]) || 0;
     for (let c = 0; c < this.accs.length; c++) {
       const a = this.accs[c];
       if (this.derived.has(c)) continue;
@@ -287,6 +299,14 @@ export class CheckAccumulator {
       }
     }
     for (const r of this.rules) rows.push(r.row());
+    for (const k of this.counts)
+      rows.push({
+        column: k.column,
+        metric: "children",
+        target: `${k.expected.toLocaleString("en-US")}${k.table ? ` in ${k.table}` : ""}`,
+        achieved: k.total.toLocaleString("en-US"),
+        pass: k.total === k.expected,
+      });
     return rows;
   }
 }

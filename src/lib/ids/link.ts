@@ -2,7 +2,7 @@
 // pattern, the seed, the column's name and how many IDs it makes) and nothing else: no ID value, no other column.
 
 import { idCapacity } from "../mask/mask";
-import type { IdLink, SpecFile, SurveyIdColumn } from "../spec/types";
+import type { ChildCount, IdLink, SpecFile, SurveyIdColumn } from "../spec/types";
 
 /** The survey ID columns of a spec that can be linked to: written, with their own IDs. */
 export function linkableColumns(spec: SpecFile): SurveyIdColumn[] {
@@ -30,6 +30,28 @@ export function linkProblem(distinct: number, link: IdLink): string | null {
   if (distinct > link.groups) return `This column has ${distinct.toLocaleString("en-US")} distinct IDs but the other table's column makes only ${link.groups.toLocaleString("en-US")}.`;
   if (BigInt(link.groups) > idCapacity(link.mask, link.min, link.max)) return "The other table's pattern cannot hold that many IDs.";
   return null;
+}
+
+/** The ID columns of the other table that use the IDs of this table's column, with the problem when one cannot be counted. */
+export function childColumnsOf(child: SpecFile, table: { seed: number; rows: number; idColumns: string[] }): { column: SurveyIdColumn; problem: string | null }[] {
+  return child.columns
+    .filter((c): c is SurveyIdColumn => c.type === "survey_id" && c.link !== undefined && table.idColumns.includes(c.link.column))
+    .map((column) => ({ column, problem: childCountProblem(column, table) }));
+}
+
+/** Why a child's ID column cannot be counted by this table, or null when it can. */
+export function childCountProblem(child: SurveyIdColumn, table: { rows: number }): string | null {
+  const link = child.link;
+  if (!link) return "That column does not use another table's IDs.";
+  if (link.groups !== table.rows) return `That table draws from ${link.groups.toLocaleString("en-US")} IDs but this table has ${table.rows.toLocaleString("en-US")} rows.`;
+  return null;
+}
+
+/** What a whole-number column needs to count the rows another table has for each ID of this one. */
+export function childCountFrom(child: SpecFile, column: SurveyIdColumn): ChildCount | null {
+  const link = column.link;
+  if (!link) return null;
+  return { column: link.column, child: { table: child.source.file_name, column: column.name, seed: child.seed, repeat_structure: { ...column.repeat_structure }, groups: link.groups } };
 }
 
 export const describeLink = (link: IdLink): string => `${link.table ? `${link.table}, ` : ""}column ${link.column} (${link.groups.toLocaleString("en-US")} IDs, seed ${link.seed})`;

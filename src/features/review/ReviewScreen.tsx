@@ -4,7 +4,7 @@
 
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { SessionState } from "../../app/session";
+import { parseSeed, type SessionState } from "../../app/session";
 import type { LocalEdits } from "../../lib/profile/edits";
 import type { RuleSpec } from "../../lib/rules/types";
 import { isExcelSettings, type ColumnOverrides } from "../../lib/profile/types";
@@ -13,6 +13,7 @@ import { AttentionBanner } from "./AttentionBanner";
 import { CodebookPanel } from "./CodebookPanel";
 import { RulesPanel } from "./RulesPanel";
 import { ProfileProgress } from "../ingest/ProfileProgress";
+import type { TableInfo } from "./ChildCountPanel";
 import { ColumnCard } from "./ColumnCard";
 import { ColumnNav } from "./ColumnNav";
 import { countByType, filterProfiles, NO_FILTERS, type Filters } from "./filter";
@@ -32,6 +33,7 @@ export interface ReviewActions {
   removeRule: (index: number) => void;
   onContinue: () => void;
   onSaveSpec: () => void;
+  setSeedText?: (text: string) => void;
 }
 
 export interface ReviewScreenProps {
@@ -60,6 +62,15 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
 
   const shown = useMemo(() => filterProfiles(profiles, filters), [profiles, filters]);
   const typeCounts = useMemo(() => countByType(profiles), [profiles]);
+  // What this table is, so a spec of another table that uses its IDs can be matched to it (specs/026).
+  const tableInfo: TableInfo = {
+    seed: parseSeed(session.seedText) ?? 42,
+    rows: rowCount,
+    idColumns: profiles
+      .filter((p) => p.summary.kind === "survey_id" && p.exclude === "include" && !p.idLink && p.naCount === 0 && Object.keys(p.sentinels).length === 0 && p.summary.distinct === rowCount)
+      .map((p) => p.name),
+    setSeed: actions.setSeedText ? (seed) => actions.setSeedText?.(String(seed)) : undefined,
+  };
   const reprofiling = phase === "profiling";
   const conflicts = profiles.filter((p) => parquetConflict(p)).length;
   const specOnly = session.specOnly;
@@ -150,6 +161,7 @@ export function ReviewScreen({ session, actions }: ReviewScreenProps) {
                 busy={busy.includes(current.name)}
                 dateCheck={datePatternChecks[current.name]}
                 onEdit={(patch) => actions.editColumn(current.name, patch)}
+                table={tableInfo}
                 onOverride={(patch) => actions.overrideColumn(current.name, patch)}
                 onCheckDate={(pattern) => actions.checkDatePattern(current.name, pattern)}
                 samples={session.samples[current.name]}

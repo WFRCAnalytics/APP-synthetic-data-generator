@@ -12,6 +12,21 @@ export interface GroupMapper {
   rows: number;
 }
 
+/** How many rows each group has, in group order (a group of the smallest size first). */
+export function groupSizes(repeatStructure: Record<string, number>): Uint32Array {
+  const buckets = Object.entries(repeatStructure)
+    .map(([size, count]) => ({ size: Number(size), count }))
+    .filter((b) => b.size > 0 && b.count > 0)
+    .sort((a, b) => a.size - b.size);
+  const out = new Uint32Array(buckets.reduce((a, b) => a + b.count, 0));
+  let at = 0;
+  for (const b of buckets) {
+    out.fill(b.size, at, at + b.count);
+    at += b.count;
+  }
+  return out;
+}
+
 export function makeGroupMapper(repeatStructure: Record<string, number>): GroupMapper {
   const buckets = Object.entries(repeatStructure)
     .map(([size, count]) => ({ size: Number(size), count }))

@@ -120,6 +120,7 @@ export function App() {
                 applyCodebook: (labels) => session.applyCodebook(labels),
                 addRule: (rule) => session.addRule(rule),
                 removeRule: (index) => session.removeRule(index),
+                setSeedText: (text) => session.setSeedText(text),
                 onContinue: () => dispatch({ type: "goTo", step: "generate" }),
                 onSaveSpec: () => {
                   const blob = session.specBlob();

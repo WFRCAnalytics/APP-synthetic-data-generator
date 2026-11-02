@@ -10,6 +10,7 @@ import { CellFormatEditor } from "./CellFormatEditor";
 import { DatePatternBox } from "./DatePatternBox";
 import { ExcludeControl } from "./ExcludeControl";
 import type { SampleDescription } from "../../lib/textgen/sample";
+import { ChildCountPanel, type TableInfo } from "./ChildCountPanel";
 import { IdLinkPanel } from "./IdLinkPanel";
 import { IdMaskEditor } from "./IdMaskEditor";
 import { PersonalKindEditor } from "./PersonalKindEditor";
@@ -28,6 +29,8 @@ export interface ColumnEditorsProps {
   busy: boolean;
   dateCheck: DatePatternCheck | undefined;
   onEdit: (patch: LocalEdits) => void;
+  /** What the table is, so another table's spec that uses its IDs can be matched to it. */
+  table?: TableInfo;
   onOverride: (patch: Partial<ColumnOverrides>) => void;
   onCheckDate: (pattern: string) => void;
   /** Invented sample values for this column, and how to ask for new ones. */
@@ -54,7 +57,7 @@ const CHOICES: [string, string][] = [
 
 const isDateLike = (t: ColumnType) => t === "date" || t === "datetime" || t === "time";
 
-export function ColumnEditors({ profile, otherNames, busy, dateCheck, onEdit, onOverride, onCheckDate, samples, onRequestSamples, specOnly = false, workbook = false }: ColumnEditorsProps) {
+export function ColumnEditors({ profile, otherNames, busy, dateCheck, onEdit, table, onOverride, onCheckDate, samples, onRequestSamples, specOnly = false, workbook = false }: ColumnEditorsProps) {
   const typeId = useId();
   const [chooseDate, setChooseDate] = useState(false);
   const kind = profile.summary.kind;
@@ -134,6 +137,7 @@ export function ColumnEditors({ profile, otherNames, busy, dateCheck, onEdit, on
 
       {kind === "survey_id" && !profile.idLink && <IdMaskEditor profile={profile} onChange={(idPattern) => onEdit({ idPattern })} />}
       {kind === "survey_id" && <IdLinkPanel profile={profile} onEdit={onEdit} />}
+      {table && <ChildCountPanel profile={profile} table={table} onEdit={onEdit} />}
 
       <ExcludeControl profile={profile} onChange={(exclude) => onEdit({ exclude })} />
 

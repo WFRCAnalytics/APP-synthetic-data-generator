@@ -188,8 +188,19 @@ const CategoricalSchema = (type: "categorical" | "boolean") =>
     label_codes: v.optional(v.boolean()),
   });
 
+const ChildCountSchema = v.strictObject({
+  column: v.pipe(v.string(), v.minLength(1)),
+  child: v.strictObject({
+    table: v.optional(v.string()),
+    column: v.pipe(v.string(), v.minLength(1)),
+    seed: v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(4294967295)),
+    repeat_structure: v.record(v.string(), positiveCount),
+    groups: positiveCount,
+  }),
+});
+
 const NumericSchema = (type: "integer" | "float") =>
-  v.strictObject({ ...base, type: v.literal(type), ...numeric });
+  v.strictObject({ ...base, type: v.literal(type), ...numeric, child_count: v.optional(ChildCountSchema) });
 
 const DateSchema = (type: "date" | "datetime" | "time") =>
   v.strictObject({
@@ -408,6 +419,25 @@ const isNumber = (c: ColumnSpec) => c.type === "integer" || c.type === "float";
 const isLabelled = (c: ColumnSpec) => c.type === "categorical" || c.type === "boolean";
 
 /** A rule must name columns of the table that suit it, and must not chain onto another rule (specs/015 FR-003). */
+/** A column that counts another table's rows: it must stand beside an ID column of one row per ID, and fit the other table. */
+function checkChildCount(col: ColumnSpec, spec: SpecFile, out: SpecProblem[]): void {
+  if (col.type !== "integer" && col.type !== "float") return;
+  const cc = col.child_count;
+  if (!cc) return;
+  const problem = (message: string): void => {
+    out.push({ column: col.name, path: "child_count", message });
+  };
+  if (col.type !== "integer") return problem("Only a whole-number column can count another table's rows.");
+  if (col.na || col.sentinels) return problem("A column that counts another table's rows has no missing values or sentinel codes.");
+  const id = spec.columns.find((c) => c.name === cc.column);
+  if (!id || id.type !== "survey_id") return problem(`"${cc.column}" is not an ID column of this table.`);
+  const once = id.repeat_structure["1"] === spec.n_rows && Object.keys(id.repeat_structure).length === 1;
+  if (!once || id.na || id.sentinels || id.link) return problem(`"${cc.column}" must hold one new ID per row, none missing, for the counts to match the other table.`);
+  if (cc.child.groups !== spec.n_rows) problem(`The other table draws from ${cc.child.groups} IDs but this table has ${spec.n_rows} rows.`);
+  const needed = Object.values(cc.child.repeat_structure).reduce((a, b) => a + b, 0);
+  if (needed > spec.n_rows) problem("The other table has more distinct IDs than this table has rows.");
+}
+
 function checkRule(rule: RuleSpec, index: number, spec: SpecFile, out: SpecProblem[]): void {
   const problem = (message: string): void => {
     out.push({ column: rule.column, path: `rules[${index}]`, message });
@@ -811,6 +841,7 @@ export function validateSpec(input: unknown): SpecResult {
   }
 
   for (const [i, rule] of (spec.rules ?? []).entries()) checkRule(rule, i, spec, problems);
+  for (const col of spec.columns) checkChildCount(col, spec, problems);
 
   const seen = new Set<string>();
   for (const col of spec.columns) {
