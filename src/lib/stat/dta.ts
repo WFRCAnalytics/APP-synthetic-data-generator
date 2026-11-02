@@ -2,7 +2,7 @@
 // labels, notes or other metadata. Numbers are doubles; dates are days since 1960-01-01 (%td), date and times
 // milliseconds since 1960-01-01 (%tc); text is a fixed-width str# column.
 
-import { safeNames, type StatTable } from "./table";
+import { cutToBytes, safeNames, type StatTable } from "./table";
 
 /** The longest text one Stata str# column holds. */
 export const DTA_MAX_TEXT = 2045;
@@ -91,8 +91,10 @@ export function writeDta(table: StatTable): Uint8Array {
       }),
     ),
   );
-  const valueLabelNames = tag("value_label_names", new Uint8Array(k * 129));
-  const variableLabels = tag("variable_labels", new Uint8Array(k * 321));
+  // Stata keeps labels only for whole numbers that fit in four bytes.
+  const sets = columns.map((c) => (c.valueLabels ?? []).filter((v) => Number.isInteger(v.value) && Math.abs(v.value) < 2_000_000_000));
+  const valueLabelNames = tag("value_label_names", cat(...columns.map((_, i) => (sets[i].length > 0 ? padded(names[i], 129) : new Uint8Array(129)))));
+  const variableLabels = tag("variable_labels", cat(...columns.map((c) => (c.label ? padded(cutToBytes(c.label, 320), 321) : new Uint8Array(321)))));
   const characteristics = ascii("<characteristics></characteristics>");
 
   const data = new Uint8Array(rowCount * rowSize);
@@ -121,7 +123,28 @@ export function writeDta(table: StatTable): Uint8Array {
   }
   const dataSection = tag("data", data);
   const strls = ascii("<strls></strls>");
-  const valueLabels = ascii("<value_labels></value_labels>");
+  const i32 = (v: number) => {
+    const b = new Uint8Array(4);
+    new DataView(b.buffer).setInt32(0, v, true);
+    return b;
+  };
+  const valueLabels = tag(
+    "value_labels",
+    cat(
+      ...sets.flatMap((set, i) => {
+        if (set.length === 0) return [];
+        const texts = set.map((v) => cat(encoder.encode(cutToBytes(v.label, 120)), new Uint8Array(1)));
+        const offsets: number[] = [];
+        let at = 0;
+        for (const t of texts) {
+          offsets.push(at);
+          at += t.length;
+        }
+        const table = cat(i32(set.length), i32(at), ...offsets.map(i32), ...set.map((v) => i32(v.value)), ...texts);
+        return [tag("lbl", cat(i32(table.length), padded(names[i], 129), new Uint8Array(3), table))];
+      }),
+    ),
+  );
   const close = ascii("</stata_dta>");
 
   const mapSize = "<map>".length + 14 * 8 + "</map>".length;

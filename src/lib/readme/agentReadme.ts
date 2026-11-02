@@ -188,7 +188,7 @@ export function agentReadme(spec: SpecFile, options: AgentReadmeOptions): string
       `- **Description of the table**: ${tick(options.specFileName)} (a small JSON file that holds only counts, limits, labels and formats).`,
     );
   const layout = options.statFormat
-    ? [`${options.statFormat === "sav" ? "An SPSS" : "A Stata"} data file. Numbers, dates and times are typed; everything else is text. There are no value labels or variable labels.`]
+    ? [`${options.statFormat === "sav" ? "An SPSS" : "A Stata"} data file. Numbers, dates and times are typed; everything else is text. Variable labels and the value labels of number columns are written into the file where the table has them.`]
     : layoutLines(spec);
   for (const line of layout) add(`- **Layout**: ${line}`);
   add("");

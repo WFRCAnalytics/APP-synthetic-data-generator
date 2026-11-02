@@ -74,6 +74,13 @@ for (const [name, label, magic, readmeText] of [
     await page.goto(APP);
     await page.locator("#file-input").setInputFiles(path);
     await expect(page.getByTestId("stat-summary")).toContainText("120 rows, 6 variables", { timeout: 60_000 });
+    // The labels of the codes and the variable labels went into the file, so they come back.
+    await expect(page.getByTestId("stat-labels")).toContainText("4 codes mean");
+    await page.getByRole("button", { name: "Profile this file" }).click();
+    await expect(page.getByRole("heading", { name: "Review columns" })).toBeVisible({ timeout: 180_000 });
+    await shownCard(page, "mode");
+    await expect(page.getByTestId("column-description")).toHaveText("Mode");
+    await expect(page.getByLabel("Value labels of mode")).toContainText("Bus");
 
     const origin = new URL(page.url()).origin;
     expect(requests.filter((u) => !u.startsWith(origin) && !u.startsWith("blob:") && !u.startsWith("data:"))).toEqual([]);

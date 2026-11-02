@@ -25,7 +25,7 @@ function readBack(file: string, bytes: Uint8Array) {
   const dir = mkdtempSync(join(tmpdir(), "statw-"));
   const path = join(dir, file);
   writeFileSync(path, bytes);
-  return JSON.parse(execFileSync("python", [join(process.cwd(), "tests/helpers/readstat.py"), path], { encoding: "utf8" })) as { names: string[]; rows: number; cells: unknown[][] };
+  return JSON.parse(execFileSync("python", [join(process.cwd(), "tests/helpers/readstat.py"), path], { encoding: "utf8" })) as { names: string[]; rows: number; cells: unknown[][]; labels: Record<string, string | null>; value_labels: Record<string, Record<string, string>> };
 }
 
 describe("the typed table", () => {
@@ -74,6 +74,27 @@ describe.skipIf(!python)("read back with pyreadstat", () => {
     expected(back);
     expect(String(back.cells[0][3])).toContain("2024-03-05");
     expect(String(back.cells[1][5])).toContain("2024-12-31");
+  });
+
+  const meta = { age: { description: "Age of the respondent" }, mode: { description: "How the trip was made", valueLabels: { "1": "Car", "2": "Bus", "3": "Café é" } }, hh_id: { description: "Household" } };
+  const labelled = tableFromCsv(csv, hints, 255, meta);
+
+  for (const [file, write] of [["l.sav", writeSav], ["l.dta", writeDta]] as const) {
+    it(`${file}: variable labels and the value labels of a number column are read back`, () => {
+      const back = readBack(file, write(labelled));
+      expect(back.labels.age).toBe("Age of the respondent");
+      expect(back.labels.mode).toBe("How the trip was made");
+      expect(back.labels.hh_id).toBe("Household");
+      expect(back.value_labels).toEqual({ mode: { "1": "Car", "2": "Bus", "3": "Café é" } });
+      expected(back); // the values themselves are untouched
+    });
+  }
+
+  it("labels are only written where the format can hold them", () => {
+    // A label for a column that is text (hh_id) is dropped; a label on a decimal code is dropped for Stata.
+    const t = tableFromCsv(csv, hints, 255, { hh_id: { valueLabels: { H1: "First" } }, income: { valueLabels: { "1.5": "x" } } });
+    expect(t.columns[0].valueLabels).toBeUndefined();
+    expect(readBack("t.dta", writeDta(t)).value_labels).toEqual({});
   });
 
   it("names that the format cannot take are made valid and stay unique", () => {

@@ -20,7 +20,7 @@ import { outputKindOf, retarget, type OutputKind } from "../lib/spec/retarget";
 import { WRITABLE_FORMATS } from "../lib/stat/detect";
 import { writeDta, DTA_MAX_TEXT } from "../lib/stat/dta";
 import { writeSav, SAV_MAX_TEXT } from "../lib/stat/sav";
-import { tableFromCsv } from "../lib/stat/table";
+import { tableFromCsv, type ColumnMeta } from "../lib/stat/table";
 import { profilesFromSpec, settingsFromSource } from "../lib/spec/toProfiles";
 import type { SpecFile, SpecProblem } from "../lib/spec/types";
 import type { SampleDescription } from "../lib/textgen/sample";
@@ -805,8 +805,12 @@ export class Session {
     if (!blob || !format) return blob ? { blob, text: { truncated: 0 } } : null;
     const spec = this.buildSpec();
     const hints: Record<string, string> = {};
-    for (const c of spec?.columns ?? []) hints[c.output_name ?? c.name] = c.type;
-    const table = tableFromCsv(await blob.text(), hints, format === "sav" ? SAV_MAX_TEXT : DTA_MAX_TEXT);
+    const meta: Record<string, ColumnMeta> = {};
+    for (const c of spec?.columns ?? []) {
+      hints[c.output_name ?? c.name] = c.type;
+      meta[c.output_name ?? c.name] = { description: c.description, valueLabels: c.value_labels };
+    }
+    const table = tableFromCsv(await blob.text(), hints, format === "sav" ? SAV_MAX_TEXT : DTA_MAX_TEXT, meta);
     const bytes = format === "sav" ? writeSav(table) : writeDta(table);
     return { blob: new Blob([bytes as BlobPart], { type: "application/octet-stream" }), text: { truncated: table.truncated } };
   }

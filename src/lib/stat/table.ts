@@ -5,6 +5,12 @@
 
 import { splitRecords } from "../csv/sniff";
 
+/** What the spec says a column means and what its codes mean; documentation that is written into the file where the format has room for it. */
+export interface ColumnMeta {
+  description?: string;
+  valueLabels?: Record<string, string>;
+}
+
 export type StatKind = "number" | "date" | "datetime" | "time" | "string";
 
 export interface StatColumn {
@@ -14,6 +20,10 @@ export interface StatColumn {
   decimals: number;
   /** For text: the widest value in bytes (UTF-8), at least 1. */
   width: number;
+  /** What the column means (a variable label), cut to the most the format holds. */
+  label?: string;
+  /** What the codes of a number column mean, as code and label; only for columns the table holds as numbers. */
+  valueLabels?: { value: number; label: string }[];
   /** Numbers as numbers, dates as days since 1970-01-01, date and times as seconds, times as seconds of the day; null is missing. */
   values: (number | string | null)[];
 }
@@ -56,7 +66,7 @@ export function cutToBytes(text: string, max: number): string {
  * @param hints the spec type of each column by name ("integer", "date", ...); a column without a hint is text
  * @param maxText the longest text the target format can hold, in bytes
  */
-export function tableFromCsv(csv: string, hints: Record<string, string>, maxText: number): StatTable {
+export function tableFromCsv(csv: string, hints: Record<string, string>, maxText: number, meta: Record<string, ColumnMeta> = {}): StatTable {
   const { rows } = splitRecords(csv.replace(/^\uFEFF/, ""), ",", '"', false, Number.MAX_SAFE_INTEGER);
   const header = rows[0] ?? [];
   const body = rows.slice(1);
@@ -113,7 +123,16 @@ export function tableFromCsv(csv: string, hints: Record<string, string>, maxText
     } else if (kind === "string") {
       for (const v of values) if (typeof v === "string") width = Math.max(width, encoder.encode(v).length);
     }
-    return { name, kind, decimals, width, values };
+    const m = meta[name];
+    const label = m?.description ? cutToBytes(m.description, 240) : undefined;
+    const valueLabels =
+      kind === "number" && m?.valueLabels
+        ? Object.entries(m.valueLabels)
+            .filter(([code]) => NUMBER.test(code.trim()))
+            .map(([code, text]) => ({ value: Number(code), label: cutToBytes(text, 120) }))
+            .slice(0, 2000)
+        : undefined;
+    return { name, kind, decimals, width, values, ...(label ? { label } : {}), ...(valueLabels && valueLabels.length > 0 ? { valueLabels } : {}) };
   });
 
   return { columns, rowCount: body.length, truncated };

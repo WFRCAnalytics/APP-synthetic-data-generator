@@ -28,8 +28,12 @@ export function HelpGuideModal({ open, onClose }: HelpGuideModalProps) {
         <h3>How it works</h3>
         <ol>
           <li>
-            <strong>Ingest.</strong> Choose a CSV, Excel (.xlsx), Parquet (.parquet) or JSON (.json,
-            .ndjson, .jsonl) file. For a JSON file the app shows its record count, key names and the
+            <strong>Ingest.</strong> Choose a CSV, Excel (.xlsx), Parquet (.parquet), JSON (.json,
+            .ndjson, .jsonl), SPSS (.sav), Stata (.dta) or SAS (.sas7bdat, .xpt) file. An SPSS,
+            Stata or SAS file is read as a table: the app shows its row count and each
+            variable&rsquo;s name and kind, never a value; the labels of its codes and its variable
+            labels are kept beside the columns, and codes an SPSS file declares as missing are read
+            as blanks. For a JSON file the app shows its record count, key names and the
             kind of each key, never a value; a list of records and one record per line both work,
             and the fake file comes out in the same form and layout. Keys that hold objects or lists
             are not read and are left out. For a Parquet file the app shows its row count, row
@@ -56,7 +60,10 @@ export function HelpGuideModal({ open, onClose }: HelpGuideModalProps) {
           <li>
             <strong>Generate.</strong> Choose a seed, generate, read the check table, then download
             the fake file, the spec, and a README for agents that says what the file is and what
-            each column holds.
+            each column holds. The file type is the same as the file you opened unless you pick
+            another (CSV, Excel, Parquet, JSON or JSON Lines; SAS files come out as CSV because they
+            are read only). &ldquo;Download all (zip)&rdquo; gives the three files together, and
+            in Chrome and Edge &ldquo;Save to a folder&rdquo; writes them into a folder you choose.
           </li>
         </ol>
 
@@ -85,12 +92,22 @@ export function HelpGuideModal({ open, onClose }: HelpGuideModalProps) {
             for names, emails, phone numbers and addresses, only the kind of data, how many distinct
             values there are and how often they repeat;
           </li>
-          <li>for free text and short codes, only the lengths and the pattern of characters.</li>
+          <li>for free text and short codes, only the lengths and the pattern of characters;</li>
+          <li>
+            for coordinates, only the bounding box and the number of decimals, never a point;
+          </li>
+          <li>
+            what the columns and codes mean, if you add a codebook or open an SPSS, Stata or SAS
+            file: short labels, which are notes about the data, not values from it;
+          </li>
+          <li>
+            the rules you state between columns, and, for an ID column that uses another
+            table&rsquo;s IDs, that table&rsquo;s pattern, seed and column name.
+          </li>
         </ul>
         <p>
           It never holds lists of IDs, a name, an email, a phone number, an address, a word of free
-          text or a coordinate. The fake file holds invented values of the same kind. Coordinate
-          columns are left out.
+          text or the location of a point. The fake file holds invented values of the same kind.
         </p>
 
         <h3>Optional protections</h3>
@@ -135,12 +152,13 @@ export function HelpGuideModal({ open, onClose }: HelpGuideModalProps) {
             Files in some encodings need twice their size in memory.
           </li>
           <li>
-            <strong>Not in this version.</strong> Nested JSON, GeoJSON, combined coordinates and
-            shapes, relations between more than two columns, and several tables at once.
+            <strong>Not in this version.</strong> Nested JSON, GeoJSON, coordinate shapes and routes,
+            relations between more than two columns, and writing SAS files.
           </li>
           <li>
-            <strong>Browsers.</strong> Chrome and Edge are fully supported; Firefox and Safari work
-            and download one file at a time.
+            <strong>Browsers.</strong> Chrome and Edge are fully supported, and can save everything
+            into a folder. Firefox and Safari work too; there you download the files one at a time
+            or all together as a zip.
           </li>
         </ul>
         <p>

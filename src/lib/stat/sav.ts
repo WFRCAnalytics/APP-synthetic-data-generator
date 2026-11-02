@@ -2,7 +2,7 @@
 // labels or other metadata. Long variable names go in the extension record that SPSS 12 and later read; dates are
 // seconds since 1582-10-14, as SPSS keeps them.
 
-import { safeNames, type StatTable } from "./table";
+import { cutToBytes, safeNames, type StatTable } from "./table";
 
 /** The longest text one SPSS string variable holds without the very-long-string record. */
 export const SAV_MAX_TEXT = 255;
@@ -52,9 +52,18 @@ export function writeSav(table: StatTable): Uint8Array {
   // Sizes
   const unitsOf = columns.map((c) => (c.kind === "string" ? segmentsOf(Math.min(c.width, SAV_MAX_TEXT)) : 1));
   const caseUnits = unitsOf.reduce((a, b) => a + b, 0);
+  const labelBytes = columns.map((c) => (c.label ? encoder.encode(cutToBytes(c.label, 120)) : null));
+  const labelRoom = labelBytes.reduce((a, l) => a + (l ? 4 + Math.ceil(l.length / 4) * 4 : 0), 0);
+  const valueLabelBytes = columns.map((c) => (c.valueLabels ?? []).map((v) => ({ value: v.value, bytes: encoder.encode(cutToBytes(v.label, 120)) })));
+  const valueLabelRoom = valueLabelBytes.reduce((a, set) => a + (set.length === 0 ? 0 : 8 + set.reduce((s, v) => s + 8 + Math.ceil((1 + v.bytes.length) / 8) * 8, 0) + 12), 0);
+  const firstSlot: number[] = [];
+  unitsOf.reduce((slot, u, i) => {
+    firstSlot[i] = slot;
+    return slot + u;
+  }, 1);
   const mapping = longNames.map((l, i) => `${shortNames[i]}=${l}`).join("\t");
   const mappingBytes = encoder.encode(mapping);
-  const total = 176 + unitsOf.reduce((a, u) => a + u * 32, 0) + (16 + 32) + (16 + 24) + (16 + 5) + (16 + mappingBytes.length) + 8 + rowCount * caseUnits * 8;
+  const total = 176 + unitsOf.reduce((a, u) => a + u * 32, 0) + labelRoom + valueLabelRoom + (16 + 32) + (16 + 24) + (16 + 5) + (16 + mappingBytes.length) + 8 + rowCount * caseUnits * 8;
   const out = new Uint8Array(total);
   const view = new DataView(out.buffer);
   let at = 0;
@@ -107,13 +116,20 @@ export function writeSav(table: StatTable): Uint8Array {
         format = (1 << 16) | (type << 8);
       }
     }
+    const label = labelBytes[i];
     i32(2);
     i32(type);
-    i32(0);
+    i32(label ? 1 : 0);
     i32(0);
     i32(format);
     i32(format);
     bytes(pad(shortNames[i], 8));
+    if (label) {
+      i32(label.length);
+      const room = new Uint8Array(Math.ceil(label.length / 4) * 4);
+      room.set(label);
+      bytes(room);
+    }
     for (let k = 1; k < unitsOf[i]; k++) {
       i32(2);
       i32(-1);
@@ -123,6 +139,23 @@ export function writeSav(table: StatTable): Uint8Array {
       i32(0);
       bytes(pad("", 8));
     }
+  });
+
+  // Value labels: one set of codes and labels per labelled variable
+  valueLabelBytes.forEach((set, i) => {
+    if (set.length === 0) return;
+    i32(3);
+    i32(set.length);
+    for (const v of set) {
+      f64(v.value);
+      const room = new Uint8Array(Math.ceil((1 + v.bytes.length) / 8) * 8);
+      room[0] = v.bytes.length;
+      room.set(v.bytes, 1);
+      bytes(room);
+    }
+    i32(4);
+    i32(1);
+    i32(firstSlot[i]);
   });
 
   // Extension records: integer info (UTF-8), floating-point info, encoding, long variable names
