@@ -92,18 +92,32 @@ export function HelpGuideModal({ open, onClose }: HelpGuideModalProps) {
           <h3>How it works</h3>
           <ol className="hg-steps">
             <Step n={1} icon={<FileUp size={20} strokeWidth={1.75} />} title="Ingest">
-              Choose a file, or start from scratch with &ldquo;Design a table&rdquo;. The app shows only what the table looks like: row count, column names and kinds, never a value.
+              Choose a file, or design a table from scratch. Only the shape is shown, never a value.
             </Step>
             <Step n={2} icon={<ListChecks size={20} strokeWidth={1.75} />} title="Review">
-              First choose how closely the fake table follows your data: Match closely, Balanced (the start) or Most private. Then pick any column to change what it keeps, such as how often each label appears, the lowest and highest value, or missing values. A column's settings are in four groups you can open and close: how the app read it, what the fake column keeps, how it is written in the fake file, and, when you make several tables, how it connects to another.
+              Pick how closely the fake table follows your data, then adjust any column: what it keeps, and how it is written.
             </Step>
             <Step n={3} icon={<Sparkles size={20} strokeWidth={1.75} />} title="Generate">
-              Choose a seed, generate, and read the check table, which says whether each column matches what was asked for.
+              Generate with a seed, then read the check table.
             </Step>
             <Step n={4} icon={<Download size={20} strokeWidth={1.75} />} title="Download">
-              Take the fake file, the spec, and a README for AI agents. &ldquo;Download all (zip)&rdquo; gives the three together; in Chrome and Edge &ldquo;Save to a folder&rdquo; writes them into a folder you choose.
+              Take the fake file, the spec and a README for AI agents.
             </Step>
           </ol>
+
+          <h3>In Review</h3>
+          <p>Start with a choice of how closely the fake table follows your data: Match closely, Balanced (the start) or Most private. Then pick a column. Its settings are in four groups:</p>
+          <ul className="hg-list">
+            <li><strong>How it was read:</strong> the kind, and any special codes or words that mean missing.</li>
+            <li><strong>What the fake column keeps:</strong> label counts, lowest and highest value, missing values.</li>
+            <li><strong>How it is written:</strong> its name and format in the fake file.</li>
+            <li><strong>How it connects:</strong> to another table, when you make several.</li>
+          </ul>
+
+          <h3>Downloads</h3>
+          <p>
+            &ldquo;Download all (zip)&rdquo; gives the fake file, the spec and the README together. In Chrome and Edge, &ldquo;Save to a folder&rdquo; writes them into a folder you choose.
+          </p>
 
           <h3>Where your data goes</h3>
           <figure className="hg-flow" aria-label="Your file is read in this browser tab and a fake file comes back to your computer; nothing goes to the internet">

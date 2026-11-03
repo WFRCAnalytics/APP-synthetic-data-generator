@@ -302,3 +302,10 @@
 .hg-node--tab span {
   color: var(--color-foreground);
 }
+
+.hg-list {
+  margin: 0 0 var(--space-3);
+  padding-left: var(--space-5);
+  display: grid;
+  gap: var(--space-1);
+}
