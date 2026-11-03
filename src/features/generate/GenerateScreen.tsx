@@ -110,6 +110,7 @@ export function GenerateScreen(props: GenerateScreenProps) {
 
       <div className="generate-layout">
         <div className="generate-controls">
+          <h3 className="gen-title">Settings</h3>
           <div className="settings-grid settings-grid--stack">
             <div className="field">
               <span className="label-row">
@@ -180,7 +181,7 @@ export function GenerateScreen(props: GenerateScreenProps) {
             )}
           </div>
 
-          <div className="actions-row">
+          <div className="actions-row gen-run">
             <button
               type="button"
               className="button button-primary"
@@ -227,15 +228,18 @@ export function GenerateScreen(props: GenerateScreenProps) {
                 </div>
               )}
 
-              <div className="actions-row">
-                <button
-                  type="button"
-                  className="button button-primary"
-                  onClick={props.onDownloadFake}
-                >
-                  <Download size={16} strokeWidth={1.75} aria-hidden="true" /> Download{" "}
-                  {fakeFileName}
-                </button>
+              <h3 className="gen-title gen-title--files">Your files</h3>
+              <button
+                type="button"
+                className="button button-primary gen-download"
+                onClick={props.onDownloadFake}
+              >
+                <Download size={18} strokeWidth={1.75} aria-hidden="true" />
+                <span className="gen-download-text">
+                  Download <span className="gen-download-name">{fakeFileName}</span>
+                </span>
+              </button>
+              <div className="gen-list">
                 <button
                   type="button"
                   className="button button-secondary"

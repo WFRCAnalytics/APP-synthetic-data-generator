@@ -775,13 +775,72 @@ section[aria-labelledby="ingest-heading"] > .empty-state .empty-state-icon {
   border-radius: var(--radius-md);
 }
 
-.generate-controls .actions-row {
+.gen-title {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-wfrc-gray);
+}
+
+.gen-title--files {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.generate-controls .gen-run {
   margin-top: var(--space-4);
 }
 
-.generate-controls .actions-row .button {
+.generate-controls .gen-run .button {
   flex: 1 1 100%;
   justify-content: center;
+}
+
+/* The fake file is the main download: its name sits under the verb, wrapped inside the button. */
+.gen-download {
+  width: 100%;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.gen-download svg {
+  flex: none;
+}
+
+.gen-download-text {
+  min-width: 0;
+}
+
+.gen-download-name {
+  display: block;
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-regular, 400);
+  overflow-wrap: anywhere;
+}
+
+/* The other files are a quiet list: one line each, no boxes. */
+.gen-list {
+  display: grid;
+  margin-top: var(--space-2);
+}
+
+.gen-list .button {
+  width: 100%;
+  padding: var(--space-2) var(--space-1);
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 0;
+  font-weight: var(--font-weight-regular, 400);
+  font-size: var(--text-sm);
+}
+
+.gen-list .button:last-child {
+  border-bottom: 0;
+}
+
+.generate-controls .field-hint {
+  margin-top: var(--space-3);
 }
 
 .generate-controls .banner {
