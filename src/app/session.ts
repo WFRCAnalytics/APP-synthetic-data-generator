@@ -680,7 +680,7 @@ export class Session {
     const readOnly = stat !== null && own === null; // a .sas7bdat is read only: its table is a CSV unless another type is chosen
     const labelOf = (kind: string) => kinds.find((o) => o.value === kind);
     const named = labelOf(own ?? "csv");
-    const same = `${named?.label} (.${named?.extension}), same as the file you opened`;
+    const same = `${named?.label} (.${named?.extension}), same as opened`;
     const others = kinds.filter((o) => o.value !== own).map((o) => ({ value: o.value, label: `${o.label} (.${o.extension})` }));
     return readOnly ? others : [{ value: "same", label: same }, ...others];
   }
